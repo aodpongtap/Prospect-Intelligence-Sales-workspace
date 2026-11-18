@@ -55,7 +55,7 @@ node server.js                                       # รัน (หรือ�
 
 - `Code.gs` — `doGet()` เสิร์ฟ `Index.html` (หรือ `Users.html` เมื่อ `?page=users`), `getUserEmail()`, `getUserLevel()`
 - `Users.html` — หน้า User Management (เรียกผ่าน `google.script.run`)
-- `appsscript.json` — `webapp: { executeAs: USER_DEPLOYING, access: ANYONE }` + scopes `userinfo.email`, `spreadsheets`, `drive.file`
+- `appsscript.json` — `webapp: { executeAs: USER_DEPLOYING, access: ANYONE }` + scopes `userinfo.email`, `spreadsheets` (ไม่ใช้ DriveApp จึงไม่ต้องขอ scope `drive`)
 - `Index.html` — dashboard (แสดงอีเมล Google ที่มุมขวา, ไม่โหลด `/api/rbac.js` บน Apps Script, เพิ่มเมนู User Management ให้ Master Admin)
 - `.clasp.json` — ผูกกับโปรเจกต์ Apps Script ที่สร้างไว้
 
@@ -65,6 +65,8 @@ node server.js                                       # รัน (หรือ�
 - คอลัมน์: `email | level | status | createdAt | lastLogin`
 - Master Admin = `aodpongtaptsr@gmail.com` (กำหนดตายตัว) — เพิ่ม/แก้สิทธิ์/เปิด-ปิด/ลบผู้ใช้ได้
 - ระดับสิทธิ์: `admin`, `editor`, `viewer` · สถานะ: `active`, `disabled`
+- ถ้าเจอ error เรื่องสิทธิ์/ชีต: เปิด Apps Script Editor แล้ว Run ฟังก์ชัน **`resetUserSheet`** (ล้าง Sheet ID แล้วสร้างชีตใหม่)
+- ระบบดัก error ที่ `doGet()` แล้วแสดงหน้าแจ้งปัญหาพร้อมวิธีแก้ (ไม่ขึ้นหน้า exception ดิบ)
 
 ```bash
 clasp login                    # บัญชี aodpongtaptsr@gmail.com
