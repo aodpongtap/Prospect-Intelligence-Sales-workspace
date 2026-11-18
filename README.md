@@ -51,20 +51,31 @@ node server.js                                       # รัน (หรือ�
 
 ## Google Apps Script Web App (`apps-script/`)
 
-โฮสต์บน Google แทน server — ล็อกอินด้วยบัญชี Google อัตโนมัติ (ไม่ต้องมี backend)
+โฮสต์บน Google แทน server — หน้าตา/สิทธิ์เหมือนเวอร์ชัน GitHub Pages ทุกอย่าง
 
-- `Code.gs` — `doGet()` เสิร์ฟ `Index.html` (หรือ `Users.html` เมื่อ `?page=users`), `getUserEmail()`, `getUserLevel()`
+- `Code.gs` — `doGet()` เสิร์ฟ `Index.html` (หรือ `?page=users` / `?page=login`), JSON API (`?api=1`), `include()` สำหรับฝังไฟล์ HTML
+- `Login.html` — ล็อกอินอีเมล/รหัสผ่าน (เก็บทั้ง `tsr3_token` และ `pi_session_v2`)
 - `Users.html` — หน้า User Management (เรียกผ่าน `google.script.run`)
-- `appsscript.json` — `webapp: { executeAs: USER_DEPLOYING, access: ANYONE }` + scopes `userinfo.email`, `spreadsheets` (ไม่ใช้ DriveApp จึงไม่ต้องขอ scope `drive`)
-- `Index.html` — dashboard (แสดงอีเมล Google ที่มุมขวา, ไม่โหลด `/api/rbac.js` บน Apps Script, เพิ่มเมนู User Management ให้ Master Admin)
+- `Index.html` — **สำเนาของ `index.html` ฝั่ง GitHub Pages** (สคริปต์เดียวกัน: `__applyMe__`, กรองเมนู/ข้อมูลเฉพาะ Sale, KPI จากดีลตัวเอง, ปุ่ม “เพิ่มดีลของฉัน”)
+- `AuthSheets.html` — ฝัง `assets/auth-sheets.js` เข้า template (`<?!= include('AuthSheets'); ?>`)
+- `appsscript.json` — `webapp: { executeAs: USER_DEPLOYING, access: ANYONE_ANONYMOUS }` + scopes `userinfo.email`, `spreadsheets`
 - `.clasp.json` — ผูกกับโปรเจกต์ Apps Script ที่สร้างไว้
+
+### หลักการ sync สองเวอร์ชัน
+
+1. แก้ UI ที่ `index.html` (ต้นฉบับ) → commit/push ขึ้น GitHub Pages
+2. คัดลอกเป็น `apps-script/Index.html` แล้วแก้เฉพาะจุดนี้:
+   - `<script src="assets/auth-sheets.js?v=3"></script>` → `<?!= include('AuthSheets'); ?>`
+   - บล็อก `// โหมด GitHub Pages` → บล็อก `// โหมด Google Apps Script` (อ่าน `tsr3_token` + `google.script.run.getMe`)
+3. `clasp push --force` → `clasp create-version` → `clasp update-deployment <deployment-id> -V <n>`
+4. ตรวจด้วย `node tools/check-gas.js` (ไม่ต้องใช้บัญชี Google)
 
 ### User Management บน Apps Script
 
 - เก็บผู้ใช้ใน Google Sheet ชื่อ **"Prospect Intelligence - Users"** (สร้างอัตโนมัติใน Drive ของเจ้าของสคริปต์)
-- คอลัมน์: `email | level | status | createdAt | lastLogin`
+- คอลัมน์: `email | level | status | createdAt | lastLogin` (+ ชีต `Deals` สำหรับดีลของแต่ละคน)
 - Master Admin = `aodpongtaptsr@gmail.com` (กำหนดตายตัว) — เพิ่ม/แก้สิทธิ์/เปิด-ปิด/ลบผู้ใช้ได้
-- ระดับสิทธิ์: `admin`, `editor`, `viewer` · สถานะ: `active`, `disabled`
+- ระดับสิทธิ์: `admin`, `sale`, `editor`, `viewer` · สถานะ: `active`, `disabled`
 - ถ้าเจอ error เรื่องสิทธิ์/ชีต: เปิด Apps Script Editor แล้ว Run ฟังก์ชัน **`resetUserSheet`** (ล้าง Sheet ID แล้วสร้างชีตใหม่)
 - ระบบดัก error ที่ `doGet()` แล้วแสดงหน้าแจ้งปัญหาพร้อมวิธีแก้ (ไม่ขึ้นหน้า exception ดิบ)
 
@@ -72,8 +83,8 @@ node server.js                                       # รัน (หรือ�
 clasp login                    # บัญชี aodpongtaptsr@gmail.com
 cd apps-script
 clasp push --force
-clasp create-deployment --description "v2"
-clasp list-deployments
+clasp create-version "v15 ..."  # จำเลข version ที่ได้
+clasp update-deployment <deployment-id> -V <version>
 ```
 
 รายละเอียดโปรเจกต์ Apps Script:
