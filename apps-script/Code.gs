@@ -1,21 +1,27 @@
 /**
  * Prospect Intelligence Sales workspace — Google Apps Script Web App
  *
- * Deploy: Deploy > New deployment > Web app
- *   Execute as: Me
- *   Who has access: Anyone with Google account  (Google จะบังคับล็อกอินให้เอง)
- *
- * User Management: เก็บรายชื่อผู้ใช้ใน Google Sheet (สร้างอัตโนมัติ)
- * Master Admin = MASTER_EMAIL เท่านั้น (กำหนดสิทธิ์/เพิ่ม/ลบผู้ใช้)
+ * ระบบล็อกอิน: อีเมล + รหัสผ่าน (เก็บ hash ใน Google Sheet)
+ * - Admin 4 บัญชี (ดู ADMIN_EMAILS) จัดการผู้ใช้ได้
+ * - รหัสผ่านสร้างอัตโนมัติจากหน้า User Management (แสดงครั้งเดียว)
+ * - Session เก็บใน Script Properties (12 ชม.)
  */
 
 var APP_TITLE = 'Prospect Intelligence Sales workspace';
-var MASTER_EMAIL = 'aodpongtaptsr@gmail.com';
 var SHEET_FILE_NAME = 'Prospect Intelligence - Users';
 var SHEET_TAB = 'Users';
 var LEVELS = ['admin', 'editor', 'viewer'];
+var ADMIN_EMAILS = [
+  'aodpongtaptsr@gmail.com',
+  'bch.sarocha@gmail.com',
+  'sittharphon.1994@gmail.com',
+  'chanphaphat.k@gmail.com'
+];
+var SEED_PASSWORD = 'Tsr@2026';          // รหัสเริ่มต้นของ 4 admin (แนะนำให้รีเซ็ตทันที)
+var SESSION_PROP = 'SESSIONS';
+var SESSION_TTL_MS = 12 * 3600 * 1000;
 
-/* ---------------- web app routes ---------------- */
+/* ---------------- routing ---------------- */
 
 function doGet(e) {
   try {
@@ -28,6 +34,22 @@ function doGet(e) {
   }
 }
 
+function handleGet_(e) {
+  var page = String((e && e.parameter && e.parameter.page) || 'index').toLowerCase();
+  if (page === 'login') return renderPage_('Login', 'เข้าสู่ระบบ · ' + APP_TITLE);
+  if (page === 'users') return renderPage_('Users', 'User Management · ' + APP_TITLE);
+  return renderPage_('Index', APP_TITLE);
+}
+
+function renderPage_(file, title) {
+  var t = HtmlService.createTemplateFromFile(file);
+  t.webAppUrl = getWebAppUrl();
+  return t.evaluate()
+    .setTitle(title)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
 function errorPage_(err) {
   var msg = (err && err.message) ? String(err.message) : String(err);
   var safe = msg.replace(/[&<>"]/g, function (c) {
@@ -35,158 +57,55 @@ function errorPage_(err) {
   });
   return '<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-    '<title>' + APP_TITLE + '</title>' +
-    '<style>body{font-family:"Prompt",Segoe UI,sans-serif;background:#F8FAFC;color:#182230;margin:0;padding:32px}' +
-    '.card{max-width:680px;margin:0 auto;background:#fff;border:1px solid #E5EAF0;border-radius:14px;padding:26px;box-shadow:0 8px 24px rgba(15,43,70,.08)}' +
-    'h1{font-size:19px;color:#0F2B46;margin:0 0 10px}p{font-size:13px;line-height:1.7;color:#475467}' +
-    'pre{background:#fff1f2;border:1px solid #ffe4e6;color:#b91c1c;padding:12px;border-radius:9px;white-space:pre-wrap;font-size:12px}' +
-    'ul{font-size:13px;color:#475467;line-height:1.8}</style></head><body><div class="card">' +
-    '<h1>เกิดข้อผิดพลาดในการเชื่อมต่อข้อมูล</h1>' +
-    '<p>ระบบไม่สามารถเปิด Google Sheet ที่ใช้เก็บรายชื่อผู้ใช้ได้</p><pre>' + safe + '</pre>' +
-    '<p><strong>วิธีแก้ (ทำครั้งเดียว):</strong></p><ul>' +
-    '<li>เปิด Apps Script Editor แล้วรันฟังก์ชัน <code>resetUserSheet</code></li>' +
-    '<li>หรือรีเฟรชหน้าอีกครั้งเพื่อให้ระบบสร้างชีตใหม่ให้อัตโนมัติ</li>' +
-    '<li>ตรวจว่าบัญชีที่ล็อกอินคือ aodpongtaptsr@gmail.com</li></ul>' +
+    '<style>body{font-family:Segoe UI,sans-serif;background:#F8FAFC;color:#182230;padding:30px}' +
+    '.card{max-width:640px;margin:auto;background:#fff;border:1px solid #E5EAF0;border-radius:12px;padding:24px}' +
+    'pre{background:#fff1f2;border:1px solid #ffe4e6;color:#b91c1c;padding:12px;border-radius:8px;white-space:pre-wrap}</style>' +
+    '</head><body><div class="card"><h2>เกิดข้อผิดพลาด</h2><pre>' + safe + '</pre>' +
     '<p><a href="' + getWebAppUrl() + '">กลับหน้าแรก</a></p></div></body></html>';
 }
 
-function handleGet_(e) {
-  var page = String((e && e.parameter && e.parameter.page) || 'index').toLowerCase();
-  var key = (e && e.parameter && e.parameter.key) || '';
-  var adminMode = false;
-  try { adminMode = !!key && String(key) === getAdminKey_(); } catch (err) { adminMode = false; }
-
-  var email = getUserEmail();
-  var level = adminMode ? 'master' : (email ? getUserLevel(email) : 'viewer');
-  touchLogin_(email);
-
-  var shownEmail = email || (adminMode ? 'ผู้ดูแลระบบ (admin key)' : '');
-
-  if (page === 'users') {
-    var tpl = HtmlService.createTemplateFromFile('Users');
-    tpl.userEmail = shownEmail;
-    tpl.userLevel = level;
-    tpl.webAppUrl = getWebAppUrl();
-    tpl.adminKey = adminMode ? key : '';
-    return tpl.evaluate()
-      .setTitle('User Management · ' + APP_TITLE)
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-  }
-
-  var t = HtmlService.createTemplateFromFile('Index');
-  t.userEmail = shownEmail;
-  t.userLevel = level;
-  t.webAppUrl = getWebAppUrl();
-  t.adminKey = adminMode ? key : '';
-  return t.evaluate()
-    .setTitle(APP_TITLE)
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
-}
-
-/* ---------------- session ---------------- */
-
-function getUserEmail() {
-  try {
-    return Session.getActiveUser().getEmail() || '';
-  } catch (err) {
-    return '';
-  }
-}
-
-/**
- * คีย์แอดมิน (สร้างอัตโนมัติครั้งแรก) — ใช้เปิดโหมดจัดการผู้ใช้บนเว็บ public
- * ดูคีย์ได้โดยรันฟังก์ชัน showAdminKey ใน Apps Script Editor
- */
-function getAdminKey_() {
-  var props = PropertiesService.getScriptProperties();
-  var k = props.getProperty('ADMIN_KEY');
-  if (!k) {
-    k = Utilities.getUuid().replace(/-/g, '').substring(0, 24);
-    props.setProperty('ADMIN_KEY', k);
-  }
-  return k;
-}
-
-function showAdminKey() {
-  var url = getWebAppUrl() + '?page=users&key=' + getAdminKey_();
-  Logger.log('Admin URL: ' + url);
-  return url;
-}
-
-function isMaster_(key) {
-  try {
-    if (key && String(key) === getAdminKey_()) return true;
-  } catch (err) { /* ignore */ }
-  return getUserLevel(getUserEmail()) === 'master';
-}
-
 function getWebAppUrl() {
-  try {
-    return ScriptApp.getService().getUrl() || '';
-  } catch (err) {
-    return '';
-  }
+  try { return ScriptApp.getService().getUrl() || ''; } catch (err) { return ''; }
 }
 
-function getSessionInfo() {
-  var email = getUserEmail();
-  var level = getUserLevel(email);
-  return {
-    email: email,
-    level: level,
-    canManageUsers: level === 'master',
-    url: getWebAppUrl()
-  };
-}
-
-/* ---------------- user store (Google Sheet) ---------------- */
+/* ---------------- sheet store ---------------- */
 
 function getSheet_() {
   var props = PropertiesService.getScriptProperties();
   var id = props.getProperty('USERS_SHEET_ID');
   var ss = null;
-
-  // 1) เปิดจาก ID ที่เคยบันทึกไว้
-  if (id) {
-    try { ss = SpreadsheetApp.openById(id); } catch (err) { ss = null; }
-  }
-
-  // 2) ถ้ายังไม่มี/เปิดไม่ได้ → สร้างใหม่ (ไม่ใช้ DriveApp จึงไม่ต้องขอ scope drive)
+  if (id) { try { ss = SpreadsheetApp.openById(id); } catch (err) { ss = null; } }
   if (!ss) {
     ss = SpreadsheetApp.create(SHEET_FILE_NAME);
     props.setProperty('USERS_SHEET_ID', ss.getId());
   }
-
   var sh = ss.getSheetByName(SHEET_TAB);
-  if (!sh) {
-    sh = ss.insertSheet(SHEET_TAB);
-    sh.appendRow(['email', 'level', 'status', 'createdAt', 'lastLogin']);
-    sh.getRange('A1:E1').setFontWeight('bold');
-    sh.setFrozenRows(1);
-  } else if (sh.getLastRow() === 0) {
-    sh.appendRow(['email', 'level', 'status', 'createdAt', 'lastLogin']);
-    sh.getRange('A1:E1').setFontWeight('bold');
+  if (!sh) sh = ss.insertSheet(SHEET_TAB);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(['email', 'name', 'level', 'status', 'passHash', 'salt', 'createdAt', 'lastLogin']);
+    sh.getRange('A1:H1').setFontWeight('bold');
     sh.setFrozenRows(1);
   }
   return sh;
 }
 
-function readUsers_() {
+function readRows_() {
   var sh = getSheet_();
   var last = sh.getLastRow();
   if (last < 2) return [];
-  var values = sh.getRange(2, 1, last - 1, 5).getValues();
-  return values
+  return sh.getRange(2, 1, last - 1, 8).getValues()
     .filter(function (r) { return String(r[0]).trim() !== ''; })
     .map(function (r) {
       return {
         email: String(r[0]).trim().toLowerCase(),
-        level: String(r[1] || 'viewer').trim().toLowerCase(),
-        status: String(r[2] || 'active').trim().toLowerCase(),
-        createdAt: r[3] ? String(r[3]) : '',
-        lastLogin: r[4] ? String(r[4]) : ''
+        name: String(r[1] || ''),
+        level: String(r[2] || 'viewer').toLowerCase(),
+        status: String(r[3] || 'active').toLowerCase(),
+        passHash: String(r[4] || ''),
+        salt: String(r[5] || ''),
+        createdAt: r[6] ? String(r[6]) : '',
+        lastLogin: r[7] ? String(r[7]) : '',
+        row: null
       };
     });
 }
@@ -195,34 +114,195 @@ function findRow_(email) {
   var sh = getSheet_();
   var last = sh.getLastRow();
   if (last < 2) return 0;
-  var values = sh.getRange(2, 1, last - 1, 1).getValues();
-  var target = String(email || '').trim().toLowerCase();
-  for (var i = 0; i < values.length; i++) {
-    if (String(values[i][0]).trim().toLowerCase() === target) return i + 2;
+  var vals = sh.getRange(2, 1, last - 1, 1).getValues();
+  var t = String(email || '').trim().toLowerCase();
+  for (var i = 0; i < vals.length; i++) {
+    if (String(vals[i][0]).trim().toLowerCase() === t) return i + 2;
   }
   return 0;
 }
 
-function getUserLevel(email) {
-  var e = String(email || '').trim().toLowerCase();
-  if (!e) return 'viewer';
-  if (e === MASTER_EMAIL) return 'master';
-  try {
-    var row = findRow_(e);
-    if (!row) return 'viewer';
-    var sh = getSheet_();
-    var v = sh.getRange(row, 1, 1, 3).getValues()[0];
-    if (String(v[2] || '').toLowerCase() === 'disabled') return 'disabled';
-    return String(v[1] || 'viewer').toLowerCase();
-  } catch (err) {
-    return 'viewer';
-  }
+/* ---------------- password ---------------- */
+
+function hash_(pw, salt) {
+  var bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(pw) + '|' + String(salt), Utilities.Charset.UTF_8);
+  return bytes.map(function (b) { return ('0' + ((b < 0 ? b + 256 : b)).toString(16)).slice(-2); }).join('');
 }
 
-/**
- * ใช้เมื่อชีตผู้ใช้มีปัญหา (ID ค้าง/ถูกลบ) — ล้างค่าและสร้างชีตใหม่
- * รันจาก Apps Script Editor > เลือกฟังก์ชัน resetUserSheet > Run
- */
+function newSalt_() { return Utilities.getUuid(); }
+
+function randPassword_() {
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789@#';
+  var out = '';
+  for (var i = 0; i < 10; i++) out += chars.charAt(Math.floor(Math.random() * chars.length));
+  return out;
+}
+
+/* ---------------- seed & auth ---------------- */
+
+function ensureSeed_() {
+  var existing = readRows_().map(function (r) { return r.email; });
+  var sh = getSheet_();
+  ADMIN_EMAILS.forEach(function (em) {
+    var e = String(em).toLowerCase();
+    if (existing.indexOf(e) < 0) {
+      var salt = newSalt_();
+      sh.appendRow([e, '', 'admin', 'active', hash_(SEED_PASSWORD, salt), salt, new Date().toISOString(), '']);
+    }
+  });
+}
+
+function session_(token) {
+  if (!token) return null;
+  var all = {};
+  try { all = JSON.parse(PropertiesService.getScriptProperties().getProperty(SESSION_PROP) || '{}'); } catch (e) { all = {}; }
+  var s = all[String(token)];
+  if (!s) return null;
+  if (Number(s.exp) < Date.now()) return null;
+  return s;
+}
+
+function saveSession_(token, data) {
+  var props = PropertiesService.getScriptProperties();
+  var all = {};
+  try { all = JSON.parse(props.getProperty(SESSION_PROP) || '{}'); } catch (e) { all = {}; }
+  // ล้าง session หมดอายุ
+  var now = Date.now();
+  Object.keys(all).forEach(function (k) { if (Number(all[k].exp) < now) delete all[k]; });
+  all[token] = data;
+  props.setProperty(SESSION_PROP, JSON.stringify(all));
+}
+
+function isAdminLevel_(level) { return String(level).toLowerCase() === 'admin'; }
+
+function login(email, password) {
+  ensureSeed_();
+  var e = String(email || '').trim().toLowerCase();
+  if (!e || !password) return { ok: false, error: 'กรอกอีเมลและรหัสผ่าน' };
+
+  var row = findRow_(e);
+  if (!row) return { ok: false, error: 'ไม่พบอีเมลนี้ในระบบ กรุณาติดต่อผู้ดูแล' };
+
+  var sh = getSheet_();
+  var v = sh.getRange(row, 1, 1, 8).getValues()[0];
+  if (String(v[3]).toLowerCase() === 'disabled') return { ok: false, error: 'บัญชีนี้ถูกปิดการใช้งาน' };
+
+  if (hash_(password, String(v[5])) !== String(v[4])) return { ok: false, error: 'รหัสผ่านไม่ถูกต้อง' };
+
+  sh.getRange(row, 8).setValue(new Date().toISOString());
+  var token = Utilities.getUuid().replace(/-/g, '');
+  var data = { email: e, name: String(v[1] || ''), level: String(v[2] || 'viewer').toLowerCase(), exp: Date.now() + SESSION_TTL_MS };
+  saveSession_(token, data);
+  return { ok: true, token: token, email: e, name: data.name, level: data.level };
+}
+
+function getMe(token) {
+  var s = session_(token);
+  if (!s) return { ok: false };
+  return { ok: true, email: s.email, name: s.name, level: s.level, isAdmin: isAdminLevel_(s.level) };
+}
+
+function logout(token) {
+  var props = PropertiesService.getScriptProperties();
+  var all = {};
+  try { all = JSON.parse(props.getProperty(SESSION_PROP) || '{}'); } catch (e) { all = {}; }
+  if (token) delete all[String(token)];
+  props.setProperty(SESSION_PROP, JSON.stringify(all));
+  return { ok: true };
+}
+
+/* ---------------- user management API ---------------- */
+
+function publicUser_(r) {
+  return { email: r.email, name: r.name, level: r.level, status: r.status, createdAt: r.createdAt, lastLogin: r.lastLogin };
+}
+
+function getUsers(token) {
+  var s = session_(token);
+  if (!s || !isAdminLevel_(s.level)) {
+    return { ok: false, error: 'เฉพาะ Admin เท่านั้น', canManage: false, users: [], levels: LEVELS };
+  }
+  ensureSeed_();
+  return { ok: true, canManage: true, me: s.email, users: readRows_().map(publicUser_), levels: LEVELS, admins: ADMIN_EMAILS };
+}
+
+function addUser(token, email, name, level) {
+  var s = session_(token);
+  if (!s || !isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
+
+  var e = String(email || '').trim().toLowerCase();
+  if (!e || e.indexOf('@') < 0) throw new Error('อีเมลไม่ถูกต้อง');
+  if (findRow_(e)) throw new Error('มีอีเมลนี้ในระบบแล้ว');
+
+  var lv = String(level || 'viewer').toLowerCase();
+  if (LEVELS.indexOf(lv) < 0) lv = 'viewer';
+
+  var pw = randPassword_();
+  var salt = newSalt_();
+  var sh = getSheet_();
+  sh.appendRow([e, String(name || ''), lv, 'active', hash_(pw, salt), salt, new Date().toISOString(), '']);
+
+  return { ok: true, email: e, password: pw, users: readRows_().map(publicUser_) };
+}
+
+function resetPassword(token, email) {
+  var s = session_(token);
+  if (!s || !isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
+
+  var e = String(email || '').trim().toLowerCase();
+  var row = findRow_(e);
+  if (!row) throw new Error('ไม่พบผู้ใช้นี้');
+
+  var pw = randPassword_();
+  var salt = newSalt_();
+  var sh = getSheet_();
+  sh.getRange(row, 5).setValue(hash_(pw, salt));
+  sh.getRange(row, 6).setValue(salt);
+
+  return { ok: true, email: e, password: pw };
+}
+
+function updateUser(token, email, level, status) {
+  var s = session_(token);
+  if (!s || !isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
+
+  var e = String(email || '').trim().toLowerCase();
+  var row = findRow_(e);
+  if (!row) throw new Error('ไม่พบผู้ใช้นี้');
+
+  var isProtected = ADMIN_EMAILS.indexOf(e) >= 0;
+  var sh = getSheet_();
+
+  if (level !== undefined && level !== null && String(level) !== '') {
+    if (isProtected) throw new Error('เปลี่ยนสิทธิ์ของ Admin หลักไม่ได้');
+    var lv = String(level).toLowerCase();
+    if (LEVELS.indexOf(lv) < 0) throw new Error('ระดับสิทธิ์ไม่ถูกต้อง');
+    sh.getRange(row, 3).setValue(lv);
+  }
+  if (status !== undefined && status !== null && String(status) !== '') {
+    if (isProtected) throw new Error('ปิดการใช้งาน Admin หลักไม่ได้');
+    var st = String(status).toLowerCase();
+    if (['active', 'disabled'].indexOf(st) < 0) throw new Error('สถานะไม่ถูกต้อง');
+    sh.getRange(row, 4).setValue(st);
+  }
+  return { ok: true, users: readRows_().map(publicUser_) };
+}
+
+function deleteUser(token, email) {
+  var s = session_(token);
+  if (!s || !isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
+
+  var e = String(email || '').trim().toLowerCase();
+  if (ADMIN_EMAILS.indexOf(e) >= 0) throw new Error('ลบ Admin หลักไม่ได้');
+
+  var row = findRow_(e);
+  if (!row) throw new Error('ไม่พบผู้ใช้นี้');
+  getSheet_().deleteRow(row);
+  return { ok: true, users: readRows_().map(publicUser_) };
+}
+
+/* ---------------- helpers (รันมือใน editor ถ้าจำเป็น) ---------------- */
+
 function resetUserSheet() {
   var props = PropertiesService.getScriptProperties();
   props.deleteProperty('USERS_SHEET_ID');
@@ -232,85 +312,8 @@ function resetUserSheet() {
   return url;
 }
 
-function touchLogin_(email) {
-  try {
-    if (!email || email.toLowerCase() === MASTER_EMAIL) return;
-    var row = findRow_(email);
-    if (!row) return;
-    getSheet_().getRange(row, 5).setValue(new Date().toISOString());
-  } catch (err) { /* ignore */ }
+function seedAdminAccounts() {
+  ensureSeed_();
+  Logger.log('Seeded admins: ' + ADMIN_EMAILS.join(', ') + ' (password: ' + SEED_PASSWORD + ')');
+  return ADMIN_EMAILS;
 }
-
-/* ---------------- API called from client ---------------- */
-
-function getUsers(key) {
-  var me = getUserEmail();
-  if (!isMaster_(key)) {
-    return { ok: false, error: 'เฉพาะ Master Admin เท่านั้น', canManage: false, users: [], levels: LEVELS };
-  }
-  var users = readUsers_();
-  users.unshift({
-    email: MASTER_EMAIL,
-    level: 'master',
-    status: 'active',
-    createdAt: '',
-    lastLogin: ''
-  });
-  return { ok: true, canManage: true, me: me, users: users, levels: LEVELS, owner: MASTER_EMAIL };
-}
-
-function addUser(key, email, level, status) {
-  if (!isMaster_(key)) throw new Error('เฉพาะ Master Admin เท่านั้น');
-  var e = String(email || '').trim().toLowerCase();
-  if (!e || e.indexOf('@') < 0) throw new Error('อีเมลไม่ถูกต้อง');
-  if (e === MASTER_EMAIL) throw new Error('มีบัญชีนี้อยู่แล้ว (Master)');
-  if (findRow_(e)) throw new Error('มีอีเมลนี้ในระบบแล้ว');
-
-  var lv = String(level || 'viewer').toLowerCase();
-  if (LEVELS.indexOf(lv) < 0) lv = 'viewer';
-
-  var lock = LockService.getScriptLock();
-  lock.waitLock(15000);
-  try {
-    getSheet_().appendRow([e, lv, String(status || 'active').toLowerCase(), new Date().toISOString(), '']);
-  } finally {
-    lock.releaseLock();
-  }
-  return getUsers();
-}
-
-function updateUser(key, email, level, status) {
-  if (!isMaster_(key)) throw new Error('เฉพาะ Master Admin เท่านั้น');
-  var e = String(email || '').trim().toLowerCase();
-  if (e === MASTER_EMAIL) throw new Error('แก้ไขบัญชี Master ไม่ได้');
-  var row = findRow_(e);
-  if (!row) throw new Error('ไม่พบผู้ใช้นี้');
-
-  var sh = getSheet_();
-  if (level !== undefined && level !== null && String(level) !== '') {
-    var lv = String(level).toLowerCase();
-    if (LEVELS.indexOf(lv) < 0) throw new Error('ระดับสิทธิ์ไม่ถูกต้อง');
-    sh.getRange(row, 2).setValue(lv);
-  }
-  if (status !== undefined && status !== null && String(status) !== '') {
-    var st = String(status).toLowerCase();
-    if (['active', 'disabled'].indexOf(st) < 0) throw new Error('สถานะไม่ถูกต้อง');
-    sh.getRange(row, 3).setValue(st);
-  }
-  return getUsers();
-}
-
-function deleteUser(key, email) {
-  if (!isMaster_(key)) throw new Error('เฉพาะ Master Admin เท่านั้น');
-  var e = String(email || '').trim().toLowerCase();
-  if (e === MASTER_EMAIL) throw new Error('ลบบัญชี Master ไม่ได้');
-  var row = findRow_(e);
-  if (!row) throw new Error('ไม่พบผู้ใช้นี้');
-  getSheet_().deleteRow(row);
-  return getUsers();
-}
-
-function getUserSheetUrl() {
-  try { return getSheet_().getParent().getUrl(); } catch (err) { return ''; }
-}
-

@@ -46,7 +46,7 @@
     </aside>
     <main class="main">
       <header class="topbar"><div class="top-left"><button class="icon-btn mobile-menu" id="mobileMenu" aria-label="เปิดเมนู"><i class="fa-solid fa-bars"></i></button><span class="breadcrumb">Workspace <i class="fa-solid fa-chevron-right" style="font-size:8px;margin:0 6px"></i> <span id="crumbName">Dashboard</span></span></div>
-        <div class="top-actions"><button class="icon-btn" id="notificationBtn" title="การแจ้งเตือน"><i class="fa-regular fa-bell"></i><span class="badge-dot"></span></button><div class="profile"><div class="avatar"><?= (getUserEmail() || 'G').substring(0,2).toUpperCase() ?></div><div class="profile-copy"><strong><?= getUserEmail() || 'Google user' ?></strong><small>Google account</small></div></div></div>
+        <div class="top-actions"><button class="icon-btn" id="notificationBtn" title="การแจ้งเตือน"><i class="fa-regular fa-bell"></i><span class="badge-dot"></span></button><div class="profile"><div class="avatar" id="avatar">US</div><div class="profile-copy"><strong id="meName">ผู้ใช้</strong><small id="meRole">—</small></div></div></div>
       </header>
       <section class="content" id="content"></section>
     </main>
@@ -71,19 +71,37 @@
     })();
   </script>
   <script>
-    // เพิ่มเมนู User Management สำหรับ Master Admin (โหมด Apps Script)
+    // Session bootstrap: ตรวจ token จากหน้า Login (ไม่มี = เด้งไปหน้า login)
     (function () {
-      var LEVEL = '<?= userLevel ?>';
-      var KEY = '<?= adminKey ?>';
-      var nav = document.getElementById('navList');
-      if (LEVEL !== 'master' || !nav) return;
-      var a = document.createElement('a');
-      a.className = 'nav-item';
-      a.href = '<?= webAppUrl ?>?page=users' + (KEY ? '&key=' + encodeURIComponent(KEY) : '');
-      a.target = '_top';
-      a.style.textDecoration = 'none';
-      a.innerHTML = '<i class="fa-solid fa-users-gear"></i>User Management';
-      nav.appendChild(a);
+      var APP = '<?= webAppUrl ?>';
+      var token = '';
+      try { token = localStorage.getItem('tsr3_token') || ''; } catch (e) { token = ''; }
+      if (!token) { window.top.location.href = APP + '?page=login'; return; }
+      google.script.run.withSuccessHandler(function (me) {
+        if (!me || !me.ok) {
+          try { localStorage.removeItem('tsr3_token'); } catch (e) {}
+          window.top.location.href = APP + '?page=login';
+          return;
+        }
+        window.__ME__ = me;
+        var av = document.getElementById('avatar'); if (av) av.textContent = String(me.email || 'US').substring(0, 2).toUpperCase();
+        var nm = document.getElementById('meName'); if (nm) nm.textContent = me.name || me.email;
+        var rl = document.getElementById('meRole'); if (rl) rl.textContent = 'สิทธิ์: ' + String(me.level).toUpperCase();
+        if (me.isAdmin) {
+          var nav = document.getElementById('navList');
+          if (nav) {
+            var a = document.createElement('a');
+            a.className = 'nav-item';
+            a.href = APP + '?page=users';
+            a.target = '_top';
+            a.style.textDecoration = 'none';
+            a.innerHTML = '<i class="fa-solid fa-users-gear"></i>User Management';
+            nav.appendChild(a);
+          }
+        }
+      }).withFailureHandler(function () {
+        window.top.location.href = APP + '?page=login';
+      }).getMe(token);
     })();
   </script>
   <script>
