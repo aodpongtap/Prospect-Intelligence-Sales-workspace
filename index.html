@@ -115,13 +115,14 @@
         // ซ่อน panel ที่ไม่เกี่ยวกับงานขาย (เช่น Alerts งานบริการ) หลัง render
         var content = document.getElementById('content');
         if (content && window.MutationObserver) {
-          new MutationObserver(function () {
-            Array.prototype.slice.call(content.querySelectorAll('.panel')).forEach(function (p) {
-              var t = p.querySelector('.panel-title');
-              if (t && /Alerts|Priority Actions/i.test(t.textContent)) p.remove();
-            });
-            // คำนวณ KPI จากดีลของตัวเอง
+          var obs = new MutationObserver(function () {
+            obs.disconnect();               // กัน loop: หยุดฟังชั่วคราวก่อนแก้ DOM
             try {
+              Array.prototype.slice.call(content.querySelectorAll('.panel')).forEach(function (p) {
+                var t = p.querySelector('.panel-title');
+                if (t && /Alerts|Priority Actions/i.test(t.textContent)) p.remove();
+              });
+              // คำนวณ KPI จากดีลของตัวเอง
               var vals = content.querySelectorAll('.kpi-value');
               if (vals.length >= 4) {
                 var total = 0, forecast = 0, atRisk = 0, overdue = 0;
@@ -132,13 +133,15 @@
                   if (!d.nextAction) overdue++;
                 });
                 var fmtM = function (n) { return '฿' + Number(n).toLocaleString('th-TH'); };
-                vals[0].textContent = fmtM(total);
-                vals[1].textContent = fmtM(Math.round(forecast));
-                vals[2].textContent = atRisk + ' Deals';
-                vals[3].textContent = overdue + ' Tasks';
+                var out = [fmtM(total), fmtM(Math.round(forecast)), atRisk + ' Deals', overdue + ' Tasks'];
+                for (var i = 0; i < 4; i++) {
+                  if (vals[i].textContent !== out[i]) vals[i].textContent = out[i];
+                }
               }
-            } catch (e) {}
-          }).observe(content, { childList: true, subtree: true });
+            } catch (e) { /* ignore */ }
+            obs.observe(content, { childList: true, subtree: true });   // ฟังต่อ
+          });
+          obs.observe(content, { childList: true, subtree: true });
         }
       }
 
