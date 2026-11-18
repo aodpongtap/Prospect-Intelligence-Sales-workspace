@@ -70,33 +70,31 @@
   </script>
   <script src="assets/auth-sheets.js?v=3"></script>
   <script>
-    // Static auth (GitHub Pages / เปิดไฟล์ในเครื่อง): บังคับล็อกอิน + เมนู User Management
-    (function () {
-      var host = location.hostname;
-      var isStatic = location.protocol === 'file:' || host === '' || /(^|\.)github\.io$/.test(host);
-      if (!isStatic || !window.PIAuth) return;
-
-      var me = PIAuth.session();
-      if (!me) { location.replace('login.html'); return; }
+    // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
+    window.__applyMe__ = function (rawMe, opts) {
+      opts = opts || {};
+      rawMe = rawMe || {};
+      var me = {
+        email: rawMe.email,
+        name: String(rawMe.name || '').trim(),
+        level: String(rawMe.level || 'viewer').toLowerCase(),
+        isAdmin: rawMe.isAdmin === true || String(rawMe.level || '').toLowerCase() === 'admin'
+      };
 
       // เก็บข้อมูลผู้ใช้ไว้ให้สคริปต์ถัดไปใช้กรองข้อมูล (ต้องมาก่อน mock data)
-      window.__ME__ = {
-        email: me.email,
-        name: String(me.name || '').trim(),
-        level: String(me.level || 'viewer').toLowerCase(),
-        isAdmin: PIAuth.isAdmin(me)
-      };
+      window.__ME__ = me;
 
       var av = document.getElementById('avatar'); if (av) av.textContent = String(me.email).substring(0, 2).toUpperCase();
       var nm = document.getElementById('meName'); if (nm) nm.textContent = me.name || me.email;
       var rl = document.getElementById('meRole'); if (rl) rl.textContent = 'สิทธิ์: ' + String(me.level).toUpperCase();
 
-      if (PIAuth.isAdmin(me)) {
+      if (me.isAdmin) {
         var nav = document.getElementById('navList');
         if (nav) {
           var a = document.createElement('a');
           a.className = 'nav-item';
-          a.href = 'users.html';
+          a.href = opts.usersUrl || 'users.html';
+          a.target = opts.usersTarget || '_self';
           a.style.textDecoration = 'none';
           a.innerHTML = '<i class="fa-solid fa-users-gear"></i>User Management';
           nav.appendChild(a);
@@ -170,7 +168,28 @@
         setTimeout(fixGreeting, 800);
       })();
       var prof = document.querySelector('.profile');
-      if (prof) { prof.style.cursor = 'pointer'; prof.title = 'ออกจากระบบ'; prof.addEventListener('click', function () { PIAuth.logout(); location.replace('login.html'); }); }
+      if (prof) {
+        prof.style.cursor = 'pointer';
+        prof.title = 'ออกจากระบบ';
+        prof.addEventListener('click', function () {
+          if (opts.onLogout) { opts.onLogout(); return; }
+          if (window.PIAuth) { PIAuth.logout(); location.replace('login.html'); }
+        });
+      }
+      return me;
+    };
+
+    // โหมด GitHub Pages / เปิดไฟล์ในเครื่อง: บังคับล็อกอินด้วย session ในเครื่อง
+    (function () {
+      var host = location.hostname;
+      var isStatic = location.protocol === 'file:' || host === '' || /(^|\.)github\.io$/.test(host);
+      if (!isStatic || !window.PIAuth) return;
+      var sess = PIAuth.session();
+      if (!sess) { location.replace('login.html'); return; }
+      window.__applyMe__(sess, {
+        usersUrl: 'users.html',
+        onLogout: function () { PIAuth.logout(); location.replace('login.html'); }
+      });
     })();
   </script>
   <script>

@@ -88,6 +88,13 @@ function renderPage_(file, title) {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+/**
+ * ใช้ฝังไฟล์ HTML อื่นใน template เช่น <?!= include('AuthSheets'); ?>
+ */
+function include(name) {
+  return HtmlService.createHtmlOutputFromFile(name).getContent();
+}
+
 function errorPage_(err) {
   var msg = (err && err.message) ? String(err.message) : String(err);
   var safe = msg.replace(/[&<>"]/g, function (c) {

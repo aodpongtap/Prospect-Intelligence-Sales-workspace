@@ -222,7 +222,11 @@ el('tb').addEventListener('click', function (e) {
 
 el('lo').addEventListener('click', function () {
   google.script.run.withSuccessHandler(function () {
-    try { localStorage.removeItem('tsr3_token'); localStorage.removeItem('tsr3_me'); } catch (e) {}
+    try {
+      localStorage.removeItem('tsr3_token');
+      localStorage.removeItem('tsr3_me');
+      localStorage.removeItem('pi_session_v2');
+    } catch (e) {}
     window.top.location.href = APP + '?page=login';
   }).logout(TOKEN);
 });

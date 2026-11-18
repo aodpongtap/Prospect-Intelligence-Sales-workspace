@@ -58,7 +58,15 @@ f.addEventListener('submit', function (e) {
         b.disabled = false; b.textContent = 'เข้าสู่ระบบ';
         return;
       }
-      try { localStorage.setItem('tsr3_token', res.token); localStorage.setItem('tsr3_me', JSON.stringify(res)); } catch (ex) {}
+      try {
+        localStorage.setItem('tsr3_token', res.token);
+        localStorage.setItem('tsr3_me', JSON.stringify(res));
+        // เก็บ session รูปแบบเดียวกับเวอร์ชัน GitHub Pages (ใช้ร่วมกันในหน้า Index)
+        localStorage.setItem('pi_session_v2', JSON.stringify({
+          email: res.email, name: res.name || '', level: res.level,
+          token: res.token, exp: Date.now() + 12 * 3600 * 1000
+        }));
+      } catch (ex) {}
       b.textContent = 'สำเร็จ กำลังพาเข้าสู่ระบบ...';
       window.top.location.href = APP;
     })

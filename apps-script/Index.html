@@ -46,8 +46,9 @@
     </aside>
     <main class="main">
       <header class="topbar"><div class="top-left"><button class="icon-btn mobile-menu" id="mobileMenu" aria-label="เปิดเมนู"><i class="fa-solid fa-bars"></i></button><span class="breadcrumb">Workspace <i class="fa-solid fa-chevron-right" style="font-size:8px;margin:0 6px"></i> <span id="crumbName">Dashboard</span></span></div>
-        <div class="top-actions"><button class="icon-btn" id="notificationBtn" title="การแจ้งเตือน"><i class="fa-regular fa-bell"></i><span class="badge-dot"></span></button><div class="profile"><div class="avatar" id="avatar">US</div><div class="profile-copy"><strong id="meName">ผู้ใช้</strong><small id="meRole">—</small></div></div></div>
+        <div class="top-actions"><button class="icon-btn" id="notificationBtn" title="การแจ้งเตือน"><i class="fa-regular fa-bell"></i><span class="badge-dot"></span></button><div class="profile"><div class="avatar" id="avatar">HS</div><div class="profile-copy"><strong id="meName">Head of Sales</strong><small id="meRole">Administrator</small></div></div></div>
       </header>
+      <div id="scopeBar" style="display:none"></div>
       <section class="content" id="content"></section>
     </main>
   </div>
@@ -60,48 +61,158 @@
     // (บน GitHub Pages / เปิดไฟล์ในเครื่อง จะข้ามไปเพื่อไม่ให้เกิด 404)
     (function () {
       var host = location.hostname;
-      var staticHost = location.protocol === 'file:' || host === '' ||
-        /(^|\.)github\.io$/.test(host) ||
-        /(^|\.)googleusercontent\.com$/.test(host) ||
-        /(^|\.)script\.google\.com$/.test(host);
+      var staticHost = location.protocol === 'file:' || host === '' || /(^|\.)github\.io$/.test(host);
       if (staticHost) { return; }
       var s = document.createElement('script');
       s.src = '/api/rbac.js';
       document.head.appendChild(s);
     })();
   </script>
+  <?!= include('AuthSheets'); ?>
   <script>
-    // Session bootstrap: ตรวจ token จากหน้า Login (ไม่มี = เด้งไปหน้า login)
-    (function () {
-      var APP = '<?= webAppUrl ?>';
-      var token = '';
-      try { token = localStorage.getItem('tsr3_token') || ''; } catch (e) { token = ''; }
-      if (!token) { window.top.location.href = APP + '?page=login'; return; }
-      google.script.run.withSuccessHandler(function (me) {
-        if (!me || !me.ok) {
-          try { localStorage.removeItem('tsr3_token'); } catch (e) {}
-          window.top.location.href = APP + '?page=login';
-          return;
+    // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
+    window.__applyMe__ = function (rawMe, opts) {
+      opts = opts || {};
+      rawMe = rawMe || {};
+      var me = {
+        email: rawMe.email,
+        name: String(rawMe.name || '').trim(),
+        level: String(rawMe.level || 'viewer').toLowerCase(),
+        isAdmin: rawMe.isAdmin === true || String(rawMe.level || '').toLowerCase() === 'admin'
+      };
+
+      // เก็บข้อมูลผู้ใช้ไว้ให้สคริปต์ถัดไปใช้กรองข้อมูล (ต้องมาก่อน mock data)
+      window.__ME__ = me;
+
+      var av = document.getElementById('avatar'); if (av) av.textContent = String(me.email).substring(0, 2).toUpperCase();
+      var nm = document.getElementById('meName'); if (nm) nm.textContent = me.name || me.email;
+      var rl = document.getElementById('meRole'); if (rl) rl.textContent = 'สิทธิ์: ' + String(me.level).toUpperCase();
+
+      if (me.isAdmin) {
+        var nav = document.getElementById('navList');
+        if (nav) {
+          var a = document.createElement('a');
+          a.className = 'nav-item';
+          a.href = opts.usersUrl || 'users.html';
+          a.target = opts.usersTarget || '_self';
+          a.style.textDecoration = 'none';
+          a.innerHTML = '<i class="fa-solid fa-users-gear"></i>User Management';
+          nav.appendChild(a);
         }
-        window.__ME__ = me;
-        var av = document.getElementById('avatar'); if (av) av.textContent = String(me.email || 'US').substring(0, 2).toUpperCase();
-        var nm = document.getElementById('meName'); if (nm) nm.textContent = me.name || me.email;
-        var rl = document.getElementById('meRole'); if (rl) rl.textContent = 'สิทธิ์: ' + String(me.level).toUpperCase();
-        if (me.isAdmin) {
-          var nav = document.getElementById('navList');
-          if (nav) {
-            var a = document.createElement('a');
-            a.className = 'nav-item';
-            a.href = APP + '?page=users';
-            a.target = '_top';
-            a.style.textDecoration = 'none';
-            a.innerHTML = '<i class="fa-solid fa-users-gear"></i>User Management';
-            nav.appendChild(a);
+      }
+
+      // สิทธิ์ Sale: แสดงเฉพาะเมนูที่เกี่ยวกับงานขาย
+      if (String(me.level).toLowerCase() === 'sale') {
+        var allow = ['dashboard', 'sales'];
+        var navList = document.getElementById('navList');
+        if (navList) {
+          Array.prototype.slice.call(navList.querySelectorAll('[data-page]')).forEach(function (el) {
+            if (allow.indexOf(el.getAttribute('data-page')) < 0) el.remove();
+          });
+        }
+        // ซ่อน panel ที่ไม่เกี่ยวกับงานขาย (เช่น Alerts งานบริการ) หลัง render
+        var content = document.getElementById('content');
+        if (content && window.MutationObserver) {
+          var obs = new MutationObserver(function () {
+            obs.disconnect();               // กัน loop: หยุดฟังชั่วคราวก่อนแก้ DOM
+            try {
+              Array.prototype.slice.call(content.querySelectorAll('.panel')).forEach(function (p) {
+                var t = p.querySelector('.panel-title');
+                if (t && /Alerts|Priority Actions/i.test(t.textContent)) p.remove();
+              });
+              // คำนวณ KPI จากดีลของตัวเอง
+              var vals = content.querySelectorAll('.kpi-value');
+              if (vals.length >= 4) {
+                var total = 0, forecast = 0, atRisk = 0, overdue = 0;
+                deals.forEach(function (d) {
+                  total += Number(d.value || 0);
+                  forecast += Number(d.value || 0) * Number(d.probability || 0) / 100;
+                  if (String(d.status) === 'At Risk') atRisk++;
+                  if (!d.nextAction) overdue++;
+                });
+                var fmtM = function (n) { return '฿' + Number(n).toLocaleString('th-TH'); };
+                var out = [fmtM(total), fmtM(Math.round(forecast)), atRisk + ' Deals', overdue + ' Tasks'];
+                for (var i = 0; i < 4; i++) {
+                  if (vals[i].textContent !== out[i]) vals[i].textContent = out[i];
+                }
+              }
+              // Sale: ซ่อนตัวเลขเทียบท้องตลาด (ข้อมูลสมมติ) ที่ไม่เกี่ยวกับดีลของตัวเอง
+              if (window.__ME__ && String(window.__ME__.level).toLowerCase() === 'sale') {
+                Array.prototype.slice.call(content.querySelectorAll('.kpi-foot')).forEach(function (f) { f.remove(); });
+              }
+            } catch (e) { /* ignore */ }
+            obs.observe(content, { childList: true, subtree: true });   // ฟังต่อ
+          });
+          obs.observe(content, { childList: true, subtree: true });
+        }
+      }
+
+      // ปรับคำทักทายตามสิทธิ์: "สวัสดี, Head of Sales" → "สวัสดี, Sale"
+      (function () {
+        var labels = { sale: 'Sale', admin: 'Admin', editor: 'Editor', viewer: 'Viewer' };
+        var want = 'สวัสดี, ' + (labels[String(me.level).toLowerCase()] || me.level);
+        var content = document.getElementById('content');
+        if (!content) return;
+        function fixGreeting() {
+          var h1 = content.querySelector('h1');
+          if (!h1) return;
+          var t = h1.textContent || '';
+          if (t.indexOf('Head of Sales') >= 0 || /^สวัสดี/.test(t)) {
+            if (t !== want) h1.textContent = want;
           }
         }
-      }).withFailureHandler(function () {
+        if (window.MutationObserver) {
+          new MutationObserver(fixGreeting).observe(content, { childList: true, subtree: true });
+        }
+        document.addEventListener('DOMContentLoaded', fixGreeting);
+        setTimeout(fixGreeting, 800);
+      })();
+      var prof = document.querySelector('.profile');
+      if (prof) {
+        prof.style.cursor = 'pointer';
+        prof.title = 'ออกจากระบบ';
+        prof.addEventListener('click', function () {
+          if (opts.onLogout) { opts.onLogout(); return; }
+          if (window.PIAuth) { PIAuth.logout(); location.replace('login.html'); }
+        });
+      }
+      return me;
+    };
+
+    // โหมด Google Apps Script: ตรวจ token จากหน้า Login (google.script.run)
+    (function () {
+      var APP = '<?= webAppUrl ?>';
+      var sess = (window.PIAuth && PIAuth.session) ? PIAuth.session() : null;
+      var token = '';
+      try { token = localStorage.getItem('tsr3_token') || ''; } catch (e) { token = ''; }
+      if (!token && sess && sess.token) token = sess.token;
+
+      var logout = function () {
+        try { localStorage.removeItem('tsr3_token'); } catch (e) {}
+        try { localStorage.removeItem('pi_session_v2'); } catch (e) {}
         window.top.location.href = APP + '?page=login';
-      }).getMe(token);
+      };
+
+      if (!token) { logout(); return; }
+
+      // มี session ในเครื่องแล้ว → แสดงผลได้ทันที (ไม่ต้องรอ server)
+      if (sess && sess.token === token && sess.email) {
+        window.__applyMe__(sess, { usersUrl: APP + '?page=users', usersTarget: '_top', onLogout: logout });
+        return;
+      }
+
+      google.script.run.withSuccessHandler(function (r) {
+        if (!r || !r.ok) { logout(); return; }
+        var prof = { email: r.email, name: r.name || '', level: r.level };
+        try {
+          localStorage.setItem('pi_session_v2', JSON.stringify({
+            email: prof.email, name: prof.name, level: prof.level,
+            token: token, exp: Date.now() + 12 * 3600 * 1000
+          }));
+        } catch (e) {}
+        window.__applyMe__(prof, { usersUrl: APP + '?page=users', usersTarget: '_top', onLogout: logout });
+        try { render(); } catch (e) {}
+      }).withFailureHandler(logout).getMe(token);
     })();
   </script>
   <script>
@@ -135,13 +246,147 @@
       {id:"T-2407",customer:"SecureLife",product:"SOC Monitoring",issue:"แจ้งเตือนผิดปกติ",priority:"Critical",tech:"ธวัชชัย",open:"2026-10-06",sla:"2026-10-07",status:"กำลังดำเนินการ",next:"ตรวจสอบ Log ระบบ",health:61},
       {id:"T-2408",customer:"Bright Retail",product:"Endpoint Security",issue:"ต่ออายุ License",priority:"Low",tech:"พัชรี",open:"2026-10-01",sla:"2026-10-15",status:"รอลูกค้ายืนยัน",next:"ส่งใบเสนอราคาต่ออายุ",health:93}
     ];
+    // ===== Data scoping: ผู้ใช้ทั่วไปเห็นเฉพาะงานของตัวเอง (Admin เห็นทั้งหมด) =====
+    (function () {
+      var me = window.__ME__;
+      if (!me || me.isAdmin) return;   // ไม่มี session (เช่นโหมดเซิร์ฟเวอร์) หรือเป็น Admin → ไม่กรอง
+
+      var mine = String(me.name || '').trim().toLowerCase();
+      function keepOnly(arr, field) {
+        for (var i = arr.length - 1; i >= 0; i--) {
+          var v = String(arr[i][field] || '').trim().toLowerCase();
+          if (!mine || v.indexOf(mine) < 0) arr.splice(i, 1);
+        }
+      }
+      keepOnly(deals, 'owner');
+      keepOnly(projects, 'owner');
+      keepOnly(tickets, 'tech');
+      window.__SCOPED__ = true;
+
+      document.addEventListener('DOMContentLoaded', function () {
+        var bar = document.getElementById('scopeBar');
+        if (!bar) return;
+        bar.style.display = 'block';
+        bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;' +
+          'background:#eff6ff;border:1px solid #dbeafe;color:#1e40af;display:flex;gap:8px;align-items:center';
+        bar.innerHTML = mine
+          ? '<i class="fa-solid fa-user-lock"></i> แสดงเฉพาะงานของคุณ: <strong>' + me.name + '</strong>' +
+            ' <span style="color:#64748b">(' + (deals.length + projects.length + tickets.length) + ' รายการ)</span>'
+          : '<i class="fa-solid fa-triangle-exclamation"></i> ยังไม่ได้กำหนดชื่อผู้รับผิดชอบงานให้บัญชีนี้ — ' +
+            'กรุณาแจ้ง Admin ให้เพิ่มชื่อของท่านในหน้า User Management';
+      });
+    })();
+
+    // ===== โหมด static + Google Sheets: ใช้ดีลจริงจาก Sheet (Sale เห็นเฉพาะของตัวเอง) =====
+    (function () {
+      var me = window.__ME__;
+      if (!me || !window.PIAuth || !PIAuth.listDeals) return;
+
+      var canFill = me.isAdmin || me.level === 'sale' || me.level === 'editor';
+
+      function paint(list) {
+        deals.length = 0;
+        list.forEach(function (d) {
+          deals.push({
+            id: d.id, name: d.name, customer: d.customer,
+            owner: d.ownerName || d.ownerEmail, team: '-',
+            value: Number(d.value || 0), stage: d.stage || 'Prospect',
+            probability: Number(d.probability || 0), close: d.close || '',
+            lastActivity: (d.updatedAt || d.createdAt || '').slice(0, 10),
+            nextAction: d.nextAction || '', status: d.status || 'Healthy', activity: []
+          });
+        });
+        try { render(); } catch (e) {}
+
+        var bar = document.getElementById('scopeBar');
+        if (!bar) return;
+        bar.style.display = 'block';
+        if (me.isAdmin) {
+          bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#ecfdf3;border:1px solid #d1fae5;color:#15803d';
+          bar.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Admin — เห็นดีลทั้งหมด <strong>' + list.length + '</strong> รายการ (ข้อมูลจาก Google Sheets)';
+        } else {
+          bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#eff6ff;border:1px solid #dbeafe;color:#1e40af';
+          bar.innerHTML = '<i class="fa-solid fa-user-lock"></i> เห็นเฉพาะดีลของคุณ: <strong>' + (me.name || me.email) + '</strong> · <strong>' + list.length + '</strong> รายการ';
+        }
+      }
+
+      PIAuth.listDeals().then(paint).catch(function (e) {
+        var bar = document.getElementById('scopeBar');
+        if (bar) {
+          bar.style.display = 'block';
+          bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412';
+          bar.textContent = 'โหลดดีลจาก Google Sheets ไม่สำเร็จ: ' + e.message;
+        }
+      });
+
+      if (!canFill) return;
+
+      document.addEventListener('DOMContentLoaded', function () {
+        var btn = document.createElement('button');
+        btn.innerHTML = '<i class="fa-solid fa-plus"></i> เพิ่มดีลของฉัน';
+        btn.style.cssText = 'position:fixed;right:22px;bottom:22px;z-index:80;border:0;border-radius:24px;padding:13px 18px;' +
+          'background:#2563EB;color:#fff;font:500 13px Prompt,sans-serif;box-shadow:0 10px 24px rgba(37,99,235,.35);cursor:pointer';
+        document.body.appendChild(btn);
+
+        var box = document.createElement('div');
+        box.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;place-items:center;z-index:90;padding:16px';
+        box.innerHTML =
+          '<form id="dealForm" style="background:#fff;border-radius:14px;padding:22px;width:min(520px,100%);font-family:Prompt,sans-serif">' +
+          '<h3 style="margin:0 0 4px;color:#0F2B46;font-size:16px">เพิ่มดีลของฉัน</h3>' +
+          '<div style="color:#667085;font-size:11px;margin-bottom:14px">บันทึกลง Google Sheets ในชื่อ ' + (me.name || me.email) + '</div>' +
+          '<div style="display:grid;gap:10px">' +
+          '<label style="font-size:11px;color:#475467">ชื่องาน/ดีล<input name="name" required style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
+          '<label style="font-size:11px;color:#475467">ลูกค้า<input name="customer" required style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+          '<label style="font-size:11px;color:#475467">มูลค่า (บาท)<input name="value" type="number" min="0" value="0" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
+          '<label style="font-size:11px;color:#475467">โอกาสปิด (%)<input name="probability" type="number" min="0" max="100" value="30" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
+          '</div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+          '<label style="font-size:11px;color:#475467">สถานะดีล<select name="stage" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px">' +
+          '<option>Prospect</option><option>Qualified</option><option>Proposal</option><option>Negotiation</option><option>Won</option><option>Lost</option></select></label>' +
+          '<label style="font-size:11px;color:#475467">คาดว่าจะปิด<input name="close" type="date" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
+          '</div>' +
+          '<label style="font-size:11px;color:#475467">สิ่งที่ต้องทำต่อ<input name="nextAction" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
+          '<div id="dealMsg" style="font-size:12px;color:#b91c1c;display:none"></div>' +
+          '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">' +
+          '<button type="button" id="dealCancel" style="border:1px solid #E5EAF0;background:#fff;border-radius:8px;padding:9px 14px;font:500 12px Prompt;cursor:pointer">ยกเลิก</button>' +
+          '<button type="submit" style="border:0;background:#2563EB;color:#fff;border-radius:8px;padding:9px 16px;font:500 12px Prompt;cursor:pointer">บันทึก</button>' +
+          '</div></div></form>';
+        document.body.appendChild(box);
+
+        btn.addEventListener('click', function () { box.style.display = 'grid'; });
+        document.getElementById('dealCancel').addEventListener('click', function () { box.style.display = 'none'; });
+
+        document.getElementById('dealForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var f = e.target, msg = document.getElementById('dealMsg');
+          msg.style.display = 'none';
+          var d = {
+            name: f.name.value.trim(), customer: f.customer.value.trim(),
+            value: f.value.value, probability: f.probability.value,
+            stage: f.stage.value, close: f.close.value,
+            nextAction: f.nextAction.value.trim(), status: 'Healthy'
+          };
+          PIAuth.addDeal(d).then(function (r) {
+            box.style.display = 'none';
+            f.reset();
+            paint(r.deals || []);
+          }).catch(function (err) {
+            msg.textContent = err.message || String(err);
+            msg.style.display = 'block';
+          });
+        });
+      });
+    })();
+
+
     const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",projects:"Project Tracking",service:"After-Sale Service",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
     const stageNames=["Planning","Sales Handover","Installation","Testing & Acceptance","Completed"];
     const stageLabels=["Prospect","Qualified","Proposal","Negotiation","Won","Lost"];
     let currentPage="dashboard",charts=[],sortDesc=true,toastTimer;
     const money=n=>"฿"+Number(n).toLocaleString("th-TH");
     const shortMoney=n=>n>=1000000?"฿"+(n/1000000).toFixed(1)+"M":"฿"+(n/1000).toFixed(0)+"K";
-    const thaiDate=date=>new Date(date+"T00:00:00").toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});
+    const thaiDate=date=>{if(!date)return '—';const d=new Date(String(date).length<=10?date+"T00:00:00":date);return isNaN(d.getTime())?'—':d.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});};
     const dayDiff=date=>Math.floor((new Date("2026-10-07T00:00:00")-new Date(date+"T00:00:00"))/86400000);
     const statusClass=status=>status==="Healthy"?"healthy":status==="Need Attention"?"attention":status==="At Risk"?"at-risk":"on-hold";
     function riskScore(d){let score=0;const inactive=dayDiff(d.lastActivity);if(inactive>7)score+=Math.min(30,15+(inactive-7));const closeDays=Math.ceil((new Date(d.close+"T00:00:00")-new Date("2026-10-07T00:00:00"))/86400000);if(closeDays<=14&&["Prospect","Qualified"].includes(d.stage))score+=25;if(d.probability<40)score+=20;if(!d.nextAction)score+=15;if(d.status==="On Hold")score+=20;return Math.min(100,score)}
