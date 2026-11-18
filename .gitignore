@@ -1,0 +1,13 @@
+# dependencies
+node_modules/
+.gradle/
+build/
+
+# logs & temp
+*.log
+.DS_Store
+Thumbs.db
+
+# editor
+.vscode/
+.idea/

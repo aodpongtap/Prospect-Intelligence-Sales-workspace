@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">SAFE1210</string>
+    <string name="store_url">https://safe1210.com/</string>
+    <string name="loading">กำลังโหลดร้านค้า...</string>
+    <string name="load_failed_title">เชื่อมต่อร้านค้าไม่ได้</string>
+    <string name="load_failed_message">ตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง</string>
+    <string name="retry">ลองอีกครั้ง</string>
+    <string name="back">ย้อนกลับ</string>
+    <string name="reload">โหลดใหม่</string>
+</resources>
