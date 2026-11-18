@@ -65,6 +65,14 @@ jobs:
         run: |
           ssh -o BatchMode=yes "$SSH_USER@$SSH_HOST" 'bash /home/mngr-tom/sync-tsr3.sh'
 
+      - name: Update auth backend pages (login / user management)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh -o BatchMode=yes "$SSH_USER@$SSH_HOST" \
+            "rsync -a /home/mngr-tom/.tsr3-deploy/auth-backend/public/ /home/mngr-tom/tsr3-auth/public/ && pm2 restart tsr3-auth --update-env > /dev/null && echo 'auth pages synced + tsr3-auth restarted'"
+
       - name: Smoke test
         run: |
           sleep 2
