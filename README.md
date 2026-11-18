@@ -8,6 +8,30 @@
 **User Management (Apps Script):** https://script.google.com/macros/s/AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-/exec?page=users
 **GitHub Project board (แผนงาน):** https://github.com/users/aodpongtap/projects/1
 
+**🆕 TSR Partner Management (CRM คู่ค้า):** https://aodpongtap.github.io/Prospect-Intelligence-Sales-workspace/partner-crm/
+**Partner Care Center (ดูแล Partner + ติดตามทีมขาย):** https://aodpongtap.github.io/Prospect-Intelligence-Sales-workspace/partner-care/
+
+## เว็บ 3 ชุดในรีโปนี้
+
+| ชุด | Path | ใช้ทำอะไร |
+|---|---|---|
+| Prospect Intelligence Sales workspace | `index.html` | ติดตามดีล/Pipeline ของทีมขาย · ล็อกอินด้วย Google Sheets |
+| Partner Care Center | `partner-care/index.html` | ดูแล Partner (สุขภาพความสัมพันธ์) + ภาพรวมทีมขาย |
+| **TSR Partner Management (CRM)** | `partner-crm/index.html` | ระบบบริหารคู่ค้าเต็มรูป: Tiering 6 ระดับ, GP/Commission Engine, Volume Rebate, Onboarding Kanban, สิทธิประโยชน์, KPI ผู้บริหาร, Admin ตั้งค่าได้ไม่ต้องแก้โค้ด |
+
+### TSR Partner Management — โครงสร้างข้อมูล (localStorage key `tsr_partner_crm_v1`)
+
+```
+settings : vat, months, target{units,value}, tiers[6], products[8]{gp,com}, rebate[{pct,rebate}], stages[6]
+partners : id, name, owner, phone, joined, sellOut, note
+orders   : id, partnerId, date, product, qty, price, discount, pay(cash|installment), status
+pipeline : id, name, stage, owner, due, note
+privs    : id, partnerId, type(Lead|Demo|Content|Business Plan), detail, date, status
+```
+
+สูตรที่ใช้: `net = qty×price×(1−discount%)` · `VAT = net×vat%` · `GP = net×gp%` · `Commission = net×com%` · Tier = ยอด In-Vat/หน่วย ของเดือนปัจจุบันที่ถึงเกณฑ์สูงสุด · Rebate = ยอดซื้อจริงหลังหักส่วนลด (ไม่รวม VAT) × อัตราตาม % ของเป้า (≥120% → 0.5%, ≥130% → 1%)
+
+
 Dashboard สำหรับทีมขาย: ติดตาม Prospect, Pipeline, Project, After-Sale Service และ Customer Intelligence
 
 ## โครงสร้าง
