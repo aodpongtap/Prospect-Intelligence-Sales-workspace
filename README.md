@@ -1,5 +1,10 @@
 # Prospect Intelligence — Sales workspace
 
+[![Deploy to server](https://github.com/aodpongtap/Prospect-Intelligence-Sales-workspace/actions/workflows/deploy.yml/badge.svg)](https://github.com/aodpongtap/Prospect-Intelligence-Sales-workspace/actions/workflows/deploy.yml)
+
+**Live demo (GitHub Pages):** https://aodpongtap.github.io/Prospect-Intelligence-Sales-workspace/
+**Production (มี login):** http://203.146.170.85:9501/
+
 Dashboard สำหรับทีมขาย: ติดตาม Prospect, Pipeline, Project, After-Sale Service และ Customer Intelligence
 
 ## โครงสร้าง
