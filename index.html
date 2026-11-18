@@ -120,13 +120,30 @@
               var t = p.querySelector('.panel-title');
               if (t && /Alerts/i.test(t.textContent)) p.remove();
             });
-            var h1 = content.querySelector('h1');
-            if (h1 && h1.textContent.indexOf('Head of Sales') >= 0) {
-              h1.textContent = 'สวัสดี, ' + (me.name || me.email);
-            }
           }).observe(content, { childList: true, subtree: true });
         }
       }
+
+      // ปรับคำทักทายตามสิทธิ์: "สวัสดี, Head of Sales" → "สวัสดี, Sale"
+      (function () {
+        var labels = { sale: 'Sale', admin: 'Admin', editor: 'Editor', viewer: 'Viewer' };
+        var want = 'สวัสดี, ' + (labels[String(me.level).toLowerCase()] || me.level);
+        var content = document.getElementById('content');
+        if (!content) return;
+        function fixGreeting() {
+          var h1 = content.querySelector('h1');
+          if (!h1) return;
+          var t = h1.textContent || '';
+          if (t.indexOf('Head of Sales') >= 0 || /^สวัสดี/.test(t)) {
+            if (t !== want) h1.textContent = want;
+          }
+        }
+        if (window.MutationObserver) {
+          new MutationObserver(fixGreeting).observe(content, { childList: true, subtree: true });
+        }
+        document.addEventListener('DOMContentLoaded', fixGreeting);
+        setTimeout(fixGreeting, 800);
+      })();
       var prof = document.querySelector('.profile');
       if (prof) { prof.style.cursor = 'pointer'; prof.title = 'ออกจากระบบ'; prof.addEventListener('click', function () { PIAuth.logout(); location.replace('login.html'); }); }
     })();
