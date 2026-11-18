@@ -118,8 +118,26 @@
           new MutationObserver(function () {
             Array.prototype.slice.call(content.querySelectorAll('.panel')).forEach(function (p) {
               var t = p.querySelector('.panel-title');
-              if (t && /Alerts/i.test(t.textContent)) p.remove();
+              if (t && /Alerts|Priority Actions/i.test(t.textContent)) p.remove();
             });
+            // คำนวณ KPI จากดีลของตัวเอง
+            try {
+              var vals = content.querySelectorAll('.kpi-value');
+              if (vals.length >= 4) {
+                var total = 0, forecast = 0, atRisk = 0, overdue = 0;
+                deals.forEach(function (d) {
+                  total += Number(d.value || 0);
+                  forecast += Number(d.value || 0) * Number(d.probability || 0) / 100;
+                  if (String(d.status) === 'At Risk') atRisk++;
+                  if (!d.nextAction) overdue++;
+                });
+                var fmtM = function (n) { return '฿' + Number(n).toLocaleString('th-TH'); };
+                vals[0].textContent = fmtM(total);
+                vals[1].textContent = fmtM(Math.round(forecast));
+                vals[2].textContent = atRisk + ' Deals';
+                vals[3].textContent = overdue + ' Tasks';
+              }
+            } catch (e) {}
           }).observe(content, { childList: true, subtree: true });
         }
       }
