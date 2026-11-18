@@ -36,7 +36,6 @@
       <nav class="nav-list" id="navList">
         <button class="nav-item active" data-page="dashboard"><i class="fa-solid fa-grid-2"></i>Dashboard</button>
         <button class="nav-item" data-page="sales"><i class="fa-solid fa-bullseye"></i>Sale Monitor</button>
-        <button class="nav-item" data-page="prompts"><i class="fa-solid fa-wand-magic-sparkles"></i>AI Prompts</button>
         <button class="nav-item" data-page="projects"><i class="fa-solid fa-diagram-project"></i>Project Tracking</button>
         <button class="nav-item" data-page="service"><i class="fa-solid fa-headset"></i>After-Sale Service</button>
         <button class="nav-item" data-page="intelligence"><i class="fa-solid fa-brain"></i>Customer Intelligence</button>
@@ -62,7 +61,9 @@
     // (บน GitHub Pages / เปิดไฟล์ในเครื่อง จะข้ามไปเพื่อไม่ให้เกิด 404)
     (function () {
       var host = location.hostname;
-      var staticHost = location.protocol === 'file:' || host === '' || /(^|\.)github\.io$/.test(host);
+      var staticHost = location.protocol === 'file:' || host === '' ||
+        /(^|\.)github\.io$/.test(host) ||
+        /^(localhost|127\.0\.0\.1|\[::1\])$/.test(host);
       if (staticHost) { return; }
       var s = document.createElement('script');
       s.src = '/api/rbac.js';
@@ -104,7 +105,7 @@
 
       // สิทธิ์ Sale: แสดงเฉพาะเมนูที่เกี่ยวกับงานขาย
       if (String(me.level).toLowerCase() === 'sale') {
-        var allow = ['dashboard', 'sales', 'prompts'];
+        var allow = ['dashboard', 'sales'];
         var navList = document.getElementById('navList');
         if (navList) {
           Array.prototype.slice.call(navList.querySelectorAll('[data-page]')).forEach(function (el) {
@@ -180,10 +181,12 @@
       return me;
     };
 
-    // โหมด GitHub Pages / เปิดไฟล์ในเครื่อง: บังคับล็อกอินด้วย session ในเครื่อง
+    // โหมด GitHub Pages / เปิดไฟล์ในเครื่อง / dev server: บังคับล็อกอินด้วย session ในเครื่อง
     (function () {
       var host = location.hostname;
-      var isStatic = location.protocol === 'file:' || host === '' || /(^|\.)github\.io$/.test(host);
+      var isStatic = location.protocol === 'file:' || host === '' ||
+        /(^|\.)github\.io$/.test(host) ||
+        /^(localhost|127\.0\.0\.1|\[::1\])$/.test(host);
       if (!isStatic || !window.PIAuth) return;
       var sess = PIAuth.session();
       if (!sess) { location.replace('login.html'); return; }
@@ -358,7 +361,7 @@
     })();
 
 
-    const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",prompts:"AI Prompts",projects:"Project Tracking",service:"After-Sale Service",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
+    const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",projects:"Project Tracking",service:"After-Sale Service",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
     const stageNames=["Planning","Sales Handover","Installation","Testing & Acceptance","Completed"];
     const stageLabels=["Prospect","Qualified","Proposal","Negotiation","Won","Lost"];
     let currentPage="dashboard",charts=[],sortDesc=true,toastTimer;
@@ -378,7 +381,7 @@
     function btn(label,action,icon="",primary=false,extra=""){return `<button class="btn ${primary?"btn-primary":""}" data-action="${action}" ${extra}>${icon?`<i class="${icon}"></i>`:""}${label}</button>`}
     function destroyCharts(){charts.forEach(c=>c.destroy());charts=[]}
     function makeChart(id,config){const canvas=document.getElementById(id);if(canvas&&window.Chart)charts.push(new Chart(canvas,config))}
-    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:renderDashboard,sales:renderSales,prompts:renderPrompts,projects:renderProjects,service:renderService,intelligence:renderIntelligence,reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard")drawDashboardCharts();if(currentPage==="intelligence")drawHealthChart();if(currentPage==="reports")drawReportCharts()}
+    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:renderDashboard,sales:renderSales,projects:renderProjects,service:renderService,intelligence:renderIntelligence,reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard")drawDashboardCharts();if(currentPage==="intelligence")drawHealthChart();if(currentPage==="reports")drawReportCharts()}
 
     /* ===== JavaScript: Dashboard page ===== */
     function renderDashboard(){const today=new Date().toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"});const rows=[...deals].sort((a,b)=>riskScore(b)-riskScore(a)).slice(0,5).map(d=>`<tr class="clickable" data-deal="${d.id}"><td><span class="deal-name">${d.name}</span><br><span class="muted">${d.customer}</span></td><td>${money(d.value)}</td><td>${d.owner}</td><td><span class="risk-pill ${riskClass(riskScore(d))}">${riskScore(d)} / 100</span></td><td>${thaiDate(d.close)}</td></tr>`).join("");return `${pageHead("สวัสดี, Head of Sales",today,btn("ดู Pipeline","go-sales","fa-solid fa-arrow-right",true))}<div class="grid kpi-grid">${kpi("Sales Pipeline","฿12,450,000","fa-solid fa-filter","#2563EB","+12.5%")}${kpi("Forecast เดือนนี้","฿4,850,000","fa-solid fa-chart-column","#16A34A","+8.2%")}${kpi("Deals at Risk","8 Deals","fa-solid fa-triangle-exclamation","#F59E0B","+2 Deals","down")}${kpi("Overdue Actions","14 Tasks","fa-solid fa-clock","#DC2626","-6 Tasks")}</div><div class="grid cols-2" style="margin-bottom:15px">${panel("Pipeline แยกตาม Stage",`<div class="chart-wrap"><canvas id="pipelineChart"></canvas></div>`,"มูลค่าดีลตามสถานะปัจจุบัน")}${panel("Sales Forecast รายเดือน",`<div class="chart-wrap"><canvas id="forecastChart"></canvas></div>`,"Actual และ Forecast")}</div><div class="grid cols-2">${panel("Deals ที่ต้องติดตามด่วน",`<div class="table-wrap"><table><thead><tr><th>Deal / Customer</th><th>มูลค่า</th><th>Owner</th><th>Risk Score</th><th>Close</th></tr></thead><tbody>${rows}</tbody></table></div>`,"เรียงตาม Risk Score สูงสุด")}<div class="grid" style="gap:15px">${panel("Today's Priority Actions",`<div class="action-list"><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>ติดตาม Proposal: Cloud Migration Phase 2</strong><small>พิมพ์ชนก · <span class="due">วันนี้ 11:00</span></small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>ยืนยันงบประมาณระบบ Smart Factory</strong><small>กิตติพงษ์ · วันนี้ 14:30</small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>โทรติดตาม Network Infrastructure</strong><small>อรทัย · <span class="due">เกินกำหนด 2 วัน</span></small></div></div></div>`)}${panel("Alerts",`<div class="alert-list"><div class="alert"><i class="fa-solid fa-clock"></i><span>3 Deals ไม่มีการติดต่อเกิน 7 วัน</span></div><div class="alert red"><i class="fa-solid fa-file-circle-exclamation"></i><span>2 Deals มีโอกาสปิดในเดือนนี้ แต่ยังไม่มี Proposal</span></div><div class="alert blue"><i class="fa-solid fa-headset"></i><span>4 Service Tickets ใกล้เกิน SLA</span></div></div>`)}</div></div>`}
@@ -560,7 +563,7 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
     document.getElementById("notificationBtn").addEventListener("click",()=>toast("คุณมีการแจ้งเตือนใหม่ 3 รายการ"));
     document.getElementById("modalBackdrop").addEventListener("click",e=>{if(e.target.id==="modalBackdrop"||e.target.closest("[data-close-modal]"))closeModal()});
     document.getElementById("content").addEventListener("input",e=>{if(e.target.id==="dealSearch")applyDealFilters()});
-    document.getElementById("content").addEventListener("change",e=>{if(["ownerFilter","teamFilter","stageFilter","riskFilter","periodFilter"].includes(e.target.id))applyDealFilters();if(e.target.id==="lineTicket")updateLinePreview();if(e.target.id==="pf3Deal")updatePrompt3()});
+    document.getElementById("content").addEventListener("change",e=>{if(["ownerFilter","teamFilter","stageFilter","riskFilter","periodFilter"].includes(e.target.id))applyDealFilters();if(e.target.id==="lineTicket")updateLinePreview()});
     document.getElementById("content").addEventListener("click",e=>{
       const row=e.target.closest("[data-deal]");if(row){openDeal(row.dataset.deal);return}
       const customer=e.target.closest("[data-customer]");if(customer){e.preventDefault();openCustomer(customer.dataset.customer);return}
@@ -568,8 +571,6 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
       if(e.target.closest("#sortRisk")){sortDesc=!sortDesc;applyDealFilters();return}
       const action=e.target.closest("[data-action]")?.dataset.action;if(!action)return;
       if(action==="go-sales"){currentPage="sales";render()}
-      else if(action==="copy-prompt"){const id=e.target.closest("[data-copy]")?.dataset.copy;if(id)copyPromptText(id)}
-      else if(action==="copy-all-prompts")copyAllPrompts()
       else if(action==="add-deal")showDealForm()
       else if(action==="refresh"){const button=e.target.closest("[data-action]");button.classList.add("loading");button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>กำลัง Refresh...';setTimeout(()=>{button.classList.remove("loading");render();toast("Refresh Data สำเร็จ")},1000)}
       else if(action==="export-deals")exportDeals()

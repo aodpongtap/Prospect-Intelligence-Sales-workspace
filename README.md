@@ -50,6 +50,17 @@ node server.js                                       # รัน (หรือ�
 - โฟลเดอร์ต้นทางบนเซิร์ฟเวอร์: `/home/mngr-tom/Test tsr - 3`
 - sync ขึ้น web root: `bash /home/mngr-tom/sync-tsr3.sh` (มี cron รันทุก 1 นาที)
 
+## สร้างไฟล์ HTML แบบ self-contained (`dist/`)
+
+```bash
+node tools/build-html.js      # รวม CSS/JS ลงในแต่ละหน้า → dist/index.html, login.html, users.html
+node tools/serve-dist.js 8123 # ทดสอบในเครื่อง → http://localhost:8123
+```
+
+- ไฟล์ใน `dist/` ไม่ต้องมีโฟลเดอร์ `assets/` (ฝัง `auth-sheets.js` ไปแล้ว)
+- มี `dist/Prospect-Intelligence-HTML.zip` พร้อมดาวน์โหลด/ส่งต่อ
+- ต้องเปิดผ่าน http(s) หรือโฮสต์ static (เบราว์เซอร์บล็อก fetch เมื่อเปิดด้วย `file://`)
+
 ## Google Apps Script Web App (`apps-script/`)
 
 โฮสต์บน Google แทน server — หน้าตา/สิทธิ์เหมือนเวอร์ชัน GitHub Pages ทุกอย่าง
