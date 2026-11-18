@@ -4,7 +4,8 @@
 
 **Live demo (GitHub Pages):** https://aodpongtap.github.io/Prospect-Intelligence-Sales-workspace/
 **Production (มี login):** http://203.146.170.85:9501/
-**Google Apps Script Web App (ล็อกอิน Google):** https://script.google.com/macros/s/AKfycbzWa-PSZJyZN4HZe1t0LxC5wfa2m9_FJxQ34d_Ochm1CFb2QIVb3E7qCpqjAbXZtqFY/exec
+**Google Apps Script Web App (ล็อกอิน Google):** https://script.google.com/macros/s/AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-/exec
+**User Management (Apps Script):** https://script.google.com/macros/s/AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-/exec?page=users
 
 Dashboard สำหรับทีมขาย: ติดตาม Prospect, Pipeline, Project, After-Sale Service และ Customer Intelligence
 
@@ -52,10 +53,18 @@ node server.js                                       # รัน (หรือ�
 
 โฮสต์บน Google แทน server — ล็อกอินด้วยบัญชี Google อัตโนมัติ (ไม่ต้องมี backend)
 
-- `Code.gs` — `doGet()` เสิร์ฟ `Index.html`, `getUserEmail()` คืนอีเมลผู้ใช้ที่ล็อกอิน
-- `appsscript.json` — `webapp: { executeAs: USER_DEPLOYING, access: ANYONE }` + scope `userinfo.email`
-- `Index.html` — dashboard (แสดงอีเมล Google ที่มุมขวา, ไม่โหลด `/api/rbac.js` บน Apps Script)
+- `Code.gs` — `doGet()` เสิร์ฟ `Index.html` (หรือ `Users.html` เมื่อ `?page=users`), `getUserEmail()`, `getUserLevel()`
+- `Users.html` — หน้า User Management (เรียกผ่าน `google.script.run`)
+- `appsscript.json` — `webapp: { executeAs: USER_DEPLOYING, access: ANYONE }` + scopes `userinfo.email`, `spreadsheets`, `drive.file`
+- `Index.html` — dashboard (แสดงอีเมล Google ที่มุมขวา, ไม่โหลด `/api/rbac.js` บน Apps Script, เพิ่มเมนู User Management ให้ Master Admin)
 - `.clasp.json` — ผูกกับโปรเจกต์ Apps Script ที่สร้างไว้
+
+### User Management บน Apps Script
+
+- เก็บผู้ใช้ใน Google Sheet ชื่อ **"Prospect Intelligence - Users"** (สร้างอัตโนมัติใน Drive ของเจ้าของสคริปต์)
+- คอลัมน์: `email | level | status | createdAt | lastLogin`
+- Master Admin = `aodpongtaptsr@gmail.com` (กำหนดตายตัว) — เพิ่ม/แก้สิทธิ์/เปิด-ปิด/ลบผู้ใช้ได้
+- ระดับสิทธิ์: `admin`, `editor`, `viewer` · สถานะ: `active`, `disabled`
 
 ```bash
 clasp login                    # บัญชี aodpongtaptsr@gmail.com

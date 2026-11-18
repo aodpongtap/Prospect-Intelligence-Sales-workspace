@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>User Management · Prospect Intelligence Sales workspace</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+<style>
+:root{--navy:#0F2B46;--blue:#2563EB;--green:#16A34A;--red:#DC2626;--bg:#F8FAFC;--ink:#182230;--muted:#667085;--line:#E5EAF0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Prompt",sans-serif;font-size:13px}
+.top{min-height:64px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 22px;flex-wrap:wrap}
+.brand{display:flex;gap:10px;align-items:center}.mark{width:34px;height:34px;border-radius:9px;background:var(--blue);display:grid;place-items:center}
+.brand strong{display:block;font-size:13px}.brand small{color:#9cb0c5;font-size:10px}
+.top a{color:#d8e2ee;text-decoration:none;font-size:12px;margin-left:14px}.top a:hover{color:#fff}
+.wrap{max-width:1080px;margin:22px auto;padding:0 16px}
+h1{font-size:20px;font-weight:600;color:var(--navy);margin:0}.subtitle{color:var(--muted);margin:4px 0 16px;font-size:12px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(15,43,70,.07);padding:16px;margin-bottom:16px}
+.panel h3{margin:0 0 12px;font-size:14px;font-weight:500}
+.fg{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:9px;align-items:end}
+label{display:block;font-size:10px;color:#475467;margin-bottom:5px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12px;background:#fff}
+.btn{border:1px solid var(--line);background:#fff;color:#344054;border-radius:8px;padding:8px 11px;font:inherit;font-size:11px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.btn:hover{border-color:#b7c5d6}.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn-danger{background:#fff1f2;border-color:#ffe4e6;color:var(--red)}
+.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:640px}
+th{font-size:10px;color:#667085;font-weight:500;background:#f8fafc;text-align:left;padding:9px}
+td{padding:9px;border-bottom:1px solid #eef1f5;font-size:12px}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px}
+.l-master{background:#0F2B46;color:#fff}.l-admin{background:#eff6ff;color:#1d4ed8}.l-editor{background:#ecfdf3;color:#15803d}.l-viewer{background:#f2f4f7;color:#475467}
+.on{color:var(--green)}.off{color:var(--red)}.acts{display:flex;gap:6px;flex-wrap:wrap}
+.msg{margin:0 0 12px;padding:9px 11px;border-radius:8px;font-size:12px;display:none}
+.msg.err{background:#fff1f2;border:1px solid #ffe4e6;color:#b91c1c;display:block}
+.msg.ok{background:#ecfdf3;border:1px solid #d1fae5;color:#15803d;display:block}
+.note{background:#eff6ff;border:1px solid #dbeafe;color:#1e40af;padding:10px 12px;border-radius:8px;font-size:11px;line-height:1.6;margin-bottom:14px}
+.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.legend div{border:1px solid var(--line);border-radius:9px;padding:9px;font-size:11px;color:#475467;line-height:1.55}
+@media(max-width:760px){.fg{grid-template-columns:1fr}.legend{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">
+    <div class="mark"><i class="fa-solid fa-users-gear"></i></div>
+    <div><strong>User Management</strong><small>Prospect Intelligence Sales workspace</small></div>
+  </div>
+  <div>
+    <span id="me" style="font-size:11px;color:#9cb0c5"></span>
+    <a href="?page=index"><i class="fa-solid fa-arrow-left"></i> กลับ Dashboard</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1>จัดการผู้ใช้งาน</h1>
+  <div class="subtitle">เฉพาะ Master Admin: เพิ่มอีเมล กำหนดระดับสิทธิ์ เปิด/ปิดการใช้งาน</div>
+
+  <div class="note">
+    <strong>หมายเหตุ:</strong> ระบบนี้ใช้บัญชี Google เป็นตัวล็อกอิน — ผู้ใช้ต้องมีอีเมลในรายการด้านล่างจึงมีสิทธิ์ตามระดับที่กำหนด
+    ข้อมูลถูกเก็บใน Google Sheet (สร้างอัตโนมัติ)
+  </div>
+
+  <div class="msg" id="msg"></div>
+
+  <section class="panel" id="addPanel">
+    <h3>เพิ่มผู้ใช้</h3>
+    <div class="fg">
+      <div><label for="email">อีเมล Google</label><input id="email" type="email" placeholder="name@gmail.com" autocomplete="off"></div>
+      <div><label for="level">ระดับสิทธิ์</label>
+        <select id="level"><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select>
+      </div>
+      <div><label for="status">สถานะ</label>
+        <select id="status"><option value="active">ใช้งาน</option><option value="disabled">ปิดการใช้งาน</option></select>
+      </div>
+      <div><button class="btn btn-primary" id="addBtn"><i class="fa-solid fa-plus"></i> เพิ่มผู้ใช้</button></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3>รายชื่อผู้ใช้ (<span id="count">0</span>)</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>อีเมล</th><th>สิทธิ์</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead>
+        <tbody id="tb"><tr><td colspan="5" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3>ระดับสิทธิ์</h3>
+    <div class="legend">
+      <div><span class="pill l-master">Master Admin</span><br>เจ้าของระบบ · จัดการผู้ใช้ได้ · มีบัญชีเดียว</div>
+      <div><span class="pill l-admin">Admin</span><br>ดู + แก้ไขข้อมูลทั้งหมด · Export · Settings</div>
+      <div><span class="pill l-editor">Editor</span><br>ดู + แก้ไขข้อมูล · Export</div>
+      <div><span class="pill l-viewer">Viewer</span><br>ดูข้อมูลเท่านั้น</div>
+    </div>
+  </section>
+</div>
+
+<script>
+var ME = '<?= userEmail ?>';
+var LEVEL = '<?= userLevel ?>';
+var busy = false;
+
+document.getElementById('me').textContent = ME + (LEVEL === 'master' ? ' · Master Admin' : ' · ' + LEVEL);
+
+function showMsg(text, kind) {
+  var el = document.getElementById('msg');
+  el.className = 'msg ' + (kind || 'ok');
+  el.textContent = text;
+  if (kind !== 'err') setTimeout(function () { el.className = 'msg'; }, 3500);
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function fmt(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  return isNaN(d.getTime()) ? '—' : d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function render(data) {
+  document.getElementById('count').textContent = data.users.length;
+  var rows = data.users.map(function (u) {
+    var isMaster = u.level === 'master';
+    var levelCell = isMaster
+      ? '<span class="pill l-master">Master Admin</span>'
+      : '<select data-act="level" data-email="' + esc(u.email) + '" style="padding:4px 6px;font-size:11px">' +
+        ['admin', 'editor', 'viewer'].map(function (l) {
+          return '<option value="' + l + '"' + (u.level === l ? ' selected' : '') + '>' + l.charAt(0).toUpperCase() + l.slice(1) + '</option>';
+        }).join('') + '</select>';
+    var statusCell = u.status === 'disabled'
+      ? '<span class="off"><i class="fa-solid fa-circle-xmark"></i> ปิด</span>'
+      : '<span class="on"><i class="fa-solid fa-circle-check"></i> ใช้งาน</span>';
+    var actions = isMaster ? '<span class="muted" style="color:#98a2b3;font-size:11px">เจ้าของระบบ</span>' : (
+      '<div class="acts">' +
+      '<button class="btn" data-act="toggle" data-email="' + esc(u.email) + '" data-status="' + (u.status === 'disabled' ? 'active' : 'disabled') + '">' +
+      (u.status === 'disabled' ? '<i class="fa-solid fa-play"></i> เปิดใช้' : '<i class="fa-solid fa-pause"></i> ปิด') + '</button>' +
+      '<button class="btn btn-danger" data-act="del" data-email="' + esc(u.email) + '"><i class="fa-solid fa-trash"></i> ลบ</button>' +
+      '</div>');
+    return '<tr><td>' + esc(u.email) + (isMaster ? ' <i class="fa-solid fa-crown" style="color:#F59E0B"></i>' : '') + '</td>' +
+      '<td>' + levelCell + '</td><td>' + statusCell + '</td><td>' + fmt(u.lastLogin) + '</td><td>' + actions + '</td></tr>';
+  }).join('');
+  document.getElementById('tb').innerHTML = rows || '<tr><td colspan="5" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
+  document.getElementById('addPanel').style.display = data.canManage ? '' : 'none';
+}
+
+function load() {
+  google.script.run.withSuccessHandler(function (data) {
+    if (!data || !data.ok) {
+      render({ users: [], canManage: false });
+      showMsg((data && data.error) || 'โหลดข้อมูลไม่สำเร็จ', 'err');
+      return;
+    }
+    render(data);
+  }).withFailureHandler(function (err) {
+    showMsg(err.message || String(err), 'err');
+  }).getUsers();
+}
+
+document.getElementById('addBtn').addEventListener('click', function () {
+  if (busy) return;
+  var email = document.getElementById('email').value.trim();
+  if (!email || email.indexOf('@') < 0) return showMsg('กรอกอีเมลให้ถูกต้อง', 'err');
+  busy = true;
+  this.disabled = true;
+  var self = this;
+  google.script.run.withSuccessHandler(function (data) {
+    busy = false; self.disabled = false;
+    document.getElementById('email').value = '';
+    if (data && data.ok) { render(data); showMsg('เพิ่มผู้ใช้ ' + email + ' แล้ว'); }
+    else showMsg((data && data.error) || 'เพิ่มไม่สำเร็จ', 'err');
+  }).withFailureHandler(function (err) {
+    busy = false; self.disabled = false; showMsg(err.message || String(err), 'err');
+  }).addUser(email, document.getElementById('level').value, document.getElementById('status').value);
+});
+
+document.getElementById('tb').addEventListener('change', function (e) {
+  var sel = e.target.closest('[data-act="level"]');
+  if (!sel) return;
+  var email = sel.dataset.email, level = sel.value;
+  google.script.run.withSuccessHandler(function (data) {
+    if (data && data.ok) { render(data); showMsg('อัปเดตสิทธิ์ ' + email + ' → ' + level); }
+    else { showMsg((data && data.error) || 'อัปเดตไม่สำเร็จ', 'err'); load(); }
+  }).withFailureHandler(function (err) { showMsg(err.message || String(err), 'err'); load(); })
+    .updateUser(email, level, '');
+});
+
+document.getElementById('tb').addEventListener('click', function (e) {
+  var btn = e.target.closest('[data-act]');
+  if (!btn || btn.tagName === 'SELECT') return;
+  var act = btn.dataset.act, email = btn.dataset.email;
+  if (act === 'toggle') {
+    google.script.run.withSuccessHandler(function (data) {
+      if (data && data.ok) { render(data); showMsg('เปลี่ยนสถานะ ' + email + ' แล้ว'); }
+      else showMsg((data && data.error) || 'เปลี่ยนสถานะไม่สำเร็จ', 'err');
+    }).withFailureHandler(function (err) { showMsg(err.message || String(err), 'err'); })
+      .updateUser(email, '', btn.dataset.status);
+  }
+  if (act === 'del') {
+    if (!confirm('ลบผู้ใช้ ' + email + ' ?')) return;
+    google.script.run.withSuccessHandler(function (data) {
+      if (data && data.ok) { render(data); showMsg('ลบผู้ใช้ ' + email + ' แล้ว'); }
+      else showMsg((data && data.error) || 'ลบไม่สำเร็จ', 'err');
+    }).withFailureHandler(function (err) { showMsg(err.message || String(err), 'err'); })
+      .deleteUser(email);
+  }
+});
+
+load();
+</script>
+</body>
+</html>

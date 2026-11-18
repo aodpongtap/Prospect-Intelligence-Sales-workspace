@@ -71,6 +71,20 @@
     })();
   </script>
   <script>
+    // เพิ่มเมนู User Management สำหรับ Master Admin (โหมด Apps Script)
+    (function () {
+      var LEVEL = '<?= userLevel ?>';
+      var nav = document.getElementById('navList');
+      if (LEVEL !== 'master' || !nav) return;
+      var a = document.createElement('a');
+      a.className = 'nav-item';
+      a.href = '?page=users';
+      a.style.textDecoration = 'none';
+      a.innerHTML = '<i class="fa-solid fa-users-gear"></i>User Management';
+      nav.appendChild(a);
+    })();
+  </script>
+  <script>
     const deals=[
       {id:1,name:"ระบบ Smart Factory",customer:"บริษัท ABC จำกัด",owner:"กิตติพงษ์",team:"Enterprise",value:2450000,stage:"Negotiation",probability:75,close:"2026-10-20",lastActivity:"2026-10-01",nextAction:"นัดยืนยันงบประมาณ",status:"Need Attention",activity:["ส่งใบเสนอราคาเวอร์ชันล่าสุด","ประชุมกับทีม IT ลูกค้า","Discovery call"]},
       {id:2,name:"Cloud Migration Phase 2",customer:"บริษัท XYZ จำกัด",owner:"พิมพ์ชนก",team:"Commercial",value:1850000,stage:"Proposal",probability:60,close:"2026-10-15",lastActivity:"2026-09-25",nextAction:"ติดตามผล Proposal",status:"At Risk",activity:["ส่ง Proposal ให้ผู้จัดการ IT","เก็บ Requirement","โทรแนะนำบริการ"]},
