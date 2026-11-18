@@ -4,6 +4,7 @@
 
 **Live demo (GitHub Pages):** https://aodpongtap.github.io/Prospect-Intelligence-Sales-workspace/
 **Production (มี login):** http://203.146.170.85:9501/
+**Google Apps Script Web App (ล็อกอิน Google):** https://script.google.com/macros/s/AKfycbzWa-PSZJyZN4HZe1t0LxC5wfa2m9_FJxQ34d_Ochm1CFb2QIVb3E7qCpqjAbXZtqFY/exec
 
 Dashboard สำหรับทีมขาย: ติดตาม Prospect, Pipeline, Project, After-Sale Service และ Customer Intelligence
 
@@ -46,3 +47,25 @@ node server.js                                       # รัน (หรือ�
 - http://203.146.170.85:9501/ — static site ผ่าน nginx (root: `/var/www/tsr3`)
 - โฟลเดอร์ต้นทางบนเซิร์ฟเวอร์: `/home/mngr-tom/Test tsr - 3`
 - sync ขึ้น web root: `bash /home/mngr-tom/sync-tsr3.sh` (มี cron รันทุก 1 นาที)
+
+## Google Apps Script Web App (`apps-script/`)
+
+โฮสต์บน Google แทน server — ล็อกอินด้วยบัญชี Google อัตโนมัติ (ไม่ต้องมี backend)
+
+- `Code.gs` — `doGet()` เสิร์ฟ `Index.html`, `getUserEmail()` คืนอีเมลผู้ใช้ที่ล็อกอิน
+- `appsscript.json` — `webapp: { executeAs: USER_DEPLOYING, access: ANYONE }` + scope `userinfo.email`
+- `Index.html` — dashboard (แสดงอีเมล Google ที่มุมขวา, ไม่โหลด `/api/rbac.js` บน Apps Script)
+- `.clasp.json` — ผูกกับโปรเจกต์ Apps Script ที่สร้างไว้
+
+```bash
+clasp login                    # บัญชี aodpongtaptsr@gmail.com
+cd apps-script
+clasp push --force
+clasp create-deployment --description "v2"
+clasp list-deployments
+```
+
+รายละเอียดโปรเจกต์ Apps Script:
+- Script ID: `1lkYiKjFqgjKO7gCDGgxaJuk8A5PIxcKbYsqJxDsdHrfpPOfGC5bXH8NV`
+- เจ้าของ: **aodpongtaptsr@gmail.com** (บัญชีเดียว)
+- ต้องเปิด Google Apps Script API ที่ https://script.google.com/home/usersettings ก่อนใช้ clasp
