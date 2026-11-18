@@ -10,7 +10,7 @@
 var APP_TITLE = 'Prospect Intelligence Sales workspace';
 var SHEET_FILE_NAME = 'Prospect Intelligence - Users';
 var SHEET_TAB = 'Users';
-var LEVELS = ['admin', 'editor', 'viewer'];
+var LEVELS = ['admin', 'sale', 'editor', 'viewer'];
 var ADMIN_EMAILS = [
   'aodpongtaptsr@gmail.com',
   'bch.sarocha@gmail.com',
@@ -53,6 +53,9 @@ function apiResponse_(p) {
     else if (action === 'reset') out = resetPassword(p.token, p.email);
     else if (action === 'update') out = updateUser(p.token, p.email, p.level, p.status);
     else if (action === 'remove') out = deleteUser(p.token, p.email);
+    else if (action === 'deals') out = getDeals(p.token);
+    else if (action === 'addDeal') out = addDeal(p.token, p.name, p.customer, p.value, p.stage, p.probability, p.close, p.nextAction, p.status);
+    else if (action === 'deleteDeal') out = deleteDeal(p.token, p.id);
     else out = { ok: false, error: 'unknown action: ' + action };
   } catch (err) {
     out = { ok: false, error: (err && err.message) ? String(err.message) : String(err) };
@@ -209,6 +212,110 @@ function saveSession_(token, data) {
 }
 
 function isAdminLevel_(level) { return String(level).toLowerCase() === 'admin'; }
+function canSell_(level) {
+  var l = String(level).toLowerCase();
+  return l === 'admin' || l === 'sale' || l === 'editor';
+}
+
+/* ---------------- deals (Google Sheet tab "Deals") ---------------- */
+
+var DEALS_TAB = 'Deals';
+
+function getDealsSheet_() {
+  var ss = getSheet_().getParent();
+  var sh = ss.getSheetByName(DEALS_TAB);
+  if (!sh) {
+    sh = ss.insertSheet(DEALS_TAB);
+    sh.appendRow(['id', 'ownerEmail', 'ownerName', 'name', 'customer', 'value', 'stage', 'probability', 'close', 'nextAction', 'status', 'createdAt', 'updatedAt']);
+    sh.getRange('A1:M1').setFontWeight('bold');
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+function readDeals_() {
+  var sh = getDealsSheet_();
+  var last = sh.getLastRow();
+  if (last < 2) return [];
+  return sh.getRange(2, 1, last - 1, 13).getValues()
+    .filter(function (r) { return String(r[0]).trim() !== ''; })
+    .map(function (r) {
+      return {
+        id: String(r[0]), ownerEmail: String(r[1] || '').toLowerCase(), ownerName: String(r[2] || ''),
+        name: String(r[3] || ''), customer: String(r[4] || ''), value: Number(r[5] || 0),
+        stage: String(r[6] || 'Prospect'), probability: Number(r[7] || 0), close: String(r[8] || ''),
+        nextAction: String(r[9] || ''), status: String(r[10] || 'Healthy'),
+        createdAt: r[11] ? String(r[11]) : '', updatedAt: r[12] ? String(r[12]) : '', row: null
+      };
+    });
+}
+
+function findDealRow_(id) {
+  var sh = getDealsSheet_();
+  var last = sh.getLastRow();
+  if (last < 2) return 0;
+  var vals = sh.getRange(2, 1, last - 1, 1).getValues();
+  for (var i = 0; i < vals.length; i++) {
+    if (String(vals[i][0]) === String(id)) return i + 2;
+  }
+  return 0;
+}
+
+function listDeals_(s) {
+  var all = readDeals_();
+  if (isAdminLevel_(s.level)) return all;
+  var me = String(s.email).toLowerCase();
+  return all.filter(function (d) { return d.ownerEmail === me; });
+}
+
+function getDeals(key) {
+  var s = session_(key);
+  if (!s) return { ok: false, error: 'กรุณาเข้าสู่ระบบใหม่' };
+  return { ok: true, level: s.level, deals: listDeals_(s) };
+}
+
+function addDeal(key, name, customer, value, stage, probability, close, nextAction, status) {
+  var s = session_(key);
+  if (!s) throw new Error('กรุณาเข้าสู่ระบบใหม่');
+  if (!canSell_(s.level)) throw new Error('บัญชีนี้ไม่มีสิทธิ์บันทึกดีล');
+
+  var n = String(name || '').trim();
+  var c = String(customer || '').trim();
+  if (!n) throw new Error('กรุณากรอกชื่องาน/ดีล');
+  if (!c) throw new Error('กรุณากรอกชื่อลูกค้า');
+
+  var id = 'D-' + Date.now();
+  var sh = getDealsSheet_();
+  sh.appendRow([
+    id,
+    String(s.email).toLowerCase(),
+    String(s.name || ''),
+    n, c,
+    Number(value || 0),
+    String(stage || 'Prospect'),
+    Number(probability || 0),
+    String(close || ''),
+    String(nextAction || ''),
+    String(status || 'Healthy'),
+    new Date().toISOString(),
+    new Date().toISOString()
+  ]);
+  return { ok: true, id: id, deals: listDeals_(s) };
+}
+
+function deleteDeal(key, id) {
+  var s = session_(key);
+  if (!s) throw new Error('กรุณาเข้าสู่ระบบใหม่');
+  var row = findDealRow_(id);
+  if (!row) throw new Error('ไม่พบดีลนี้');
+  var sh = getDealsSheet_();
+  var owner = String(sh.getRange(row, 2).getValue() || '').toLowerCase();
+  if (!isAdminLevel_(s.level) && owner !== String(s.email).toLowerCase()) {
+    throw new Error('ลบได้เฉพาะดีลของตนเอง');
+  }
+  sh.deleteRow(row);
+  return { ok: true, deals: listDeals_(s) };
+}
 
 function login(email, password) {
   ensureSeed_();

@@ -64,7 +64,7 @@ td{padding:9px;border-bottom:1px solid #eef1f5;font-size:12px}
     <div class="fg">
       <div><label for="email">อีเมล</label><input id="email" type="email" placeholder="name@gmail.com" autocomplete="off"></div>
       <div><label for="name">ชื่อ (ไม่บังคับ)</label><input id="name" type="text" placeholder="ชื่อ-นามสกุล"></div>
-      <div><label for="level">สิทธิ์</label><select id="level"><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select></div>
+      <div><label for="level">สิทธิ์</label><select id="level"><option value="viewer">Viewer</option><option value="sale">Sale (กรอกดีลของตัวเอง)</option><option value="editor">Editor</option><option value="admin">Admin</option></select></div>
       <div><button class="btn btn-primary" id="addBtn"><i class="fa-solid fa-user-plus"></i> เพิ่ม + สร้างรหัส</button></div>
     </div>
   </section>
@@ -134,8 +134,9 @@ function render(users) {
     var levelCell = core
       ? '<span class="pill l-core">Admin (หลัก)</span>'
       : '<select data-act="level" data-email="' + esc(u.email) + '" style="padding:4px 6px;font-size:11px">' +
-        ['admin', 'editor', 'viewer'].map(function (l) {
-          return '<option value="' + l + '"' + (u.level === l ? ' selected' : '') + '>' + l.charAt(0).toUpperCase() + l.slice(1) + '</option>';
+        ['admin', 'sale', 'editor', 'viewer'].map(function (l) {
+          var label = l === 'sale' ? 'Sale' : l.charAt(0).toUpperCase() + l.slice(1);
+          return '<option value="' + l + '"' + (u.level === l ? ' selected' : '') + '>' + label + '</option>';
         }).join('') + '</select>';
     var statusCell = u.status === 'disabled'
       ? '<span class="off"><i class="fa-solid fa-circle-xmark"></i> ปิด</span>'

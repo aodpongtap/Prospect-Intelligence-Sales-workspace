@@ -121,6 +121,32 @@
     });
   }
 
+  /* ---------- deals (ดีลของแต่ละคน) ---------- */
+  function listDeals() {
+    return call('deals', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดดีลไม่สำเร็จ');
+      return r.deals || [];
+    });
+  }
+
+  function addDeal(d) {
+    return call('addDeal', {
+      token: token(), name: d.name, customer: d.customer, value: d.value,
+      stage: d.stage, probability: d.probability, close: d.close,
+      nextAction: d.nextAction, status: d.status
+    }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'บันทึกดีลไม่สำเร็จ');
+      return r;
+    });
+  }
+
+  function deleteDeal(id) {
+    return call('deleteDeal', { token: token(), id: id }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ลบดีลไม่สำเร็จ');
+      return r;
+    });
+  }
+
   global.PIAuth = {
     coreAdmins: [
       'aodpongtaptsr@gmail.com',
@@ -140,6 +166,9 @@
     addUser: addUser,
     resetPassword: resetPassword,
     updateUser: updateUser,
-    removeUser: removeUser
+    removeUser: removeUser,
+    listDeals: listDeals,
+    addDeal: addDeal,
+    deleteDeal: deleteDeal
   };
 })(window);
