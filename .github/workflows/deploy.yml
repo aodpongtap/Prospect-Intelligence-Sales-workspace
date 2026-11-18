@@ -1,0 +1,64 @@
+name: Deploy to server
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-tsr3
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Sync repo -> server -> web root
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -o BatchMode=yes "$SSH_USER@$SSH_HOST" 'echo "ssh-ok: $(hostname)"'
+
+      - name: Upload build to staging folder
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          rsync -az --delete \
+            --exclude '.git' --exclude '.github' \
+            --exclude 'node_modules' --exclude 'auth-backend/data' \
+            -e "ssh -o BatchMode=yes" \
+            ./ "$SSH_USER@$SSH_HOST:/home/mngr-tom/.tsr3-deploy/"
+
+      - name: Publish to project folder
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
+        run: |
+          ssh -o BatchMode=yes "$SSH_USER@$SSH_HOST" \
+            "rsync -a --delete --exclude 'auth-backend/data' /home/mngr-tom/.tsr3-deploy/ '$REMOTE_PATH/'"
+
+      - name: Refresh web root
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh -o BatchMode=yes "$SSH_USER@$SSH_HOST" 'bash /home/mngr-tom/sync-tsr3.sh'
+
+      - name: Smoke test
+        run: |
+          sleep 2
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://203.146.170.85:9501/login)
+          echo "login page HTTP $code"
+          test "$code" = "200"
