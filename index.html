@@ -46,7 +46,7 @@
     </aside>
     <main class="main">
       <header class="topbar"><div class="top-left"><button class="icon-btn mobile-menu" id="mobileMenu" aria-label="เปิดเมนู"><i class="fa-solid fa-bars"></i></button><span class="breadcrumb">Workspace <i class="fa-solid fa-chevron-right" style="font-size:8px;margin:0 6px"></i> <span id="crumbName">Dashboard</span></span></div>
-        <div class="top-actions"><button class="icon-btn" id="notificationBtn" title="การแจ้งเตือน"><i class="fa-regular fa-bell"></i><span class="badge-dot"></span></button><div class="profile"><div class="avatar">HS</div><div class="profile-copy"><strong>Head of Sales</strong><small>Administrator</small></div></div></div>
+        <div class="top-actions"><button class="icon-btn" id="notificationBtn" title="การแจ้งเตือน"><i class="fa-regular fa-bell"></i><span class="badge-dot"></span></button><div class="profile"><div class="avatar" id="avatar">HS</div><div class="profile-copy"><strong id="meName">Head of Sales</strong><small id="meRole">Administrator</small></div></div></div>
       </header>
       <section class="content" id="content"></section>
     </main>
@@ -65,6 +65,36 @@
       var s = document.createElement('script');
       s.src = '/api/rbac.js';
       document.head.appendChild(s);
+    })();
+  </script>
+  <script src="assets/auth.js"></script>
+  <script>
+    // Static auth (GitHub Pages / เปิดไฟล์ในเครื่อง): บังคับล็อกอิน + เมนู User Management
+    (function () {
+      var host = location.hostname;
+      var isStatic = location.protocol === 'file:' || host === '' || /(^|\.)github\.io$/.test(host);
+      if (!isStatic || !window.PIAuth) return;
+
+      var me = PIAuth.session();
+      if (!me) { location.replace('login.html'); return; }
+
+      var av = document.getElementById('avatar'); if (av) av.textContent = String(me.email).substring(0, 2).toUpperCase();
+      var nm = document.getElementById('meName'); if (nm) nm.textContent = me.name || me.email;
+      var rl = document.getElementById('meRole'); if (rl) rl.textContent = 'สิทธิ์: ' + String(me.level).toUpperCase();
+
+      if (PIAuth.isAdmin(me)) {
+        var nav = document.getElementById('navList');
+        if (nav) {
+          var a = document.createElement('a');
+          a.className = 'nav-item';
+          a.href = 'users.html';
+          a.style.textDecoration = 'none';
+          a.innerHTML = '<i class="fa-solid fa-users-gear"></i>User Management';
+          nav.appendChild(a);
+        }
+      }
+      var prof = document.querySelector('.profile');
+      if (prof) { prof.style.cursor = 'pointer'; prof.title = 'ออกจากระบบ'; prof.addEventListener('click', function () { PIAuth.logout(); location.replace('login.html'); }); }
     })();
   </script>
   <script>
