@@ -1,6 +1,6 @@
-# SAFE1210-Project
+# Prospect Intelligence — Sales workspace
 
-โปรเจกต์รวมเว็บ SAFE1210 + Dashboard ทีมขาย (Prospect Intelligence Sales workspace)
+โปรเจกต์รวม Dashboard ทีมขาย (Prospect Intelligence Sales workspace) + เว็บ SAFE1210
 
 ## โครงสร้าง
 
