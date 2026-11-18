@@ -55,7 +55,18 @@
   <div class="toast" id="toast"><i class="fa-solid fa-circle-check"></i><span id="toastText"></span></div>
 
   <!-- ===== JavaScript: Mock data ===== -->
-  <script src="/api/rbac.js"></script>
+  <script>
+    // RBAC helper มาจาก auth-backend — โหลดเฉพาะเมื่อรันบนเซิร์ฟเวอร์ที่มี /api
+    // (บน GitHub Pages / เปิดไฟล์ในเครื่อง จะข้ามไปเพื่อไม่ให้เกิด 404)
+    (function () {
+      var host = location.hostname;
+      var staticHost = location.protocol === 'file:' || host === '' || /(^|\.)github\.io$/.test(host);
+      if (staticHost) { return; }
+      var s = document.createElement('script');
+      s.src = '/api/rbac.js';
+      document.head.appendChild(s);
+    })();
+  </script>
   <script>
     const deals=[
       {id:1,name:"ระบบ Smart Factory",customer:"บริษัท ABC จำกัด",owner:"กิตติพงษ์",team:"Enterprise",value:2450000,stage:"Negotiation",probability:75,close:"2026-10-20",lastActivity:"2026-10-01",nextAction:"นัดยืนยันงบประมาณ",status:"Need Attention",activity:["ส่งใบเสนอราคาเวอร์ชันล่าสุด","ประชุมกับทีม IT ลูกค้า","Discovery call"]},

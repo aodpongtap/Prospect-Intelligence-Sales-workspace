@@ -1,4 +1,4 @@
-# Prospect Intelligence — Sales workspace
+# Prospect Intelligence Sales workspace
 
 [![Deploy to server](https://github.com/aodpongtap/Prospect-Intelligence-Sales-workspace/actions/workflows/deploy.yml/badge.svg)](https://github.com/aodpongtap/Prospect-Intelligence-Sales-workspace/actions/workflows/deploy.yml)
 
