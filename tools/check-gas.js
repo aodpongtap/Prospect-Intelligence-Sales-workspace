@@ -49,6 +49,7 @@ function get(url, depth = 0) {
     console.log('index page:', home.status, b.length,
       'applyMe=' + b.includes('__applyMe__'),
       'authSheets=' + b.includes('auth-sheets.js'),
+      'aiPrompts=' + b.includes('renderPrompts'),
       'scopeBar=' + b.includes('scopeBar'),
       'saleObserver=' + b.includes('obs.disconnect'),
       'kpiFoot=' + b.includes('kpi-foot'));

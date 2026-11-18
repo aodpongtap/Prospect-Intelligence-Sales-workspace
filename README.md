@@ -6,6 +6,7 @@
 **Production (มี login):** http://203.146.170.85:9501/
 **Google Apps Script Web App (ล็อกอิน Google):** https://script.google.com/macros/s/AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-/exec
 **User Management (Apps Script):** https://script.google.com/macros/s/AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-/exec?page=users
+**GitHub Project board (แผนงาน):** https://github.com/users/aodpongtap/projects/1
 
 Dashboard สำหรับทีมขาย: ติดตาม Prospect, Pipeline, Project, After-Sale Service และ Customer Intelligence
 

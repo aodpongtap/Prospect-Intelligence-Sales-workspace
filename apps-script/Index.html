@@ -36,6 +36,7 @@
       <nav class="nav-list" id="navList">
         <button class="nav-item active" data-page="dashboard"><i class="fa-solid fa-grid-2"></i>Dashboard</button>
         <button class="nav-item" data-page="sales"><i class="fa-solid fa-bullseye"></i>Sale Monitor</button>
+        <button class="nav-item" data-page="prompts"><i class="fa-solid fa-wand-magic-sparkles"></i>AI Prompts</button>
         <button class="nav-item" data-page="projects"><i class="fa-solid fa-diagram-project"></i>Project Tracking</button>
         <button class="nav-item" data-page="service"><i class="fa-solid fa-headset"></i>After-Sale Service</button>
         <button class="nav-item" data-page="intelligence"><i class="fa-solid fa-brain"></i>Customer Intelligence</button>
@@ -103,7 +104,7 @@
 
       // สิทธิ์ Sale: แสดงเฉพาะเมนูที่เกี่ยวกับงานขาย
       if (String(me.level).toLowerCase() === 'sale') {
-        var allow = ['dashboard', 'sales'];
+        var allow = ['dashboard', 'sales', 'prompts'];
         var navList = document.getElementById('navList');
         if (navList) {
           Array.prototype.slice.call(navList.querySelectorAll('[data-page]')).forEach(function (el) {
@@ -380,7 +381,7 @@
     })();
 
 
-    const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",projects:"Project Tracking",service:"After-Sale Service",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
+    const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",prompts:"AI Prompts",projects:"Project Tracking",service:"After-Sale Service",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
     const stageNames=["Planning","Sales Handover","Installation","Testing & Acceptance","Completed"];
     const stageLabels=["Prospect","Qualified","Proposal","Negotiation","Won","Lost"];
     let currentPage="dashboard",charts=[],sortDesc=true,toastTimer;
@@ -400,7 +401,7 @@
     function btn(label,action,icon="",primary=false,extra=""){return `<button class="btn ${primary?"btn-primary":""}" data-action="${action}" ${extra}>${icon?`<i class="${icon}"></i>`:""}${label}</button>`}
     function destroyCharts(){charts.forEach(c=>c.destroy());charts=[]}
     function makeChart(id,config){const canvas=document.getElementById(id);if(canvas&&window.Chart)charts.push(new Chart(canvas,config))}
-    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:renderDashboard,sales:renderSales,projects:renderProjects,service:renderService,intelligence:renderIntelligence,reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard")drawDashboardCharts();if(currentPage==="intelligence")drawHealthChart();if(currentPage==="reports")drawReportCharts()}
+    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:renderDashboard,sales:renderSales,prompts:renderPrompts,projects:renderProjects,service:renderService,intelligence:renderIntelligence,reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard")drawDashboardCharts();if(currentPage==="intelligence")drawHealthChart();if(currentPage==="reports")drawReportCharts()}
 
     /* ===== JavaScript: Dashboard page ===== */
     function renderDashboard(){const today=new Date().toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"});const rows=[...deals].sort((a,b)=>riskScore(b)-riskScore(a)).slice(0,5).map(d=>`<tr class="clickable" data-deal="${d.id}"><td><span class="deal-name">${d.name}</span><br><span class="muted">${d.customer}</span></td><td>${money(d.value)}</td><td>${d.owner}</td><td><span class="risk-pill ${riskClass(riskScore(d))}">${riskScore(d)} / 100</span></td><td>${thaiDate(d.close)}</td></tr>`).join("");return `${pageHead("สวัสดี, Head of Sales",today,btn("ดู Pipeline","go-sales","fa-solid fa-arrow-right",true))}<div class="grid kpi-grid">${kpi("Sales Pipeline","฿12,450,000","fa-solid fa-filter","#2563EB","+12.5%")}${kpi("Forecast เดือนนี้","฿4,850,000","fa-solid fa-chart-column","#16A34A","+8.2%")}${kpi("Deals at Risk","8 Deals","fa-solid fa-triangle-exclamation","#F59E0B","+2 Deals","down")}${kpi("Overdue Actions","14 Tasks","fa-solid fa-clock","#DC2626","-6 Tasks")}</div><div class="grid cols-2" style="margin-bottom:15px">${panel("Pipeline แยกตาม Stage",`<div class="chart-wrap"><canvas id="pipelineChart"></canvas></div>`,"มูลค่าดีลตามสถานะปัจจุบัน")}${panel("Sales Forecast รายเดือน",`<div class="chart-wrap"><canvas id="forecastChart"></canvas></div>`,"Actual และ Forecast")}</div><div class="grid cols-2">${panel("Deals ที่ต้องติดตามด่วน",`<div class="table-wrap"><table><thead><tr><th>Deal / Customer</th><th>มูลค่า</th><th>Owner</th><th>Risk Score</th><th>Close</th></tr></thead><tbody>${rows}</tbody></table></div>`,"เรียงตาม Risk Score สูงสุด")}<div class="grid" style="gap:15px">${panel("Today's Priority Actions",`<div class="action-list"><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>ติดตาม Proposal: Cloud Migration Phase 2</strong><small>พิมพ์ชนก · <span class="due">วันนี้ 11:00</span></small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>ยืนยันงบประมาณระบบ Smart Factory</strong><small>กิตติพงษ์ · วันนี้ 14:30</small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>โทรติดตาม Network Infrastructure</strong><small>อรทัย · <span class="due">เกินกำหนด 2 วัน</span></small></div></div></div>`)}${panel("Alerts",`<div class="alert-list"><div class="alert"><i class="fa-solid fa-clock"></i><span>3 Deals ไม่มีการติดต่อเกิน 7 วัน</span></div><div class="alert red"><i class="fa-solid fa-file-circle-exclamation"></i><span>2 Deals มีโอกาสปิดในเดือนนี้ แต่ยังไม่มี Proposal</span></div><div class="alert blue"><i class="fa-solid fa-headset"></i><span>4 Service Tickets ใกล้เกิน SLA</span></div></div>`)}</div></div>`}
@@ -431,13 +432,158 @@
     function drawReportCharts(){makeChart("reportStage",{type:"doughnut",data:{labels:stageLabels,datasets:[{data:stageLabels.map(s=>deals.filter(d=>d.stage===s).length),backgroundColor:["#93c5fd","#60a5fa","#2563eb","#0f2b46","#16a34a","#dc2626"],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"right",labels:{boxWidth:10,usePointStyle:true}}}}});makeChart("reportSales",{type:"bar",data:{labels:["พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค."],datasets:[{label:"ยอดขาย (ล้านบาท)",data:[2.8,3.2,3.7,3.9,4.2,4.85],backgroundColor:"#2563eb",borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true},x:{grid:{display:false}}}}})}
     function renderSettings(){return `${pageHead("Settings","ตั้งค่าการใช้งานและการแจ้งเตือน")}<div class="grid cols-2">${panel("ตั้งค่าทั่วไป",`<div class="form-grid"><div class="form-group"><label>ชื่อ Workspace</label><input value="Prospect Intelligence"></div><div class="form-group"><label>สกุลเงิน</label><select><option>THB - บาทไทย</option><option>USD - US Dollar</option></select></div><div class="form-group"><label>Timezone</label><select><option>Asia/Bangkok (GMT+7)</option></select></div><div class="form-group"><label>รูปแบบวันที่</label><select><option>DD/MM/YYYY</option></select></div></div><div style="margin-top:15px">${btn("บันทึกการตั้งค่า","save-settings","fa-solid fa-floppy-disk",true)}</div>`)}${panel("การแจ้งเตือน",`<div class="action-list">${["แจ้งเตือนเมื่อ Deal มีความเสี่ยงสูง","แจ้งเตือนเมื่อมี Task เกินกำหนด","แจ้งเตือน Ticket ใกล้เกิน SLA","สรุป Pipeline ประจำสัปดาห์"].map((x,i)=>`<div class="action-item"><div class="action-copy"><strong>${x}</strong><small>รับการแจ้งเตือนผ่าน Dashboard</small></div><input type="checkbox" ${i<3?"checked":""} aria-label="${x}"></div>`).join("")}</div>`)}</div>`}
 
+    /* ===== JavaScript: AI Prompts (CRM) ===== */
+    const promptCell = s => String(s === null || s === undefined ? '' : s).replace(/\|/g,'/').replace(/\r?\n/g,' ').trim();
+    const promptHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    function mdTable(head,rows){
+      const body = rows.length ? rows : [head.map((h,i)=>i===0?'ไม่พบข้อมูล':'—')];
+      return [head, head.map(()=> '---'), ...body].map(r=>'| '+r.map(promptCell).join(' | ')+' |').join('\n');
+    }
+    function promptPipelineDeals(){return deals.filter(d=>!["Won","Lost"].includes(d.stage))}
+    function promptInstallDeals(){return deals.filter(d=>d.stage==="Won"||d.status==="On Hold")}
+    function promptDealTable(list){
+      return mdTable(
+        ["ชื่องาน/ลูกค้า","สินค้า/Stage","มูลค่า (บาท)","ผู้รับผิดชอบ","คาดว่าปิด","หมายเหตุ / Action Plan","สถานะ"],
+        list.map(d=>[d.name+" ("+d.customer+")",d.stage,Number(d.value||0).toLocaleString("th-TH"),d.owner,thaiDate(d.close),d.nextAction||"ไม่ระบุ",d.status])
+      );
+    }
+    function prompt1Text(){
+      const list=promptPipelineDeals();
+      const total=list.reduce((s,d)=>s+Number(d.value||0),0);
+      return `บทบาท (Role): คุณคือผู้เชี่ยวชาญด้าน B2B Sales Operations & CRM Analyst
+
+บริบท (Context): ข้อมูลรายการขายของทีมขาย B2B Partner สถานะ Pipeline (ยังไม่ปิด) จำนวน ${list.length} ดีล มูลค่ารวม ${money(total)}
+Stage อ้างอิง: 1.Pipeline = รอตัดสินใจ | 2.รอติดตั้ง | 3.Actual = ปิดงาน/ติดตั้งแล้ว | 0.ยกเลิกใบงาน
+
+ข้อมูลนำเข้า (Data):
+${promptDealTable(list)}
+
+ภารกิจ (Task):
+1. จัดกลุ่มดีลเป็น 3 ระดับ พร้อมเหตุผลสั้น ๆ ต่อดีล
+   - Hot (โอกาสปิดสูง/พร้อมติดตั้ง): ลูกค้าพร้อม งบชัดเจน มีกำหนดวันชัด
+   - Warm (มีโอกาสแต่ติดเงื่อนไข): รอพื้นที่ รอราคา รอเทียบข้อเสนอ
+   - Cold / At-Risk (เสี่ยงหลุด/เงียบ): ไม่มี Follow-up หรือเลื่อนกำหนดปิดหลายรอบ
+2. สรุปมูลค่ารวมที่คาดว่าจะเปลี่ยนเป็นยอด Actual ได้จริงในเดือนนี้ (แยกตามระดับ Hot/Warm/Cold)
+3. เสนอ 1 Action เร่งด่วนต่อดีลมูลค่าสูงสุด 3 อันดับแรก (ระบุผู้รับผิดชอบ + กำหนดวันที่ควรทำ)
+
+รูปแบบผลลัพธ์ (Format): ตารางสรุปตามระดับความพร้อม + คอลัมน์ Action เร่งด่วน แล้วปิดท้ายด้วยข้อสรุป 1 ย่อหน้า
+กติกา: ใช้ภาษาไทย กระชับ ถ้าข้อมูลใดว่างให้เขียน "ไม่ระบุ" ห้ามสร้างข้อมูลขึ้นเอง`;
+    }
+    function prompt2Text(){
+      const list=promptInstallDeals();
+      return `บทบาท (Role): คุณคือผู้จัดการฝ่ายประสานงานขายและติดตั้ง (Project & Installation Coordinator)
+
+บริบท (Context): รายการขายที่ปิดการขายแล้วแต่ยังไม่จบเป็น Actual (สถานะ 2.รอติดตั้ง / On Hold) จำนวน ${list.length} รายการ ซึ่งหลายเคสติดปัญหาหน้างาน เช่น พื้นที่ยังไม่พร้อม หรือรอนัดหมายช่าง
+
+ข้อมูลนำเข้า (Data):
+${mdTable(["SO/ชื่องาน","ลูกค้า","สินค้า/Stage","ผู้รับผิดชอบ","คาดว่าปิด","ปัญหา / Action Plan","สถานะ"],
+  list.map(d=>["#"+d.id,d.customer,d.stage,d.owner,thaiDate(d.close),d.nextAction||"ไม่ระบุ",d.status]))}
+
+ภารกิจ (Task):
+1. จัดหมวดหมู่ปัญหาหลักที่ทำให้ยังไม่จบเป็น Actual เช่น (ก) เตรียมสถานที่ (ข) สินค้า/สต็อก (ค) การนัดหมายช่าง (ง) เอกสาร/เงื่อนไขการชำระเงิน
+2. สร้างเช็กลิสต์คำถาม 5 ข้อ ที่พนักงานขาย/ผู้ประสานงานต้องถามลูกค้าเพื่อปลดล็อกหน้างาน
+3. จัดลำดับ Priority งานที่ควรเร่งติดตั้งก่อน โดยพิจารณาจากมูลค่างาน + ความพร้อมของลูกค้า + ระยะเวลาที่ค้างอยู่
+
+รูปแบบผลลัพธ์ (Format): บุลเล็ตสรุปปัญหาภาพรวม + ตาราง Priority (ลำดับ, งาน, เจ้าของ, สิ่งที่ต้องทำต่อ, กำหนดเสร็จ)
+กติกา: ใช้ภาษาไทย ระบุวันที่ในรูปแบบ วว/ดด/ปปปป`;
+    }
+    function prompt3Text(d){
+      if(!d)return "ยังไม่มีดีลให้สร้างข้อความติดตาม";
+      return `บทบาท (Role): คุณคือที่ปรึกษาการขาย B2B (B2B Sales Coach)
+
+บริบท (Context): ต้องการร่างข้อความติดตามลูกค้าทาง LINE / Email อย่างมืออาชีพ ไม่กดดันเกินไป และเน้นการช่วยเหลือ
+
+ข้อมูลลูกค้า (Input):
+- ชื่อลูกค้า/บริษัท: ${d.customer}
+- ชื่องาน/สิ่งที่เสนอ: ${d.name}
+- มูลค่าโดยประมาณ: ${money(d.value)}
+- Stage ปัจจุบัน: ${d.stage} (Probability ${d.probability}%)
+- กำหนดปิดที่คาดไว้: ${thaiDate(d.close)}
+- เงื่อนไขการชำระ: [เงินสด / เงินผ่อน / เครดิตเทอม] ← ถ้าไม่ทราบให้ใช้ข้อความกลาง ๆ ไม่ระบุตัวเลข
+- สถานะล่าสุด / ปัญหาที่ติด: ${d.nextAction||"ไม่ระบุ"}
+- ผู้ดูแลฝั่งเรา: ${d.owner}
+
+ภารกิจ (Task): ร่างข้อความติดตาม 2 แบบ
+1. แบบสุภาพ เป็นกันเอง (สำหรับ LINE Official / แชตส่วนตัว): ถามความคืบหน้า เสนอช่วยดูหน้างาน หรือส่งเอกสารเพิ่ม
+2. แบบทางการ (สำหรับ Email / หนังสือสอบถาม): สรุปสถานะใบเสนอราคา/SO เงื่อนไขการชำระ และกำหนดเวลารอบส่งมอบหรือโปรโมชัน
+
+รูปแบบผลลัพธ์ (Format): ข้อความพร้อมคัดลอก 2 บล็อก (ระบุหัวข้อ "แบบ LINE" และ "แบบ Email") โดยใช้ช่องว่าง [ ... ] สำหรับชื่อผู้ติดต่อหรือวันที่ที่ยังไม่ทราบ
+กติกา: ห้ามแต่งราคา/เงื่อนไขที่ไม่มีในข้อมูล, ความยาวไม่เกิน 120 คำต่อแบบ`;
+    }
+    function promptOwnerRows(){
+      const map={};
+      deals.forEach(d=>{
+        const k=d.owner||"ไม่ระบุ";
+        const m=map[k]||(map[k]={owner:k,actual:0,actualN:0,install:0,installN:0,pipe:0,pipeN:0,lost:0,lostN:0});
+        const v=Number(d.value||0);
+        if(d.stage==="Won"){m.actual+=v;m.actualN++}
+        else if(d.stage==="Lost"){m.lost+=v;m.lostN++}
+        else if(d.status==="On Hold"){m.install+=v;m.installN++}
+        else {m.pipe+=v;m.pipeN++}
+      });
+      return Object.keys(map).map(k=>{
+        const m=map[k],closed=m.actualN+m.lostN;
+        return [m.owner,m.actual.toLocaleString("th-TH"),m.actualN,m.install.toLocaleString("th-TH"),m.installN,m.pipe.toLocaleString("th-TH"),m.pipeN,(closed?Math.round(m.actualN/closed*100):0)+"%"];
+      });
+    }
+    function prompt4Text(){
+      return `บทบาท (Role): คุณคือ Head of BU & Sales Director
+
+บริบท (Context): ข้อมูลสรุปยอดรายบุคคลของทีมขาย B2B Partner (มูลค่าเป็นบาท)
+คอลัมน์: Actual = ปิดงานแล้ว (Won) | รอติดตั้ง = ปิดขายแล้ว/On Hold รอติดตั้ง | Pipeline = ยังไม่ปิด | Conversion = Won ÷ (Won + Lost)
+
+ข้อมูลนำเข้า (Data):
+${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำนวน Actual","รอติดตั้ง (บาท)","จำนวน","Pipeline (บาท)","จำนวน","Conversion"],promptOwnerRows())}
+
+เป้าหมายยอดขายเดือนนี้: [ระบุเป้าเป็นบาท หรือระบุว่า "ยังไม่มีเป้าให้ใช้ค่าเฉลี่ย 3 เดือนย้อนหลัง"]
+
+ภารกิจ (Task):
+1. คำนวณ Conversion Rate จาก Pipeline → Actual ของทีมและรายบุคคล พร้อมชี้ว่าใครต่ำ/สูงกว่าค่าเฉลี่ยทีม
+2. วิเคราะห์ช่องว่าง (GAP) ระหว่างยอดปัจจุบันกับเป้าหมาย และประเมินว่าต้องปิดดีลเพิ่มกี่รายการ/มูลค่าเท่าไร
+3. เขียนจุดแข็งและจุดที่ต้องเร่งผลักดันรายบุคคล สำหรับใช้คุย 1-on-1 ประจำสัปดาห์
+
+รูปแบบผลลัพธ์ (Format): Executive Summary 3 หัวข้อสั้น ๆ — (1) ภาพรวมทีม (2) รายบุคคล (3) แผนขับเคลื่อนสัปดาห์หน้า
+กติกา: ตัวเลขต้องคำนวณจากตารางเท่านั้น ห้ามประมาณเกินข้อมูล ใช้ภาษาไทย`;
+    }
+    function promptCard(id,title,subtitle,text){
+      return panel(title,
+        `<textarea class="field" id="${id}" readonly spellcheck="false" style="width:100%;min-height:250px;font-family:ui-monospace,Consolas,monospace;font-size:11px;line-height:1.65;white-space:pre;overflow:auto">${promptHtml(text)}</textarea>
+         <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+           <button class="btn btn-primary" data-action="copy-prompt" data-copy="${id}"><i class="fa-regular fa-copy"></i>คัดลอก Prompt</button>
+           <span class="panel-sub">วางใน AI (ChatGPT / Copilot / Gemini) ได้ทันที</span>
+         </div>`,subtitle);
+    }
+    function renderPrompts(){
+      const pipe=promptPipelineDeals(),inst=promptInstallDeals();
+      const options=deals.map(d=>`<option value="${d.id}">${promptHtml(d.customer)} — ${promptHtml(d.name)}</option>`).join("");
+      return `${pageHead("AI Prompts สำหรับงานขาย","ชุดคำสั่งสำเร็จรูป 4 ชุด — ระบบเติมข้อมูลดีลของคุณให้อัตโนมัติ แล้วกดคัดลอกไปวางใน AI",btn("คัดลอกทั้ง 4 ชุด","copy-all-prompts","fa-regular fa-copy",true))}
+        ${promptCard("promptText1","1) วิเคราะห์ Pipeline & ประเมินโอกาสปิดงาน",`Pipeline ${pipe.length} ดีล · ${money(pipe.reduce((s,d)=>s+Number(d.value||0),0))}`,prompt1Text())}
+        ${promptCard("promptText2","2) งานค้าง/รอติดตั้ง — หาจุดติดและแผนปลดล็อก",`รอติดตั้ง/On Hold ${inst.length} รายการ`,prompt2Text())}
+        ${panel("3) ร่างข้อความติดตามลูกค้ารายบุคคล",
+          `<div class="toolbar" style="margin-bottom:10px"><select class="select" id="pf3Deal" style="min-width:260px">${options||'<option value="">ไม่มีดีล</option>'}</select><span class="panel-sub">เลือกดีล → ข้อความด้านล่างจะเปลี่ยนตาม</span></div>
+           <textarea class="field" id="promptText3" readonly spellcheck="false" style="width:100%;min-height:250px;font-family:ui-monospace,Consolas,monospace;font-size:11px;line-height:1.65;white-space:pre;overflow:auto">${promptHtml(prompt3Text(deals[0]))}</textarea>
+           <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn btn-primary" data-action="copy-prompt" data-copy="promptText3"><i class="fa-regular fa-copy"></i>คัดลอก Prompt</button><span class="panel-sub">LINE + Email 2 แบบในชุดเดียว</span></div>`,
+          "เลือกดีลรายตัวเพื่อสร้างข้อความติดตาม")}
+        ${promptCard("promptText4","4) สรุปผลงาน & คาดการณ์เป้ายอดขายรายบุคคล","คำนวณ Actual / รอติดตั้ง / Pipeline / Conversion จากข้อมูลจริง",prompt4Text())}
+        ${panel("หมายเหตุการใช้งาน",`<div class="suggestion"><strong>ยังไม่มีฟิลด์ "เงื่อนไขการชำระเงิน" ในระบบ</strong> — Prompt ที่ 3 จะให้ AI ใช้ข้อความกลาง ๆ แทน ถ้าต้องการให้แม่นขึ้น แจ้ง Admin ให้เพิ่มคอลัมน์ <code>payment</code> ในชีต <code>Deals</code> แล้วเชื่อมฟอร์ม "เพิ่มดีลของฉัน"<br><br>
+        • ข้อมูลที่ส่งให้ AI คือดีลที่คุณมีสิทธิ์เห็นเท่านั้น (Sale เห็นเฉพาะของตัวเอง)<br>
+        • ชุดข้อมูลอ้างอิงจาก Google Sheets ล่าสุด — กด Refresh ที่หน้า Sale Monitor ก่อนถ้าเพิ่งเพิ่มดีล</div>`)}`;
+    }
+    function copyToClipboard(text){
+      const fallback=()=>{const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy")}catch(err){}document.body.removeChild(ta);toast("คัดลอก Prompt แล้ว")};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>toast("คัดลอก Prompt แล้ว"),fallback)}else fallback();
+    }
+    function copyPromptText(id){const el=document.getElementById(id);if(!el)return;copyToClipboard(el.value!==undefined?el.value:el.textContent)}
+    function copyAllPrompts(){const parts=["promptText1","promptText2","promptText3","promptText4"].map(id=>{const el=document.getElementById(id);return el?"### "+id+"\n\n"+(el.value!==undefined?el.value:el.textContent):""}).filter(Boolean);copyToClipboard(parts.join("\n\n---\n\n"))}
+    function updatePrompt3(){const sel=document.getElementById("pf3Deal"),ta=document.getElementById("promptText3");if(!sel||!ta)return;const d=deals.find(x=>String(x.id)===sel.value)||deals[0];ta.value=prompt3Text(d)}
+
     /* ===== JavaScript: Event handlers and actions ===== */
     document.getElementById("navList").addEventListener("click",e=>{const item=e.target.closest(".nav-item");if(!item)return;currentPage=item.dataset.page;render()});
     document.getElementById("mobileMenu").addEventListener("click",()=>document.getElementById("sidebar").classList.toggle("open"));
     document.getElementById("notificationBtn").addEventListener("click",()=>toast("คุณมีการแจ้งเตือนใหม่ 3 รายการ"));
     document.getElementById("modalBackdrop").addEventListener("click",e=>{if(e.target.id==="modalBackdrop"||e.target.closest("[data-close-modal]"))closeModal()});
     document.getElementById("content").addEventListener("input",e=>{if(e.target.id==="dealSearch")applyDealFilters()});
-    document.getElementById("content").addEventListener("change",e=>{if(["ownerFilter","teamFilter","stageFilter","riskFilter","periodFilter"].includes(e.target.id))applyDealFilters();if(e.target.id==="lineTicket")updateLinePreview()});
+    document.getElementById("content").addEventListener("change",e=>{if(["ownerFilter","teamFilter","stageFilter","riskFilter","periodFilter"].includes(e.target.id))applyDealFilters();if(e.target.id==="lineTicket")updateLinePreview();if(e.target.id==="pf3Deal")updatePrompt3()});
     document.getElementById("content").addEventListener("click",e=>{
       const row=e.target.closest("[data-deal]");if(row){openDeal(row.dataset.deal);return}
       const customer=e.target.closest("[data-customer]");if(customer){e.preventDefault();openCustomer(customer.dataset.customer);return}
@@ -445,6 +591,8 @@
       if(e.target.closest("#sortRisk")){sortDesc=!sortDesc;applyDealFilters();return}
       const action=e.target.closest("[data-action]")?.dataset.action;if(!action)return;
       if(action==="go-sales"){currentPage="sales";render()}
+      else if(action==="copy-prompt"){const id=e.target.closest("[data-copy]")?.dataset.copy;if(id)copyPromptText(id)}
+      else if(action==="copy-all-prompts")copyAllPrompts()
       else if(action==="add-deal")showDealForm()
       else if(action==="refresh"){const button=e.target.closest("[data-action]");button.classList.add("loading");button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>กำลัง Refresh...';setTimeout(()=>{button.classList.remove("loading");render();toast("Refresh Data สำเร็จ")},1000)}
       else if(action==="export-deals")exportDeals()
