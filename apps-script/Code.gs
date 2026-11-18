@@ -27,6 +27,7 @@ function doGet(e) {
     var tpl = HtmlService.createTemplateFromFile('Users');
     tpl.userEmail = email;
     tpl.userLevel = level;
+    tpl.webAppUrl = getWebAppUrl();
     return tpl.evaluate()
       .setTitle('User Management · ' + APP_TITLE)
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
@@ -36,6 +37,7 @@ function doGet(e) {
   var t = HtmlService.createTemplateFromFile('Index');
   t.userEmail = email;
   t.userLevel = level;
+  t.webAppUrl = getWebAppUrl();
   return t.evaluate()
     .setTitle(APP_TITLE)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover')

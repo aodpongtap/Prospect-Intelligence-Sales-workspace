@@ -78,7 +78,8 @@
       if (LEVEL !== 'master' || !nav) return;
       var a = document.createElement('a');
       a.className = 'nav-item';
-      a.href = '?page=users';
+      a.href = '<?= webAppUrl ?>?page=users';
+      a.target = '_top';
       a.style.textDecoration = 'none';
       a.innerHTML = '<i class="fa-solid fa-users-gear"></i>User Management';
       nav.appendChild(a);
