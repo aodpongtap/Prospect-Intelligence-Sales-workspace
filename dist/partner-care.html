@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partner Care Center · ดูแล Partner และติดตามทีมขาย</title>
+<meta name="description" content="ศูนย์ดูแล Partner และติดตามผลงานทีมขาย — ดูสุขภาพ Partner, งานค้าง, Pipeline และผลงานรายคนในที่เดียว">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F7FB; --card:#fff; --ink:#0F1B2D; --muted:#64748B; --line:#E6EBF2;
+    --navy:#0B2545; --primary:#1D4ED8; --teal:#0F766E; --green:#15803D;
+    --amber:#B45309; --red:#B91C1C; --radius:14px; --shadow:0 6px 20px rgba(11,37,69,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Prompt",sans-serif;font-size:13.5px;-webkit-font-smoothing:antialiased}
+  button{font:inherit;cursor:pointer}
+  input,select,textarea{font:inherit}
+
+  /* ---------- Login ---------- */
+  #gate{position:fixed;inset:0;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#0B2545 0%,#123A63 55%,#0F766E 130%);z-index:60}
+  .gate-card{width:min(400px,100%);background:#fff;border-radius:18px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.28)}
+  .gate-brand{display:flex;align-items:center;gap:11px;margin-bottom:20px}
+  .gate-brand .mark{width:42px;height:42px;border-radius:12px;background:var(--primary);color:#fff;display:grid;place-items:center;font-size:17px}
+  .gate-brand strong{display:block;font-size:14px}
+  .gate-brand small{color:var(--muted);font-size:11px}
+  .gate-card h1{margin:0 0 4px;font-size:19px;color:var(--navy)}
+  .gate-card p.sub{margin:0 0 18px;color:var(--muted);font-size:11.5px}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:11.5px;color:#475467;margin-bottom:5px}
+  .field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;outline:none}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:#93B4F8;box-shadow:0 0 0 3px rgba(29,78,216,.1)}
+  .btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;color:#344054;border-radius:9px;padding:9px 13px;font-size:12px;transition:.15s}
+  .btn:hover{border-color:#C7D3E3;box-shadow:0 3px 10px rgba(11,37,69,.07)}
+  .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .btn.primary:hover{background:#1a45c0}
+  .btn.wide{width:100%;justify-content:center;padding:11px}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+  .err{display:none;background:#FEF2F2;border:1px solid #FDE2E2;color:#B91C1C;border-radius:9px;padding:9px 11px;font-size:11.5px;margin-bottom:12px}
+  .gate-note{margin-top:14px;font-size:10.5px;color:var(--muted);line-height:1.7}
+
+  /* ---------- Shell ---------- */
+  #app{display:none}
+  .rail{position:fixed;inset:0 auto 0 0;width:236px;background:var(--navy);color:#CBD8E6;padding:20px 12px;display:flex;flex-direction:column;z-index:20}
+  .brand{display:flex;align-items:center;gap:11px;padding:0 8px 22px;color:#fff}
+  .brand .mark{width:36px;height:36px;border-radius:11px;background:linear-gradient(140deg,var(--primary),var(--teal));display:grid;place-items:center;font-size:15px}
+  .brand strong{display:block;font-size:12.5px;line-height:1.35}
+  .brand small{color:#8FA6BE;font-size:10px}
+  .rail-label{padding:4px 10px 8px;color:#7C93AC;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase}
+  .nav{display:grid;gap:4px}
+  .nav button{border:0;background:transparent;color:#C2D0DE;display:flex;align-items:center;gap:11px;text-align:left;padding:10px 12px;border-radius:9px;font-size:12.5px;width:100%;transition:.15s}
+  .nav button i{width:16px;text-align:center;font-size:13px}
+  .nav button:hover{background:rgba(255,255,255,.09);color:#fff}
+  .nav button.on{background:rgba(255,255,255,.14);color:#fff;box-shadow:inset 3px 0 #5AB0A8}
+  .rail-foot{margin-top:auto;border-top:1px solid rgba(255,255,255,.12);padding:12px 8px 0;font-size:10px;color:#8FA6BE}
+
+  .main{margin-left:236px;min-height:100vh}
+  .top{position:sticky;top:0;z-index:10;height:64px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 26px;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .top h2{margin:0;font-size:14.5px;color:var(--navy);font-weight:600}
+  .top .sub{color:var(--muted);font-size:10.5px}
+  .who{display:flex;align-items:center;gap:9px}
+  .avatar{width:34px;height:34px;border-radius:50%;background:#DBEAFE;color:#12375D;display:grid;place-items:center;font-size:11.5px;font-weight:600}
+  .who strong{display:block;font-size:11.5px}
+  .who small{color:var(--muted);font-size:10px}
+  .content{max-width:1500px;padding:22px 26px 40px;margin:0 auto}
+
+  /* ---------- Cards ---------- */
+  .grid{display:grid;gap:14px}
+  .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+  .kpi-label{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:11px}
+  .kpi-label i{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:12px;background:#EEF2FF;color:var(--primary)}
+  .kpi-value{font-size:23px;font-weight:600;color:var(--navy);margin:9px 0 3px;letter-spacing:-.4px}
+  .kpi-foot{color:var(--muted);font-size:10.5px}
+  .card h3{margin:0 0 2px;font-size:13px;color:var(--navy)}
+  .card .hint{color:var(--muted);font-size:10.5px;margin-bottom:12px}
+  .head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .head h3{margin:0}
+
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;font-size:10px;color:#667085;font-weight:500;background:#F8FAFC;padding:9px 10px;white-space:nowrap}
+  td{padding:10px;border-bottom:1px solid #EFF3F8;font-size:11.5px;color:#334155;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#FAFCFF}
+  .name{color:var(--navy);font-weight:500}
+  .sub2{color:var(--muted);font-size:10.5px}
+  .wrap{overflow:auto}
+  .pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 9px;font-size:10px;font-weight:500;white-space:nowrap}
+  .pill.good{background:#DCFCE7;color:#15803D}
+  .pill.watch{background:#FEF3C7;color:#B45309}
+  .pill.risk{background:#FEE2E2;color:#B91C1C}
+  .pill.info{background:#E0EAFF;color:#1D4ED8}
+  .pill.mute{background:#EEF2F6;color:#475569}
+  .bar{height:6px;border-radius:6px;background:#EDF1F7;overflow:hidden;min-width:70px}
+  .bar > span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#60A5FA,#1D4ED8)}
+  .empty{padding:34px 12px;text-align:center;color:var(--muted);font-size:12px}
+  .empty i{display:block;font-size:20px;margin-bottom:8px;color:#B7C4D4}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .toolbar input,.toolbar select{padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;outline:none;font-size:11.5px}
+  .toolbar input:focus,.toolbar select:focus{border-color:#93B4F8;box-shadow:0 0 0 3px rgba(29,78,216,.1)}
+  .row-hl{background:#FFF7ED}
+
+  /* ---------- Modal ---------- */
+  .backdrop{position:fixed;inset:0;background:rgba(11,23,42,.5);display:none;place-items:center;padding:16px;z-index:50;backdrop-filter:blur(2px)}
+  .backdrop.open{display:grid}
+  .modal{width:min(560px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+  .modal header{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .modal header h3{margin:0;font-size:15px;color:var(--navy)}
+  .modal header p{margin:3px 0 0;color:var(--muted);font-size:10.5px}
+  .modal .body{padding:18px 20px}
+  .modal footer{padding:13px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+  .x{border:0;background:transparent;color:var(--muted);font-size:16px;line-height:1}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:var(--navy);color:#fff;border-radius:11px;padding:11px 16px;font-size:12px;opacity:0;pointer-events:none;transition:.25s;z-index:80;box-shadow:0 12px 30px rgba(11,37,69,.3)}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @media(max-width:1100px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:820px){
+    .rail{position:static;inset:auto;width:auto;flex-direction:row;overflow:auto;padding:8px;gap:6px;align-items:center}
+    .brand,.rail-label,.rail-foot{display:none}
+    .nav{display:flex;gap:6px}
+    .nav button{white-space:nowrap;padding:9px 12px}
+    .main{margin-left:0}
+    .content{padding:16px 14px 30px}
+    .two{grid-template-columns:1fr}
+    .top{padding:0 14px;height:58px}
+    .who .txt{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="gate">
+  <form class="gate-card" id="loginForm" autocomplete="on">
+    <div class="gate-brand">
+      <div class="mark"><i class="fa-solid fa-handshake-angle"></i></div>
+      <div><strong>Partner Care Center</strong><small>ดูแล Partner · ติดตามทีมขาย</small></div>
+    </div>
+    <h1>เข้าสู่ระบบ</h1>
+    <p class="sub">ใช้บัญชีที่ได้รับจากผู้ดูแลระบบ (ออกที่หน้า User Management)</p>
+    <div class="err" id="loginErr"></div>
+    <div class="field"><label for="email">อีเมล</label><input id="email" name="email" type="email" required placeholder="name@company.com"></div>
+    <div class="field"><label for="password">รหัสผ่าน</label><input id="password" name="password" type="password" required placeholder="••••••••"></div>
+    <button class="btn primary wide" id="loginBtn" type="submit"><i class="fa-solid fa-arrow-right-to-bracket"></i> เข้าสู่ระบบ</button>
+    <div class="gate-note">หากยังไม่มีบัญชี กรุณาติดต่อ Admin · ระบบนี้เชื่อมข้อมูลกับ Google Sheets</div>
+  </form>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <aside class="rail">
+    <div class="brand">
+      <div class="mark"><i class="fa-solid fa-handshake-angle"></i></div>
+      <div><strong>Partner Care Center</strong><small>Sales &amp; Partner Monitoring</small></div>
+    </div>
+    <div class="rail-label">เมนู</div>
+    <nav class="nav" id="nav">
+      <button data-view="team" class="on"><i class="fa-solid fa-chart-line"></i><span id="navTeam">ภาพรวมทีมขาย</span></button>
+      <button data-view="partners"><i class="fa-solid fa-handshake"></i>ดูแล Partner</button>
+      <button data-view="deals"><i class="fa-solid fa-table-list"></i>รายการดีล</button>
+    </nav>
+    <div class="rail-foot"><i class="fa-solid fa-database"></i> ข้อมูลจาก Google Sheets</div>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <div>
+        <h2 id="pageTitle">ภาพรวมทีมขาย</h2>
+        <div class="sub" id="pageSub">ติดตามผลงานและความคืบหน้าของทีม</div>
+      </div>
+      <div class="who">
+        <div class="avatar" id="avatar">--</div>
+        <div class="txt"><strong id="meName">-</strong><small id="meRole">-</small></div>
+        <button class="btn ghost" id="logout" title="ออกจากระบบ"><i class="fa-solid fa-right-from-bracket"></i></button>
+      </div>
+    </header>
+    <div class="content" id="view"></div>
+  </main>
+</div>
+
+<div class="backdrop" id="backdrop"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="../assets/auth-sheets.js?v=4"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ---------------- state ---------------- */
+  var ME = null;
+  var DEALS = [];
+  var VIEW = 'team';
+  var TOUCH_KEY = 'pc_touch_log_v1';
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------------- utils ---------------- */
+  function money(n) { return '฿' + Number(n || 0).toLocaleString('th-TH'); }
+  function shortMoney(n) {
+    n = Number(n || 0);
+    if (n >= 1000000) return '฿' + (n / 1000000).toFixed(2) + 'M';
+    if (n >= 1000) return '฿' + Math.round(n / 1000) + 'K';
+    return '฿' + n;
+  }
+  function toDate(s) {
+    if (!s) return null;
+    var d = new Date(String(s).length <= 10 ? s + 'T00:00:00' : s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function thaiDate(s) {
+    var d = toDate(s);
+    return d ? d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '—';
+  }
+  function daysAgo(s) {
+    var d = toDate(s);
+    if (!d) return null;
+    return Math.floor((Date.now() - d.getTime()) / 86400000);
+  }
+  function esc(s) {
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function toast(msg) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 2600);
+  }
+  function todayISO() { return new Date().toISOString().slice(0, 10); }
+
+  /* ---------------- touch log (บันทึกการดูแล Partner) ---------------- */
+  function touchLog() {
+    try { return JSON.parse(localStorage.getItem(TOUCH_KEY) || '{}'); } catch (e) { return {}; }
+  }
+  function saveTouch(key, note) {
+    var log = touchLog();
+    var arr = log[key] || [];
+    arr.unshift({ date: todayISO(), note: note, by: (ME && ME.name) || (ME && ME.email) || '-' });
+    log[key] = arr.slice(0, 20);
+    try { localStorage.setItem(TOUCH_KEY, JSON.stringify(log)); } catch (e) {}
+  }
+  function lastTouch(key) {
+    var arr = (touchLog()[key] || []);
+    return arr.length ? arr[0] : null;
+  }
+
+  /* ---------------- derived metrics ---------------- */
+  function isOpen(d) { return d.stage !== 'Won' && d.stage !== 'Lost'; }
+  function isOverdue(d) {
+    var c = toDate(d.close);
+    return !!c && isOpen(d) && c.getTime() < Date.now();
+  }
+  function risk(d) {
+    var s = 0;
+    var c = toDate(d.close);
+    if (c && c.getTime() < Date.now() && isOpen(d)) s += 40;
+    if (!d.nextAction) s += 25;
+    if (Number(d.probability || 0) < 40 && isOpen(d)) s += 15;
+    var upd = daysAgo(d.updatedAt || d.createdAt);
+    if (upd !== null && upd > 14) s += 15;
+    if (String(d.status) === 'On Hold') s += 20;
+    return Math.min(100, s);
+  }
+  function riskPill(r) {
+    if (r >= 55) return '<span class="pill risk"><i class="fa-solid fa-circle-exclamation"></i>เสี่ยงสูง</span>';
+    if (r >= 30) return '<span class="pill watch"><i class="fa-solid fa-triangle-exclamation"></i>เฝ้าระวัง</span>';
+    return '<span class="pill good"><i class="fa-solid fa-circle-check"></i>ปกติ</span>';
+  }
+  function partnerKey(d) { return String(d.customer || '-').trim(); }
+
+  function partnerAgg() {
+    var map = {};
+    DEALS.forEach(function (d) {
+      var k = partnerKey(d);
+      var p = map[k] || (map[k] = { key: k, deals: 0, value: 0, won: 0, open: 0, overdue: 0, atRisk: 0, lastActivity: '', nextAction: '', nextClose: '', owner: '' });
+      p.deals++;
+      p.value += Number(d.value || 0);
+      if (d.stage === 'Won') p.won += Number(d.value || 0);
+      if (isOpen(d)) p.open++;
+      if (isOverdue(d)) p.overdue++;
+      if (risk(d) >= 30) p.atRisk++;
+      var upd = d.updatedAt || d.createdAt || '';
+      if (String(upd) > String(p.lastActivity)) { p.lastActivity = upd; p.owner = d.ownerName || d.ownerEmail || ''; }
+      if (!p.nextAction && d.nextAction) p.nextAction = d.nextAction;
+      var c = d.close || '';
+      if (isOpen(d) && c && (!p.nextClose || c < p.nextClose)) p.nextClose = c;
+    });
+
+    return Object.keys(map).map(function (k) {
+      var p = map[k];
+      var t = lastTouch(k);
+      var lastDays = daysAgo(t ? t.date : p.lastActivity);
+      var health = 50;
+      if (p.nextAction) health += 15;
+      if (lastDays === null) health -= 15;
+      else if (lastDays <= 14) health += 20;
+      else if (lastDays <= 30) health += 5;
+      else health -= 20;
+      if (p.won > 0) health += 10;
+      if (p.overdue > 0) health -= 20;
+      if (p.atRisk > 0) health -= 10;
+      p.health = Math.max(0, Math.min(100, health));
+      p.lastTouch = t;
+      p.lastDays = lastDays;
+      return p;
+    }).sort(function (a, b) { return a.health - b.health || b.value - a.value; });
+  }
+
+  function teamRows() {
+    var map = {};
+    DEALS.forEach(function (d) {
+      var k = d.ownerName || d.ownerEmail || '-';
+      var r = map[k] || (map[k] = { owner: k, deals: 0, value: 0, forecast: 0, won: 0, open: 0, atRisk: 0, overdue: 0 });
+      r.deals++;
+      r.value += Number(d.value || 0);
+      if (isOpen(d)) { r.open++; r.forecast += Number(d.value || 0) * Number(d.probability || 0) / 100; }
+      if (d.stage === 'Won') r.won += Number(d.value || 0);
+      if (risk(d) >= 55) r.atRisk++;
+      if (isOverdue(d)) r.overdue++;
+    });
+    return Object.keys(map).map(function (k) { return map[k]; })
+      .sort(function (a, b) { return b.value - a.value; });
+  }
+
+  /* ---------------- views ---------------- */
+  function viewTeam() {
+    var rows = teamRows();
+    var totalValue = DEALS.reduce(function (s, d) { return s + Number(d.value || 0); }, 0);
+    var open = DEALS.filter(isOpen);
+    var forecast = open.reduce(function (s, d) { return s + Number(d.value || 0) * Number(d.probability || 0) / 100; }, 0);
+    var wonValue = DEALS.filter(function (d) { return d.stage === 'Won'; }).reduce(function (s, d) { return s + Number(d.value || 0); }, 0);
+    var overdue = DEALS.filter(isOverdue);
+    var risky = DEALS.filter(function (d) { return risk(d) >= 55; });
+    var maxValue = rows.reduce(function (m, r) { return Math.max(m, r.value); }, 1);
+
+    var kpis = ''
+      + kpi('มูลค่ารวมทั้ง Pipeline', shortMoney(totalValue), 'fa-solid fa-sack-dollar', '#1D4ED8', DEALS.length + ' ดีล')
+      + kpi('Forecast ถ่วงน้ำหนัก', shortMoney(forecast), 'fa-solid fa-chart-simple', '#0F766E', open.length + ' ดีลที่ยังเปิด')
+      + kpi('ปิดได้แล้ว (Won)', shortMoney(wonValue), 'fa-solid fa-trophy', '#15803D', DEALS.filter(function (d) { return d.stage === 'Won'; }).length + ' ดีล')
+      + kpi('ต้องด่วน', overdue.length + ' เกินกำหนด', 'fa-solid fa-fire', '#B91C1C', risky.length + ' ดีลเสี่ยงสูง');
+
+    var leader = rows.length ? '<div class="wrap"><table><thead><tr>'
+      + '<th>ผู้รับผิดชอบ</th><th>ดีล</th><th>มูลค่ารวม</th><th>Forecast</th><th>ปิดได้</th><th>เสี่ยง/เกินกำหนด</th><th style="min-width:120px">สัดส่วนมูลค่า</th>'
+      + '</tr></thead><tbody>'
+      + rows.map(function (r) {
+          var pct = Math.round(r.value / maxValue * 100);
+          return '<tr>'
+            + '<td class="name">' + esc(r.owner) + '</td>'
+            + '<td>' + r.deals + '</td>'
+            + '<td>' + money(r.value) + '</td>'
+            + '<td>' + money(Math.round(r.forecast)) + '</td>'
+            + '<td>' + (r.won ? money(r.won) : '<span class="sub2">—</span>') + '</td>'
+            + '<td>' + (r.atRisk + r.overdue > 0
+                ? '<span class="pill risk">' + r.atRisk + ' เสี่ยง</span> <span class="pill watch">' + r.overdue + ' เกินกำหนด</span>'
+                : '<span class="pill good">ไม่มี</span>') + '</td>'
+            + '<td><div class="bar"><span style="width:' + pct + '%"></span></div></td>'
+            + '</tr>';
+        }).join('')
+      + '</tbody></table></div>'
+      : '<div class="empty"><i class="fa-solid fa-users"></i>ยังไม่มีข้อมูลทีม</div>';
+
+    var urgent = DEALS.slice().sort(function (a, b) { return risk(b) - risk(a); }).slice(0, 6);
+    var urgentList = urgent.length ? '<div class="wrap"><table><thead><tr><th>ดีล / Partner</th><th>ผู้รับผิดชอบ</th><th>มูลค่า</th><th>คาดปิด</th><th>สถานะ</th></tr></thead><tbody>'
+      + urgent.map(function (d) {
+          return '<tr class="' + (risk(d) >= 55 ? 'row-hl' : '') + '">'
+            + '<td><div class="name">' + esc(d.name) + '</div><div class="sub2">' + esc(d.customer) + '</div></td>'
+            + '<td>' + esc(d.ownerName || d.ownerEmail || '-') + '</td>'
+            + '<td>' + money(d.value) + '</td>'
+            + '<td>' + thaiDate(d.close) + (isOverdue(d) ? ' <span class="pill risk">เลยกำหนด</span>' : '') + '</td>'
+            + '<td>' + riskPill(risk(d)) + '</td>'
+            + '</tr>';
+        }).join('') + '</tbody></table></div>'
+      : '<div class="empty"><i class="fa-solid fa-inbox"></i>ไม่มีดีลที่ต้องติดตามด่วน</div>';
+
+    return '<div class="grid kpis" style="margin-bottom:14px">' + kpis + '</div>'
+      + '<div class="card" style="margin-bottom:14px">'
+      + '<div class="head"><div><h3>ผลงานรายคน</h3><div class="hint">' + (ME.isAdmin ? 'เห็นดีลของทุกคนในทีม' : 'คุณเห็นเฉพาะดีลของตัวเอง') + '</div></div>'
+      + '<button class="btn" data-action="add-deal"><i class="fa-solid fa-plus"></i> เพิ่มดีล</button></div>'
+      + leader + '</div>'
+      + '<div class="card"><div class="head"><div><h3>ดีลที่ต้องติดตามด่วน</h3><div class="hint">เรียงตามความเสี่ยง: เลยกำหนดปิด / ไม่มี Next Action / ไม่มีความเคลื่อนไหว</div></div></div>' + urgentList + '</div>';
+  }
+
+  function kpi(label, value, icon, color, foot) {
+    return '<article class="card"><div class="kpi-label">' + label + '<i class="' + icon + '" style="background:' + color + '14;color:' + color + '"></i></div>'
+      + '<div class="kpi-value">' + value + '</div><div class="kpi-foot">' + foot + '</div></article>';
+  }
+
+  function viewPartners() {
+    var list = partnerAgg();
+    if (!list.length) return '<div class="card"><div class="empty"><i class="fa-solid fa-handshake"></i>ยังไม่มี Partner ในความดูแล</div></div>';
+
+    var rows = list.map(function (p) {
+      var state = p.health >= 70 ? '<span class="pill good">ดี (' + p.health + ')</span>'
+        : p.health >= 40 ? '<span class="pill watch">เฝ้าระวัง (' + p.health + ')</span>'
+        : '<span class="pill risk">เสี่ยง (' + p.health + ')</span>';
+      var touch = p.lastTouch ? thaiDate(p.lastTouch.date) : (p.lastActivity ? thaiDate(p.lastActivity) : '—');
+      var touchSub = p.lastDays === null ? 'ไม่มีข้อมูล' : (p.lastDays === 0 ? 'วันนี้' : p.lastDays + ' วันก่อน');
+      return '<tr>'
+        + '<td><div class="name">' + esc(p.key) + '</div><div class="sub2">' + p.deals + ' ดีล · ผู้ดูแล ' + esc(p.owner || '-') + '</div></td>'
+        + '<td>' + money(p.value) + (p.won ? '<div class="sub2">ปิดได้ ' + shortMoney(p.won) + '</div>' : '') + '</td>'
+        + '<td>' + state + (p.overdue ? '<div class="sub2" style="color:#B91C1C">เลยกำหนด ' + p.overdue + ' ดีล</div>' : '') + '</td>'
+        + '<td>' + touch + '<div class="sub2">' + touchSub + '</div></td>'
+        + '<td>' + (p.nextAction ? esc(p.nextAction) : '<span class="sub2">ยังไม่ระบุ</span>') + '</td>'
+        + '<td>' + thaiDate(p.nextClose) + '</td>'
+        + '<td><button class="btn" data-touch="' + esc(p.key) + '"><i class="fa-solid fa-phone"></i> บันทึกการติดต่อ</button></td>'
+        + '</tr>';
+    }).join('');
+
+    var risky = list.filter(function (p) { return p.health < 40; }).length;
+    var quiet = list.filter(function (p) { return p.lastDays === null || p.lastDays > 30; }).length;
+
+    return '<div class="grid kpis" style="margin-bottom:14px">'
+      + kpi('Partner ทั้งหมด', String(list.length), 'fa-solid fa-handshake', '#1D4ED8', 'จากดีลในความดูแล')
+      + kpi('ต้องดูแลด่วน', String(risky), 'fa-solid fa-heart-crack', '#B91C1C', 'สุขภาพต่ำกว่า 40')
+      + kpi('เงียบเกิน 30 วัน', String(quiet), 'fa-solid fa-bell-slash', '#B45309', 'ไม่มีกิจกรรม/ไม่มีการติดต่อ')
+      + kpi('มูลค่ารวม', shortMoney(list.reduce(function (s, p) { return s + p.value; }, 0)), 'fa-solid fa-coins', '#0F766E', 'ทุก Partner')
+      + '</div>'
+      + '<div class="card"><div class="head"><div><h3>รายชื่อ Partner และสุขภาพความสัมพันธ์</h3>'
+      + '<div class="hint">สุขภาพคำนวณจาก: มี Next Action · ความถี่ในการติดต่อ · ดีลเลยกำหนด · เคยปิดงานได้</div></div>'
+      + '<div class="toolbar"><input id="pSearch" placeholder="ค้นหา Partner..." style="min-width:180px"></div></div>'
+      + '<div class="wrap"><table id="pTable"><thead><tr><th>Partner</th><th>มูลค่า</th><th>สุขภาพ</th><th>ติดต่อล่าสุด</th><th>Next Action</th><th>ดีลถัดไปปิด</th><th></th></tr></thead><tbody>'
+      + rows + '</tbody></table></div></div>';
+  }
+
+  function viewDeals() {
+    if (!DEALS.length) return '<div class="card"><div class="empty"><i class="fa-solid fa-folder-open"></i>ยังไม่มีดีล</div></div>';
+    var stages = ['Prospect', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'];
+    var rows = DEALS.slice().sort(function (a, b) { return risk(b) - risk(a); }).map(function (d) {
+      return '<tr data-name="' + esc((d.name || '') + ' ' + (d.customer || '')) + '" data-stage="' + esc(d.stage) + '">'
+        + '<td><div class="name">' + esc(d.name) + '</div><div class="sub2">' + esc(d.customer) + '</div></td>'
+        + '<td>' + esc(d.ownerName || d.ownerEmail || '-') + '</td>'
+        + '<td>' + money(d.value) + '</td>'
+        + '<td><span class="pill info">' + esc(d.stage) + '</span></td>'
+        + '<td>' + Number(d.probability || 0) + '%<div class="sub2">ถ่วงน้ำหนัก ' + shortMoney(Number(d.value || 0) * Number(d.probability || 0) / 100) + '</div></td>'
+        + '<td>' + thaiDate(d.close) + (isOverdue(d) ? ' <span class="pill risk">เลยกำหนด</span>' : '') + '</td>'
+        + '<td>' + (d.nextAction ? esc(d.nextAction) : '<span class="sub2">ยังไม่ระบุ</span>') + '</td>'
+        + '<td>' + riskPill(risk(d)) + '</td>'
+        + '</tr>';
+    }).join('');
+
+    return '<div class="card"><div class="head"><div><h3>รายการดีลทั้งหมด (' + DEALS.length + ')</h3><div class="hint">เรียงตามความเสี่ยงสูงสุดก่อน</div></div>'
+      + '<div class="toolbar"><input id="dSearch" placeholder="ค้นหาชื่อดีล/Partner"><select id="dStage"><option value="">ทุก Stage</option>'
+      + stages.map(function (s) { return '<option>' + s + '</option>'; }).join('') + '</select>'
+      + '<button class="btn primary" data-action="add-deal"><i class="fa-solid fa-plus"></i> เพิ่มดีล</button></div></div>'
+      + '<div class="wrap"><table id="dTable"><thead><tr><th>ดีล / Partner</th><th>ผู้รับผิดชอบ</th><th>มูลค่า</th><th>Stage</th><th>โอกาส</th><th>คาดปิด</th><th>Next Action</th><th>สถานะ</th></tr></thead><tbody>'
+      + rows + '</tbody></table></div></div>';
+  }
+
+  /* ---------------- render ---------------- */
+  var TITLES = {
+    team: ['ภาพรวมทีมขาย', 'ติดตามผลงานและความคืบหน้าของทีม'],
+    partners: ['ดูแล Partner', 'สุขภาพความสัมพันธ์ งานค้าง และการติดต่อล่าสุด'],
+    deals: ['รายการดีล', 'ดีลทั้งหมดที่คุณมีสิทธิ์เห็น']
+  };
+
+  function render() {
+    $('navTeam').textContent = ME.isAdmin ? 'ภาพรวมทีมขาย' : 'ผลงานของฉัน';
+    $('pageTitle').textContent = TITLES[VIEW][0];
+    $('pageSub').textContent = TITLES[VIEW][1];
+    Array.prototype.forEach.call(document.querySelectorAll('#nav button'), function (b) {
+      b.classList.toggle('on', b.dataset.view === VIEW);
+    });
+    var html = VIEW === 'team' ? viewTeam() : VIEW === 'partners' ? viewPartners() : viewDeals();
+    $('view').innerHTML = html;
+    bindFilters();
+  }
+
+  function bindFilters() {
+    var p = $('pSearch');
+    if (p) p.addEventListener('input', function () {
+      var q = p.value.toLowerCase();
+      Array.prototype.forEach.call(document.querySelectorAll('#pTable tbody tr'), function (tr) {
+        tr.style.display = tr.textContent.toLowerCase().indexOf(q) >= 0 ? '' : 'none';
+      });
+    });
+    var ds = $('dSearch'), dg = $('dStage');
+    function filterDeals() {
+      var q = (ds && ds.value || '').toLowerCase(), st = dg && dg.value || '';
+      Array.prototype.forEach.call(document.querySelectorAll('#dTable tbody tr'), function (tr) {
+        var ok = (!q || (tr.dataset.name || '').toLowerCase().indexOf(q) >= 0) && (!st || tr.dataset.stage === st);
+        tr.style.display = ok ? '' : 'none';
+      });
+    }
+    if (ds) ds.addEventListener('input', filterDeals);
+    if (dg) dg.addEventListener('change', filterDeals);
+  }
+
+  /* ---------------- modals ---------------- */
+  function openModal(html) { $('modal').innerHTML = html; $('backdrop').classList.add('open'); }
+  function closeModal() { $('backdrop').classList.remove('open'); $('modal').innerHTML = ''; }
+
+  function dealFormModal() {
+    var stages = ['Prospect', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'];
+    openModal(
+      '<header><div><h3>เพิ่มดีลใหม่</h3><p>บันทึกในชื่อ ' + esc(ME.name || ME.email) + '</p></div>'
+      + '<button class="x" data-close>&times;</button></header>'
+      + '<form class="body" id="dealForm">'
+      + '<div class="field"><label>ชื่อดีล / งาน *</label><input name="name" required placeholder="เช่น ระบบตู้กดน้ำ Partner A"></div>'
+      + '<div class="field"><label>Partner / ลูกค้า *</label><input name="customer" required placeholder="ชื่อบริษัท"></div>'
+      + '<div class="two"><div class="field"><label>มูลค่า (บาท)</label><input name="value" type="number" min="0" value="0"></div>'
+      + '<div class="field"><label>โอกาสปิด (%)</label><input name="probability" type="number" min="0" max="100" value="30"></div></div>'
+      + '<div class="two"><div class="field"><label>Stage</label><select name="stage">' + stages.map(function (s) { return '<option>' + s + '</option>'; }).join('') + '</select></div>'
+      + '<div class="field"><label>คาดว่าจะปิด</label><input name="close" type="date" value="' + todayISO() + '"></div></div>'
+      + '<div class="field"><label>Next Action</label><input name="nextAction" placeholder="เช่น นัดติดตั้ง / รอราคา / โทรตามผล"></div>'
+      + '<div class="field"><label>สถานะ</label><select name="status"><option>Healthy</option><option>Need Attention</option><option>At Risk</option><option>On Hold</option></select></div>'
+      + '</form>'
+      + '<footer><button class="btn" data-close>ยกเลิก</button><button class="btn primary" id="saveDeal"><i class="fa-solid fa-check"></i> บันทึกดีล</button></footer>'
+    );
+
+    $('saveDeal').addEventListener('click', function () {
+      var f = $('dealForm');
+      if (!f.reportValidity()) return;
+      var btn = $('saveDeal');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...';
+      window.PIAuth.addDeal({
+        name: f.name.value.trim(),
+        customer: f.customer.value.trim(),
+        value: Number(f.value.value || 0),
+        stage: f.stage.value,
+        probability: Number(f.probability.value || 0),
+        close: f.close.value,
+        nextAction: f.nextAction.value.trim(),
+        status: f.status.value
+      }).then(function () {
+        closeModal();
+        toast('บันทึกดีลแล้ว');
+        loadDeals();
+      }).catch(function (e) {
+        btn.disabled = false;
+        btn.innerHTML = 'บันทึกดีล';
+        toast('บันทึกไม่สำเร็จ: ' + e.message);
+      });
+    });
+  }
+
+  function touchModal(key) {
+    var log = touchLog()[key] || [];
+    var history = log.length
+      ? log.map(function (x) { return '<li style="margin-bottom:6px"><strong>' + esc(x.date) + '</strong> · ' + esc(x.note) + '<div class="sub2">โดย ' + esc(x.by) + '</div></li>'; }).join('')
+      : '<li class="sub2">ยังไม่มีประวัติการติดต่อ</li>';
+    openModal(
+      '<header><div><h3>บันทึกการดูแล Partner</h3><p>' + esc(key) + '</p></div><button class="x" data-close>&times;</button></header>'
+      + '<div class="body"><div class="field"><label>บันทึกวันนี้ (' + todayISO() + ')</label>'
+      + '<textarea id="touchNote" rows="3" placeholder="เช่น โทรตามผล นัดตรวจพื้นที่ 22/11, ส่งใบเสนอราคาใหม่"></textarea></div>'
+      + '<div style="font-size:11.5px;color:#475467;margin:6px 0 6px">ประวัติล่าสุด</div>'
+      + '<ul style="margin:0;padding-left:18px;font-size:11.5px;color:#334155">' + history + '</ul></div>'
+      + '<footer><button class="btn" data-close>ปิด</button><button class="btn primary" id="saveTouch"><i class="fa-solid fa-floppy-disk"></i> บันทึก</button></footer>'
+    );
+    $('saveTouch').addEventListener('click', function () {
+      var note = $('touchNote').value.trim();
+      if (!note) { toast('กรุณากรอกบันทึก'); return; }
+      saveTouch(key, note);
+      closeModal();
+      toast('บันทึกการติดต่อแล้ว');
+      render();
+    });
+  }
+
+  /* ---------------- data ---------------- */
+  function loadDeals() {
+    return window.PIAuth.listDeals().then(function (list) {
+      DEALS = (list || []).map(function (d) {
+        return {
+          id: d.id, name: d.name || '(ไม่มีชื่อ)', customer: d.customer || '-',
+          value: Number(d.value || 0), stage: d.stage || 'Prospect',
+          probability: Number(d.probability || 0), close: d.close || '',
+          nextAction: d.nextAction || '', status: d.status || 'Healthy',
+          ownerName: d.ownerName || '', ownerEmail: d.ownerEmail || '',
+          createdAt: d.createdAt || '', updatedAt: d.updatedAt || ''
+        };
+      });
+      render();
+    }).catch(function (e) {
+      $('view').innerHTML = '<div class="card"><div class="empty"><i class="fa-solid fa-plug-circle-xmark"></i>โหลดข้อมูลไม่สำเร็จ: ' + esc(e.message) + '</div></div>';
+    });
+  }
+
+  /* ---------------- boot ---------------- */
+  function start(user) {
+    ME = {
+      email: user.email,
+      name: String(user.name || '').trim() || user.email,
+      level: String(user.level || 'viewer').toLowerCase()
+    };
+    ME.isAdmin = ME.level === 'admin';
+
+    $('gate').style.display = 'none';
+    $('app').style.display = 'block';
+    $('avatar').textContent = String(ME.email).substring(0, 2).toUpperCase();
+    $('meName').textContent = ME.name;
+    $('meRole').textContent = 'สิทธิ์: ' + ME.level.toUpperCase();
+    render();
+    loadDeals();
+  }
+
+  $('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var err = $('loginErr'), btn = $('loginBtn');
+    err.style.display = 'none';
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบ...';
+    window.PIAuth.login($('email').value.trim(), $('password').value).then(function (r) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> เข้าสู่ระบบ';
+      if (!r || !r.ok) {
+        err.textContent = (r && r.error) || 'เข้าสู่ระบบไม่สำเร็จ';
+        err.style.display = 'block';
+        return;
+      }
+      start(r.user || (window.PIAuth.session() || {}));
+    }).catch(function (ex) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> เข้าสู่ระบบ';
+      err.textContent = ex.message || 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้';
+      err.style.display = 'block';
+    });
+  });
+
+  $('logout').addEventListener('click', function () {
+    window.PIAuth.logout();
+    location.reload();
+  });
+
+  document.addEventListener('click', function (e) {
+    var navBtn = e.target.closest('#nav button');
+    if (navBtn) { VIEW = navBtn.dataset.view; render(); return; }
+    if (e.target.closest('[data-close]')) { closeModal(); return; }
+    if (e.target === $('backdrop')) { closeModal(); return; }
+    var add = e.target.closest('[data-action="add-deal"]');
+    if (add) { dealFormModal(); return; }
+    var touch = e.target.closest('[data-touch]');
+    if (touch) { touchModal(touch.dataset.touch); return; }
+  });
+
+  // เริ่มใช้งาน: ถ้ามี session อยู่แล้วเข้าเลย
+  (function boot() {
+    var s = window.PIAuth && window.PIAuth.session ? window.PIAuth.session() : null;
+    if (s && s.email) { start(s); return; }
+    $('gate').style.display = 'grid';
+  })();
+})();
+</script>
+</body>
+</html>

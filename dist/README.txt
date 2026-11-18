@@ -1,5 +1,4 @@
-Prospect Intelligence Sales workspace — ชุดไฟล์ HTML (self-contained)
-================================================================
+Prospect Intelligence Sales workspace — ชุดไฟล์ HTML (self-contained)================================================================
 
 ไฟล์ในโฟลเดอร์นี้สร้างจาก tools/build-html.js
 CSS/JS ทั้งหมดฝังอยู่ในแต่ละไฟล์แล้ว ไม่ต้องมีโฟลเดอร์ assets/

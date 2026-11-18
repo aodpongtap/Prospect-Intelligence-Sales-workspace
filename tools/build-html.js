@@ -31,9 +31,20 @@ for (const page of PAGES) {
   console.log('✔ dist/' + page, '(' + Math.round(html.length / 1024) + ' KB)');
 }
 
+// เว็บชุดใหม่ที่เป็นไฟล์เดียวอยู่แล้ว — คัดลอกออกมาให้ดาวน์โหลดได้ที่ dist/
+const SINGLE = [
+  ['partner-crm/index.html', 'partner-crm.html', 'TSR Partner Management (CRM คู่ค้า)'],
+  ['partner-care/index.html', 'partner-care.html', 'Partner Care Center (ดูแล Partner + Monitor ทีมขาย)']
+];
+for (const [srcRel, outName, label] of SINGLE) {
+  const src = path.join(ROOT, srcRel);
+  if (!fs.existsSync(src)) continue;
+  fs.copyFileSync(src, path.join(OUT, outName));
+  console.log('✔ dist/' + outName + ' — ' + label);
+}
+
 // หน้าแนะนำการใช้งาน
-const readme = `Prospect Intelligence Sales workspace — ชุดไฟล์ HTML (self-contained)
-================================================================
+const readme = `Prospect Intelligence Sales workspace — ชุดไฟล์ HTML (self-contained)================================================================
 
 ไฟล์ในโฟลเดอร์นี้สร้างจาก tools/build-html.js
 CSS/JS ทั้งหมดฝังอยู่ในแต่ละไฟล์แล้ว ไม่ต้องมีโฟลเดอร์ assets/
