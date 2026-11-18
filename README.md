@@ -32,6 +32,13 @@ node server.js --init-master <username> <password>   # สร้าง master ad
 node server.js                                       # รัน (หรือใช้ pm2)
 ```
 
+### User Management (จัดการผู้ใช้)
+
+- เข้าที่ **`/admin/users`** — หรือเมนู **User Management** ที่แสดงเฉพาะ Master Admin
+- ทำได้: สร้างบัญชี · กำหนดระดับสิทธิ์ (Master Admin / Admin / Editor / Viewer) · รีเซ็ตรหัสผ่าน · ปิด/ลบบัญชี
+- ระดับสิทธิ์: `master` = ทุกอย่าง + จัดการผู้ใช้ (มีได้บัญชีเดียว), `admin` = ดู/แก้ข้อมูล + export + settings, `editor` = ดู/แก้ + export, `viewer` = ดูเท่านั้น
+- หน้านี้ต้องล็อกอินและเรียก API ของ backend — **ไม่ทำงานบน GitHub Pages** (static) ให้ใช้ลิงก์ production แทน
+
 > `auth-backend/data/` (users.json, sessions.json) เป็นข้อมูล runtime ที่มี hash รหัสผ่าน — **ไม่ถูก track ใน git** (ดู `.gitignore`)
 
 ## เว็บที่รันอยู่
