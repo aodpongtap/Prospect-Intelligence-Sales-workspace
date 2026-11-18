@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Management · Prospect Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+<style>
+:root{--navy:#0F2B46;--blue:#2563EB;--green:#16A34A;--orange:#F59E0B;--red:#DC2626;--bg:#F8FAFC;--ink:#182230;--muted:#667085;--line:#E5EAF0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Prompt",sans-serif;font-size:13px}
+.top{height:64px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+.top a{color:#d8e2ee;text-decoration:none;font-size:12px;margin-left:16px}.top a:hover{color:#fff}.brand{display:flex;gap:10px;align-items:center}.mark{width:34px;height:34px;border-radius:9px;background:var(--blue);display:grid;place-items:center}
+.wrap{max-width:1100px;margin:26px auto;padding:0 20px}h1{font-size:21px;font-weight:600;color:var(--navy);margin:0}.subtitle{color:var(--muted);margin:4px 0 20px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(15,43,70,.07);padding:18px;margin-bottom:18px}
+.panel h3{margin:0 0 14px;font-size:14px;font-weight:500}
+.fg{display:grid;grid-template-columns:repeat(5,1fr) auto;gap:10px;align-items:end}label{display:block;font-size:10px;color:#475467;margin-bottom:5px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12px}
+.btn{border:1px solid var(--line);background:#fff;color:#344054;border-radius:8px;padding:8px 11px;font:inherit;font-size:11px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.btn:hover{border-color:#b7c5d6}.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn-danger{background:#fff1f2;border-color:#ffe4e6;color:var(--red)}
+table{width:100%;border-collapse:collapse}th{font-size:10px;color:#667085;font-weight:500;background:#f8fafc;text-align:left;padding:10px}td{padding:10px;border-bottom:1px solid #eef1f5;font-size:12px}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px}.l-master{background:#0F2B46;color:#fff}.l-admin{background:#eff6ff;color:#1d4ed8}.l-editor{background:#ecfdf3;color:#15803d}.l-viewer{background:#f2f4f7;color:#475467}
+.off{color:var(--red)}.on{color:var(--green)}.acts{display:flex;gap:6px;flex-wrap:wrap}
+.legend{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.legend div{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:11px;color:#475467;line-height:1.6}
+.pw{position:relative}.pw input{padding-right:62px}.ib{position:absolute;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#667085;width:26px;height:26px;border-radius:6px;cursor:pointer}.ib:hover{background:#f1f5f9;color:#1d4ed8}#tgl{right:30px}#cpy{right:4px}
+.toast{position:fixed;right:22px;bottom:22px;background:var(--navy);color:#fff;padding:11px 15px;border-radius:9px;display:none}
+@media(max-width:900px){.fg,.legend{grid-template-columns:1fr 1fr}}
+</style></head><body>
+<div class="top"><div class="brand"><div class="mark"><i class="fa-solid fa-users-gear"></i></div><strong>User Management</strong></div>
+<div><a href="/"><i class="fa-solid fa-arrow-left"></i> กลับ Dashboard</a><a href="#" id="lo"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></div></div>
+<div class="wrap">
+<h1>จัดการผู้ใช้งาน</h1><div class="subtitle">เฉพาะ Master Admin: สร้างบัญชี กำหนดระดับสิทธิ์ รีเซ็ตรหัสผ่าน ปิด/ลบบัญชี</div>
+<div class="panel"><h3>ระดับสิทธิ์ (Access levels)</h3><div class="legend">
+<div><span class="pill l-master">Master Admin</span><br>มีได้บัญชีเดียว · ทุกอย่าง + จัดการผู้ใช้ · ลบ/ลดสิทธิ์ไม่ได้</div>
+<div><span class="pill l-admin">Admin</span><br>ดู + แก้ไขข้อมูลทั้งหมด · Export · Settings · ส่ง LINE</div>
+<div><span class="pill l-editor">Editor</span><br>ดู + เพิ่ม/แก้ไข Deal, Project, Ticket, Activity · Export · (ไม่มี Settings)</div>
+<div><span class="pill l-viewer">Viewer</span><br>ดูอย่างเดียว · ไม่มีปุ่มแก้ไข/Export</div></div></div>
+<div class="panel"><h3>สร้างผู้ใช้ใหม่ (Create user)</h3><form id="cf" class="fg">
+<div><label>Username</label><input name="username" required pattern="[a-zA-Z0-9._\-]{3,32}" placeholder="เช่น somchai.k"></div>
+<div><label>ชื่อที่แสดง (Display name)</label><input name="displayName" placeholder="สมชาย ก."></div>
+<div><label>รหัสผ่าน (Password ≥ 8 ตัว)</label><div class="pw"><input name="password" id="npw" type="password" required minlength="8" autocomplete="new-password"><button type="button" class="ib" id="tgl" title="แสดง/ซ่อนรหัสผ่าน (Show/Hide)"><i class="fa-regular fa-eye"></i></button><button type="button" class="ib" id="cpy" title="คัดลอกรหัสผ่าน (Copy)"><i class="fa-regular fa-copy"></i></button></div></div>
+<div><label>ระดับสิทธิ์</label><select name="level"><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select></div>
+<div><button type="button" class="btn" id="gen" title="Generate a secure random password"><i class="fa-solid fa-wand-magic-sparkles"></i>สร้างรหัสผ่านอัตโนมัติ (Generate)</button></div>
+<div><button class="btn btn-primary"><i class="fa-solid fa-user-plus"></i>สร้างผู้ใช้</button></div></form></div>
+<div class="panel"><h3>ผู้ใช้ทั้งหมด</h3><div style="overflow:auto"><table><thead><tr><th>Username</th><th>ชื่อที่แสดง</th><th>ระดับสิทธิ์</th><th>สถานะ</th><th>เข้าระบบล่าสุด</th><th>จัดการ</th></tr></thead><tbody id="tb"></tbody></table></div></div>
+</div><div class="toast" id="t"></div>
+<script>
+function api(m,u,b){return fetch(u,{method:m,credentials:'same-origin',headers:{'Content-Type':'application/json','X-TSR3':'1'},body:b?JSON.stringify(b):undefined}).then(function(r){if(r.status===401)location.href='/login?next=/admin/users';return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j})})}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function toast(x){var t=document.getElementById('t');t.textContent=x;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(function(){t.style.display='none'},2600)}
+function fmt(d){return d?new Date(d).toLocaleString('th-TH',{timeZone:'Asia/Bangkok'}):'-'}
+// Secure random password: 16 chars, at least one of each class, no ambiguous chars (O 0 I l 1), unbiased (rejection sampling)
+var PW_SETS=['ABCDEFGHJKLMNPQRSTUVWXYZ','abcdefghijkmnpqrstuvwxyz','23456789','!@#$%^&*-_=+?'];
+function rnd(n){var a=new Uint32Array(1),lim=Math.floor(0x100000000/n)*n;do{crypto.getRandomValues(a)}while(a[0]>=lim);return a[0]%n}
+function pick(s){return s[rnd(s.length)]}
+function genPw(len){len=len||16;var all=PW_SETS.join(''),out=PW_SETS.map(pick);while(out.length<len)out.push(pick(all));
+for(var i=out.length-1;i>0;i--){var j=rnd(i+1),t=out[i];out[i]=out[j];out[j]=t}return out.join('')}
+function setVis(show){var f=document.getElementById('npw'),b=document.getElementById('tgl');f.type=show?'text':'password';b.innerHTML=show?'<i class="fa-regular fa-eye-slash"></i>':'<i class="fa-regular fa-eye"></i>'}
+function copyText(t){if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(t);return new Promise(function(ok,no){var x=document.createElement('textarea');x.value=t;x.style.position='fixed';x.style.opacity='0';document.body.appendChild(x);x.select();var r=false;try{r=document.execCommand('copy')}catch(e){}document.body.removeChild(x);r?ok():no()})}
+var LV={master:'Master Admin',admin:'Admin',editor:'Editor',viewer:'Viewer'};
+function load(){api('GET','/api/users').then(function(j){document.getElementById('tb').innerHTML=j.users.map(function(u){var M=u.level==='master';
+return '<tr data-u="'+esc(u.username)+'"><td><strong>'+esc(u.username)+'</strong></td><td>'+esc(u.displayName)+'</td><td>'+(M?'<span class="pill l-master">Master Admin</span>':'<select data-k="level">'+['admin','editor','viewer'].map(function(l){return '<option value="'+l+'"'+(l===u.level?' selected':'')+'>'+LV[l]+'</option>'}).join('')+'</select>')+'</td><td class="'+(u.disabled?'off':'on')+'">'+(u.disabled?'ปิดใช้งาน':'ใช้งาน')+'</td><td>'+fmt(u.lastLogin)+'</td><td><div class="acts"><button class="btn" data-a="pw"><i class="fa-solid fa-key"></i>รีเซ็ตรหัสผ่าน</button>'+(M?'':'<button class="btn" data-a="tg">'+(u.disabled?'<i class="fa-solid fa-toggle-on"></i>เปิดใช้งาน':'<i class="fa-solid fa-ban"></i>ปิดใช้งาน')+'</button><button class="btn btn-danger" data-a="del"><i class="fa-solid fa-trash"></i>ลบ</button>')+'</div></td></tr>'}).join('')}).catch(function(e){toast(e.message)})}
+document.getElementById('gen').onclick=function(){var p=genPw(16);document.querySelectorAll('#cf [name=password],#cf [name=confirm]').forEach(function(f){f.value=p});setVis(true);toast('สร้างรหัสผ่านแล้ว — กดคัดลอกเพื่อส่งให้ผู้ใช้ (Generated, click copy)')};
+document.getElementById('tgl').onclick=function(){setVis(document.getElementById('npw').type==='password')};
+document.getElementById('cpy').onclick=function(){var v=document.getElementById('npw').value;if(!v)return toast('ยังไม่มีรหัสผ่านให้คัดลอก (Nothing to copy)');copyText(v).then(function(){toast('คัดลอกรหัสผ่านแล้ว (Copied)')},function(){setVis(true);document.getElementById('npw').select();toast('คัดลอกอัตโนมัติไม่ได้ กรุณากด Ctrl+C (Press Ctrl+C)')})};
+document.getElementById('cf').addEventListener('submit',function(e){e.preventDefault();var f=e.target,d=Object.fromEntries(new FormData(f));api('POST','/api/users',d).then(function(){alert('สร้างผู้ใช้ '+d.username.toLowerCase()+' แล้ว\nรหัสผ่าน: '+d.password+'\n(กรุณาส่งให้ผู้ใช้ทางช่องทางที่ปลอดภัย)');f.reset();setVis(false);load()}).catch(function(e){toast(e.message)})});
+document.getElementById('tb').addEventListener('change',function(e){var s=e.target.closest('[data-k=level]');if(!s)return;var u=s.closest('tr').dataset.u;api('PATCH','/api/users/'+encodeURIComponent(u),{level:s.value}).then(function(){toast('อัปเดตสิทธิ์ '+u+' แล้ว');load()}).catch(function(e){toast(e.message);load()})});
+document.getElementById('tb').addEventListener('click',function(e){var b=e.target.closest('[data-a]');if(!b)return;var tr=b.closest('tr'),u=tr.dataset.u,a=b.dataset.a,U='/api/users/'+encodeURIComponent(u);
+if(a==='pw'){var p=prompt('รหัสผ่านใหม่สำหรับ '+u+' (≥ 8 ตัว) — เว้นว่างเพื่อสุ่ม');if(p===null)return;if(!p)p=genPw();api('PATCH',U,{password:p}).then(function(){alert('รีเซ็ตรหัสผ่าน '+u+' แล้ว\nรหัสผ่านใหม่: '+p)}).catch(function(e){toast(e.message)})}
+if(a==='tg'){var off=tr.querySelector('.on')!==null;api('PATCH',U,{disabled:off}).then(function(){toast(off?'ปิดใช้งานแล้ว':'เปิดใช้งานแล้ว');load()}).catch(function(e){toast(e.message)})}
+if(a==='del'){if(!confirm('ลบผู้ใช้ '+u+' ?'))return;api('DELETE',U).then(function(){toast('ลบ '+u+' แล้ว');load()}).catch(function(e){toast(e.message)})}});
+document.getElementById('lo').onclick=function(e){e.preventDefault();api('POST','/api/logout').finally(function(){location.href='/login'})};
+load();
+</script></body></html>

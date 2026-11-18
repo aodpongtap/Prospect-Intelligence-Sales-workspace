@@ -11,3 +11,7 @@ Thumbs.db
 # editor
 .vscode/
 .idea/
+
+# server-side backups & runtime data (may hold password hashes)
+*.bak.*
+auth-backend/data/

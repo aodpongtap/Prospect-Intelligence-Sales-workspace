@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เข้าสู่ระบบ · Prospect Management &amp; Customer Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+<style>
+:root{--navy:#0F2B46;--blue:#2563EB;--red:#DC2626;--bg:#F8FAFC;--ink:#182230;--muted:#667085;--line:#E5EAF0}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;grid-template-columns:1fr 1fr;font-family:"Prompt",sans-serif;color:var(--ink);background:var(--bg);font-size:13px}
+.side{background:var(--navy);color:#d8e2ee;padding:48px;display:flex;flex-direction:column;justify-content:space-between}
+.brand{display:flex;gap:12px;align-items:center;color:#fff}.mark{width:42px;height:42px;border-radius:11px;background:var(--blue);display:grid;place-items:center;font-size:18px}
+.brand strong{display:block;font-size:14px}.brand small{color:#9cb0c5;font-size:11px}
+.side h2{color:#fff;font-weight:500;font-size:26px;line-height:1.45;margin:0 0 12px}.side p{color:#9cb0c5;max-width:420px;line-height:1.7}
+.main{display:grid;place-items:center;padding:30px}.card{width:100%;max-width:380px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 24px rgba(15,43,70,.07);padding:32px}
+h1{font-size:20px;font-weight:600;margin:0 0 4px;color:var(--navy)}.sub{color:var(--muted);margin-bottom:22px}
+label{display:block;font-size:11px;color:#475467;margin:0 0 6px}.fg{margin-bottom:15px}
+.inp{position:relative}.inp i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#98a2b3}
+input{width:100%;padding:11px 12px 11px 36px;border:1px solid var(--line);border-radius:9px;font:inherit;outline:none}input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #dbeafe}
+button{width:100%;padding:11px;border:0;border-radius:9px;background:var(--blue);color:#fff;font:inherit;font-weight:500;cursor:pointer}button:hover{background:#1d4ed8}button:disabled{opacity:.6}
+.err{display:none;background:#fff1f2;border:1px solid #ffe4e6;color:var(--red);padding:9px 11px;border-radius:8px;margin-bottom:14px;font-size:12px}
+.foot{color:#98a2b3;font-size:10px;margin-top:18px;text-align:center}
+@media(max-width:800px){body{grid-template-columns:1fr}.side{display:none}}
+</style></head>
+<body>
+<div class="side">
+  <div class="brand"><div class="mark"><i class="fa-solid fa-chart-line"></i></div><div><strong>Prospect Intelligence</strong><small>Sales &amp; Service Workspace</small></div></div>
+  <div><h2>Prospect Management &amp;<br>Customer Intelligence Dashboard</h2><p>ติดตาม Pipeline, Project และงานบริการหลังการขายได้ในที่เดียว กรุณาเข้าสู่ระบบด้วยบัญชีที่ได้รับจากผู้ดูแลระบบ</p></div>
+  <small style="color:#6f86a0">© Prospect Intelligence</small>
+</div>
+<div class="main"><form class="card" id="f" autocomplete="on">
+  <h1>เข้าสู่ระบบ</h1><div class="sub">Sign in to continue</div>
+  <div class="err" id="err"></div>
+  <div class="fg"><label for="u">ชื่อผู้ใช้ (Username)</label><div class="inp"><i class="fa-regular fa-user"></i><input id="u" name="username" autocomplete="username" required autofocus></div></div>
+  <div class="fg"><label for="p">รหัสผ่าน (Password)</label><div class="inp"><i class="fa-solid fa-lock"></i><input id="p" name="password" type="password" autocomplete="current-password" required></div></div>
+  <button id="b" type="submit">เข้าสู่ระบบ</button>
+  <div class="foot">ลืมรหัสผ่าน? ติดต่อ Master Admin เพื่อรีเซ็ต</div>
+</form></div>
+<script>
+var f=document.getElementById('f'),err=document.getElementById('err'),b=document.getElementById('b');
+var m=location.search.match(/[?&]next=(.*)$/),next=m?decodeURIComponent(m[1]):'/';
+f.addEventListener('submit',function(e){e.preventDefault();err.style.display='none';b.disabled=true;b.textContent='กำลังตรวจสอบ...';
+fetch('/api/login',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-TSR3':'1'},body:JSON.stringify({username:f.username.value,password:f.password.value,next:next})})
+.then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'เข้าสู่ระบบไม่สำเร็จ');location.href=j.next||'/'})})
+.catch(function(x){err.textContent=x.message;err.style.display='block';b.disabled=false;b.textContent='เข้าสู่ระบบ';f.password.value='';f.password.focus()})});
+</script>
+</body></html>
