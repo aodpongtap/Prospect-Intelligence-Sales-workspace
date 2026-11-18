@@ -138,6 +138,10 @@
                   if (vals[i].textContent !== out[i]) vals[i].textContent = out[i];
                 }
               }
+              // Sale: ซ่อนตัวเลขเทียบท้องตลาด (ข้อมูลสมมติ) ที่ไม่เกี่ยวกับดีลของตัวเอง
+              if (window.__ME__ && String(window.__ME__.level).toLowerCase() === 'sale') {
+                Array.prototype.slice.call(content.querySelectorAll('.kpi-foot')).forEach(function (f) { f.remove(); });
+              }
             } catch (e) { /* ignore */ }
             obs.observe(content, { childList: true, subtree: true });   // ฟังต่อ
           });
@@ -340,7 +344,7 @@
     let currentPage="dashboard",charts=[],sortDesc=true,toastTimer;
     const money=n=>"฿"+Number(n).toLocaleString("th-TH");
     const shortMoney=n=>n>=1000000?"฿"+(n/1000000).toFixed(1)+"M":"฿"+(n/1000).toFixed(0)+"K";
-    const thaiDate=date=>new Date(date+"T00:00:00").toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});
+    const thaiDate=date=>{if(!date)return '—';const d=new Date(String(date).length<=10?date+"T00:00:00":date);return isNaN(d.getTime())?'—':d.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});};
     const dayDiff=date=>Math.floor((new Date("2026-10-07T00:00:00")-new Date(date+"T00:00:00"))/86400000);
     const statusClass=status=>status==="Healthy"?"healthy":status==="Need Attention"?"attention":status==="At Risk"?"at-risk":"on-hold";
     function riskScore(d){let score=0;const inactive=dayDiff(d.lastActivity);if(inactive>7)score+=Math.min(30,15+(inactive-7));const closeDays=Math.ceil((new Date(d.close+"T00:00:00")-new Date("2026-10-07T00:00:00"))/86400000);if(closeDays<=14&&["Prospect","Qualified"].includes(d.stage))score+=25;if(d.probability<40)score+=20;if(!d.nextAction)score+=15;if(d.status==="On Hold")score+=20;return Math.min(100,score)}
