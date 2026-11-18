@@ -74,11 +74,12 @@
     // เพิ่มเมนู User Management สำหรับ Master Admin (โหมด Apps Script)
     (function () {
       var LEVEL = '<?= userLevel ?>';
+      var KEY = '<?= adminKey ?>';
       var nav = document.getElementById('navList');
       if (LEVEL !== 'master' || !nav) return;
       var a = document.createElement('a');
       a.className = 'nav-item';
-      a.href = '<?= webAppUrl ?>?page=users';
+      a.href = '<?= webAppUrl ?>?page=users' + (KEY ? '&key=' + encodeURIComponent(KEY) : '');
       a.target = '_top';
       a.style.textDecoration = 'none';
       a.innerHTML = '<i class="fa-solid fa-users-gear"></i>User Management';

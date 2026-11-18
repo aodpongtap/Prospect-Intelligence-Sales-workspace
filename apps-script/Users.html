@@ -98,9 +98,20 @@ td{padding:9px;border-bottom:1px solid #eef1f5;font-size:12px}
 <script>
 var ME = '<?= userEmail ?>';
 var LEVEL = '<?= userLevel ?>';
+var KEY = '<?= adminKey ?>';
 var busy = false;
 
-document.getElementById('me').textContent = ME + (LEVEL === 'master' ? ' · Master Admin' : ' · ' + LEVEL);
+document.getElementById('me').textContent = ME
+  ? (ME + (LEVEL === 'master' ? ' · Master Admin' : ' · ' + LEVEL))
+  : 'โหมดสาธารณะ (ไม่ได้เข้าสู่ระบบ)';
+
+if (!ME) {
+  var pubNote = document.createElement('div');
+  pubNote.style.cssText = 'background:#fef3c7;border:1px solid #fde68a;color:#92400e;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.6;margin-bottom:14px';
+  pubNote.innerHTML = '<strong>โหมดสาธารณะ</strong> — คุณเปิดหน้านี้โดยไม่เข้าสู่ระบบ Google จึงดูรายชื่อได้อย่างเดียว<br>' +
+    'หากต้องการเพิ่ม/แก้ไขผู้ใช้ ให้เข้าสู่ระบบด้วยบัญชี Master Admin (aodpongtaptsr@gmail.com)';
+  document.querySelector('.wrap').insertBefore(pubNote, document.getElementById('msg'));
+}
 
 function showMsg(text, kind) {
   var el = document.getElementById('msg');
@@ -157,7 +168,7 @@ function load() {
     render(data);
   }).withFailureHandler(function (err) {
     showMsg(err.message || String(err), 'err');
-  }).getUsers();
+  }).getUsers(KEY);
 }
 
 document.getElementById('addBtn').addEventListener('click', function () {
@@ -174,7 +185,7 @@ document.getElementById('addBtn').addEventListener('click', function () {
     else showMsg((data && data.error) || 'เพิ่มไม่สำเร็จ', 'err');
   }).withFailureHandler(function (err) {
     busy = false; self.disabled = false; showMsg(err.message || String(err), 'err');
-  }).addUser(email, document.getElementById('level').value, document.getElementById('status').value);
+  }).addUser(KEY, email, document.getElementById('level').value, document.getElementById('status').value);
 });
 
 document.getElementById('tb').addEventListener('change', function (e) {
@@ -185,7 +196,7 @@ document.getElementById('tb').addEventListener('change', function (e) {
     if (data && data.ok) { render(data); showMsg('อัปเดตสิทธิ์ ' + email + ' → ' + level); }
     else { showMsg((data && data.error) || 'อัปเดตไม่สำเร็จ', 'err'); load(); }
   }).withFailureHandler(function (err) { showMsg(err.message || String(err), 'err'); load(); })
-    .updateUser(email, level, '');
+    .updateUser(KEY, email, level, '');
 });
 
 document.getElementById('tb').addEventListener('click', function (e) {
@@ -197,7 +208,7 @@ document.getElementById('tb').addEventListener('click', function (e) {
       if (data && data.ok) { render(data); showMsg('เปลี่ยนสถานะ ' + email + ' แล้ว'); }
       else showMsg((data && data.error) || 'เปลี่ยนสถานะไม่สำเร็จ', 'err');
     }).withFailureHandler(function (err) { showMsg(err.message || String(err), 'err'); })
-      .updateUser(email, '', btn.dataset.status);
+      .updateUser(KEY, email, '', btn.dataset.status);
   }
   if (act === 'del') {
     if (!confirm('ลบผู้ใช้ ' + email + ' ?')) return;
@@ -205,7 +216,7 @@ document.getElementById('tb').addEventListener('click', function (e) {
       if (data && data.ok) { render(data); showMsg('ลบผู้ใช้ ' + email + ' แล้ว'); }
       else showMsg((data && data.error) || 'ลบไม่สำเร็จ', 'err');
     }).withFailureHandler(function (err) { showMsg(err.message || String(err), 'err'); })
-      .deleteUser(email);
+      .deleteUser(KEY, email);
   }
 });
 

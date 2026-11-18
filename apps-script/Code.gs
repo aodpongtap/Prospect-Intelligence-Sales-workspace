@@ -52,15 +52,22 @@ function errorPage_(err) {
 
 function handleGet_(e) {
   var page = String((e && e.parameter && e.parameter.page) || 'index').toLowerCase();
+  var key = (e && e.parameter && e.parameter.key) || '';
+  var adminMode = false;
+  try { adminMode = !!key && String(key) === getAdminKey_(); } catch (err) { adminMode = false; }
+
   var email = getUserEmail();
-  var level = getUserLevel(email);
+  var level = adminMode ? 'master' : (email ? getUserLevel(email) : 'viewer');
   touchLogin_(email);
+
+  var shownEmail = email || (adminMode ? 'ผู้ดูแลระบบ (admin key)' : '');
 
   if (page === 'users') {
     var tpl = HtmlService.createTemplateFromFile('Users');
-    tpl.userEmail = email;
+    tpl.userEmail = shownEmail;
     tpl.userLevel = level;
     tpl.webAppUrl = getWebAppUrl();
+    tpl.adminKey = adminMode ? key : '';
     return tpl.evaluate()
       .setTitle('User Management · ' + APP_TITLE)
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
@@ -68,9 +75,10 @@ function handleGet_(e) {
   }
 
   var t = HtmlService.createTemplateFromFile('Index');
-  t.userEmail = email;
+  t.userEmail = shownEmail;
   t.userLevel = level;
   t.webAppUrl = getWebAppUrl();
+  t.adminKey = adminMode ? key : '';
   return t.evaluate()
     .setTitle(APP_TITLE)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover')
@@ -85,6 +93,33 @@ function getUserEmail() {
   } catch (err) {
     return '';
   }
+}
+
+/**
+ * คีย์แอดมิน (สร้างอัตโนมัติครั้งแรก) — ใช้เปิดโหมดจัดการผู้ใช้บนเว็บ public
+ * ดูคีย์ได้โดยรันฟังก์ชัน showAdminKey ใน Apps Script Editor
+ */
+function getAdminKey_() {
+  var props = PropertiesService.getScriptProperties();
+  var k = props.getProperty('ADMIN_KEY');
+  if (!k) {
+    k = Utilities.getUuid().replace(/-/g, '').substring(0, 24);
+    props.setProperty('ADMIN_KEY', k);
+  }
+  return k;
+}
+
+function showAdminKey() {
+  var url = getWebAppUrl() + '?page=users&key=' + getAdminKey_();
+  Logger.log('Admin URL: ' + url);
+  return url;
+}
+
+function isMaster_(key) {
+  try {
+    if (key && String(key) === getAdminKey_()) return true;
+  } catch (err) { /* ignore */ }
+  return getUserLevel(getUserEmail()) === 'master';
 }
 
 function getWebAppUrl() {
@@ -208,10 +243,9 @@ function touchLogin_(email) {
 
 /* ---------------- API called from client ---------------- */
 
-function getUsers() {
+function getUsers(key) {
   var me = getUserEmail();
-  var level = getUserLevel(me);
-  if (level !== 'master') {
+  if (!isMaster_(key)) {
     return { ok: false, error: 'เฉพาะ Master Admin เท่านั้น', canManage: false, users: [], levels: LEVELS };
   }
   var users = readUsers_();
@@ -225,8 +259,8 @@ function getUsers() {
   return { ok: true, canManage: true, me: me, users: users, levels: LEVELS, owner: MASTER_EMAIL };
 }
 
-function addUser(email, level, status) {
-  if (getUserLevel(getUserEmail()) !== 'master') throw new Error('เฉพาะ Master Admin เท่านั้น');
+function addUser(key, email, level, status) {
+  if (!isMaster_(key)) throw new Error('เฉพาะ Master Admin เท่านั้น');
   var e = String(email || '').trim().toLowerCase();
   if (!e || e.indexOf('@') < 0) throw new Error('อีเมลไม่ถูกต้อง');
   if (e === MASTER_EMAIL) throw new Error('มีบัญชีนี้อยู่แล้ว (Master)');
@@ -245,8 +279,8 @@ function addUser(email, level, status) {
   return getUsers();
 }
 
-function updateUser(email, level, status) {
-  if (getUserLevel(getUserEmail()) !== 'master') throw new Error('เฉพาะ Master Admin เท่านั้น');
+function updateUser(key, email, level, status) {
+  if (!isMaster_(key)) throw new Error('เฉพาะ Master Admin เท่านั้น');
   var e = String(email || '').trim().toLowerCase();
   if (e === MASTER_EMAIL) throw new Error('แก้ไขบัญชี Master ไม่ได้');
   var row = findRow_(e);
@@ -266,8 +300,8 @@ function updateUser(email, level, status) {
   return getUsers();
 }
 
-function deleteUser(email) {
-  if (getUserLevel(getUserEmail()) !== 'master') throw new Error('เฉพาะ Master Admin เท่านั้น');
+function deleteUser(key, email) {
+  if (!isMaster_(key)) throw new Error('เฉพาะ Master Admin เท่านั้น');
   var e = String(email || '').trim().toLowerCase();
   if (e === MASTER_EMAIL) throw new Error('ลบบัญชี Master ไม่ได้');
   var row = findRow_(e);
