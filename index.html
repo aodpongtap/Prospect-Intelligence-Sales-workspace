@@ -102,6 +102,31 @@
           nav.appendChild(a);
         }
       }
+
+      // สิทธิ์ Sale: แสดงเฉพาะเมนูที่เกี่ยวกับงานขาย
+      if (String(me.level).toLowerCase() === 'sale') {
+        var allow = ['dashboard', 'sales'];
+        var navList = document.getElementById('navList');
+        if (navList) {
+          Array.prototype.slice.call(navList.querySelectorAll('[data-page]')).forEach(function (el) {
+            if (allow.indexOf(el.getAttribute('data-page')) < 0) el.remove();
+          });
+        }
+        // ซ่อน panel ที่ไม่เกี่ยวกับงานขาย (เช่น Alerts งานบริการ) หลัง render
+        var content = document.getElementById('content');
+        if (content && window.MutationObserver) {
+          new MutationObserver(function () {
+            Array.prototype.slice.call(content.querySelectorAll('.panel')).forEach(function (p) {
+              var t = p.querySelector('.panel-title');
+              if (t && /Alerts/i.test(t.textContent)) p.remove();
+            });
+            var h1 = content.querySelector('h1');
+            if (h1 && h1.textContent.indexOf('Head of Sales') >= 0) {
+              h1.textContent = 'สวัสดี, ' + (me.name || me.email);
+            }
+          }).observe(content, { childList: true, subtree: true });
+        }
+      }
       var prof = document.querySelector('.profile');
       if (prof) { prof.style.cursor = 'pointer'; prof.title = 'ออกจากระบบ'; prof.addEventListener('click', function () { PIAuth.logout(); location.replace('login.html'); }); }
     })();
