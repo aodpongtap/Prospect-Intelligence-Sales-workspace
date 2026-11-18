@@ -1,18 +1,17 @@
 # Prospect Intelligence — Sales workspace
 
-โปรเจกต์รวม Dashboard ทีมขาย (Prospect Intelligence Sales workspace) + เว็บ SAFE1210
+Dashboard สำหรับทีมขาย: ติดตาม Prospect, Pipeline, Project, After-Sale Service และ Customer Intelligence
 
 ## โครงสร้าง
 
 | Path | รายละเอียด |
 |---|---|
-| `index.html` | **Prospect Intelligence Sales workspace** — Dashboard (Prospect, Pipeline, Project, After-Sale, Customer Intelligence, Reports, Settings) |
-| `SAFE1210_App.html` | หน้า landing/ทางลัดสินค้า SAFE1210 |
-| `SAFE1210Android/` | ซอร์สแอป Android (Kotlin) + `SAFE1210iOS/` (Swift) |
-| `SAFE1210_Android_Source.zip`, `SAFE1210_Mobile_Projects.zip` | แพ็กซอร์ส/โปรเจกต์มือถือ |
-| `SAFE1210_website_summary_TH.pptx` | สรุปข้อมูลเว็บไซต์ (ภาษาไทย) |
-| `Code.txt` | โน้ตประกอบโปรเจกต์ |
+| `index.html` | ตัวแอปหลัก **Prospect Intelligence Sales workspace** — Dashboard (Prospect, Pipeline, Project, After-Sale, Customer Intelligence, Reports, Settings) |
 | `auth-backend/` | Backend ล็อกอิน/RBAC (Node.js ล้วน ไม่มี dependency) + nginx config ตัวอย่าง |
+| `.github/workflows/deploy.yml` | Auto-deploy ขึ้นเซิร์ฟเวอร์ทุกครั้งที่ push เข้า `main` |
+| `README.md` | เอกสารนี้ |
+
+> ไฟล์โมบายล์ (Android/iOS), ไฟล์ zip และไฟล์นำเสนอของ SAFE1210 ย้ายออกจาก repo นี้แล้ว แยกเก็บไว้นอกโปรเจกต์
 
 ## auth-backend
 

@@ -47,7 +47,16 @@ jobs:
           REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
         run: |
           ssh -o BatchMode=yes "$SSH_USER@$SSH_HOST" \
-            "rsync -a --delete --exclude 'auth-backend/data' /home/mngr-tom/.tsr3-deploy/ '$REMOTE_PATH/'"
+            "rsync -a --delete \
+               --exclude 'auth-backend/data' \
+               --exclude 'SAFE1210Android' \
+               --exclude 'SAFE1210_App.html' \
+               --exclude 'SAFE1210Android_Source.zip' \
+               --exclude 'SAFE1210_Mobile_Projects.zip' \
+               --exclude 'SAFE1210_website_summary_TH.pptx' \
+               --exclude 'Code.txt' \
+               --exclude '*.bak.*' \
+               /home/mngr-tom/.tsr3-deploy/ '$REMOTE_PATH/'"
 
       - name: Refresh web root
         env:
