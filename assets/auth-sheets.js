@@ -1,0 +1,145 @@
+/**
+ * Prospect Intelligence Sales workspace — auth ผ่าน Google Sheets (JSONP API)
+ *
+ * ต้องมี Apps Script Web App ที่ deploy แล้ว (api=1) และตั้ง access เป็น
+ * "Anyone, even anonymous" เพื่อให้เว็บ HTML เรียกได้
+ *
+ * API_FALLBACK: ใช้ localStorage เมื่อเรียก API ไม่ได้ (ออฟไลน์/ยังไม่ deploy)
+ */
+(function (global) {
+  var API = 'https://script.google.com/macros/s/AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-/exec';
+  var SESSION_KEY = 'pi_session_v2';
+  var TTL_MS = 12 * 3600 * 1000;
+
+  function jsonp(params) {
+    return new Promise(function (resolve, reject) {
+      var cb = 'piCb_' + Math.random().toString(36).slice(2);
+      var script = document.createElement('script');
+      var timer = setTimeout(function () { done(); reject(new Error('เชื่อมต่อ Google Sheets ไม่ได้ (timeout)')); }, 25000);
+
+      function done() {
+        clearTimeout(timer);
+        try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
+      window[cb] = function (data) { done(); resolve(data); };
+      script.onerror = function () { done(); reject(new Error('เชื่อมต่อ Google Sheets ไม่ได้')); };
+
+      var qs = Object.keys(params)
+        .filter(function (k) { return params[k] !== undefined && params[k] !== null; })
+        .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); })
+        .join('&');
+
+      script.src = API + '?api=1&callback=' + cb + '&' + qs;
+      document.head.appendChild(script);
+    });
+  }
+
+  function call(action, extra) {
+    var params = { api: '1', action: action };
+    Object.keys(extra || {}).forEach(function (k) { params[k] = extra[k]; });
+    var qs = Object.keys(params)
+      .filter(function (k) { return params[k] !== undefined && params[k] !== null; })
+      .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); })
+      .join('&');
+
+    return fetch(API + '?' + qs, { method: 'GET', redirect: 'follow' })
+      .then(function (r) { return r.text(); })
+      .then(function (txt) {
+        try { return JSON.parse(txt); }
+        catch (e) { throw new Error('รูปแบบข้อมูลจาก API ไม่ถูกต้อง'); }
+      })
+      .catch(function () {
+        throw new Error('เชื่อมต่อ Google Sheets ไม่ได้ กรุณาตรวจสอบสิทธิ์ที่ Apps Script');
+      });
+  }
+
+  /* ---------- session (เก็บในเครื่อง) ---------- */
+  function getSession() {
+    try {
+      var s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+      if (!s || Number(s.exp) < Date.now()) return null;
+      return s;
+    } catch (e) { return null; }
+  }
+  function setSession(s) {
+    s.exp = Date.now() + TTL_MS;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+  }
+  function clearSession() { localStorage.removeItem(SESSION_KEY); }
+  function token() { var s = getSession(); return s && s.token ? s.token : ''; }
+  function isAdmin(s) { return !!s && String(s.level).toLowerCase() === 'admin'; }
+
+  /* ---------- cache รายชื่อผู้ใช้ ---------- */
+  var cache = [];
+
+  function login(email, password) {
+    return call('login', { email: email, password: password }).then(function (r) {
+      if (!r || !r.ok) return { ok: false, error: (r && r.error) || 'เข้าสู่ระบบไม่สำเร็จ' };
+      setSession({ email: r.email, name: r.name || '', level: r.level, token: r.token });
+      return { ok: true, user: { email: r.email, name: r.name, level: r.level } };
+    });
+  }
+
+  function loadUsers() {
+    return call('users', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดรายชื่อผู้ใช้ไม่สำเร็จ');
+      cache = r.users || [];
+      return cache;
+    });
+  }
+
+  function addUser(email, name, level) {
+    return call('add', { token: token(), email: email, name: name, level: level }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'เพิ่มผู้ใช้ไม่สำเร็จ');
+      cache = r.users || cache;
+      return { email: r.email, password: r.password };
+    });
+  }
+
+  function resetPassword(email) {
+    return call('reset', { token: token(), email: email }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'รีเซ็ตรหัสไม่สำเร็จ');
+      return { email: r.email, password: r.password };
+    });
+  }
+
+  function updateUser(email, level, status) {
+    return call('update', { token: token(), email: email, level: level, status: status }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'อัปเดตไม่สำเร็จ');
+      cache = r.users || cache;
+      return { ok: true };
+    });
+  }
+
+  function removeUser(email) {
+    return call('remove', { token: token(), email: email }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ลบผู้ใช้ไม่สำเร็จ');
+      cache = r.users || cache;
+      return { ok: true };
+    });
+  }
+
+  global.PIAuth = {
+    coreAdmins: [
+      'aodpongtaptsr@gmail.com',
+      'bch.sarocha@gmail.com',
+      'sittharphon.1994@gmail.com',
+      'chanphaphat.k@gmail.com'
+    ],
+    defaultPassword: 'Tsr@2026',
+    api: API,
+    seed: function () { return loadUsers().catch(function () { return []; }); },
+    login: login,
+    logout: function () { clearSession(); return Promise.resolve({ ok: true }); },
+    session: getSession,
+    isAdmin: isAdmin,
+    listUsers: function () { return cache.slice(); },
+    refresh: loadUsers,
+    addUser: addUser,
+    resetPassword: resetPassword,
+    updateUser: updateUser,
+    removeUser: removeUser
+  };
+})(window);

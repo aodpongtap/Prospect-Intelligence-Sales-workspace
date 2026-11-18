@@ -25,6 +25,8 @@ var SESSION_TTL_MS = 12 * 3600 * 1000;
 
 function doGet(e) {
   try {
+    var p = (e && e.parameter) || {};
+    if (String(p.api) === '1') return apiResponse_(p);
     return handleGet_(e);
   } catch (err) {
     return HtmlService.createHtmlOutput(errorPage_(err))
@@ -32,6 +34,39 @@ function doGet(e) {
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
+}
+
+/**
+ * JSON / JSONP API สำหรับเว็บ HTML ภายนอก (ดึงผู้ใช้จาก Google Sheets)
+ * เรียก: .../exec?api=1&action=login&email=..&password=..&callback=cb
+ */
+function apiResponse_(p) {
+  var cb = String(p.callback || '');
+  var out;
+  try {
+    var action = String(p.action || '');
+    if (action === 'seed') { ensureSeed_(); out = { ok: true }; }
+    else if (action === 'login') out = login(p.email, p.password);
+    else if (action === 'me') out = getMe(p.token);
+    else if (action === 'users') out = getUsers(p.token);
+    else if (action === 'add') out = addUser(p.token, p.email, p.name, p.level);
+    else if (action === 'reset') out = resetPassword(p.token, p.email);
+    else if (action === 'update') out = updateUser(p.token, p.email, p.level, p.status);
+    else if (action === 'remove') out = deleteUser(p.token, p.email);
+    else out = { ok: false, error: 'unknown action: ' + action };
+  } catch (err) {
+    out = { ok: false, error: (err && err.message) ? String(err.message) : String(err) };
+  }
+  var body = cb ? (cb + '(' + JSON.stringify(out) + ');') : JSON.stringify(out);
+  return ContentService.createTextOutput(body)
+    .setMimeType(cb ? ContentService.MimeType.JAVASCRIPT : ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  // เผื่อเรียกแบบ POST form-encoded
+  var p = (e && e.parameter) || {};
+  p.api = '1';
+  return apiResponse_(p);
 }
 
 function handleGet_(e) {
