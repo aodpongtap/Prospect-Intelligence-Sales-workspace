@@ -159,9 +159,9 @@
     var pr = progressOf(p);
     var hasBlocker = p.blocker && String(p.blocker).trim() !== '' && p.blocker !== 'ไม่มี' && p.blocker !== '-';
     if (days < 0) return 'delayed';
-    if (hasBlocker && days <= 14) return 'at-risk';
+    if (days <= 3) return 'at-risk';
     if (days <= 7 && pr < 80) return 'at-risk';
-    if (hasBlocker) return 'at-risk';
+    if (days <= 14 && hasBlocker) return 'at-risk';
     return 'on-time';
   }
   var state = { q: '', stage: '', owner: '', health: '' };
@@ -638,7 +638,7 @@
       + '.pt-s2{color:#98A2B3;font-size:9.5px;margin-top:3px;line-height:1.5}'
       + '.pt-tag{background:#EEF2FF;color:#3730A3;border-radius:99px;padding:4px 10px;font-size:10px;white-space:nowrap}'
       /* board */
-      + '.pt-board{display:grid;grid-template-columns:repeat(5,minmax(215px,1fr));gap:11px;overflow-x:auto;padding-bottom:6px}'
+      + '.pt-board{display:grid;grid-template-columns:repeat(5,minmax(190px,1fr));gap:10px;overflow-x:auto;padding-bottom:6px}'
       + '.pt-col{background:#F3F6FA;border-radius:11px;padding:10px;min-height:180px}'
       + '.pt-col.drag-over{outline:2px dashed #60A5FA;background:#EFF6FF}'
       + '.pt-col-h{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:#0F2B46;padding:2px 3px 9px}'
