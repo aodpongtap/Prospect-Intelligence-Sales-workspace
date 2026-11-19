@@ -145,6 +145,7 @@
       <button data-view="orders"><i class="fa-solid fa-receipt"></i>คำสั่งซื้อ &amp; Commission</button>
       <button data-view="pipeline"><i class="fa-solid fa-diagram-project"></i>Onboarding Pipeline</button>
       <button data-view="privs"><i class="fa-solid fa-gift"></i>สิทธิประโยชน์</button>
+      <button data-view="network"><i class="fa-solid fa-sitemap"></i>ทีม &amp; สิทธิ์</button>
       <button data-view="admin"><i class="fa-solid fa-sliders"></i>ตั้งค่าระบบ</button>
     </nav>
     <div class="rail-foot" id="railFoot">ข้อมูลตัวอย่าง · บันทึกในเครื่อง</div>
@@ -205,8 +206,24 @@
         { pct: 130, rebate: 1.0 }
       ],
       target: { units: 2, value: 150000 },
+      currentUser: 'U001',
       stages: ['Recruit', 'BU / MOU', 'Training', 'Start Selling', 'ติดตั้ง / ส่งมอบ', 'ปิดสัญญา']
     },
+    users: [
+      { id: 'U001', name: 'ผู้ดูแลระบบ (Admin)', email: 'admin@tsr.co.th', level: 'admin', parentId: '', createdAt: '2025-01-05', status: 'active' },
+      { id: 'U002', name: 'BU Vending', email: 'bu.vending@tsr.co.th', level: 'bu', parentId: 'U001', createdAt: '2025-01-10', status: 'active' },
+      { id: 'U003', name: 'BU Laundry', email: 'bu.laundry@tsr.co.th', level: 'bu', parentId: 'U001', createdAt: '2025-01-10', status: 'active' },
+      { id: 'U004', name: 'Head Team North', email: 'head.north@tsr.co.th', level: 'head', parentId: 'U002', createdAt: '2025-02-01', status: 'active' },
+      { id: 'U005', name: 'Head Team Bangkok', email: 'head.bkk@tsr.co.th', level: 'head', parentId: 'U003', createdAt: '2025-02-01', status: 'active' },
+      { id: 'U006', name: 'Supervisor เชียงราย', email: 'sup.chiangrai@tsr.co.th', level: 'sup', parentId: 'U004', createdAt: '2025-03-01', status: 'active' },
+      { id: 'U007', name: 'Supervisor กรุงเทพ 1', email: 'sup.bkk1@tsr.co.th', level: 'sup', parentId: 'U005', createdAt: '2025-03-01', status: 'active' },
+      { id: 'U008', name: 'กิตติพงษ์ (Sale)', email: 'kittipong@tsr.co.th', level: 'sale', parentId: 'U006', createdAt: '2025-04-12', status: 'active' },
+      { id: 'U009', name: 'พิมพ์ชนก (Sale)', email: 'pimchanok@tsr.co.th', level: 'sale', parentId: 'U006', createdAt: '2025-04-12', status: 'active' },
+      { id: 'U010', name: 'ธนกร (Sale)', email: 'thanakorn@tsr.co.th', level: 'sale', parentId: 'U007', createdAt: '2025-05-02', status: 'active' },
+      { id: 'U011', name: 'ตัวแทน A เชียงราย', email: 'agent.a@mail.com', level: 'agent', parentId: 'U008', createdAt: '2025-06-18', status: 'active' },
+      { id: 'U012', name: 'MCN สายซักผ้า', email: 'mcn.laundry@mail.com', level: 'agent', parentId: 'U009', createdAt: '2025-07-04', status: 'active' },
+      { id: 'U013', name: 'ตัวแทน B กรุงเทพ', email: 'agent.b@mail.com', level: 'agent', parentId: 'U010', createdAt: '2025-08-20', status: 'active' }
+    ],
     partners: [
       { id: 'P001', name: 'หจก. กรีนวอเตอร์ เชียงราย', owner: 'กิตติพงษ์', phone: '081-234-5678', joined: '2025-03-12', sellOut: 42, note: 'โซนเหนือ ดูแลตู้กดน้ำ 12 จุด' },
       { id: 'P002', name: 'บจก. สมาร์ทลอนดรี้ กรุงเทพ', owner: 'พิมพ์ชนก', phone: '089-111-2222', joined: '2024-11-02', sellOut: 68, note: 'เน้นเครื่องซักผ้า Stack' },
@@ -381,6 +398,7 @@
     orders: ['คำสั่งซื้อ & Commission', 'คำนวณ GP / Commission / Volume Rebate อัตโนมัติ'],
     pipeline: ['Onboarding Pipeline', 'Recruit → BU/MOU → Training → Start Selling → ติดตั้ง → ปิดสัญญา'],
     privs: ['สิทธิประโยชน์คู่ค้า', 'Lead · Demo · Content · Business Plan'],
+    network: ['ทีม & สิทธิ์ 6 ระดับ', 'ลงทะเบียน ID พร้อมเลือกผู้ดูแลต้นสาย · เห็นลูกข่ายทั้งเครือข่าย'],
     admin: ['ตั้งค่าระบบ', 'ปรับ Tier / GP / Commission / เป้าหมาย ได้โดยไม่ต้องแก้โค้ด']
   };
 
@@ -399,6 +417,7 @@
     else if (VIEW === 'orders') html = viewOrders();
     else if (VIEW === 'pipeline') html = viewPipeline();
     else if (VIEW === 'privs') html = viewPrivs();
+    else if (VIEW === 'network') html = viewNetwork();
     else html = viewAdmin();
     $('view').innerHTML = html;
     if (VIEW === 'pipeline') bindKanban();
@@ -701,6 +720,215 @@
       + '</div>';
   }
 
+  /* ---------------- ทีม & สิทธิ์ (6 ระดับ / เครือข่ายลูกข่าย) ---------------- */
+  var LEVELS = {
+    admin: { n: 1, name: 'Admin (ผู้ดูแลระบบ)', short: 'Admin', cls: 'r' },
+    bu:    { n: 2, name: 'BU (Business Unit)', short: 'BU', cls: 'v' },
+    head:  { n: 3, name: 'Head Team', short: 'Head', cls: 'b' },
+    sup:   { n: 4, name: 'Supervisor', short: 'Sup', cls: 'b' },
+    sale:  { n: 5, name: 'เซลล์ (Sale)', short: 'Sale', cls: 'g' },
+    agent: { n: 6, name: 'ตัวแทน / MCN', short: 'Agent', cls: 'n' }
+  };
+  var LEVEL_ORDER = ['admin', 'bu', 'head', 'sup', 'sale', 'agent'];
+
+  function lv(code) { return LEVELS[code] || LEVELS.agent; }
+  function userById(id) {
+    var l = DB.users;
+    for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i];
+    return null;
+  }
+  function currentUser() {
+    var u = userById(DB.settings.currentUser);
+    if (u) return u;
+    return DB.users[0] || { id: '', name: '-', level: 'agent', parentId: '' };
+  }
+  function childrenOf(id) {
+    return DB.users.filter(function (u) { return u.parentId === id; });
+  }
+  function descendantsOf(id) {
+    var out = [], queue = [id], guard = 0;
+    while (queue.length && guard++ < 5000) {
+      var cur = queue.shift();
+      childrenOf(cur).forEach(function (u) { out.push(u); queue.push(u.id); });
+    }
+    return out;
+  }
+  function scopeUsers() {
+    var me = currentUser();
+    if (!me || !me.id) return [];
+    if (lv(me.level).n === 1) return DB.users.filter(function (u) { return u.id !== me.id; });
+    return descendantsOf(me.id);
+  }
+  function canSee(targetId) {
+    var me = currentUser();
+    if (!me) return false;
+    if (lv(me.level).n === 1) return true;
+    return descendantsOf(me.id).some(function (u) { return u.id === targetId; });
+  }
+  function pathOf(u) {
+    var me = currentUser();
+    var minN = lv(me.level).n;
+    var names = [], cur = u, guard = 0;
+    while (cur && guard++ < 20) {
+      var p = userById(cur.parentId);
+      if (!p) break;
+      if (lv(p.level).n >= minN && p.id !== me.id) names.unshift(p.name);  // ไม่แสดงสายงานเหนือตัวเอง
+      cur = p;
+    }
+    return names;
+  }
+
+  function viewNetwork() {
+    var me = currentUser();
+    var scope = scopeUsers();
+    var byLevel = {};
+    LEVEL_ORDER.forEach(function (k) { byLevel[k] = 0; });
+    scope.forEach(function (u) { byLevel[u.level] = (byLevel[u.level] || 0) + 1; });
+
+    var switcher = '<select class="sel" id="meSwitch" title="สลับผู้ใช้เพื่อทดสอบการมองเห็น">'
+      + DB.users.map(function (u) {
+        return '<option value="' + esc(u.id) + '"' + (u.id === me.id ? ' selected' : '') + '>' + esc(u.name) + ' · ' + lv(u.level).short + '</option>';
+      }).join('') + '</select>';
+
+    var rows = scope.slice().sort(function (a, b) { return lv(a.level).n - lv(b.level).n || String(a.name).localeCompare(String(b.name)); }).map(function (u) {
+      var path = pathOf(u);
+      return '<tr>'
+        + '<td><div class="nm">' + esc(u.name) + '</div><div class="s2">' + esc(u.email || '-') + '</div></td>'
+        + '<td><span class="pill ' + lv(u.level).cls + '">L' + lv(u.level).n + ' · ' + lv(u.level).short + '</span></td>'
+        + '<td>' + esc((userById(u.parentId) || {}).name || '-') + '</td>'
+        + '<td><span class="s2">' + esc(path.join(' › ') || '-') + '</span></td>'
+        + '<td>' + esc(u.createdAt || '-') + '</td>'
+        + '<td><span class="pill ' + (u.status === 'active' ? 'g' : 'n') + '">' + esc(u.status === 'active' ? 'ใช้งาน' : 'ปิด') + '</span></td>'
+        + '<td style="white-space:nowrap"><button class="btn sm" data-editu="' + esc(u.id) + '"><i class="fa-solid fa-pen"></i></button> '
+        + '<button class="btn sm dgr" data-delu="' + esc(u.id) + '"><i class="fa-solid fa-trash"></i></button></td>'
+        + '</tr>';
+    }).join('');
+
+    var total = scope.length;
+    return '<div class="card" style="margin-bottom:14px">'
+      + '<div class="head"><div><h3>โครงข่ายสิทธิ์ 6 ระดับ</h3>'
+      + '<div class="hint">ผู้ที่อยู่ระดับบนจะเห็นลูกข่ายทั้งหมดใต้สายงานของตัวเอง (ทั้งเซลล์และตัวแทน/MCN ใต้เซลล์)</div></div>'
+      + '<div class="tools"><span class="s2">มุมมองปัจจุบัน:</span>' + switcher
+      + '<button class="btn pri" data-add="user"><i class="fa-solid fa-user-plus"></i> ลงทะเบียน ID</button></div></div>'
+      + '<div class="grid k4" style="margin:0">'
+      + kpi('ลูกข่ายในสายงาน', String(total), 'fa-solid fa-users', '#4F46E5', 'ไม่รวมตัวเอง (' + lv(me.level).short + ')')
+      + kpi('Supervisor', String(byLevel.sup || 0), 'fa-solid fa-user-tie', '#0E9384', 'ทีมที่ดูแล')
+      + kpi('เซลล์ (Sale)', String(byLevel.sale || 0), 'fa-solid fa-user-group', '#B54708', 'ผู้ขายในสาย')
+      + kpi('ตัวแทน / MCN', String(byLevel.agent || 0), 'fa-solid fa-id-card', '#6941C6', 'ปลายสาย')
+      + '</div>'
+      + '<div class="note" style="margin-top:12px"><b>ลำดับชั้น:</b> L1 Admin › L2 BU › L3 Head Team › L4 Supervisor › L5 เซลล์ › L6 ตัวแทน/MCN — การสร้าง ID ต้องเลือกระดับและเลือกผู้ดูแลต้นสาย (ต้องเป็นระดับที่สูงกว่าเท่านั้น)</div>'
+      + '</div>'
+
+      + '<div class="grid k2">'
+      + '<div class="card"><div class="head"><div><h3>แผนผังเครือข่าย</h3><div class="hint">เริ่มจาก ' + esc(me.name) + ' ลงไปยังปลายสาย</div></div></div>'
+      + treeNode(me, 0) + '</div>'
+
+      + '<div class="card"><div class="head"><div><h3>รายชื่อในสายงาน (' + scope.length + ')</h3>'
+      + '<div class="hint">' + (lv(me.level).n === 1 ? 'Admin เห็นทุกคนในระบบ' : 'เห็นเฉพาะผู้ที่อยู่ใต้สายงานของตัวเอง') + '</div></div>'
+      + '<input class="inp" id="uSearch" placeholder="ค้นหาชื่อ/อีเมล" style="min-width:160px"></div>'
+      + (scope.length ? '<div class="tbl-wrap" style="max-height:520px"><table id="uTbl"><thead><tr>'
+          + '<th>ชื่อ / อีเมล</th><th>ระดับ</th><th>ผู้ดูแล (Upline)</th><th>สายงาน</th><th>สร้างเมื่อ</th><th>สถานะ</th><th></th>'
+          + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+          : '<div class="empty"><i class="fa-solid fa-user-slash"></i>ยังไม่มีผู้ใช้ใต้สายงาน</div>')
+      + '</div></div>';
+  }
+
+  function treeNode(u, depth) {
+    var kids = childrenOf(u.id);
+    var l = lv(u.level);
+    var row = '<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:9px;margin:0 0 4px ' + (depth * 16) + 'px;'
+      + 'background:' + (depth === 0 ? '#EEF2FF' : '#F8FAFC') + ';border:1px solid ' + (depth === 0 ? '#E0E7FF' : '#EFF3F8') + '">'
+      + '<span class="pill ' + l.cls + '">L' + l.n + ' ' + l.short + '</span>'
+      + '<strong style="font-size:11.5px;color:#111C33">' + esc(u.name) + '</strong>'
+      + (kids.length ? '<span class="s2" style="margin-left:auto">' + kids.length + ' ใต้สังกัด</span>' : '')
+      + '</div>';
+    return row + kids.map(function (k) { return treeNode(k, depth + 1); }).join('');
+  }
+
+  function uplinesFor(levelCode) {
+    var n = lv(levelCode).n;
+    var me = currentUser();
+    var pool = DB.users.filter(function (u) {
+      var un = lv(u.level).n;
+      if (un >= n) return false;
+      if (lv(me.level).n === 1) return true;
+      return u.id === me.id || descendantsOf(me.id).some(function (x) { return x.id === u.id; });
+    });
+    return pool.sort(function (a, b) { return lv(a.level).n - lv(b.level).n; });
+  }
+
+  function userModal(id) {
+    var u = id ? userById(id) : null;
+    var isEdit = !!u;
+    var preset = u || { name: '', email: '', level: 'sale', parentId: '', status: 'active' };
+
+    var levelOpts = LEVEL_ORDER.map(function (code) {
+      var l = LEVELS[code];
+      var sel = preset.level === code ? ' selected' : '';
+      return '<option value="' + code + '"' + sel + '>L' + l.n + ' · ' + l.name + '</option>';
+    }).join('');
+
+    function uplineOpts(levelCode, parentId) {
+      var list = uplinesFor(levelCode);
+      if (!list.length) return '<option value="">— ยังไม่มีผู้ใช้ระดับบนให้เลือก —</option>';
+      return '<option value="">— เลือกผู้ดูแลต้นสาย —</option>' + list.map(function (x) {
+        return '<option value="' + esc(x.id) + '"' + (parentId === x.id ? ' selected' : '') + '>' + esc(x.name) + ' · ' + lv(x.level).short + '</option>';
+      }).join('');
+    }
+
+    openModal(
+      '<div class="mh"><div><h3>' + (isEdit ? 'แก้ไข ID / สิทธิ์' : 'ลงทะเบียน ID ใหม่') + '</h3>'
+      + '<p>เลือกระดับสิทธิ์ และเลือกผู้ดูแลต้นสาย (ต้องเป็นระดับที่สูงกว่าเท่านั้น)</p></div><button class="x" data-close>&times;</button></div>'
+      + '<div class="mb"><form id="uf">'
+      + '<div class="fld"><label>ชื่อ-นามสกุล / ชื่อทีม *</label><input name="name" required value="' + esc(preset.name) + '"></div>'
+      + '<div class="fld"><label>อีเมล (ใช้เป็น ID เข้าระบบ)</label><input name="email" type="email" value="' + esc(preset.email) + '"></div>'
+      + '<div class="two"><div class="fld"><label>ระดับสิทธิ์ *</label><select name="level" id="uLevel">' + levelOpts + '</select></div>'
+      + '<div class="fld"><label>ผู้ดูแลต้นสาย *</label><select name="parentId" id="uParent">' + uplineOpts(preset.level, preset.parentId) + '</select></div></div>'
+      + '<div class="two"><div class="fld"><label>สถานะ</label><select name="status">'
+      + '<option value="active"' + (preset.status === 'active' ? ' selected' : '') + '>ใช้งาน</option>'
+      + '<option value="inactive"' + (preset.status !== 'active' ? ' selected' : '') + '>ปิดการใช้งาน</option></select></div>'
+      + '<div class="fld"><label>วันที่สร้าง</label><input name="createdAt" type="date" value="' + esc(preset.createdAt || new Date().toISOString().slice(0, 10)) + '"></div></div>'
+      + '<div class="note" id="uHint">—</div>'
+      + '</form></div>'
+      + '<div class="mf"><button class="btn" data-close>ยกเลิก</button><button class="btn pri" id="uSave"><i class="fa-solid fa-check"></i> บันทึก</button></div>'
+    );
+
+    var f = $('uf');
+    function refreshHint() {
+      var l = lv(f.level.value);
+      var allowed = uplinesFor(f.level.value).map(function (x) { return lv(x.level).short; })
+        .filter(function (v, i, a) { return a.indexOf(v) === i; });
+      $('uHint').innerHTML = '<b>L' + l.n + ' ' + l.name + '</b> — ผู้ดูแลต้นสายที่เลือกได้: '
+        + (allowed.length ? allowed.join(', ') : 'ไม่มี (ต้องสร้างระดับบนก่อน)')
+        + '<br>สิทธิ์การมองเห็น: ' + (l.n === 1 ? 'เห็นทุกคนในระบบ' : 'เห็นเฉพาะลูกข่ายใต้สายงานของตัวเอง');
+    }
+    f.level.addEventListener('change', function () {
+      $('uParent').innerHTML = uplineOpts(f.level.value, '');
+      refreshHint();
+    });
+    refreshHint();
+
+    $('uSave').addEventListener('click', function () {
+      if (!f.reportValidity()) return;
+      var parentId = f.parentId.value;
+      if (f.level.value !== 'admin' && !parentId) { toast('กรุณาเลือกผู้ดูแลต้นสาย'); return; }
+      var obj = {
+        id: isEdit ? u.id : ('U' + String(Date.now()).slice(-5)),
+        name: f.name.value.trim(),
+        email: f.email.value.trim(),
+        level: f.level.value,
+        parentId: f.level.value === 'admin' ? '' : parentId,
+        createdAt: f.createdAt.value,
+        status: f.status.value
+      };
+      if (isEdit) {
+        DB.users = DB.users.map(function (x) { return x.id === u.id ? obj : x; });
+      } else DB.users.push(obj);
+      saveDB(); closeModal(); render();
+      toast(isEdit ? 'อัปเดตสิทธิ์แล้ว' : 'ลงทะเบียน ID เรียบร้อย');
+    });
+  }
+
   /* ---------------- Admin ---------------- */
   function viewAdmin() {
     var s = DB.settings;
@@ -920,10 +1148,27 @@
       else if (k === 'order') orderModal();
       else if (k === 'lead') leadModal();
       else if (k === 'priv') privModal();
+      else if (k === 'user') userModal('');
       return;
     }
     var ed = e.target.closest('[data-edit]');
     if (ed) { partnerModal(ed.dataset.edit); return; }
+    var edu = e.target.closest('[data-editu]');
+    if (edu) {
+      if (!canSee(edu.dataset.editu)) { toast('ไม่มีสิทธิ์แก้ไขผู้ใช้ที่อยู่นอกสายงาน'); return; }
+      userModal(edu.dataset.editu); return;
+    }
+    var delu = e.target.closest('[data-delu]');
+    if (delu) {
+      var uid = delu.dataset.delu;
+      if (!canSee(uid)) { toast('ไม่มีสิทธิ์ลบผู้ใช้ที่อยู่นอกสายงาน'); return; }
+      if (childrenOf(uid).length) { toast('ลบไม่ได้: ยังมีลูกข่ายใต้สังกัด'); return; }
+      if (confirm('ลบ ID นี้?')) {
+        DB.users = DB.users.filter(function (x) { return x.id !== uid; });
+        saveDB(); render(); toast('ลบ ID แล้ว');
+      }
+      return;
+    }
     var del = e.target.closest('[data-del]');
     if (del) {
       var pid = del.dataset.del;
@@ -962,6 +1207,22 @@
       }
       return;
     }
+  });
+
+  // Network: สลับผู้ใช้ + ค้นหา
+  document.addEventListener('change', function (e) {
+    if (e.target.id === 'meSwitch') {
+      DB.settings.currentUser = e.target.value;
+      saveDB(); render();
+      toast('มุมมองเปลี่ยนเป็น: ' + currentUser().name);
+    }
+  });
+  document.addEventListener('input', function (e) {
+    if (e.target.id !== 'uSearch') return;
+    var q = e.target.value.toLowerCase();
+    Array.prototype.forEach.call(document.querySelectorAll('#uTbl tbody tr'), function (tr) {
+      tr.style.display = tr.textContent.toLowerCase().indexOf(q) >= 0 ? '' : 'none';
+    });
   });
 
   // Admin: บันทึกการตั้งค่า
