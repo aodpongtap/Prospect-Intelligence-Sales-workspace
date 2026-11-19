@@ -488,57 +488,70 @@
       tot.target += b.target;
     });
 
-    var head = m ? ('01.' + TH_MONTHS[m - 1] + ' ' + (y + 543)) : ('ทั้งปี ' + (y + 543));
+    var head = m ? (TH_MONTHS[m - 1] + ' ' + (y + 543)) : ('ทั้งปี ' + (y + 543));
 
     var body = blocks.map(function (b) {
+      var perHead = b.rows.length ? b.target / b.rows.length : 0;
       var ach4 = b.target ? (b.sum.s4 / b.target * 100) : 0;
-      var achFc = b.target ? (b.sum.forecast / b.target * 100) : 0;
-      var headRow = '<tr class="sr-teamhead"><td colspan="9">'
-        + '<i class="fa-solid fa-users"></i> <b>' + esc(b.team.name) + '</b>'
-        + '<span class="sr-s2" style="display:inline;margin-left:8px">' + b.rows.length + ' คน</span>'
-        + '<span class="sr-th-meta">เป้าหมาย ' + (m ? 'เดือนนี้ ' : 'ทั้งปี ') + '<b>' + money(b.target) + '</b>'
-        + ' · Ach 4. <b>' + pct(ach4) + '</b>'
-        + ' · Forecast (การันตี + Pipeline) <b>' + pct(achFc) + '</b></span>'
+      var fc = b.target ? (b.sum.forecast / b.target * 100) : 0;
+      var band = '<tr class="sr-band"><td colspan="10">'
+        + '<span class="sr-band-name"><i class="fa-solid fa-users"></i> ' + esc(b.team.name) + '</span>'
+        + '<span class="sr-band-sub">' + b.rows.length + ' คน · เป้า ' + money(b.target) + '</span>'
+        + '<span class="sr-band-pill">Ach 4. <b>' + pct(ach4) + '</b></span>'
+        + '<span class="sr-band-pill alt">Forecast <b>' + pct(fc) + '</b></span>'
         + '</td></tr>';
+
       var saleRows = b.rows.map(function (x) {
+        var nm = String(x.sale.name || '');
+        var av = nm.trim().charAt(0) || '?';
+        var g = perHead ? (x.s.s4 / perHead * 100) : 0;
         return '<tr>'
-          + '<td class="sr-td-sale"><div class="sr-nm">' + esc(x.sale.name) + '</div><div class="sr-s2">' + x.sale.id + '</div></td>'
+          + '<td class="sr-sticky"><div class="sr-sale"><span class="sr-av">' + esc(av) + '</span>'
+          + '  <div style="min-width:0"><div class="sr-nm">' + esc(x.sale.name) + '</div>'
+          + '  <div class="sr-s2">' + esc(x.sale.team) + '</div></div></div></td>'
+          + '<td class="sr-num sr-goal" title="เป้า/คน ' + money(perHead) + ' · Actual ' + money(x.s.s4) + '">'
+          + '  <div class="sr-goal-num">' + pct(g) + '</div>'
+          + '  <div class="sr-mini"><span style="width:' + Math.max(0, Math.min(100, g)) + '%"></span></div></td>'
           + '<td class="sr-num">' + (x.s.s4 ? money(x.s.s4) : '<span class="sr-dim">—</span>') + '</td>'
           + '<td class="sr-num" title="ถ่วงน้ำหนัก 90% = ' + money(x.s.s3 * 0.9) + '">' + (x.s.s3 ? money(x.s.s3) : '<span class="sr-dim">—</span>') + '</td>'
           + '<td class="sr-num" title="ถ่วงน้ำหนัก 80% = ' + money(x.s.s2 * 0.8) + '">' + (x.s.s2 ? money(x.s.s2) : '<span class="sr-dim">—</span>') + '</td>'
           + '<td class="sr-num" title="ถ่วงตามโอกาสปิด = ' + money(x.s.weighted1) + '">' + (x.s.s1 ? money(x.s.s1) : '<span class="sr-dim">—</span>') + '</td>'
-          + '<td class="sr-num sr-strong">' + money(x.s.totalSale) + '</td>'
-          + '<td class="sr-num sr-sep">' + (x.other.s1 ? money(x.other.s1) : '<span class="sr-dim">—</span>') + '</td>'
-          + '<td class="sr-num">' + (x.other.s0 ? money(x.other.s0) : '<span class="sr-dim">—</span>') + '</td>'
-          + '<td class="sr-num ' + (x.other.s5 ? 'sr-neg' : '') + '">' + (x.other.s5 ? ('-' + money(x.other.s5)) : '<span class="sr-dim">—</span>') + '</td>'
+          + '<td class="sr-num sr-total-col">' + money(x.s.totalSale) + '</td>'
+          + '<td class="sr-num sr-sep sr-muted">' + (x.other.s1 ? money(x.other.s1) : '<span class="sr-dim">—</span>') + '</td>'
+          + '<td class="sr-num sr-muted">' + (x.other.s0 ? money(x.other.s0) : '<span class="sr-dim">—</span>') + '</td>'
+          + '<td class="sr-num ' + (x.other.s5 ? 'sr-neg' : 'sr-muted') + '">' + (x.other.s5 ? ('-' + money(x.other.s5)) : '<span class="sr-dim">—</span>') + '</td>'
           + '</tr>';
       }).join('');
-      return headRow + saleRows;
+      return band + saleRows;
     }).join('');
+
+    var totAch = tot.target ? (tot.m.s4 / tot.target * 100) : 0;
 
     return ''
       + '<section class="sr-panel">'
-      + '  <div class="sr-ph"><div><h3>สรุป Forecast แยกตามเซลส์ (Summary)</h3>'
-      + '    <div class="sr-s2">น้ำหนัก: 4 = 100% · 3 = 90% · 2 = 80% · 1 = ตามโอกาสปิดรายดีล · คอลัมน์ขวาคือปี ' + (y + 543) + ' เดือนอื่น</div></div>'
+      + '  <div class="sr-ph"><div><h3>สรุปยอดขายรายเซลส์ (Forecast Summary)</h3>'
+      + '    <div class="sr-s2">แท่ง % = Actual เทียบเป้าต่อคน · ตัวเลขจาง ๆ ทางขวาคืองานเดือนอื่นของทั้งปี</div></div>'
       + '    <span class="sr-tag">' + esc(head) + '</span></div>'
       + '  <div class="sr-tablewrap"><table class="sr-table sr-summary"><thead><tr>'
-      + '    <th rowspan="2" class="sr-td-sale">Sale</th>'
+      + '    <th rowspan="2" class="sr-sticky sr-td-sale">Sale</th>'
+      + '    <th rowspan="2" class="sr-num">เป้า/คน</th>'
       + '    <th colspan="5" class="sr-grp">เดือนที่เลือก — ' + esc(head) + '</th>'
-      + '    <th colspan="3" class="sr-grp sr-grp-alt">งานอื่นๆ ทั้งปี ' + (y + 543) + '</th>'
+      + '    <th colspan="3" class="sr-grp sr-grp-alt">ทั้งปี ' + (y + 543) + ' (เดือนอื่น)</th>'
       + '  </tr><tr>'
-      + '    <th class="sr-num">4. Actual</th><th class="sr-num">3. รอส่งของ</th>'
-      + '    <th class="sr-num">2. รอ PO</th><th class="sr-num">1. Pipeline</th>'
-      + '    <th class="sr-num">รวมเดือนนี้</th>'
-      + '    <th class="sr-num sr-grp-alt">Pipeline เดือนอื่น</th><th class="sr-num">0.กำลังคุย Detail</th><th class="sr-num">5.ยกเลิก</th>'
+      + '    <th class="sr-num">Actual</th><th class="sr-num">รอส่งของ</th>'
+      + '    <th class="sr-num">รอ PO</th><th class="sr-num">Pipeline</th>'
+      + '    <th class="sr-num sr-total-col">รวมเดือนนี้</th>'
+      + '    <th class="sr-num sr-grp-alt sr-sep">Pipeline อื่น</th><th class="sr-num">กำลังคุย</th><th class="sr-num">ยกเลิก</th>'
       + '  </tr></thead><tbody>'
-      + (body || '<tr><td colspan="9" class="sr-empty">ไม่พบข้อมูลตามตัวกรอง</td></tr>')
-      + '</tbody><tfoot><tr>'
-      + '  <td class="sr-td-sale"><b>Total</b></td>'
+      + (body || '<tr><td colspan="10" class="sr-empty">ไม่พบข้อมูลตามตัวกรอง</td></tr>')
+      + '</tbody><tfoot><tr class="sr-total-row">'
+      + '  <td class="sr-sticky"><b>รวมทั้งหมด</b></td>'
+      + '  <td class="sr-num"><b>' + pct(totAch) + '</b></td>'
       + '  <td class="sr-num"><b>' + money(tot.m.s4) + '</b></td>'
       + '  <td class="sr-num"><b>' + money(tot.m.s3) + '</b></td>'
       + '  <td class="sr-num"><b>' + money(tot.m.s2) + '</b></td>'
       + '  <td class="sr-num"><b>' + money(tot.m.s1) + '</b></td>'
-      + '  <td class="sr-num sr-strong"><b>' + money(tot.m.totalSale) + '</b></td>'
+      + '  <td class="sr-num sr-total-col"><b>' + money(tot.m.totalSale) + '</b></td>'
       + '  <td class="sr-num sr-sep"><b>' + money(tot.o.s1) + '</b></td>'
       + '  <td class="sr-num"><b>' + money(tot.o.s0) + '</b></td>'
       + '  <td class="sr-num sr-neg"><b>' + (tot.o.s5 ? '-' + money(tot.o.s5) : money(0)) + '</b></td>'
@@ -625,7 +638,7 @@
     var EN_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     var monthTh = TH_MONTHS.map(function (mth, i) {
       return '<th class="sr-num' + (state.month === i + 1 ? ' sr-hl' : '') + '" title="' + mth + '">'
-        + String(i + 1).padStart(2, '0') + ' ' + EN_MONTHS[i] + '</th>';
+        + EN_MONTHS[i] + '</th>';
     }).join('');
 
     var rows = listTeams.map(function (t) {
@@ -1269,6 +1282,26 @@
       + '.sr-td-sale{min-width:150px}'
       + '.sr-td-team{min-width:150px}'
       + '.sr-teamhead td{background:#F5F8FF;color:#1E3A8A;font-size:10.5px;padding:8px 9px;border-top:1px solid #E4EBF7;border-bottom:1px solid #E4EBF7}'
+      + '.sr-band td{background:#F1F5FB;padding:9px 11px;border-top:1px solid #E4EBF7;border-bottom:1px solid #E4EBF7}'
+      + '.sr-band-name{font-size:11.5px;font-weight:600;color:#0F2B46;margin-right:10px}'
+      + '.sr-band-name i{font-size:9px;color:#64748B;margin-right:4px}'
+      + '.sr-band-sub{font-size:10px;color:#667085;margin-right:12px}'
+      + '.sr-band-pill{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid #E0E7FF;color:#3730A3;'
+      + 'border-radius:99px;padding:2px 9px;font-size:9.5px;margin-right:6px}'
+      + '.sr-band-pill.alt{background:#fff;border-color:#D1FAE5;color:#15803D}'
+      + '.sr-summary tbody tr:hover td{background:#F7FAFF}'
+      + '.sr-sticky{position:sticky;left:0;background:#fff;z-index:2}'
+      + '.sr-summary tbody tr:hover .sr-sticky{background:#F7FAFF}'
+      + '.sr-total-row td{background:#F8FAFC!important;border-top:2px solid #E2E8F0}'
+      + '.sr-sale{display:flex;align-items:center;gap:8px;min-width:0}'
+      + '.sr-av{width:26px;height:26px;border-radius:50%;background:#EEF2FF;color:#4338CA;display:grid;place-items:center;'
+      + 'font-size:10.5px;font-weight:600;flex:0 0 26px}'
+      + '.sr-goal{min-width:74px}'
+      + '.sr-goal-num{font-size:11px;font-weight:600;color:#0F2B46}'
+      + '.sr-mini{height:5px;width:64px;margin:4px 0 0 auto;background:#EEF2F7;border-radius:99px;overflow:hidden}'
+      + '.sr-mini span{display:block;height:100%;background:#2563EB;border-radius:99px}'
+      + '.sr-total-col{background:#EFF6FF}'
+      + '.sr-muted{color:#98A2B3}'
       + '.sr-teamhead i{font-size:9px;margin-right:4px}'
       + '.sr-th-meta{margin-left:12px;color:#475569}'
       + '.sr-th-meta b{color:#0F2B46}'
