@@ -1612,6 +1612,8 @@
     data: function () {
       return { deals: DEALS, teams: TEAMS, sales: SALES, viewerTeam: viewerTeam() };
     },
+    scope: scopeOf,
+    scopedDeals: function () { return DEALS.filter(inScope); },
     addDeal: addDeal,
     openAddDeal: openAddDeal,
     removeDeal: removeDeal,

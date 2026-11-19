@@ -273,7 +273,7 @@
 })(window);
 
 </script>
-  <script src="assets/sales-report.js?v=14"></script>
+  <script src="assets/sales-report.js?v=15"></script>
   <script src="assets/project-tracking.js?v=3"></script>
   <script src="assets/customer-intelligence.js?v=2"></script>
   <script src="assets/team-page.js?v=1"></script>
@@ -821,7 +821,8 @@
         var d = (window.SalesReport && SalesReport.data) ? SalesReport.data() : null;
         if (!d) return null;
         var out = [];
-        d.deals.forEach(function (x) {
+        var scoped = (SalesReport.scopedDeals ? SalesReport.scopedDeals() : d.deals);
+        scoped.forEach(function (x) {
           var s = null;
           for (var i = 0; i < d.sales.length; i++) if (d.sales[i].id === x.saleId) s = d.sales[i];
           if (!s) return;
