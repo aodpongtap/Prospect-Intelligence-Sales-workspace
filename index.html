@@ -321,7 +321,8 @@
       setTimeout(fillTeamUplines, 40);
 
       return pageHead('ทีม & สิทธิ์',
-          'คุณคือ L' + myN + ' ' + ladderOf(me.level).label + ' · เห็นเฉพาะผู้ใช้ในสายงานของตัวเอง'
+          'คุณคือ L' + myN + ' ' + ladderOf(me.level).label + ' · '
+            + (myN === 1 ? 'เห็นทั้งเครือข่าย' : 'เห็นเฉพาะผู้ใช้ในสายงานของคุณ')
             + (window.__CAN_REGISTER__ ? ' · ลงทะเบียน ID ได้' : ' · อ่านอย่างเดียว'),
           '')
         + '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:15px">' + chips + '</div>'
