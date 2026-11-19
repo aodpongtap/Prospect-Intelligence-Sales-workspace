@@ -622,8 +622,10 @@
     var y = state.year;
     var lockedTeam = viewerTeam();
     var listTeams = lockedTeam ? TEAMS.filter(function (t) { return t.code === lockedTeam; }) : TEAMS;
+    var EN_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     var monthTh = TH_MONTHS.map(function (mth, i) {
-      return '<th class="sr-num' + (state.month === i + 1 ? ' sr-hl' : '') + '">' + String(i + 1).padStart(2, '0') + '.' + mth.slice(0, 3) + '.</th>';
+      return '<th class="sr-num' + (state.month === i + 1 ? ' sr-hl' : '') + '" title="' + mth + '">'
+        + String(i + 1).padStart(2, '0') + ' ' + EN_MONTHS[i] + '</th>';
     }).join('');
 
     var rows = listTeams.map(function (t) {
