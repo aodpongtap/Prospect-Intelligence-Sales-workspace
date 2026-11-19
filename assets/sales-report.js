@@ -379,7 +379,7 @@
         money(k.target),
         'Head Count <b>' + k.headCount + '</b> คน · Prod./Head <b>' + money(k.perHead) + '</b>'
           + (teamLine ? '<br>' + teamLine : ''),
-        100, '#0F2B46', 'fa-solid fa-bullseye'),
+        undefined, '#0F2B46', 'fa-solid fa-bullseye'),
       cardKpi('Actual ปิดงานแล้ว',
         pct(k.ach4),
         money(s.s4) + ' จากเป้า ' + money(k.target),
@@ -665,7 +665,7 @@
     var cards = [
       cardKpi('เป้าหมายทีม (Target)', money(k.target),
         'Head Count <b>' + k.headCount + '</b> คน · Prod./Head <b>' + money(k.perHead) + '</b>',
-        100, '#0F2B46', 'fa-solid fa-bullseye'),
+        undefined, '#0F2B46', 'fa-solid fa-bullseye'),
       cardKpi('%Ach 4. (Actual ปิดงานแล้ว 100%)', pct(k.ach4),
         money(s.s4) + ' / ' + money(k.target), k.ach4, '#2563EB', 'fa-solid fa-circle-check'),
       cardKpi('%Ach 4.+3. (รวมรอส่งของ 90%)', pct(k.ach43),
