@@ -474,7 +474,8 @@
       var c = colorOf(r.a);
       return '<tr>'
         + '<td style="white-space:nowrap">' + esc(thDateTime(r.t)) + '</td>'
-        + '<td><div class="lg-who">' + esc(r.n || r.u) + '</div><div class="lg-mail">' + esc(r.u) + '</div></td>'
+        + '<td><div class="lg-who">' + esc(r.n || r.u) + '</div>'
+        + (r.n && r.n !== r.u ? '<div class="lg-mail">' + esc(r.u) + '</div>' : '') + '</td>'
         + '<td><span class="lg-act" style="background:' + c + '15;color:' + c + '"><i class="' + iconOf(r.a) + '"></i> ' + esc(labelOf(r.a)) + '</span></td>'
         + '<td>' + esc(r.tg || '—') + '</td>'
         + '<td>' + esc(r.d || '—') + '</td>'
