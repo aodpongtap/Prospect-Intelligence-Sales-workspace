@@ -47,7 +47,7 @@
       <div class="sidebar-bottom"><small><i class="fa-solid fa-circle-check"></i> ข้อมูลอัปเดตล่าสุด: วันนี้ 09:42</small></div>
     </aside>
     <main class="main">
-      <header class="topbar"><div class="top-left"><button class="icon-btn mobile-menu" id="mobileMenu" aria-label="เปิดเมนู"><i class="fa-solid fa-bars"></i></button><span class="breadcrumb">Workspace <i class="fa-solid fa-chevron-right" style="font-size:8px;margin:0 6px"></i> <span id="crumbName">Dashboard</span></span></div>
+      <header class="topbar"><div class="top-left"><button class="icon-btn" id="backBtn" title="ย้อนกลับ" aria-label="ย้อนกลับ" style="display:none"><i class="fa-solid fa-arrow-left"></i></button><button class="icon-btn mobile-menu" id="mobileMenu" aria-label="เปิดเมนู"><i class="fa-solid fa-bars"></i></button><span class="breadcrumb">Workspace <i class="fa-solid fa-chevron-right" style="font-size:8px;margin:0 6px"></i> <span id="crumbName">Dashboard</span></span></div>
         <div class="top-actions"><button class="icon-btn" id="notificationBtn" title="การแจ้งเตือน"><i class="fa-regular fa-bell"></i><span class="badge-dot"></span></button><div class="profile"><div class="avatar" id="avatar">HS</div><div class="profile-copy"><strong id="meName">Head of Sales</strong><small id="meRole">Administrator</small></div></div></div>
       </header>
       <div id="scopeBar" style="display:none"></div>
@@ -429,7 +429,27 @@
         }
       });
 
-      if (!canFill) return;
+      // ให้ปุ่ม "Add Deal" ใน Sale Monitor บันทึกลง Google Sheets ได้
+      window.__paintDeals__ = paint;
+      window.__saveDealSheet__ = function (f) {
+        PIAuth.addDeal({
+          name: f.name, customer: f.customer,
+          value: Number(f.value || 0), probability: Number(f.probability || 0),
+          stage: f.stage, close: f.close,
+          nextAction: f.nextAction || '', status: 'Healthy'
+        }).then(function (r) {
+          try { closeModal(); } catch (e) {}
+          paint((r && r.deals) || []);
+          try { toast('บันทึกดีลลง Google Sheets เรียบร้อย'); } catch (e) {}
+        }).catch(function (e) {
+          try { toast('บันทึกไม่สำเร็จ: ' + (e.message || e)); } catch (err) {}
+        });
+      };
+
+      // ปุ่มลอย "เพิ่มดีลของฉัน" + ฟอร์มเพิ่มดีล ถูกนำออกตามคำขอ
+      // (ใช้ปุ่ม "Add Deal" ในหน้า Sale Monitor แทน — บันทึกลงชีตเดียวกัน)
+      return;
+      /* eslint-disable no-unreachable */
 
       document.addEventListener('DOMContentLoaded', function () {
         var btn = document.createElement('button');
@@ -493,7 +513,7 @@
     const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",partners:"Partner CRM",team:"ทีม & สิทธิ์",projects:"Project Tracking",service:"After-Sale Service",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
     const stageNames=["Planning","Sales Handover","Installation","Testing & Acceptance","Completed"];
     const stageLabels=["Prospect","Qualified","Proposal","Negotiation","Won","Lost"];
-    let currentPage="dashboard",charts=[],sortDesc=true,toastTimer;
+    let currentPage="dashboard",charts=[],sortDesc=true,toastTimer,pageStack=[];
     const money=n=>"฿"+Number(n).toLocaleString("th-TH");
     const shortMoney=n=>n>=1000000?"฿"+(n/1000000).toFixed(1)+"M":"฿"+(n/1000).toFixed(0)+"K";
     const thaiDate=date=>{if(!date)return '—';const d=new Date(String(date).length<=10?date+"T00:00:00":date);return isNaN(d.getTime())?'—':d.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});};
@@ -510,7 +530,7 @@
     function btn(label,action,icon="",primary=false,extra=""){return `<button class="btn ${primary?"btn-primary":""}" data-action="${action}" ${extra}>${icon?`<i class="${icon}"></i>`:""}${label}</button>`}
     function destroyCharts(){charts.forEach(c=>c.destroy());charts=[]}
     function makeChart(id,config){const canvas=document.getElementById(id);if(canvas&&window.Chart)charts.push(new Chart(canvas,config))}
-    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:renderDashboard,sales:renderSales,partners:renderPartnerCRM,team:renderTeam,projects:renderProjects,service:renderService,intelligence:renderIntelligence,reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard")drawDashboardCharts();if(currentPage==="intelligence")drawHealthChart();if(currentPage==="reports")drawReportCharts();if(currentPage==="team")loadTeam()}
+    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:renderDashboard,sales:renderSales,partners:renderPartnerCRM,team:renderTeam,projects:renderProjects,service:renderService,intelligence:renderIntelligence,reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard")drawDashboardCharts();if(currentPage==="intelligence")drawHealthChart();if(currentPage==="reports")drawReportCharts();if(currentPage==="team")loadTeam();var bb=document.getElementById("backBtn");if(bb)bb.style.display=pageStack.length?"inline-grid":"none"}
 
     /* ===== JavaScript: Dashboard page ===== */
     function renderDashboard(){const today=new Date().toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"});const rows=[...deals].sort((a,b)=>riskScore(b)-riskScore(a)).slice(0,5).map(d=>`<tr class="clickable" data-deal="${d.id}"><td><span class="deal-name">${d.name}</span><br><span class="muted">${d.customer}</span></td><td>${money(d.value)}</td><td>${d.owner}</td><td><span class="risk-pill ${riskClass(riskScore(d))}">${riskScore(d)} / 100</span></td><td>${thaiDate(d.close)}</td></tr>`).join("");return `${pageHead("สวัสดี, Head of Sales",today,btn("ดู Pipeline","go-sales","fa-solid fa-arrow-right",true))}<div class="grid kpi-grid">${kpi("Sales Pipeline","฿12,450,000","fa-solid fa-filter","#2563EB","+12.5%")}${kpi("Forecast เดือนนี้","฿4,850,000","fa-solid fa-chart-column","#16A34A","+8.2%")}${kpi("Deals at Risk","8 Deals","fa-solid fa-triangle-exclamation","#F59E0B","+2 Deals","down")}${kpi("Overdue Actions","14 Tasks","fa-solid fa-clock","#DC2626","-6 Tasks")}</div><div class="grid cols-2" style="margin-bottom:15px">${panel("Pipeline แยกตาม Stage",`<div class="chart-wrap"><canvas id="pipelineChart"></canvas></div>`,"มูลค่าดีลตามสถานะปัจจุบัน")}${panel("Sales Forecast รายเดือน",`<div class="chart-wrap"><canvas id="forecastChart"></canvas></div>`,"Actual และ Forecast")}</div><div class="grid cols-2">${panel("Deals ที่ต้องติดตามด่วน",`<div class="table-wrap"><table><thead><tr><th>Deal / Customer</th><th>มูลค่า</th><th>Owner</th><th>Risk Score</th><th>Close</th></tr></thead><tbody>${rows}</tbody></table></div>`,"เรียงตาม Risk Score สูงสุด")}<div class="grid" style="gap:15px">${panel("Today's Priority Actions",`<div class="action-list"><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>ติดตาม Proposal: Cloud Migration Phase 2</strong><small>พิมพ์ชนก · <span class="due">วันนี้ 11:00</span></small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>ยืนยันงบประมาณระบบ Smart Factory</strong><small>กิตติพงษ์ · วันนี้ 14:30</small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>โทรติดตาม Network Infrastructure</strong><small>อรทัย · <span class="due">เกินกำหนด 2 วัน</span></small></div></div></div>`)}${panel("Alerts",`<div class="alert-list"><div class="alert"><i class="fa-solid fa-clock"></i><span>3 Deals ไม่มีการติดต่อเกิน 7 วัน</span></div><div class="alert red"><i class="fa-solid fa-file-circle-exclamation"></i><span>2 Deals มีโอกาสปิดในเดือนนี้ แต่ยังไม่มี Proposal</span></div><div class="alert blue"><i class="fa-solid fa-headset"></i><span>4 Service Tickets ใกล้เกิน SLA</span></div></div>`)}</div></div>`}
@@ -687,7 +707,8 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
     function updatePrompt3(){const sel=document.getElementById("pf3Deal"),ta=document.getElementById("promptText3");if(!sel||!ta)return;const d=deals.find(x=>String(x.id)===sel.value)||deals[0];ta.value=prompt3Text(d)}
 
     /* ===== JavaScript: Event handlers and actions ===== */
-    document.getElementById("navList").addEventListener("click",e=>{const item=e.target.closest(".nav-item");if(!item)return;currentPage=item.dataset.page;render()});
+    document.getElementById("navList").addEventListener("click",e=>{const item=e.target.closest(".nav-item");if(!item)return;if(item.dataset.page!==currentPage)pageStack.push(currentPage);currentPage=item.dataset.page;render()});
+    document.getElementById("backBtn").addEventListener("click",()=>{const p=pageStack.pop();if(p){currentPage=p;render()}else{currentPage="dashboard";render()}});
     // เปิดหน้าที่ระบุจาก URL เช่น index.html?page=team
     (function(){try{const p=new URLSearchParams(location.search).get("page");if(p&&pageTitles[p]){currentPage=p;render()}}catch(err){}})();
     document.getElementById("mobileMenu").addEventListener("click",()=>document.getElementById("sidebar").classList.toggle("open"));
@@ -741,7 +762,7 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
       else if(action==="save-project-status")saveProjectStatus()
     });
     function exportDeals(){const headers=["Deal Name","Customer","Owner","Value","Stage","Probability","Expected Close","Risk Score","Status"],rows=deals.map(d=>[d.name,d.customer,d.owner,d.value,d.stage,d.probability,d.close,riskScore(d),d.status]),csv=[headers,...rows].map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n"),link=document.createElement("a");link.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));link.download="sales-report.csv";link.click();URL.revokeObjectURL(link.href);toast("Export Report สำเร็จ")}
-    function saveDeal(id=null){const form=document.getElementById("dealForm");if(!form.reportValidity())return;const f=Object.fromEntries(new FormData(form));if(id){const d=deals.find(x=>x.id===id);Object.assign(d,{...f,value:Number(f.value),probability:Number(f.probability),lastActivity:"2026-10-07",status:"Healthy"});closeModal();render();toast("อัปเดต Deal เรียบร้อยแล้ว")}else{deals.unshift({id:Date.now(),...f,value:Number(f.value),probability:Number(f.probability),lastActivity:"2026-10-07",status:"Healthy",activity:["สร้าง Deal ใหม่"]});closeModal();render();toast("เพิ่ม Deal ใหม่เรียบร้อยแล้ว")}}
+    function saveDeal(id=null){const form=document.getElementById("dealForm");if(!form.reportValidity())return;const f=Object.fromEntries(new FormData(form));if(window.__saveDealSheet__&&!id){window.__saveDealSheet__(f);return}if(id){const d=deals.find(x=>x.id===id);Object.assign(d,{...f,value:Number(f.value),probability:Number(f.probability),lastActivity:"2026-10-07",status:"Healthy"});closeModal();render();toast("อัปเดต Deal เรียบร้อยแล้ว")}else{deals.unshift({id:Date.now(),...f,value:Number(f.value),probability:Number(f.probability),lastActivity:"2026-10-07",status:"Healthy",activity:["สร้าง Deal ใหม่"]});closeModal();render();toast("เพิ่ม Deal ใหม่เรียบร้อยแล้ว")}}
     function showActivityForm(id){setModal("Add Activity","บันทึกกิจกรรมสำหรับ Deal",`<form id="activityForm"><div class="form-group"><label>รายละเอียด Activity</label><textarea name="activity" required placeholder="ระบุรายละเอียดการติดต่อ"></textarea><input type="hidden" name="id" value="${id}"></div></form>`,[{label:"Cancel"},{label:"บันทึก Activity",action:"save-activity",primary:true}])}
     function saveActivity(){const form=document.getElementById("activityForm");if(!form.reportValidity())return;const f=Object.fromEntries(new FormData(form)),d=deals.find(x=>x.id===Number(f.id));d.activity.unshift(f.activity);d.lastActivity="2026-10-07";closeModal();render();toast("บันทึก Activity เรียบร้อยแล้ว")}
     function saveTask(id){const form=document.getElementById("taskForm");if(!form.reportValidity())return;const f=Object.fromEntries(new FormData(form));projects.find(p=>p.id===id).tasks.push({...f,status:"รอดำเนินการ"});closeModal();render();toast("เพิ่ม Task เรียบร้อยแล้ว")}
