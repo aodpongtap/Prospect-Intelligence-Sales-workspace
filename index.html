@@ -159,7 +159,6 @@
                 if (t && /Alerts|Priority Actions/i.test(t.textContent)) p.remove();
               });
               // ตัวเลข KPI คำนวณจากดีลจริงในสายงาน — ดูแลโดย window.__afterRender__ (paintKpis)
-              }
               // Sale: ซ่อนตัวเลขเทียบท้องตลาด (ข้อมูลสมมติ) ที่ไม่เกี่ยวกับดีลของตัวเอง
               if (window.__ME__ && String(window.__ME__.level).toLowerCase() === 'sale') {
                 Array.prototype.slice.call(content.querySelectorAll('.kpi-foot')).forEach(function (f) { f.remove(); });
