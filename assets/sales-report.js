@@ -1286,6 +1286,9 @@
       return render();
     },
     viewerTeam: viewerTeam,
+    data: function () {
+      return { deals: DEALS, teams: TEAMS, sales: SALES, viewerTeam: viewerTeam() };
+    },
     drawCharts: drawCharts,
     renderDashboard: function () {
       injectCss();
