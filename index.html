@@ -267,62 +267,74 @@
     function renderTeam() {
       var me = window.__ME__ || {};
       var users = teamUsers();
+      var myN = ladderOf(me.level).n;
       var byLevel = {};
       LADDER.forEach(function (l) { byLevel[l.code] = 0; });
       users.forEach(function (u) { byLevel[u.level] = (byLevel[u.level] || 0) + 1; });
       var root = null;
       for (var i = 0; i < users.length; i++) if (users[i].email === me.email) { root = users[i]; break; }
 
-      var levelOpts = LADDER.filter(function (l) { return l.n >= (ladderOf(me.level).n + 1); }).map(function (l) {
+      var levelOpts = LADDER.filter(function (l) { return l.n > myN; }).map(function (l) {
         return '<option value="' + l.code + '">L' + l.n + ' · ' + l.label + '</option>';
       }).join('');
 
-      // สิทธิ์ลงทะเบียน ID: Admin / BU / Head Team เท่านั้น (Supervisor = อ่านอย่างเดียว)
-      window.__CAN_REGISTER__ = ladderOf(me.level).n <= 3;
+      // สิทธิ์ลงทะเบียน ID: Admin / BU / Head Team เท่านั้น (Supervisor ลงไป = อ่านอย่างเดียว)
+      window.__CAN_REGISTER__ = myN <= 3;
 
       var rows = users.map(function (u) {
         var l = ladderOf(u.level);
         var up = '-';
         for (var j = 0; j < users.length; j++) if (users[j].email === u.parent) up = users[j].name || users[j].email;
         if (u.parent && up === '-') up = u.parent;
-        return '<tr><td><div class="deal-name">' + String(u.name || u.email) + '</div><div class="muted" style="font-size:10px">' + String(u.email) + '</div></td>'
-          + '<td><span class="status" style="background:#E0EAFF;color:#1D4ED8">L' + l.n + ' · ' + l.label + '</span></td>'
-          + '<td>' + up + '</td>'
-          + '<td>' + (u.createdAt ? String(u.createdAt).slice(0, 10) : '—') + '</td>'
-          + '<td>' + (u.status === 'disabled' ? '<span class="status at-risk">ปิด</span>' : '<span class="status healthy">ใช้งาน</span>') + '</td></tr>';
+        return '<tr>'
+          + '<td><div class="deal-name">' + String(u.name || u.email) + '</div><div class="muted" style="font-size:10px">' + String(u.email) + '</div></td>'
+          + '<td><span class="status" style="background:#E0EAFF;color:#1D4ED8;white-space:nowrap">L' + l.n + ' · ' + l.label + '</span></td>'
+          + '<td style="font-size:10.5px">' + up + '</td>'
+          + '<td>' + (u.status === 'disabled' ? '<span class="status at-risk">ปิด</span>' : '<span class="status healthy">ใช้งาน</span>') + '</td>'
+          + '<td style="font-size:10px;color:#667085">' + (u.createdAt ? String(u.createdAt).slice(0, 10) : '—') + '</td>'
+          + '</tr>';
       }).join('');
 
-      return pageHead('ทีม & สิทธิ์ 6 ระดับ',
-          window.__CAN_REGISTER__
-            ? 'ผู้ที่อยู่ระดับบนจะเห็นลูกข่ายทั้งหมดใต้สายงานของตัวเอง'
-            : 'อ่านอย่างเดียว — ดูรายชื่อลูกน้องในสายงานของคุณ',
-          window.__CAN_REGISTER__ ? '<button class="btn btn-primary" data-action="add-team"><i class="fa-solid fa-user-plus"></i> ลงทะเบียน ID</button>' : '')
-        + '<div class="grid kpi-grid" style="margin-bottom:15px">'
-        + '<article class="kpi"><div class="kpi-top">ลูกข่ายในสายงาน<span class="kpi-icon" style="background:#EEF2FF;color:#1D4ED8"><i class="fa-solid fa-users"></i></span></div><div class="kpi-value">' + Math.max(0, users.length - 1) + '</div><div class="kpi-foot">ไม่รวมตัวเอง · L' + ladderOf(me.level).n + '</div></article>'
-        + '<article class="kpi"><div class="kpi-top">Supervisor<span class="kpi-icon" style="background:#CCFBF1;color:#0E9384"><i class="fa-solid fa-user-tie"></i></span></div><div class="kpi-value">' + (byLevel.sup || 0) + '</div><div class="kpi-foot">ทีมในสาย</div></article>'
-        + '<article class="kpi"><div class="kpi-top">เซลล์ (Sale)<span class="kpi-icon" style="background:#FEF3C7;color:#B45309"><i class="fa-solid fa-user-group"></i></span></div><div class="kpi-value">' + (byLevel.sale || 0) + '</div><div class="kpi-foot">ผู้ขาย</div></article>'
-        + '<article class="kpi"><div class="kpi-top">ตัวแทน / MCN<span class="kpi-icon" style="background:#F3E8FF;color:#6941C6"><i class="fa-solid fa-id-card"></i></span></div><div class="kpi-value">' + (byLevel.agent || 0) + '</div><div class="kpi-foot">ปลายสาย</div></article>'
-        + '</div>'
-        + '<div class="grid cols-2">'
+      var chips = LADDER.map(function (l) {
+        return '<span style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #E5EAF0;border-radius:99px;padding:5px 11px;font-size:11px;color:#475467">'
+          + 'L' + l.n + ' ' + l.label + ' <b style="color:#0F2B46">' + (byLevel[l.code] || 0) + '</b></span>';
+      }).join('');
+
+      var formHtml;
+      if (window.__CAN_REGISTER__) {
+        formHtml = panel('ลงทะเบียน ID ใหม่',
+          '<div style="font-size:11px;color:#667085;margin-bottom:10px">สร้างได้เฉพาะระดับที่ต่ำกว่าคุณ (L' + (myN + 1) + ' ลงไป) · ระบบสร้างรหัสผ่านให้และแสดงครั้งเดียว</div>'
+          + '<div class="form-grid">'
+          + '<div class="form-group"><label>อีเมล *</label><input id="tuEmail" type="email" placeholder="name@company.com"></div>'
+          + '<div class="form-group"><label>ชื่อ-นามสกุล</label><input id="tuName" placeholder="ชื่อ-นามสกุล"></div>'
+          + '<div class="form-group"><label>ระดับสิทธิ์ *</label><select id="tuLevel">' + (levelOpts || '<option value="">ไม่มีระดับให้สร้าง</option>') + '</select></div>'
+          + '<div class="form-group"><label>ผู้ดูแลต้นสาย (Upline) *</label><select id="tuParent"></select></div>'
+          + '</div>'
+          + '<div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+          + '<button class="btn btn-primary" data-action="save-team"><i class="fa-solid fa-check"></i> บันทึก + สร้างรหัสผ่าน</button>'
+          + '<span id="tuMsg" style="font-size:11px;color:#667085"></span></div>', '');
+      } else {
+        formHtml = panel('สิทธิ์การลงทะเบียน',
+          '<div class="alert"><i class="fa-solid fa-lock"></i><span>ระดับ L' + myN + ' (' + ladderOf(me.level).label + ') ดูรายชื่อได้อย่างเดียว — การสร้าง ID ต้องเป็น Admin / BU / Head Team</span></div>', '');
+      }
+
+      setTimeout(fillTeamUplines, 40);
+
+      return pageHead('ทีม & สิทธิ์',
+          'คุณคือ L' + myN + ' ' + ladderOf(me.level).label + ' · เห็นเฉพาะผู้ใช้ในสายงานของตัวเอง'
+            + (window.__CAN_REGISTER__ ? ' · ลงทะเบียน ID ได้' : ' · อ่านอย่างเดียว'),
+          '')
+        + '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:15px">' + chips + '</div>'
+        + formHtml
+        + '<div class="grid cols-2" style="margin-top:15px">'
         + panel('แผนผังเครือข่าย',
             root ? teamTree(root, 0) : '<div class="empty"><i class="fa-solid fa-user-slash"></i>ไม่พบข้อมูลของคุณในระบบ</div>',
             'เริ่มจาก ' + String(me.name || me.email || '-'))
         + panel('รายชื่อในสายงาน (' + users.length + ')',
             users.length
-              ? '<div class="table-wrap" style="max-height:520px"><table><thead><tr><th>ชื่อ / อีเมล</th><th>ระดับ</th><th>ผู้ดูแลสาย</th><th>สร้างเมื่อ</th><th>สถานะ</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
-              : '<div class="empty"><i class="fa-solid fa-users"></i>ยังไม่มีผู้ใช้ใต้สายงาน</div>',
+              ? '<div class="table-wrap" style="max-height:460px"><table><thead><tr><th>ชื่อ / อีเมล</th><th>ระดับ</th><th>ผู้ดูแลสาย</th><th>สถานะ</th><th>สร้างเมื่อ</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+              : '<div class="empty"><i class="fa-solid fa-users"></i>ยังไม่มีผู้ใช้ในสายงาน</div>',
             'L1 Admin เห็นทั้งเครือข่าย · ระดับอื่นเห็นเฉพาะลูกข่าย')
-        + '</div>'
-        + '<div id="teamForm" style="display:none;margin-top:15px">'
-        + panel('ลงทะเบียน ID ใหม่ (ต้องมีสิทธิ์ระดับบนกว่า)',
-            '<div class="form-grid">'
-            + '<div class="form-group"><label>อีเมล</label><input id="tuEmail" type="email" placeholder="name@company.com"></div>'
-            + '<div class="form-group"><label>ชื่อ</label><input id="tuName" placeholder="ชื่อ-นามสกุล"></div>'
-            + '<div class="form-group"><label>ระดับสิทธิ์</label><select id="tuLevel">' + (levelOpts || '<option value="">ไม่มีสิทธิ์สร้าง</option>') + '</select></div>'
-            + '<div class="form-group"><label>ผู้ดูแลต้นสาย</label><select id="tuParent"></select></div>'
-            + '</div>'
-            + '<div style="margin-top:12px"><button class="btn btn-primary" data-action="save-team"><i class="fa-solid fa-check"></i> บันทึก + สร้างรหัสผ่าน</button></div>'
-            + '<div id="tuMsg" style="margin-top:10px;font-size:11px;color:#667085"></div>', '');
         + '</div>';
     }
 
@@ -349,13 +361,21 @@
       box.innerHTML = opts || '<option value="">— ไม่มีผู้ใช้ระดับบน —</option>';
     }
 
-    function loadTeam() {
+    function loadTeam(force) {
       if (!window.PIAuth || !PIAuth.refresh) return;
+      if (window.__TEAM_LOADING__) return;
+      if (!force && window.__TEAM_READY__) return;
+      window.__TEAM_LOADING__ = true;
       PIAuth.refresh().then(function (list) {
         window.__TEAM__ = list || [];
+        window.__TEAM_READY__ = true;
+        window.__TEAM_LOADING__ = false;
         if (currentPage === 'team') render();
       }).catch(function () {
         window.__TEAM__ = [];
+        window.__TEAM_READY__ = true;
+        window.__TEAM_LOADING__ = false;
+        if (currentPage === 'team') render();
       });
     }
 
@@ -976,7 +996,7 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
             else{toast('คัดลอกไม่สำเร็จ')}
           });
           if(msg)msg.textContent='';
-          loadTeam();
+          loadTeam(true);
         }).catch(function(e){if(msg)msg.textContent=e.message;toast("ไม่สำเร็จ: "+e.message)});
       }
       else if(action==="add-deal")showDealForm()
