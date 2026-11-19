@@ -332,10 +332,22 @@
       var box = document.getElementById('tuParent');
       if (!lv || !box) return;
       var n = ladderOf(lv.value).n;
-      var opts = teamUsers().filter(function (u) { return ladderOf(u.level).n < n; }).map(function (u) {
-        return '<option value="' + u.email + '">' + String(u.name || u.email) + ' · L' + ladderOf(u.level).n + '</option>';
-      });
-      box.innerHTML = opts.join('') || '<option value="">— ไม่มีผู้ใช้ระดับบน —</option>';
+      var me = window.__ME__ || {};
+      var meN = ladderOf(me.level).n;
+      var list = teamUsers().filter(function (u) { return ladderOf(u.level).n < n; });
+      var hasMe = false;
+      for (var i = 0; i < list.length; i++) if (list[i].email === me.email) hasMe = true;
+
+      var opts = '';
+      // ให้เลือก "ตัวเอง" ได้เสมอ (Head/BU ที่ไม่มีผู้ใช้ระดับบนในสายงาน)
+      if (me.email && meN < n && !hasMe) {
+        opts += '<option value="' + me.email + '" selected>' + String(me.name || me.email) + ' · L' + meN + ' (คุณ)</option>';
+      }
+      opts += list.map(function (u, idx) {
+        var sel = (!opts && idx === 0) ? ' selected' : '';
+        return '<option value="' + u.email + '"' + sel + '>' + String(u.name || u.email) + ' · L' + ladderOf(u.level).n + '</option>';
+      }).join('');
+      box.innerHTML = opts || '<option value="">— ไม่มีผู้ใช้ระดับบน —</option>';
     }
 
     function loadTeam() {
