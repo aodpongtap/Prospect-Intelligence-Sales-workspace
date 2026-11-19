@@ -429,7 +429,8 @@
     var cards = [
       cardKpi('เป้าหมายทีม',
         money(k.target),
-        'Head Count <b>' + k.headCount + '</b> คน · Prod./Head <b>' + money(k.perHead) + '</b>',
+        'Head Count <b>' + k.headCount + '</b> คน · Prod./Head <b>' + money(k.perHead) + '</b>'
+          + '<br><span class="sr-link" data-sr-toggletargets><i class="fa-solid fa-pen-to-square"></i> ใส่ Target รายเดือน</span>',
         undefined, '#0F2B46', 'fa-solid fa-bullseye'),
       cardKpi('Actual ปิดงานแล้ว',
         pct(k.ach4),
@@ -657,10 +658,12 @@
 
     return ''
       + '<section class="sr-panel">'
-      + '  <div class="sr-ph"><div><h3>เป้าหมายการขายรายทีม — ปี ' + (y + 543) + '</h3>'
-      + '    <div class="sr-s2">' + (state.month ? 'เป้าหมายของเดือนที่เลือก' : 'รวมทั้งปี') + '</div></div>'
+      + '  <div class="sr-ph"><div><h3>เป้าหมายการขายรายทีม (Target) — ปี ' + (y + 543) + '</h3>'
+      + '    <div class="sr-s2">กดปุ่ม “ใส่ Target” เพื่อกรอกเป้าหมายของแต่ละเดือน · ' + (state.month ? 'เดือนที่เลือก: ' + TH_MONTHS[state.month - 1] : 'รวมทั้งปี') + '</div></div>'
       + '    <div class="sr-tools">'
-      + '      <button class="sr-btn" data-sr-toggletargets>' + (ui.targets ? '<i class="fa-solid fa-chevron-up"></i> ซ่อนตารางเป้าหมาย' : '<i class="fa-solid fa-sliders"></i> แก้ไขเป้าหมาย') + '</button>'
+      + (ui.targets
+        ? '      <button class="sr-btn" data-sr-toggletargets><i class="fa-solid fa-chevron-up"></i> ซ่อนตาราง</button>'
+        : '      <button class="sr-btn dark" data-sr-toggletargets><i class="fa-solid fa-pen-to-square"></i> ใส่ Target</button>')
       + '    </div></div>'
       + '<div class="sr-targets-sum">' + sumLine + '</div>'
       + (ui.targets
@@ -1159,7 +1162,15 @@
     }
 
     if (t.closest('[data-sr-addteam]')) { addTeamModal(); return; }
-    if (t.closest('[data-sr-toggletargets]')) { ui.targets = !ui.targets; if (typeof global.render === 'function') global.render(); return; }
+    if (t.closest('[data-sr-toggletargets]')) {
+      ui.targets = !ui.targets;
+      if (typeof global.render === 'function') global.render();
+      if (ui.targets) setTimeout(function () {
+        var box = document.querySelector('.sr-targets');
+        if (box && box.scrollIntoView) box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }, 80);
+      return;
+    }
     if (t.closest('[data-sr-resettargets]')) { resetTargets(); return; }
     var delBtn = t.closest('[data-sr-delteam]');
     if (delBtn) { deleteTeam(delBtn.getAttribute('data-sr-delteam')); return; }
@@ -1235,6 +1246,8 @@
       + '.sr-sum-item{font-size:11.5px;color:#475467}'
       + '.sr-sum-item b{color:#0F2B46;margin-right:5px}'
       + '.sr-sum-sep{color:#C2CBD8}'
+      + '.sr-link{display:inline-flex;align-items:center;gap:4px;color:#2563EB;font-size:10px;cursor:pointer;margin-top:5px}'
+      + '.sr-link:hover{text-decoration:underline}'
       + '.sr-tag{background:#EEF2FF;color:#3730A3;border-radius:99px;padding:4px 10px;font-size:10px;white-space:nowrap}'
       /* table */
       + '.sr-tablewrap{overflow:auto;width:100%;-webkit-overflow-scrolling:touch}'
