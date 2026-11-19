@@ -375,7 +375,7 @@
   }
 
   /* ============================ 4) VIEW ============================ */
-  var state = { year: 2026, month: 11, team: '', sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1 };
+  var state = { year: 2026, month: 11, team: '', sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1, perfTeam: '' };
   var ui = { targets: false };
   var charts = [];
 
@@ -830,7 +830,7 @@
             x: { stacked: true, grid: { display: false } },
             y: {
               stacked: true, beginAtZero: true,
-              ticks: { callback: function (v) { return v >= 1000000 ? (v / 1000000).toFixed(1) + 'M' : (v / 1000) + 'K'; } },
+              ticks: { callback: function (v) { return Number(v).toLocaleString('th-TH'); } },
               grid: { color: '#EFF3F8' }
             }
           }
@@ -864,6 +864,133 @@
     }
   }
 
+  /* ---------- ผลงานรายบุคคล: ชิปเซลส์ + รายงานรายเดือน ---------- */
+  function saleChips() {
+    var tm = state.perfTeam || state.team || '';
+    var list = SALES.filter(function (s) { return !tm || s.team === tm; });
+    if (!list.length) return '<div class="sr-s2">ไม่มีเซลส์ในทีมนี้</div>';
+    return list.map(function (s) {
+      var deals = DEALS.filter(function (d) {
+        return d.saleId === s.id && d.year === state.year && (!state.month || d.month === state.month);
+      });
+      var sum = summarize(deals);
+      var teamSize = SALES.filter(function (x) { return x.team === s.team; }).length || 1;
+      var tg = targetOf(s.team, state.year, state.month) / teamSize;
+      var ach = tg ? sum.s4 / tg * 100 : 0;
+      return '<button class="sr-salechip" data-sr-sale="' + esc(s.id) + '" title="ดูรายงานรายเดือนของ ' + esc(s.name) + '">'
+        + '<span class="sr-schip-av">' + esc(String(s.name).trim().charAt(0)) + '</span>'
+        + '<span class="sr-schip-txt"><b>' + esc(s.name) + '</b>'
+        + '<small>' + esc(s.team) + ' · Actual ' + money(sum.s4) + ' · ' + pct(ach) + '</small></span>'
+        + '<i class="fa-solid fa-chevron-right"></i></button>';
+    }).join('');
+  }
+
+  function openSaleMonthly(saleId) {
+    var s = sale(saleId);
+    var teamSize = SALES.filter(function (x) { return x.team === s.team; }).length || 1;
+    var rows = '';
+    var tot = { s4: 0, s3: 0, s2: 0, s1: 0, total: 0, target: 0 };
+    for (var m = 1; m <= 12; m++) {
+      var list = DEALS.filter(function (d) { return d.saleId === saleId && d.year === state.year && d.month === m; });
+      var sum = summarize(list);
+      var tg = targetOf(s.team, state.year, m) / teamSize;
+      var ach = tg ? sum.s4 / tg * 100 : 0;
+      tot.s4 += sum.s4; tot.s3 += sum.s3; tot.s2 += sum.s2; tot.s1 += sum.s1;
+      tot.total += sum.totalSale; tot.target += tg;
+      var has = sum.totalSale || sum.s0 || sum.s5;
+      rows += '<tr class="' + (state.month === m ? 'sr-hl-row' : '') + (has ? '' : ' sr-dimrow') + '">'
+        + '<td><b>' + TH_MONTHS[m - 1] + '</b>' + (state.month === m ? ' <span class="sr-now">เดือนที่เลือก</span>' : '') + '</td>'
+        + '<td class="sr-num">' + (sum.s4 ? money(sum.s4) : '<span class="sr-dim">—</span>') + '</td>'
+        + '<td class="sr-num">' + (sum.s3 ? money(sum.s3) : '<span class="sr-dim">—</span>') + '</td>'
+        + '<td class="sr-num">' + (sum.s2 ? money(sum.s2) : '<span class="sr-dim">—</span>') + '</td>'
+        + '<td class="sr-num">' + (sum.s1 ? money(sum.s1) : '<span class="sr-dim">—</span>') + '</td>'
+        + '<td class="sr-num sr-strong">' + (sum.totalSale ? money(sum.totalSale) : '<span class="sr-dim">—</span>') + '</td>'
+        + '<td class="sr-num sr-muted">' + money(tg) + '</td>'
+        + '<td class="sr-num"><div class="sr-achbar"><span style="width:' + Math.max(0, Math.min(100, ach)) + '%"></span></div>'
+        + '<small>' + pct(ach) + '</small></td>'
+        + '</tr>';
+    }
+    var totAch = tot.target ? tot.s4 / tot.target * 100 : 0;
+    var body = '<div class="sr-mtable"><table class="sr-table"><thead><tr>'
+      + '<th>เดือน</th><th class="sr-num">Actual</th><th class="sr-num">รอส่งของ</th><th class="sr-num">รอ PO</th>'
+      + '<th class="sr-num">Pipeline</th><th class="sr-num">รวม</th><th class="sr-num">เป้า/เดือน</th><th class="sr-num">%Ach 4.</th>'
+      + '</tr></thead><tbody>' + rows + '</tbody>'
+      + '<tfoot><tr class="sr-total-row"><td><b>รวมทั้งปี</b></td>'
+      + '<td class="sr-num"><b>' + money(tot.s4) + '</b></td>'
+      + '<td class="sr-num"><b>' + money(tot.s3) + '</b></td>'
+      + '<td class="sr-num"><b>' + money(tot.s2) + '</b></td>'
+      + '<td class="sr-num"><b>' + money(tot.s1) + '</b></td>'
+      + '<td class="sr-num"><b>' + money(tot.total) + '</b></td>'
+      + '<td class="sr-num sr-muted"><b>' + money(tot.target) + '</b></td>'
+      + '<td class="sr-num"><b>' + pct(totAch) + '</b></td></tr></tfoot></table></div>';
+
+    if (typeof global.setModal === 'function') {
+      global.setModal(s.name, s.team + ' · รายงานยอดขายรายเดือน ปี ' + (state.year + 543), body,
+        [{ label: 'ปิด', primary: true }], true);
+    }
+  }
+
+  /* ---------- ฟอร์มเพิ่มดีล (เก็บครบทุกฟิลด์ที่ Reports ต้องใช้) ---------- */
+  function openAddDeal() {
+    var tm = state.team || viewerTeam() || '';
+    var list = SALES.filter(function (s) { return !tm || s.team === tm; });
+    if (!list.length) list = SALES;
+    var saleOpts = list.map(function (s) {
+      return '<option value="' + esc(s.id) + '">' + esc(teamByCode(s.team).name) + ' · ' + esc(s.name) + '</option>';
+    }).join('');
+    var statusOpts = STATUS.map(function (st) {
+      return '<option value="' + st.code + '"' + (st.code === 1 ? ' selected' : '') + '>' + st.code + ' · ' + esc(st.label) + '</option>';
+    }).join('');
+    var prodOpts = PRODUCTS.map(function (p) { return '<option value="' + p.code + '">' + esc(p.name) + '</option>'; }).join('');
+    var payOpts = PAYMENTS.map(function (p) { return '<option value="' + p.code + '">' + esc(p.name) + '</option>'; }).join('');
+    var yearOpts = YEARS.map(function (y) { return '<option value="' + y + '"' + (y === state.year ? ' selected' : '') + '>' + (y + 543) + '</option>'; }).join('');
+    var monthOpts = TH_MONTHS.map(function (m, i) {
+      return '<option value="' + (i + 1) + '"' + ((i + 1) === (state.month || new Date().getMonth() + 1) ? ' selected' : '') + '>' + m + '</option>';
+    }).join('');
+
+    var body = '<form id="srDealForm">'
+      + '<div class="sr-dform">'
+      + '  <label class="sr-df full">ชื่องาน / ดีล *<input name="job" required placeholder="เช่น ร้านสะดวกซัก 6 เครื่อง"></label>'
+      + '  <label class="sr-df full">ลูกค้า *<input name="customer" required placeholder="ชื่อบริษัท / ร้านค้า"></label>'
+      + '  <label class="sr-df">พนักงานขาย *<select name="saleId">' + saleOpts + '</select></label>'
+      + '  <label class="sr-df">สถานะงาน *<select name="status">' + statusOpts + '</select></label>'
+      + '  <label class="sr-df">มูลค่างาน (บาท) *<input name="amount" type="number" min="0" step="1000" required placeholder="0"></label>'
+      + '  <label class="sr-df">โอกาสปิด (%)<input name="prob" type="number" min="0" max="100" value="40"></label>'
+      + '  <label class="sr-df">สินค้า<select name="product">' + prodOpts + '</select></label>'
+      + '  <label class="sr-df">รูปแบบการซื้อ<select name="payment">' + payOpts + '</select></label>'
+      + '  <label class="sr-df">ปีที่คาดว่าจะปิด<select name="year">' + yearOpts + '</select></label>'
+      + '  <label class="sr-df">เดือนที่คาดว่าจะปิด<select name="month">' + monthOpts + '</select></label>'
+      + '  <label class="sr-df full">หมายเหตุ<input name="note" placeholder="รายละเอียด/เงื่อนไข (แสดงใน Reports)"></label>'
+      + '</div>'
+      + '<div class="sr-s2" style="margin-top:10px">ข้อมูลนี้จะถูกใช้ใน Reports · Dashboard · Customer Intelligence ทันที</div>'
+      + '</form>';
+
+    global.setModal('เพิ่มดีลใหม่', 'กรอกข้อมูลให้ครบเพื่อให้รายงานคำนวณถูกต้อง', body, [
+      { label: 'ยกเลิก' },
+      { label: 'บันทึกดีล', icon: 'fa-solid fa-check', action: 'sr-save-deal', primary: true }
+    ], true);
+  }
+
+  function saveDealForm() {
+    var f = document.getElementById('srDealForm');
+    if (!f || !f.reportValidity()) return;
+    try {
+      addDeal({
+        job: f.job.value, customer: f.customer.value,
+        saleId: f.saleId.value, status: Number(f.status.value),
+        amount: Number(f.amount.value || 0), prob: Number(f.prob.value || 0),
+        product: f.product.value, payment: f.payment.value,
+        year: Number(f.year.value), month: Number(f.month.value),
+        note: f.note.value
+      });
+      if (typeof global.closeModal === 'function') global.closeModal();
+      if (typeof global.render === 'function') global.render();
+      if (typeof global.toast === 'function') global.toast('บันทึกดีลแล้ว — Reports อัปเดตเรียบร้อย');
+    } catch (e) {
+      if (typeof global.toast === 'function') global.toast('บันทึกไม่สำเร็จ: ' + (e.message || e));
+    }
+  }
+
   function render() {
     var k = kpis();
     return '<div class="sr">'
@@ -877,8 +1004,15 @@
       + '<div class="sr-charts">'
       + '  <section class="sr-panel sr-chart-wide">'
       + '    <div class="sr-ph"><div><h3>ผลงานรายบุคคล (Sale Performance)</h3>'
-      + '      <div class="sr-s2">แท่งซ้อนแยกตามสถานะ · เส้นประสีแดงคือเป้าหมายต่อคน (เป้าหมายทีม ÷ Head Count = ' + money(k.perHead) + ')</div></div></div>'
+      + '      <div class="sr-s2">เลือกทีมด้านขวา แล้วคลิกชื่อเซลส์เพื่อดูรายงานยอดขายรายเดือน · เส้นประแดง = เป้าหมายต่อคน</div></div>'
+      + '      <div class="sr-teamtabs">'
+      + '        <button class="sr-tab' + (state.perfTeam === '' ? ' on' : '') + '" data-sr-perfteam="">ทุกทีม</button>'
+      + TEAMS.map(function (t) {
+          return '<button class="sr-tab' + (state.perfTeam === t.code ? ' on' : '') + '" data-sr-perfteam="' + esc(t.code) + '">' + esc(t.name) + '</button>';
+        }).join('')
+      + '      </div></div>'
       + '    <div class="sr-chartbox"><canvas id="srBarChart"></canvas></div>'
+      + '    <div class="sr-salelist">' + saleChips() + '</div>'
       + '  </section>'
       + '  <div class="sr-donuts">'
       + '    <section class="sr-panel">'
@@ -918,6 +1052,7 @@
       var names = [], d4 = [], d3 = [], d2 = [], d1 = [];
       SALES.forEach(function (r) {
         if (state.sale && state.sale !== r.id) return;
+        if (state.perfTeam && r.team !== state.perfTeam) return;
         var list = k.list.filter(function (d) { return d.saleId === r.id; });
         var s = summarize(list);
         if (!list.length) return;
@@ -955,7 +1090,7 @@
             x: { stacked: true, grid: { display: false } },
             y: {
               stacked: true, beginAtZero: true,
-              ticks: { callback: function (v) { return v >= 1000000 ? (v / 1000000).toFixed(1) + 'M' : (v / 1000) + 'K'; } },
+              ticks: { callback: function (v) { return Number(v).toLocaleString('th-TH'); } },
               grid: { color: '#EFF3F8' }
             }
           }
@@ -1177,6 +1312,12 @@
     }
 
     if (t.closest('[data-sr-addteam]')) { addTeamModal(); return; }
+    var ptBtn = t.closest('[data-sr-perfteam]');
+    if (ptBtn) { state.perfTeam = ptBtn.getAttribute('data-sr-perfteam'); if (typeof global.render === 'function') global.render(); return; }
+    var saleBtn = t.closest('[data-sr-sale]');
+    if (saleBtn) { openSaleMonthly(saleBtn.getAttribute('data-sr-sale')); return; }
+    var act0 = t.closest('[data-action]');
+    if (act0 && act0.getAttribute('data-action') === 'sr-save-deal') { saveDealForm(); return; }
     if (t.closest('[data-sr-toggletargets]')) {
       ui.targets = !ui.targets;
       if (typeof global.render === 'function') global.render();
@@ -1302,6 +1443,34 @@
       + '.sr-mini span{display:block;height:100%;background:#2563EB;border-radius:99px}'
       + '.sr-total-col{background:#EFF6FF}'
       + '.sr-muted{color:#98A2B3}'
+      + '.sr-teamtabs{display:flex;gap:6px;flex-wrap:wrap}'
+      + '.sr-tab{border:1px solid #E5EAF0;background:#fff;color:#475467;border-radius:99px;padding:5px 12px;font-size:10.5px;'
+      + 'font-family:inherit;cursor:pointer}'
+      + '.sr-tab:hover{border-color:#C7D7EE}'
+      + '.sr-tab.on{background:#0F2B46;border-color:#0F2B46;color:#fff}'
+      + '.sr-salelist{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}'
+      + '.sr-salechip{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #E9EEF5;border-radius:10px;'
+      + 'padding:7px 10px;cursor:pointer;font-family:inherit;text-align:left;transition:box-shadow .15s,border-color .15s}'
+      + '.sr-salechip:hover{border-color:#C7D7EE;box-shadow:0 6px 16px rgba(15,43,70,.08)}'
+      + '.sr-schip-av{width:26px;height:26px;border-radius:50%;background:#EEF2FF;color:#4338CA;display:grid;place-items:center;'
+      + 'font-size:10.5px;font-weight:600;flex:0 0 26px}'
+      + '.sr-schip-txt{display:flex;flex-direction:column;line-height:1.35;min-width:0}'
+      + '.sr-schip-txt b{font-size:10.5px;color:#0F2B46;font-weight:600}'
+      + '.sr-schip-txt small{font-size:9px;color:#98A2B3}'
+      + '.sr-salechip i{font-size:9px;color:#C2CBD8}'
+      + '.sr-mtable{max-height:60vh;overflow:auto}'
+      + '.sr-mtable .sr-table{font-size:11px}'
+      + '.sr-hl-row td{background:#FFFBEB!important}'
+      + '.sr-now{background:#FDE68A;color:#92400E;border-radius:99px;padding:1px 7px;font-size:8.5px;margin-left:4px}'
+      + '.sr-dimrow td{color:#B0BAC9}'
+      + '.sr-achbar{height:5px;width:64px;margin:0 0 3px auto;background:#EEF2F7;border-radius:99px;overflow:hidden}'
+      + '.sr-achbar span{display:block;height:100%;background:#2563EB;border-radius:99px}'
+      + '.sr-dform{display:grid;grid-template-columns:1fr 1fr;gap:10px}'
+      + '.sr-df{display:grid;gap:5px;font-size:10px;color:#475467;min-width:0}'
+      + '.sr-df.full{grid-column:1/-1}'
+      + '.sr-df input,.sr-df select{border:1px solid #DCE3EB;border-radius:8px;padding:9px 10px;font-size:11px;'
+      + 'font-family:inherit;outline:none;color:#344054;min-width:0;width:100%}'
+      + '.sr-df input:focus,.sr-df select:focus{border-color:#60A5FA;box-shadow:0 0 0 3px rgba(37,99,235,.1)}'
       + '.sr-teamhead i{font-size:9px;margin-right:4px}'
       + '.sr-th-meta{margin-left:12px;color:#475569}'
       + '.sr-th-meta b{color:#0F2B46}'
@@ -1389,6 +1558,7 @@
       return { deals: DEALS, teams: TEAMS, sales: SALES, viewerTeam: viewerTeam() };
     },
     addDeal: addDeal,
+    openAddDeal: openAddDeal,
     removeDeal: removeDeal,
     saveDeals: saveDeals,
     onChange: onChange,

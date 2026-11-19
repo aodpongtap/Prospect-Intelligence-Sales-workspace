@@ -95,7 +95,7 @@
     })();
   </script>
   <script src="assets/auth-sheets.js?v=3"></script>
-  <script src="assets/sales-report.js?v=12"></script>
+  <script src="assets/sales-report.js?v=13"></script>
   <script src="assets/project-tracking.js?v=3"></script>
   <script src="assets/customer-intelligence.js?v=2"></script>
   <script src="assets/team-page.js?v=1"></script>
@@ -1097,7 +1097,7 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
           loadTeam(true);
         }).catch(function(e){if(msg)msg.textContent=e.message;toast("ไม่สำเร็จ: "+e.message)});
       }
-      else if(action==="add-deal")showDealForm()
+      else if(action==="add-deal"){window.SalesReport&&SalesReport.openAddDeal?SalesReport.openAddDeal():showDealForm()}
       else if(action==="open-tree")openTeamTree()
       else if(action==="refresh"){const button=e.target.closest("[data-action]");button.classList.add("loading");button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>กำลัง Refresh...';setTimeout(()=>{button.classList.remove("loading");render();toast("Refresh Data สำเร็จ")},1000)}
       else if(action==="export-deals")exportDeals()
