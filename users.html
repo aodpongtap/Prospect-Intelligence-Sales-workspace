@@ -28,14 +28,18 @@ table{width:100%;border-collapse:collapse;min-width:900px;table-layout:fixed}
 th{font-size:10px;color:#667085;font-weight:500;background:#f8fafc;text-align:left;padding:10px 12px;white-space:nowrap;vertical-align:middle}
 td{padding:10px 12px;border-bottom:1px solid #eef1f5;font-size:12px;vertical-align:middle}
 tbody tr:hover{background:#fafcff}
-/* ความกว้างคอลัมน์ให้ตรงกัน */
-.c-email{width:24%}.c-name{width:17%}.c-level{width:15%}.c-parent{width:17%}.c-down{width:8%}.c-status{width:9%}.c-last{width:11%}.c-act{width:auto}
+/* ความกว้างคอลัมน์ให้ตรงกัน (รวม = 100%) */
+.c-email{width:21%}.c-name{width:15%}.c-level{width:14%}.c-parent{width:16%}.c-down{width:8%}.c-status{width:11%}.c-last{width:15%}.c-act{width:auto}
 td.c-email>span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 td.c-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 td.c-level select{width:100%;padding:5px 6px;font-size:11px}
-td.c-down{text-align:center}
-td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap}
-.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px}
+th.c-down,td.c-down,th.c-status,td.c-status{text-align:center}
+td.c-down .pill{justify-content:center;min-width:62px}
+td.c-status .on,td.c-status .off{display:inline-flex;align-items:center;gap:4px;justify-content:center;min-width:62px;font-size:11px}
+td.c-last{white-space:nowrap}
+td.c-act{white-space:nowrap}
+td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
+.pill{display:inline-flex;align-items:center;justify-content:center;padding:2px 9px;border-radius:20px;font-size:10px;line-height:1.6;white-space:nowrap}
 .l-admin{background:#eff6ff;color:#1d4ed8}.l-editor{background:#ecfdf3;color:#15803d}.l-viewer{background:#f2f4f7;color:#475467}.l-core{background:#0F2B46;color:#fff}
 .on{color:var(--green)}.off{color:var(--red)}.acts{display:flex;gap:6px;flex-wrap:wrap}
 .msg{margin:0 0 12px;padding:9px 11px;border-radius:8px;font-size:12px;display:none}
@@ -98,7 +102,7 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap}
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th class="c-email">อีเมล</th><th class="c-name">ชื่อ</th><th class="c-level">ระดับสิทธิ์</th><th class="c-parent">ผู้ดูแลสาย</th><th class="c-down" style="text-align:center">ลูกข่าย</th><th class="c-status">สถานะ</th><th class="c-last">เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
+        <thead><tr><th class="c-email">อีเมล</th><th class="c-name">ชื่อ</th><th class="c-level">ระดับสิทธิ์</th><th class="c-parent">ผู้ดูแลสาย</th><th class="c-down">ลูกข่าย</th><th class="c-status">สถานะ</th><th class="c-last">เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
         <tbody id="tb"><tr><td colspan="8" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
       </table>
     </div>
