@@ -119,40 +119,6 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
       <div><span class="pill l-viewer">L6 · ตัวแทน/MCN</span><br>เห็นเฉพาะงานตัวเอง</div>
     </div>
   </section>
-
-  <section class="panel" id="settingsPanel">
-    <h3>ตั้งค่าระบบ (Settings)</h3>
-    <div style="color:#667085;font-size:11.5px;margin-bottom:12px">ย้ายมาจากเมนู Settings — ตั้งค่าพื้นฐานของ workspace และการแจ้งเตือน</div>
-    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
-      <label style="font-size:11px;color:#475467">ชื่อ Workspace
-        <input id="setName" value="Prospect Intelligence" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px">
-      </label>
-      <label style="font-size:11px;color:#475467">สกุลเงิน
-        <select id="setCur" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px">
-          <option>THB - บาทไทย</option><option>USD - US Dollar</option>
-        </select>
-      </label>
-      <label style="font-size:11px;color:#475467">Timezone
-        <select id="setTz" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px">
-          <option>Asia/Bangkok (GMT+7)</option>
-        </select>
-      </label>
-      <label style="font-size:11px;color:#475467">รูปแบบวันที่
-        <select id="setDate" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px">
-          <option>DD/MM/YYYY</option><option>YYYY-MM-DD</option>
-        </select>
-      </label>
-    </div>
-    <div style="margin-top:14px;font-size:11.5px;color:#475467;margin-bottom:6px">การแจ้งเตือน</div>
-    <div class="legend" style="gap:10px">
-      <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" checked> แจ้งเตือนเมื่อดีลมีความเสี่ยงสูง</label>
-      <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" checked> แจ้งเตือนงานเกินกำหนด</label>
-      <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" checked> สรุป Pipeline ประจำสัปดาห์</label>
-    </div>
-    <div style="margin-top:14px">
-      <button class="btn btn-primary" id="saveSettings"><i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่า</button>
-    </div>
-  </section>
 </div>
 
 <script src="assets/auth-sheets.js?v=3"></script>
@@ -388,27 +354,6 @@ function moveParent(email) {
 }
 
 el('level').addEventListener('change', refreshUplines);
-
-// Settings (ย้ายมาจากเมนู Settings ในหน้า Dashboard)
-el('saveSettings') && el('saveSettings').addEventListener('click', function () {
-  try {
-    localStorage.setItem('pi_settings_v1', JSON.stringify({
-      name: el('setName').value, currency: el('setCur').value,
-      timezone: el('setTz').value, dateFormat: el('setDate').value
-    }));
-  } catch (e) {}
-  showMsg('บันทึกการตั้งค่าเรียบร้อยแล้ว', 'ok');
-});
-(function restoreSettings() {
-  try {
-    var s = JSON.parse(localStorage.getItem('pi_settings_v1') || 'null');
-    if (!s) return;
-    if (el('setName')) el('setName').value = s.name || 'Prospect Intelligence';
-    if (el('setCur')) el('setCur').value = s.currency || 'THB - บาทไทย';
-    if (el('setTz')) el('setTz').value = s.timezone || 'Asia/Bangkok (GMT+7)';
-    if (el('setDate')) el('setDate').value = s.dateFormat || 'DD/MM/YYYY';
-  } catch (e) {}
-})();
 
 el('tb').addEventListener('change', function (e) {
   var sel = e.target.closest('[data-act="level"]');
