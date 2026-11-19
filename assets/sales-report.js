@@ -373,12 +373,10 @@
   function renderKpis(k) {
     var s = k.sum;
     var scope = state.month ? monthLabel(state.year, state.month) : ('ปี ' + (state.year + 543));
-    var teamLine = k.monthTargets.map(function (x) { return esc(x.name) + ' ' + money(x.amount); }).join(' · ');
     var cards = [
       cardKpi('เป้าหมายทีม',
         money(k.target),
-        'Head Count <b>' + k.headCount + '</b> คน · Prod./Head <b>' + money(k.perHead) + '</b>'
-          + (teamLine ? '<br>' + teamLine : ''),
+        'Head Count <b>' + k.headCount + '</b> คน · Prod./Head <b>' + money(k.perHead) + '</b>',
         undefined, '#0F2B46', 'fa-solid fa-bullseye'),
       cardKpi('Actual ปิดงานแล้ว',
         pct(k.ach4),
@@ -394,7 +392,7 @@
         k.forecastPct, '#16A34A', 'fa-solid fa-chart-line')
     ];
     return '<div class="sr-scope"><i class="fa-regular fa-calendar"></i> ขอบเขตข้อมูล: <b>' + esc(scope) + '</b>' +
-      ' · ' + k.list.length + ' ดีล · Cash In คาดรับ <b>' + money(s.cashIn) + '</b></div>'
+      ' · ' + k.list.length + ' ดีล</div>'
       + '<div class="sr-kpis">' + cards.join('') + '</div>';
   }
 
@@ -642,8 +640,7 @@
         + '<div class="sr-trow-h"><b>' + esc(t.name) + '</b><span>' + cnt + ' คน</span></div>'
         + '<div class="sr-trow-n">' + money(ts.s4) + ' <span>/ ' + money(tg) + '</span><em>' + pct(pAch) + '</em></div>'
         + '<div class="sr-bar"><span style="width:' + Math.max(0, Math.min(100, pAch)) + '%;background:#2563EB"></span></div>'
-        + '<div class="sr-trow-f">Forecast ' + money(ts.forecast) + ' · ' + pct(pFc)
-        + ' · Pipeline ' + money(ts.s1) + '</div>'
+        + '<div class="sr-trow-f">Forecast ' + money(ts.forecast) + ' · ' + pct(pFc) + '</div>'
         + '</div>';
     }).join('');
 
@@ -658,7 +655,6 @@
         + '<td><div>' + esc(sale(d.saleId).name) + '</div><div class="sr-s2">' + esc(teamByCode(sale(d.saleId).team).name) + '</div></td>'
         + '<td class="sr-num sr-strong">' + money(d.amount) + '</td>'
         + '<td class="sr-num">' + String(d.month).padStart(2, '0') + '.' + TH_MONTHS[d.month - 1] + ' ' + String(d.year + 543).slice(-2) + '</td>'
-        + '<td class="sr-num">' + (d.status === 1 ? pct(d.prob) : '—') + '</td>'
         + '</tr>';
     }).join('');
 
@@ -700,13 +696,13 @@
       + '</div>'
       + '<div class="sr-scope"><i class="fa-regular fa-calendar"></i> '
       + esc(state.month ? monthLabel(state.year, state.month) : ('ปี ' + (state.year + 543)))
-      + ' · ' + k.list.length + ' ดีล · Cash In คาดรับ <b>' + money(s.cashIn) + '</b></div>'
+      + ' · ' + k.list.length + ' ดีล</div>'
       + '<div class="sr-kpis">' + cards.join('') + '</div>'
       + '<div class="sr-dash-teams">' + (teamRows || '<div class="sr-trow">ยังไม่มีทีม</div>') + '</div>'
       + '<div class="sr-dash-charts">'
       + '  <section class="sr-panel">'
       + '    <div class="sr-ph"><div><h3>ยอดขายตามทีม แยกตามสถานะ</h3>'
-      + '      <div class="sr-s2">4.Actual · 3.รอส่งของ · 2.รอยืนยัน PO · 1.Pipeline</div></div></div>'
+      + '      <div class="sr-s2">ปิดงานแล้ว · รอส่งของ · รอ PO · Pipeline</div></div></div>'
       + '    <div class="sr-chartbox"><canvas id="srDashBar"></canvas></div>'
       + '  </section>'
       + '  <section class="sr-panel">'
@@ -720,8 +716,8 @@
       + '    <button class="sr-btn" data-sr-goto="reports"><i class="fa-solid fa-list"></i> ดูดีลทั้งหมด</button></div>'
       + '  <div class="sr-tablewrap"><table class="sr-table"><thead><tr>'
       + '    <th>สถานะ</th><th>ลูกค้า / งาน</th><th>Sale</th><th class="sr-num">มูลค่า</th>'
-      + '    <th class="sr-num">คาดปิด</th><th class="sr-num">โอกาส</th>'
-      + '  </tr></thead><tbody>' + (followRows || '<tr><td colspan="6" class="sr-empty">ไม่มีดีลที่ต้องติดตาม</td></tr>') + '</tbody></table></div>'
+      + '    <th class="sr-num">คาดปิด</th>'
+      + '  </tr></thead><tbody>' + (followRows || '<tr><td colspan="5" class="sr-empty">ไม่มีดีลที่ต้องติดตาม</td></tr>') + '</tbody></table></div>'
       + '</section>'
       + '</div>';
   }
@@ -747,10 +743,10 @@
         data: {
           labels: teams.map(function (t) { return t.name; }),
           datasets: [
-            { label: '4.Actual', data: series.s4, backgroundColor: '#2563EB', borderRadius: 4, stack: 'a' },
-            { label: '3.รอส่งของ', data: series.s3, backgroundColor: '#38BDF8', borderRadius: 4, stack: 'a' },
-            { label: '2.รอยืนยัน PO', data: series.s2, backgroundColor: '#F59E0B', borderRadius: 4, stack: 'a' },
-            { label: '1.Pipeline', data: series.s1, backgroundColor: '#A78BFA', borderRadius: 4, stack: 'a' }
+            { label: 'ปิดงานแล้ว', data: series.s4, backgroundColor: '#2563EB', borderRadius: 4, stack: 'a' },
+            { label: 'รอส่งของ', data: series.s3, backgroundColor: '#38BDF8', borderRadius: 4, stack: 'a' },
+            { label: 'รอ PO', data: series.s2, backgroundColor: '#F59E0B', borderRadius: 4, stack: 'a' },
+            { label: 'Pipeline', data: series.s1, backgroundColor: '#A78BFA', borderRadius: 4, stack: 'a' }
           ]
         },
         options: {
