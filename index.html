@@ -116,7 +116,7 @@
       //  - Sale / Agent: เห็นเฉพาะงานขายของตัวเอง
       var lvCode = String(me.level).toLowerCase();
       var NAV_ALLOW = {
-        sup: ['dashboard'],
+        sup: ['dashboard', 'team'],
         sale: ['dashboard', 'sales'],
         agent: ['dashboard', 'sales']
       };
@@ -273,6 +273,9 @@
         return '<option value="' + l.code + '">L' + l.n + ' · ' + l.label + '</option>';
       }).join('');
 
+      // สิทธิ์ลงทะเบียน ID: Admin / BU / Head Team เท่านั้น (Supervisor = อ่านอย่างเดียว)
+      window.__CAN_REGISTER__ = ladderOf(me.level).n <= 3;
+
       var rows = users.map(function (u) {
         var l = ladderOf(u.level);
         var up = '-';
@@ -285,8 +288,11 @@
           + '<td>' + (u.status === 'disabled' ? '<span class="status at-risk">ปิด</span>' : '<span class="status healthy">ใช้งาน</span>') + '</td></tr>';
       }).join('');
 
-      return pageHead('ทีม & สิทธิ์ 6 ระดับ', 'ผู้ที่อยู่ระดับบนจะเห็นลูกข่ายทั้งหมดใต้สายงานของตัวเอง',
-          '<button class="btn btn-primary" data-action="add-team">' + '<i class="fa-solid fa-user-plus"></i> ลงทะเบียน ID</button>')
+      return pageHead('ทีม & สิทธิ์ 6 ระดับ',
+          window.__CAN_REGISTER__
+            ? 'ผู้ที่อยู่ระดับบนจะเห็นลูกข่ายทั้งหมดใต้สายงานของตัวเอง'
+            : 'อ่านอย่างเดียว — ดูรายชื่อลูกน้องในสายงานของคุณ',
+          window.__CAN_REGISTER__ ? '<button class="btn btn-primary" data-action="add-team"><i class="fa-solid fa-user-plus"></i> ลงทะเบียน ID</button>' : '')
         + '<div class="grid kpi-grid" style="margin-bottom:15px">'
         + '<article class="kpi"><div class="kpi-top">ลูกข่ายในสายงาน<span class="kpi-icon" style="background:#EEF2FF;color:#1D4ED8"><i class="fa-solid fa-users"></i></span></div><div class="kpi-value">' + Math.max(0, users.length - 1) + '</div><div class="kpi-foot">ไม่รวมตัวเอง · L' + ladderOf(me.level).n + '</div></article>'
         + '<article class="kpi"><div class="kpi-top">Supervisor<span class="kpi-icon" style="background:#CCFBF1;color:#0E9384"><i class="fa-solid fa-user-tie"></i></span></div><div class="kpi-value">' + (byLevel.sup || 0) + '</div><div class="kpi-foot">ทีมในสาย</div></article>'
@@ -741,8 +747,9 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
       const action=e.target.closest("[data-action]")?.dataset.action;if(!action)return;
       if(action==="go-back"){const p=pageStack.pop();currentPage=p||"dashboard";render();return}
       if(action==="go-sales"){currentPage="sales";render()}
-      else if(action==="add-team"){var f=document.getElementById("teamForm");if(f){f.style.display="block";fillTeamUplines();f.scrollIntoView({behavior:"smooth",block:"center"})}}
+      else if(action==="add-team"){if(!window.__CAN_REGISTER__){toast("สิทธิ์ Supervisor ดูได้อย่างเดียว");return}var f=document.getElementById("teamForm");if(f){f.style.display="block";fillTeamUplines();f.scrollIntoView({behavior:"smooth",block:"center"})}}
       else if(action==="save-team"){
+        if(!window.__CAN_REGISTER__){toast("สิทธิ์ Supervisor ดูได้อย่างเดียว");return}
         var em=(document.getElementById("tuEmail")||{}).value||"";
         var nm=(document.getElementById("tuName")||{}).value||"";
         var lv=(document.getElementById("tuLevel")||{}).value||"";
