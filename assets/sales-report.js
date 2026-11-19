@@ -327,8 +327,16 @@
           (!state.product || d.product === state.product) &&
           (!state.payment || d.payment === state.payment);
       });
+      /* 0.กำลังคุย และ 5.ยกเลิก นับทั้งปี (รวมเดือนที่เลือก) เพื่อไม่ให้ดีลที่ยกเลิกในเดือนนี้หายไป */
+      var restDeals = DEALS.filter(function (d) {
+        return d.saleId === r.id && d.year === y &&
+          (!state.product || d.product === state.product) &&
+          (!state.payment || d.payment === state.payment);
+      });
       var s = summarize(monthDeals);
       var o = summarize(otherDeals);
+      var rest = summarize(restDeals);
+      o.s0 = rest.s0; o.s5 = rest.s5;
       return { sale: r, s: s, other: o, empty: monthDeals.length === 0 && otherDeals.length === 0 };
     }).filter(function (x) { return !x.empty && (!state.sale || x.sale.id === state.sale); });
 
