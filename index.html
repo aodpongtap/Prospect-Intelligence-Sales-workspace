@@ -275,6 +275,14 @@
         + '.tm-kids{margin-left:auto;color:#667085;font-size:9.5px;white-space:nowrap;background:#F4F7FB;border-radius:99px;padding:3px 8px}'
         + '.tm-lv{background:#EEF2FF;color:#3730A3;border-radius:99px;padding:3px 9px;font-size:9px;white-space:nowrap}'
         + '.tm-me{border-color:#93C5FD;background:#F5F9FF;box-shadow:0 0 0 3px rgba(37,99,235,.08)}'
+        + '.tm-modal{max-height:64vh;overflow:auto;padding:2px 2px 6px}'
+        + '.tm-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:10px;color:#667085;margin-bottom:12px;'
+        + 'background:#F8FAFC;border:1px solid #EEF2F7;border-radius:9px;padding:8px 11px}'
+        + '.tm-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}'
+        + '.tm-tree-lg .tm-node{padding:11px 14px}'
+        + '.tm-tree-lg .tm-name{font-size:12.5px}'
+        + '.tm-tree-lg .tm-mail{font-size:10px}'
+        + '.tm-tree-lg ul{padding-left:28px}'
         + '@media(max-width:760px){.tm-tree ul{padding-left:16px}.tm-tree ul>li::before{left:-8px}'
         + '.tm-tree ul>li::after{left:-8px;width:9px}.tm-node{padding:8px 10px;gap:8px}'
         + '.tm-lv{display:none}}';
@@ -282,6 +290,25 @@
       el.id = 'tm-style';
       el.textContent = css;
       document.head.appendChild(el);
+    }
+
+    function openTeamTree() {
+      var me = window.__ME__ || {};
+      var users = teamUsers();
+      var root = null;
+      for (var i = 0; i < users.length; i++) if (users[i].email === me.email) root = users[i];
+      injectTeamCss();
+      var legend = LADDER.map(function (l) {
+        return '<span><i class="tm-dot tm-l' + l.n + '"></i>L' + l.n + ' ' + l.label + '</span>';
+      }).join('');
+      var body = '<div class="tm-modal">'
+        + '<div class="tm-legend">' + legend + '</div>'
+        + (root
+          ? '<ul class="tm-tree tm-tree-lg">' + teamTree(root, 0) + '</ul>'
+          : '<div class="empty"><i class="fa-solid fa-user-slash"></i>ไม่พบข้อมูลของคุณในระบบ</div>')
+        + '</div>';
+      setModal('แผนผังเครือข่าย', 'เริ่มจาก ' + String(me.name || me.email || '-') + ' · ทั้งหมด ' + users.length + ' คน',
+        body, [{ label: 'ปิด', primary: true }], true);
     }
 
     function teamTree(u, depth) {
@@ -369,8 +396,14 @@
         + formHtml
         + '<div class="grid cols-2" style="margin-top:15px">'
         + panel('แผนผังเครือข่าย',
-            root ? '<ul class="tm-tree">' + teamTree(root, 0) + '</ul>' : '<div class="empty"><i class="fa-solid fa-user-slash"></i>ไม่พบข้อมูลของคุณในระบบ</div>',
-            'เริ่มจาก ' + String(me.name || me.email || '-'))
+            '<div style="display:flex;flex-direction:column;gap:10px;align-items:flex-start">'
+              + '<div style="font-size:11.5px;color:#475467">เริ่มจาก <b style="color:#0F2B46">' + String(me.name || me.email || '-')
+              + '</b> · ทั้งหมด ' + users.length + ' คน</div>'
+              + (root
+                ? '<button class="btn btn-primary" data-action="open-tree"><i class="fa-solid fa-sitemap"></i> เปิดแผนผังเครือข่าย</button>'
+                : '<div class="empty"><i class="fa-solid fa-user-slash"></i>ไม่พบข้อมูลของคุณในระบบ</div>')
+              + '</div>',
+            'เปิดเป็นหน้าต่างใหญ่เพื่อดูโครงสร้างทั้งเครือข่าย')
         + panel('รายชื่อในสายงาน (' + users.length + ')',
             users.length
               ? '<div class="table-wrap" style="max-height:460px"><table><thead><tr><th>ชื่อ / อีเมล</th><th>ระดับ</th><th>ผู้ดูแลสาย</th><th>สถานะ</th><th>สร้างเมื่อ</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
@@ -1041,6 +1074,7 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
         }).catch(function(e){if(msg)msg.textContent=e.message;toast("ไม่สำเร็จ: "+e.message)});
       }
       else if(action==="add-deal")showDealForm()
+      else if(action==="open-tree")openTeamTree()
       else if(action==="refresh"){const button=e.target.closest("[data-action]");button.classList.add("loading");button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>กำลัง Refresh...';setTimeout(()=>{button.classList.remove("loading");render();toast("Refresh Data สำเร็จ")},1000)}
       else if(action==="export-deals")exportDeals()
       else if(action==="add-project")toast("ฟังก์ชันสร้าง Project พร้อมใช้งาน")
