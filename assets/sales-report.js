@@ -1348,6 +1348,8 @@
       return render();
     },
     viewerTeam: viewerTeam,
+    teamHeads: TEAM_HEADS,
+    teams: function () { return TEAMS; },
     data: function () {
       return { deals: DEALS, teams: TEAMS, sales: SALES, viewerTeam: viewerTeam() };
     },

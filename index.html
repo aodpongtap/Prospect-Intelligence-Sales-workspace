@@ -98,6 +98,7 @@
   <script src="assets/sales-report.js?v=9"></script>
   <script src="assets/project-tracking.js?v=3"></script>
   <script src="assets/customer-intelligence.js?v=2"></script>
+  <script src="assets/team-page.js?v=1"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
     window.__applyMe__ = function (rawMe, opts) {
@@ -311,6 +312,25 @@
         body, [{ label: 'ปิด', primary: true }], true);
     }
 
+    /** ทีม (BU) ของผู้ใช้ — ไล่ขึ้นหาต้นสายว่าใครเป็น Head Sale ของ BU ไหน (ใช้ร่วมกับหน้า Reports) */
+    function teamOfUser(u) {
+      var list = teamUsers();
+      var heads = (window.SalesReport && SalesReport.teamHeads) || {};
+      var seen = {}, cur = u, guard = 0;
+      while (cur && guard++ < 10) {
+        var em = String(cur.email || '').toLowerCase();
+        if (heads[em]) return heads[em];
+        if (seen[em]) break;
+        seen[em] = 1;
+        var p = null;
+        for (var i = 0; i < list.length; i++) {
+          if (String(list[i].email || '').toLowerCase() === String(cur.parent || '').toLowerCase()) p = list[i];
+        }
+        cur = p;
+      }
+      return '';
+    }
+
     function teamTree(u, depth) {
       var kids = teamChildren(u.email);
       var l = ladderOf(u.level);
@@ -318,6 +338,7 @@
       var isMe = u.email === meEmail;
       var label = String(u.name || '').trim();
       var initial = label ? label.charAt(0) : String(u.email || '?').slice(0, 2).toUpperCase();
+      var bu = teamOfUser(u);
       var node = '<div class="tm-node' + (isMe ? ' tm-me' : '') + '">'
         + '<span class="tm-av tm-l' + l.n + '">' + initial + '</span>'
         + '<div style="min-width:0">'
@@ -325,6 +346,7 @@
         + '  <div class="tm-mail">' + String(u.email) + '</div>'
         + '</div>'
         + (kids.length ? '<span class="tm-kids">' + kids.length + ' คน</span>' : '')
+        + (bu ? '<span class="tm-team">' + bu + '</span>' : '')
         + '<span class="tm-lv">L' + l.n + ' · ' + l.label + '</span>'
         + '</div>';
       return '<li>' + node
@@ -773,7 +795,7 @@
     function btn(label,action,icon="",primary=false,extra=""){return `<button class="btn ${primary?"btn-primary":""}" data-action="${action}" ${extra}>${icon?`<i class="${icon}"></i>`:""}${label}</button>`}
     function destroyCharts(){charts.forEach(c=>c.destroy());charts=[]}
     function makeChart(id,config){const canvas=document.getElementById(id);if(canvas&&window.Chart)charts.push(new Chart(canvas,config))}
-    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,partners:renderPartnerCRM,team:renderTeam,projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),intelligence:(window.CustomerIntel?CustomerIntel.render:renderIntelligence),reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=(canGoBack()?"<div class=\"back-wrap\"><button class=\"back-pill\" data-action=\"go-back\"><i class=\"fa-solid fa-arrow-left\"></i> ย้อนกลับ"+(prevTitle()?" · "+prevTitle():"")+"</button></div>":"")+views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence"){window.CustomerIntel?CustomerIntel.drawCharts():drawHealthChart()}if(currentPage==="reports")drawReportCharts();if(currentPage==="team")loadTeam();if(window.__afterRender__)window.__afterRender__();var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
+    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,partners:renderPartnerCRM,team:(window.TeamPage?TeamPage.render:renderTeam),projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),intelligence:(window.CustomerIntel?CustomerIntel.render:renderIntelligence),reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=(canGoBack()?"<div class=\"back-wrap\"><button class=\"back-pill\" data-action=\"go-back\"><i class=\"fa-solid fa-arrow-left\"></i> ย้อนกลับ"+(prevTitle()?" · "+prevTitle():"")+"</button></div>":"")+views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence"){window.CustomerIntel?CustomerIntel.drawCharts():drawHealthChart()}if(currentPage==="reports")drawReportCharts();if(currentPage==="team"&&!window.TeamPage)loadTeam();if(window.__afterRender__)window.__afterRender__();var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
 
     /* ===== การนำทางแบบเว็บทั่วไป: URL เปลี่ยน + ปุ่ม Back ของเบราว์เซอร์ใช้ได้ ===== */
     function pageUrl(p){return p&&p!=="dashboard"?"index.html?page="+encodeURIComponent(p):"index.html"}
