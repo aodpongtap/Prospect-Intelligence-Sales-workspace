@@ -289,16 +289,27 @@
         }
       }
 
-      // สิทธิ์ Sale: แสดงเฉพาะเมนูที่เกี่ยวกับงานขาย
-      if (String(me.level).toLowerCase() === 'sale') {
-        var allow = ['dashboard', 'sales'];
+      // จำกัดเมนูตามระดับสิทธิ์
+      //  - Supervisor (L4): เห็นเฉพาะ "แดชบอร์ดรวมของลูกน้อง"
+      //  - Sale / Agent: เห็นเฉพาะงานขายของตัวเอง
+      var lvCode = String(me.level).toLowerCase();
+      var NAV_ALLOW = {
+        sup: ['dashboard'],
+        sale: ['dashboard', 'sales'],
+        agent: ['dashboard', 'sales']
+      };
+      var allow = NAV_ALLOW[lvCode];
+      if (allow) {
         var navList = document.getElementById('navList');
         if (navList) {
           Array.prototype.slice.call(navList.querySelectorAll('[data-page]')).forEach(function (el) {
             if (allow.indexOf(el.getAttribute('data-page')) < 0) el.remove();
           });
         }
-        // ซ่อน panel ที่ไม่เกี่ยวกับงานขาย (เช่น Alerts งานบริการ) หลัง render
+      }
+
+      // Sale / Agent: ซ่อน panel ที่ไม่เกี่ยวกับงานขาย + KPI จากดีลของตัวเอง
+      if (lvCode === 'sale' || lvCode === 'agent') {
         var content = document.getElementById('content');
         if (content && window.MutationObserver) {
           var obs = new MutationObserver(function () {
@@ -544,6 +555,7 @@
     (function () {
       var me = window.__ME__;
       if (!me || me.isAdmin) return;   // ไม่มี session (เช่นโหมดเซิร์ฟเวอร์) หรือเป็น Admin → ไม่กรอง
+      if (['bu', 'head', 'sup'].indexOf(String(me.level).toLowerCase()) >= 0) return;  // เซิร์ฟเวอร์ส่งดีลของลูกข่ายมาแล้ว
 
       var mine = String(me.name || '').trim().toLowerCase();
       function keepOnly(arr, field) {

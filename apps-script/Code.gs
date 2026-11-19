@@ -299,6 +299,15 @@ function listDeals_(s) {
   var all = readDeals_();
   if (isAdminLevel_(s.level)) return all;
   var me = String(s.email).toLowerCase();
+
+  // Supervisor ขึ้นไป (L2–L4) เห็นดีลรวมของลูกข่ายใต้สายงานตัวเอง
+  if (levelN_(s.level) <= 4) {
+    var team = descendantsOf_(me).map(function (r) { return String(r.email).toLowerCase(); });
+    return all.filter(function (d) {
+      var o = String(d.ownerEmail || '').toLowerCase();
+      return o === me || team.indexOf(o) >= 0;
+    });
+  }
   return all.filter(function (d) { return d.ownerEmail === me; });
 }
 
