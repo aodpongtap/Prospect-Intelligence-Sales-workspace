@@ -29,7 +29,7 @@ th{font-size:10px;color:#667085;font-weight:500;background:#f8fafc;text-align:le
 td{padding:10px 12px;border-bottom:1px solid #eef1f5;font-size:12px;vertical-align:middle}
 tbody tr:hover{background:#fafcff}
 /* ความกว้างคอลัมน์ให้ตรงกัน (รวม = 100%) */
-.c-email{width:21%}.c-name{width:15%}.c-level{width:14%}.c-parent{width:16%}.c-down{width:8%}.c-status{width:11%}.c-last{width:15%}.c-act{width:auto}
+.c-email{width:20%}.c-name{width:14%}.c-level{width:13%}.c-parent{width:15%}.c-down{width:7%}.c-status{width:10%}.c-last{width:12%}.c-act{width:186px}
 td.c-email>span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 td.c-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 td.c-level select{width:100%;padding:5px 6px;font-size:11px}
@@ -414,11 +414,11 @@ function render(users) {
     var acts = '<div class="acts">' +
       '<a class="btn" href="index.html?page=team&focus=' + encodeURIComponent(u.email) + '" target="_blank" title="ดูสายงาน"><i class="fa-solid fa-sitemap"></i></a>' +
       (core ? '' : '<button class="btn" data-act="move" data-email="' + esc(u.email) + '" title="ย้ายสายงาน (เปลี่ยนผู้ดูแล)"><i class="fa-solid fa-arrows-turn-to-dots"></i></button>') +
-      '<button class="btn" data-act="reset" data-email="' + esc(u.email) + '"><i class="fa-solid fa-rotate"></i> รีเซ็ตรหัส</button>' +
+      '<button class="btn" data-act="reset" data-email="' + esc(u.email) + '" title="รีเซ็ตรหัสผ่าน"><i class="fa-solid fa-rotate"></i></button>' +
       (core ? '' :
-        '<button class="btn" data-act="toggle" data-email="' + esc(u.email) + '" data-status="' + (u.status === 'disabled' ? 'active' : 'disabled') + '">' +
-        (u.status === 'disabled' ? '<i class="fa-solid fa-play"></i> เปิดใช้' : '<i class="fa-solid fa-pause"></i> ปิด') + '</button>' +
-        '<button class="btn btn-danger" data-act="del" data-email="' + esc(u.email) + '"><i class="fa-solid fa-trash"></i> ลบ</button>') +
+        '<button class="btn" data-act="toggle" data-email="' + esc(u.email) + '" data-status="' + (u.status === 'disabled' ? 'active' : 'disabled') + '" title="' + (u.status === 'disabled' ? 'เปิดใช้งาน' : 'ปิดการใช้งาน') + '">' +
+        (u.status === 'disabled' ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>') + '</button>' +
+        '<button class="btn btn-danger" data-act="del" data-email="' + esc(u.email) + '" title="ลบผู้ใช้"><i class="fa-solid fa-trash"></i></button>') +
       '</div>';
     return '<tr data-search="' + esc(((u.name || '') + ' ' + u.email).toLowerCase()) + '" data-level="' + esc(u.level) + '" data-parent="' + esc(u.parent || '') + '">'
       + '<td class="c-email" title="' + esc(u.email) + '"><span>' + esc(u.email) + '</span></td>'
