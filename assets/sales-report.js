@@ -367,13 +367,9 @@
         pct(k.ach43),
         money(s.s4 + s.s3 * 0.9) + ' / ' + money(k.target),
         k.ach43, '#0EA5E9', 'fa-solid fa-truck-fast'),
-      cardKpi('%Ach 4.+3.+2. (รวมรอยืนยัน PO 80%)',
-        pct(k.ach432),
-        money(s.secured) + ' / ' + money(k.target),
-        k.ach432, '#F59E0B', 'fa-solid fa-file-signature'),
       cardKpi('ประมาณการยอดปิดเดือน (Weighted Forecast)',
         money(s.forecast),
-        'การันตี 4+3+2 <b>' + money(s.secured) + '</b> + Pipeline ถ่วงน้ำหนัก <b>' + money(s.weighted1) + '</b>',
+        'ยอดการันตี (ปิดงาน + รอส่งของ + รอ PO) <b>' + money(s.secured) + '</b> + Pipeline ถ่วงน้ำหนัก <b>' + money(s.weighted1) + '</b>',
         k.forecastPct, '#16A34A', 'fa-solid fa-chart-line')
     ];
     return '<div class="sr-scope"><i class="fa-regular fa-calendar"></i> ขอบเขตข้อมูล: <b>' + esc(scope) + '</b>' +
@@ -429,7 +425,7 @@
         + '<span class="sr-s2" style="display:inline;margin-left:8px">' + b.rows.length + ' คน</span>'
         + '<span class="sr-th-meta">เป้าหมาย ' + (m ? 'เดือนนี้ ' : 'ทั้งปี ') + '<b>' + money(b.target) + '</b>'
         + ' · Ach 4. <b>' + pct(ach4) + '</b>'
-        + ' · Forecast (4+3+2+Pipeline) <b>' + pct(achFc) + '</b></span>'
+        + ' · Forecast (การันตี + Pipeline) <b>' + pct(achFc) + '</b></span>'
         + '</td></tr>';
       var saleRows = b.rows.map(function (x) {
         return '<tr>'
