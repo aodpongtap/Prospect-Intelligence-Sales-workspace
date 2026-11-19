@@ -9,76 +9,341 @@
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 <style>
-:root{--navy:#0F2B46;--blue:#2563EB;--red:#DC2626;--bg:#F8FAFC;--ink:#182230;--muted:#667085;--line:#E5EAF0}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;grid-template-columns:1fr 1fr;font-family:"Prompt",sans-serif;color:var(--ink);background:var(--bg);font-size:13px}
-.side{background:var(--navy);color:#d8e2ee;padding:48px;display:flex;flex-direction:column;justify-content:space-between}
-.brand{display:flex;gap:12px;align-items:center;color:#fff}.mark{width:42px;height:42px;border-radius:11px;background:var(--blue);display:grid;place-items:center;font-size:18px}
-.brand strong{display:block;font-size:14px}.brand small{color:#9cb0c5;font-size:11px}
-.side h2{color:#fff;font-weight:500;font-size:26px;line-height:1.45;margin:0 0 12px}.side p{color:#9cb0c5;max-width:420px;line-height:1.7}
-.main{display:grid;place-items:center;padding:30px}
-.card{width:100%;max-width:390px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 24px rgba(15,43,70,.07);padding:30px}
-h1{font-size:20px;font-weight:600;margin:0 0 4px;color:var(--navy)}.sub{color:var(--muted);margin-bottom:18px}
-label{display:block;font-size:11px;color:#475467;margin:0 0 6px}.fg{margin-bottom:14px}
-.inp{position:relative}.inp i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#98a2b3}
-input{width:100%;padding:11px 12px 11px 36px;border:1px solid var(--line);border-radius:9px;font:inherit;outline:none}
-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #dbeafe}
-button{width:100%;padding:11px;border:0;border-radius:9px;background:var(--blue);color:#fff;font:inherit;font-weight:500;cursor:pointer}
-button:hover{background:#1d4ed8}button:disabled{opacity:.6}
-.err{display:none;background:#fff1f2;border:1px solid #ffe4e6;color:var(--red);padding:9px 11px;border-radius:8px;margin-bottom:14px;font-size:12px}
-.note{background:#eff6ff;border:1px solid #dbeafe;color:#1e40af;padding:10px 12px;border-radius:8px;font-size:11px;line-height:1.6;margin-bottom:16px}
-.foot{color:#98a2b3;font-size:10px;margin-top:16px;text-align:center}
-@media(max-width:800px){body{grid-template-columns:1fr}.side{display:none}}
+:root{
+  --navy:#0F2B46;--navy-2:#153A5C;--blue:#2563EB;--blue-2:#1D4ED8;
+  --red:#DC2626;--green:#16A34A;--bg:#F6F8FC;--ink:#182230;--muted:#667085;
+  --line:#E4EAF2;--line-2:#D7E0EC;--white:#fff;
+  --shadow:0 18px 44px rgba(15,43,70,.10);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  font-family:"Prompt",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);
+  background:var(--bg);font-size:13px;-webkit-font-smoothing:antialiased;
+}
+a{color:var(--blue);text-decoration:none;font-weight:500}
+a:hover{text-decoration:underline}
+
+/* ---------- brand panel ---------- */
+.side{
+  position:relative;overflow:hidden;padding:44px 48px;display:flex;flex-direction:column;justify-content:space-between;
+  background:
+    radial-gradient(900px 520px at 8% -10%,rgba(37,99,235,.42),transparent 60%),
+    radial-gradient(700px 420px at 100% 108%,rgba(14,147,132,.30),transparent 62%),
+    linear-gradient(158deg,var(--navy) 0%,#0B2238 58%,#0A1D30 100%);
+  color:#D7E3F0;
+}
+.side::after{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.16;
+  background-image:linear-gradient(rgba(255,255,255,.42) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.42) 1px,transparent 1px);
+  background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(70% 60% at 50% 40%,#000 0%,transparent 100%);
+  mask-image:radial-gradient(70% 60% at 50% 40%,#000 0%,transparent 100%);
+}
+.side>*{position:relative;z-index:1}
+.brand{display:flex;gap:12px;align-items:center;color:#fff}
+.mark{
+  width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:19px;
+  background:linear-gradient(140deg,#3B82F6,#1D4ED8);box-shadow:0 10px 22px rgba(37,99,235,.42);
+}
+.brand strong{display:block;font-size:14.5px;letter-spacing:.2px}
+.brand small{color:#9CB0C5;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase}
+
+.hero h2{color:#fff;font-weight:500;font-size:30px;line-height:1.4;margin:0 0 12px;letter-spacing:-.2px}
+.hero h2 span{color:#7FB0FF}
+.hero p{color:#A9BDD1;max-width:430px;line-height:1.75;font-size:12.5px;margin:0}
+.feats{display:flex;flex-direction:column;gap:11px;margin-top:26px;max-width:430px}
+.feat{display:flex;gap:11px;align-items:flex-start;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.09);
+  border-radius:12px;padding:11px 13px;backdrop-filter:blur(2px)}
+.feat i{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:12px;flex:0 0 28px;
+  background:rgba(127,176,255,.16);color:#9FC5FF}
+.feat b{display:block;color:#EAF2FB;font-size:11.5px;font-weight:500;margin-bottom:1px}
+.feat span{color:#93A9BF;font-size:10.5px;line-height:1.55}
+.side-foot{display:flex;justify-content:space-between;align-items:center;gap:14px;color:#6F869F;font-size:10px}
+.side-foot .pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);border-radius:99px;padding:5px 10px;color:#A9BDD1;font-size:9.5px}
+
+/* ---------- form side ---------- */
+.main{display:grid;place-items:center;padding:32px 24px;position:relative}
+.main::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(760px 420px at 78% 6%,rgba(37,99,235,.07),transparent 62%);
+}
+.card{
+  position:relative;width:100%;max-width:398px;background:#fff;border:1px solid var(--line);
+  border-radius:18px;box-shadow:var(--shadow);padding:30px 30px 24px;
+  animation:rise .34s cubic-bezier(.21,.9,.3,1) both;
+}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card.shake{animation:shake .32s ease}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+.welcome{display:inline-flex;align-items:center;gap:6px;background:#EFF6FF;border:1px solid #DBEAFE;color:#1D4ED8;
+  border-radius:99px;padding:4px 10px;font-size:10px;font-weight:500;margin-bottom:12px}
+.card h1{font-size:21px;font-weight:600;margin:0 0 5px;color:var(--navy);letter-spacing:-.2px}
+.sub{color:var(--muted);font-size:11.5px;margin-bottom:18px;line-height:1.6}
+
+.err{display:none;align-items:flex-start;gap:8px;background:#FFF1F2;border:1px solid #FFE4E6;color:#B42318;
+  padding:10px 12px;border-radius:10px;margin-bottom:14px;font-size:11.5px;line-height:1.55}
+.err i{margin-top:1px}
+.err.show{display:flex}
+
+.fg{margin-bottom:13px}
+.flabel{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+label{font-size:11px;color:#475467;font-weight:500}
+.flabel a{font-size:10.5px;color:var(--blue)}
+.inp{position:relative;display:flex;align-items:center}
+.inp>i.lead{position:absolute;left:13px;color:#98A2B3;font-size:12px;pointer-events:none;transition:color .15s}
+input{
+  width:100%;padding:12px 40px 12px 37px;border:1px solid var(--line-2);border-radius:10px;font:inherit;font-size:13px;
+  color:var(--ink);background:#fff;outline:none;transition:border-color .15s,box-shadow .15s,background .15s;
+}
+input::placeholder{color:#B4BDC9}
+input:hover{border-color:#C6D3E2}
+input:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(37,99,235,.13);background:#FDFEFF}
+.inp:focus-within>i.lead{color:var(--blue)}
+.eye{position:absolute;right:6px;width:30px;height:30px;border:0;background:transparent;color:#98A2B3;
+  border-radius:8px;cursor:pointer;display:grid;place-items:center;font-size:12px}
+.eye:hover{background:#F1F5F9;color:#475467}
+.hint{display:none;align-items:center;gap:5px;color:#B54708;font-size:10px;margin-top:5px}
+.hint.show{display:flex}
+
+.btn{
+  width:100%;position:relative;padding:12px;border:0;border-radius:10px;font:inherit;font-weight:500;font-size:13px;
+  color:#fff;cursor:pointer;background:linear-gradient(135deg,#3B82F6,var(--blue-2));
+  box-shadow:0 8px 18px rgba(37,99,235,.26);transition:transform .12s,box-shadow .15s,filter .15s;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;
+}
+.btn:hover{filter:brightness(1.04);box-shadow:0 10px 22px rgba(37,99,235,.3)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.75;cursor:progress;box-shadow:none}
+.btn .spin{
+  width:13px;height:13px;border-radius:50%;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;
+  animation:spin .7s linear infinite;display:none
+}
+.btn.loading .spin{display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.divider{display:flex;align-items:center;gap:9px;color:#98A2B3;font-size:10px;margin:18px 0 12px}
+.divider::before,.divider::after{content:"";height:1px;background:var(--line);flex:1}
+
+.help{display:flex;align-items:center;gap:10px;background:#F8FAFC;border:1px solid #EEF2F7;border-radius:11px;padding:10px 12px}
+.help i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:#EFF6FF;color:var(--blue);font-size:11px;flex:0 0 26px}
+.help b{display:block;font-size:11px;color:var(--navy);font-weight:500}
+.help span{font-size:10px;color:var(--muted)}
+.copy{margin-left:auto;border:1px solid var(--line-2);background:#fff;border-radius:8px;color:#475467;
+  font:inherit;font-size:10px;padding:5px 9px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:.15s}
+.copy:hover{border-color:#C6D3E2;color:var(--navy)}
+.foot{color:#98A2B3;font-size:10px;margin-top:14px;text-align:center;line-height:1.7}
+.mobile-brand{display:none}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);background:#0F2B46;color:#fff;
+  padding:9px 16px;border-radius:99px;font-size:11px;opacity:0;pointer-events:none;transition:.22s;z-index:9}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media(max-width:900px){
+  body{grid-template-columns:1fr}
+  .side{display:none}
+  .main{padding:22px 16px 28px;align-content:center}
+  .card{max-width:430px;padding:24px 20px 20px;border-radius:16px}
+  .mobile-brand{display:flex;gap:11px;align-items:center;justify-content:center;margin-bottom:16px}
+  .mobile-brand .mark{width:40px;height:40px;border-radius:12px;font-size:17px}
+  .mobile-brand strong{display:block;font-size:13px;color:var(--navy)}
+  .mobile-brand small{font-size:9.5px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+  input{font-size:16px;padding:13px 44px 13px 37px}
+  .card h1{font-size:19px}
+}
+@media(prefers-reduced-motion:reduce){
+  .card,.card.shake,.btn .spin{animation:none}
+}
 </style>
 </head>
 <body>
+
+<!-- ================= แบรนด์ (desktop) ================= -->
 <div class="side">
-  <div class="brand"><div class="mark"><i class="fa-solid fa-chart-line"></i></div><div><strong>Prospect Intelligence</strong><small>Sales workspace</small></div></div>
-  <div>
-    <h2>Prospect Intelligence<br>Sales workspace</h2>
-    <p>ติดตาม Pipeline, Project Tracking, Customer Intelligence และรายงานยอดขายได้ในที่เดียว กรุณาเข้าสู่ระบบด้วยอีเมลและรหัสผ่านที่ได้รับจากผู้ดูแลระบบ</p>
+  <div class="brand">
+    <div class="mark"><i class="fa-solid fa-chart-line"></i></div>
+    <div><strong>Prospect Intelligence</strong><small>Sales workspace</small></div>
   </div>
-  <small style="color:#6f86a0">© Prospect Intelligence</small>
+
+  <div class="hero">
+    <h2>เห็นทุกยอดขาย<br><span>ก่อนใครในทีม</span></h2>
+    <p>workspace เดียวสำหรับติดตาม Pipeline, Forecast, โครงการส่งมอบ และข้อมูลลูกค้า — ข้อมูลชุดเดียวกันทั้งบริษัท</p>
+    <div class="feats">
+      <div class="feat"><i class="fa-solid fa-chart-pie"></i><div><b>รายงานยอดขาย &amp; Forecast</b><span>เปรียบเทียบเป้าหมายรายทีม รายเดือน</span></div></div>
+      <div class="feat"><i class="fa-solid fa-diagram-project"></i><div><b>Project Tracking</b><span>ติดตามงานติดตั้งจนถึงส่งมอบลูกค้า</span></div></div>
+      <div class="feat"><i class="fa-solid fa-brain"></i><div><b>Customer Intelligence</b><span>รู้ว่าลูกค้ารายไหนควรติดต่อต่อ</span></div></div>
+    </div>
+  </div>
+
+  <div class="side-foot">
+    <span>© Prospect Intelligence</span>
+    <span class="pill"><i class="fa-solid fa-shield-halved"></i> เข้าใช้งานเฉพาะผู้ที่ได้รับสิทธิ์</span>
+  </div>
 </div>
 
+<!-- ================= ฟอร์มเข้าสู่ระบบ ================= -->
 <div class="main">
-  <form class="card" id="f" autocomplete="on">
-    <h1>เข้าสู่ระบบ</h1><div class="sub">Sign in with your email</div>
-    <div class="err" id="err"></div>
-    <div class="fg"><label for="u">อีเมล</label><div class="inp"><i class="fa-regular fa-envelope"></i><input id="u" name="email" type="email" required autofocus placeholder="name@gmail.com"></div></div>
-    <div class="fg"><label for="p">รหัสผ่าน</label><div class="inp"><i class="fa-solid fa-lock"></i><input id="p" name="password" type="password" required></div></div>
-    <button id="b" type="submit">เข้าสู่ระบบ</button>
-    <div class="foot">ลืมรหัสผ่าน? ติดต่อ Admin เพื่อรีเซ็ตให้<br>
-      กรุณาส่งเมลมาที่ <a href="mailto:Pongtap.p@tsrplc.com?subject=ขอรีเซ็ตรหัสผ่าน%20Prospect%20Intelligence" style="color:#2563EB;text-decoration:none;font-weight:500">Pongtap.p@tsrplc.com</a></div>
+  <form class="card" id="f" autocomplete="on" novalidate>
+    <div class="mobile-brand">
+      <div class="mark"><i class="fa-solid fa-chart-line"></i></div>
+      <div><strong>Prospect Intelligence</strong><small>Sales workspace</small></div>
+    </div>
+
+    <span class="welcome"><i class="fa-solid fa-hand-sparkles"></i> ยินดีต้อนรับกลับ</span>
+    <h1>เข้าสู่ระบบ</h1>
+    <div class="sub">ใช้อีเมลและรหัสผ่านที่ได้รับจากผู้ดูแลระบบ</div>
+
+    <div class="err" id="err" role="alert" aria-live="assertive"><i class="fa-solid fa-circle-exclamation"></i><span id="errText"></span></div>
+
+    <div class="fg">
+      <div class="flabel"><label for="u">อีเมล</label></div>
+      <div class="inp">
+        <i class="fa-regular fa-envelope lead"></i>
+        <input id="u" name="email" type="email" autocomplete="username" inputmode="email"
+               enterkeyhint="next" required autofocus placeholder="name@company.com" aria-label="อีเมล">
+      </div>
+    </div>
+
+    <div class="fg">
+      <div class="flabel">
+        <label for="p">รหัสผ่าน</label>
+        <a href="mailto:Pongtap.p@tsrplc.com?subject=ขอรีเซ็ตรหัสผ่าน%20Prospect%20Intelligence">ลืมรหัสผ่าน?</a>
+      </div>
+      <div class="inp">
+        <i class="fa-solid fa-lock lead"></i>
+        <input id="p" name="password" type="password" autocomplete="current-password"
+               enterkeyhint="go" required placeholder="รหัสผ่านของคุณ" aria-label="รหัสผ่าน">
+        <button class="eye" id="eye" type="button" aria-label="แสดงรหัสผ่าน" title="แสดง/ซ่อนรหัสผ่าน">
+          <i class="fa-regular fa-eye"></i>
+        </button>
+      </div>
+      <div class="hint" id="caps"><i class="fa-solid fa-triangle-exclamation"></i> Caps Lock เปิดอยู่</div>
+    </div>
+
+    <button class="btn" id="b" type="submit">
+      <span class="spin"></span><span id="bLabel">เข้าสู่ระบบ</span>
+    </button>
+
+    <div class="divider">ต้องการความช่วยเหลือ?</div>
+    <div class="help">
+      <i class="fa-solid fa-headset"></i>
+      <div>
+        <b>ติดต่อผู้ดูแลระบบ</b>
+        <span id="helpMail">Pongtap.p@tsrplc.com</span>
+      </div>
+      <button class="copy" id="copy" type="button"><i class="fa-regular fa-copy"></i> คัดลอก</button>
+    </div>
+
+    <div class="foot">ระบบจะจดจำอีเมลของคุณไว้ในเครื่องนี้ · ไม่เก็บรหัสผ่าน</div>
   </form>
 </div>
 
+<div class="toast" id="toast"></div>
+
   <script src="assets/auth-sheets.js?v=4"></script>
 <script>
-var f = document.getElementById('f'), err = document.getElementById('err'), b = document.getElementById('b');
+(function () {
+  var f = document.getElementById('f'),
+      err = document.getElementById('err'),
+      errText = document.getElementById('errText'),
+      b = document.getElementById('b'),
+      bLabel = document.getElementById('bLabel'),
+      u = document.getElementById('u'),
+      p = document.getElementById('p'),
+      eye = document.getElementById('eye'),
+      caps = document.getElementById('caps'),
+      toastEl = document.getElementById('toast'),
+      LAST_EMAIL = 'pi_last_email';
 
-PIAuth.seed();
-var s = PIAuth.session();
-if (s) { location.replace('index.html'); }
+  PIAuth.seed();
+  if (PIAuth.session()) { location.replace('index.html'); }
 
-f.addEventListener('submit', function (e) {
-  e.preventDefault();
-  err.style.display = 'none';
-  b.disabled = true; b.textContent = 'กำลังตรวจสอบ...';
-  PIAuth.login(f.email.value, f.password.value).then(function (res) {
-    if (!res.ok) {
-      err.textContent = res.error || 'เข้าสู่ระบบไม่สำเร็จ';
-      err.style.display = 'block';
-      b.disabled = false; b.textContent = 'เข้าสู่ระบบ';
-      return;
-    }
-    b.textContent = 'สำเร็จ กำลังเข้าสู่ระบบ...';
-    location.replace('index.html');
-  }).catch(function (x) {
-    err.textContent = x.message || String(x);
-    err.style.display = 'block';
-    b.disabled = false; b.textContent = 'เข้าสู่ระบบ';
+  /* จำอีเมลล่าสุด (ไม่เก็บรหัสผ่าน) */
+  try {
+    var last = localStorage.getItem(LAST_EMAIL);
+    if (last) { u.value = last; setTimeout(function () { p.focus(); }, 120); }
+  } catch (e) {}
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { toastEl.classList.remove('show'); }, 2200);
+  }
+  function showErr(msg) {
+    errText.textContent = msg || 'เข้าสู่ระบบไม่สำเร็จ';
+    err.classList.add('show');
+    f.classList.remove('shake');
+    void f.offsetWidth;
+    f.classList.add('shake');
+  }
+  function clearErr() { err.classList.remove('show'); }
+  function busy(on, text) {
+    b.disabled = !!on;
+    b.classList.toggle('loading', !!on);
+    bLabel.textContent = text || (on ? 'กำลังตรวจสอบ...' : 'เข้าสู่ระบบ');
+  }
+
+  u.addEventListener('input', clearErr);
+  p.addEventListener('input', clearErr);
+
+  /* แสดง/ซ่อนรหัสผ่าน */
+  eye.addEventListener('click', function () {
+    var show = p.type === 'password';
+    p.type = show ? 'text' : 'password';
+    eye.innerHTML = show ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+    eye.setAttribute('aria-label', show ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน');
+    p.focus();
   });
-});
+
+  /* เตือน Caps Lock */
+  function capsCheck(e) {
+    try { caps.classList.toggle('show', !!(e.getModifierState && e.getModifierState('CapsLock'))); } catch (x) {}
+  }
+  p.addEventListener('keydown', capsCheck);
+  p.addEventListener('keyup', capsCheck);
+  p.addEventListener('blur', function () { caps.classList.remove('show'); });
+
+  /* คัดลอกอีเมลผู้ดูแล */
+  document.getElementById('copy').addEventListener('click', function () {
+    var mail = 'Pongtap.p@tsrplc.com';
+    var done = function () { toast('คัดลอกอีเมลแล้ว'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(mail).then(done).catch(function () { toast(mail); });
+    } else { toast(mail); }
+  });
+
+  f.addEventListener('submit', function (e) {
+    e.preventDefault();
+    clearErr();
+    var email = String(u.value || '').trim();
+    var pass = String(p.value || '');
+
+    if (!email) { showErr('กรุณากรอกอีเมล'); u.focus(); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('รูปแบบอีเมลไม่ถูกต้อง เช่น name@company.com'); u.focus(); return; }
+    if (!pass) { showErr('กรุณากรอกรหัสผ่าน'); p.focus(); return; }
+
+    busy(true);
+    PIAuth.login(email, pass).then(function (res) {
+      if (!res.ok) {
+        showErr(res.error || 'เข้าสู่ระบบไม่สำเร็จ');
+        busy(false);
+        p.focus(); p.select();
+        return;
+      }
+      try { localStorage.setItem(LAST_EMAIL, email); } catch (x) {}
+      busy(true, 'สำเร็จ กำลังเข้าสู่ระบบ...');
+      location.replace('index.html');
+    }).catch(function (x) {
+      showErr(x && x.message ? x.message : String(x));
+      busy(false);
+      p.focus();
+    });
+  });
+})();
 </script>
 </body>
 </html>
