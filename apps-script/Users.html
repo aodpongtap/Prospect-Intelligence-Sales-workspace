@@ -65,9 +65,16 @@ td{padding:9px;border-bottom:1px solid #eef1f5;font-size:12px}
     <div class="fg">
       <div><label for="email">อีเมล</label><input id="email" type="email" placeholder="name@gmail.com" autocomplete="off"></div>
       <div><label for="name">ชื่อ (ไม่บังคับ)</label><input id="name" type="text" placeholder="ชื่อ-นามสกุล"></div>
-      <div><label for="level">สิทธิ์</label>
-        <select id="level"><option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option></select>
+      <div><label for="level">ระดับสิทธิ์</label>
+        <select id="level">
+          <option value="bu">L2 · BU</option>
+          <option value="head">L3 · Head Team</option>
+          <option value="sup">L4 · Supervisor</option>
+          <option value="sale" selected>L5 · เซลล์ (Sale)</option>
+          <option value="agent">L6 · ตัวแทน / MCN</option>
+        </select>
       </div>
+      <div><label for="parent">ผู้ดูแลต้นสาย (Upline) *</label><select id="parent"><option value="">— เลือก —</option></select></div>
       <div><button class="btn btn-primary" id="addBtn"><i class="fa-solid fa-user-plus"></i> เพิ่ม + สร้างรหัส</button></div>
     </div>
   </section>
@@ -76,18 +83,21 @@ td{padding:9px;border-bottom:1px solid #eef1f5;font-size:12px}
     <h3>รายชื่อผู้ใช้ (<span id="count">0</span>)</h3>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>อีเมล</th><th>ชื่อ</th><th>สิทธิ์</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead>
-        <tbody id="tb"><tr><td colspan="6" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
+        <thead><tr><th>อีเมล</th><th>ชื่อ</th><th>ระดับสิทธิ์</th><th>ผู้ดูแลสาย</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead>
+        <tbody id="tb"><tr><td colspan="7" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
       </table>
     </div>
   </section>
 
   <section class="panel">
-    <h3>ระดับสิทธิ์</h3>
+    <h3>ระดับสิทธิ์ 6 ระดับ</h3>
     <div class="legend">
-      <div><span class="pill l-admin">Admin</span><br>จัดการผู้ใช้ + ดู/แก้ข้อมูลทั้งหมด + Export + Settings</div>
-      <div><span class="pill l-editor">Editor</span><br>ดู + แก้ไขข้อมูล + Export</div>
-      <div><span class="pill l-viewer">Viewer</span><br>ดูข้อมูลเท่านั้น</div>
+      <div><span class="pill l-admin">L1 · Admin</span><br>เห็นทั้งเครือข่าย + ตั้งค่าทั้งหมด</div>
+      <div><span class="pill l-editor">L2 · BU</span><br>เห็นทุกทีมใต้ BU ของตัวเอง</div>
+      <div><span class="pill l-editor">L3 · Head Team</span><br>เห็น Supervisor + เซลล์ + ตัวแทนในทีม</div>
+      <div><span class="pill l-viewer">L4 · Supervisor</span><br>เห็นเซลล์และตัวแทนใต้ทีมของตัวเอง</div>
+      <div><span class="pill l-viewer">L5 · เซลล์</span><br>เห็นตัวแทน/MCN ใต้ตัวเอง</div>
+      <div><span class="pill l-viewer">L6 · ตัวแทน/MCN</span><br>เห็นเฉพาะงานของตัวเอง</div>
     </div>
   </section>
 </div>
@@ -128,16 +138,24 @@ function isCoreAdmin(email) {
 }
 
 function render(data) {
+  window.__USERS__ = data.users || [];
   el('count').textContent = data.users.length;
   el('addPanel').style.display = data.canManage ? '' : 'none';
+  var labels = data.labels || {};
+  var myLevel = data.myLevel || 'agent';
   var rows = data.users.map(function (u) {
     var core = isCoreAdmin(u.email);
     var levelCell = core
-      ? '<span class="pill l-core">Admin (หลัก)</span>'
+      ? '<span class="pill l-core">L1 · Admin (หลัก)</span>'
       : '<select data-act="level" data-email="' + esc(u.email) + '" style="padding:4px 6px;font-size:11px">' +
-        ['admin', 'editor', 'viewer'].map(function (l) {
-          return '<option value="' + l + '"' + (u.level === l ? ' selected' : '') + '>' + l.charAt(0).toUpperCase() + l.slice(1) + '</option>';
+        (data.levels || []).map(function (l) {
+          return '<option value="' + l + '"' + (u.level === l ? ' selected' : '') + '>' + esc(labels[l] || l) + '</option>';
         }).join('') + '</select>';
+    var parentName = '-';
+    for (var i = 0; i < window.__USERS__.length; i++) {
+      if (window.__USERS__[i].email === u.parent) { parentName = window.__USERS__[i].name || window.__USERS__[i].email; }
+    }
+    if (u.parent && parentName === '-') parentName = u.parent;
     var statusCell = u.status === 'disabled'
       ? '<span class="off"><i class="fa-solid fa-circle-xmark"></i> ปิด</span>'
       : '<span class="on"><i class="fa-solid fa-circle-check"></i> ใช้งาน</span>';
@@ -150,9 +168,25 @@ function render(data) {
         '<button class="btn btn-danger" data-act="del" data-email="' + esc(u.email) + '"><i class="fa-solid fa-trash"></i> ลบ</button>' +
         '</div>';
     return '<tr><td>' + esc(u.email) + '</td><td>' + esc(u.name || '—') + '</td><td>' + levelCell + '</td>' +
-      '<td>' + statusCell + '</td><td>' + fmt(u.lastLogin) + '</td><td>' + acts + '</td></tr>';
+      '<td>' + esc(parentName) + '</td><td>' + statusCell + '</td><td>' + fmt(u.lastLogin) + '</td><td>' + acts + '</td></tr>';
   }).join('');
-  el('tb').innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
+  el('tb').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
+  refreshUplines();
+}
+
+/** กรองรายชื่อผู้ดูแลต้นสาย: ต้องอยู่ระดับสูงกว่าระดับที่เลือก */
+function refreshUplines() {
+  var sel = el('level'), box = el('parent');
+  if (!sel || !box) return;
+  var order = (window.__LEVELS__ || ['admin', 'bu', 'head', 'sup', 'sale', 'agent']);
+  var myN = order.indexOf(sel.value) + 1 || 6;
+  var labels = window.__LABELS__ || {};
+  var opts = (window.__USERS__ || []).filter(function (u) {
+    return (order.indexOf(u.level) + 1) < myN;
+  }).map(function (u) {
+    return '<option value="' + esc(u.email) + '">' + esc((u.name || u.email) + ' · ' + (labels[u.level] || u.level)) + '</option>';
+  });
+  box.innerHTML = '<option value="">— เลือก —</option>' + opts.join('');
 }
 
 function load() {
@@ -167,6 +201,9 @@ function load() {
       return;
     }
     el('me').textContent = data.me;
+    window.__LEVELS__ = data.levels || [];
+    window.__LABELS__ = data.labels || {};
+    window.__MYLEVEL__ = data.myLevel || '';
     render(data);
   }).withFailureHandler(function (e) { showMsg(e.message || String(e), 'err'); }).getUsers(TOKEN);
 }
@@ -174,24 +211,27 @@ function load() {
 el('addBtn').addEventListener('click', function () {
   var email = el('email').value.trim();
   if (!email || email.indexOf('@') < 0) return showMsg('กรอกอีเมลให้ถูกต้อง', 'err');
+  if (!el('parent').value) return showMsg('กรุณาเลือกผู้ดูแลต้นสาย (Upline)', 'err');
   var btn = this; btn.disabled = true;
   google.script.run.withSuccessHandler(function (res) {
     btn.disabled = false;
     el('email').value = ''; el('name').value = '';
-    render({ users: res.users, canManage: true });
+    render({ users: res.users, canManage: true, levels: window.__LEVELS__, labels: window.__LABELS__, myLevel: window.__MYLEVEL__ });
     showPw(res.email, res.password);
     showMsg('เพิ่มผู้ใช้และสร้างรหัสผ่านแล้ว', 'ok');
   }).withFailureHandler(function (e) { btn.disabled = false; showMsg(e.message || String(e), 'err'); })
-    .addUser(TOKEN, email, el('name').value.trim(), el('level').value);
+    .addUser(TOKEN, email, el('name').value.trim(), el('level').value, el('parent').value);
 });
+
+el('level').addEventListener('change', refreshUplines);
 
 el('tb').addEventListener('change', function (e) {
   var sel = e.target.closest('[data-act="level"]');
   if (!sel) return;
   google.script.run.withSuccessHandler(function (res) {
-    render({ users: res.users, canManage: true }); showMsg('อัปเดตสิทธิ์แล้ว', 'ok');
+    render({ users: res.users, canManage: true, levels: window.__LEVELS__, labels: window.__LABELS__, myLevel: window.__MYLEVEL__ }); showMsg('อัปเดตสิทธิ์แล้ว', 'ok');
   }).withFailureHandler(function (err) { showMsg(err.message || String(err), 'err'); load(); })
-    .updateUser(TOKEN, sel.dataset.email, sel.value, '');
+    .updateUser(TOKEN, sel.dataset.email, sel.value, '', '');
 });
 
 el('tb').addEventListener('click', function (e) {

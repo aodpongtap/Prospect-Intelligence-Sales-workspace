@@ -10,7 +10,19 @@
 var APP_TITLE = 'Prospect Intelligence Sales workspace';
 var SHEET_FILE_NAME = 'Prospect Intelligence - Users';
 var SHEET_TAB = 'Users';
-var LEVELS = ['admin', 'sale', 'editor', 'viewer'];
+var LEVELS = ['admin', 'bu', 'head', 'sup', 'sale', 'agent'];
+var LEVEL_LABELS = {
+  admin: 'L1 · Admin',
+  bu: 'L2 · BU',
+  head: 'L3 · Head Team',
+  sup: 'L4 · Supervisor',
+  sale: 'L5 · เซลล์ (Sale)',
+  agent: 'L6 · ตัวแทน / MCN'
+};
+function levelN_(level) {
+  var i = LEVELS.indexOf(String(level || '').toLowerCase());
+  return i < 0 ? LEVELS.length : i + 1;
+}
 var ADMIN_EMAILS = [
   'aodpongtaptsr@gmail.com',
   'bch.sarocha@gmail.com',
@@ -49,9 +61,9 @@ function apiResponse_(p) {
     else if (action === 'login') out = login(p.email, p.password);
     else if (action === 'me') out = getMe(p.token);
     else if (action === 'users') out = getUsers(p.token);
-    else if (action === 'add') out = addUser(p.token, p.email, p.name, p.level);
+    else if (action === 'add') out = addUser(p.token, p.email, p.name, p.level, p.parent);
     else if (action === 'reset') out = resetPassword(p.token, p.email);
-    else if (action === 'update') out = updateUser(p.token, p.email, p.level, p.status);
+    else if (action === 'update') out = updateUser(p.token, p.email, p.level, p.status, p.parent);
     else if (action === 'remove') out = deleteUser(p.token, p.email);
     else if (action === 'deals') out = getDeals(p.token);
     else if (action === 'addDeal') out = addDeal(p.token, p.name, p.customer, p.value, p.stage, p.probability, p.close, p.nextAction, p.status);
@@ -127,9 +139,13 @@ function getSheet_() {
   var sh = ss.getSheetByName(SHEET_TAB);
   if (!sh) sh = ss.insertSheet(SHEET_TAB);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(['email', 'name', 'level', 'status', 'passHash', 'salt', 'createdAt', 'lastLogin']);
-    sh.getRange('A1:H1').setFontWeight('bold');
+    sh.appendRow(['email', 'name', 'level', 'status', 'passHash', 'salt', 'createdAt', 'lastLogin', 'parent']);
+    sh.getRange('A1:I1').setFontWeight('bold');
     sh.setFrozenRows(1);
+  } else if (String(sh.getRange('I1').getValue() || '') === '') {
+    // อพยพข้อมูลเดิม: เพิ่มคอลัมน์ parent (ผู้ดูแลต้นสาย)
+    sh.getRange('I1').setValue('parent');
+    sh.getRange('A1:I1').setFontWeight('bold');
   }
   return sh;
 }
@@ -138,18 +154,19 @@ function readRows_() {
   var sh = getSheet_();
   var last = sh.getLastRow();
   if (last < 2) return [];
-  return sh.getRange(2, 1, last - 1, 8).getValues()
+  return sh.getRange(2, 1, last - 1, 9).getValues()
     .filter(function (r) { return String(r[0]).trim() !== ''; })
     .map(function (r) {
       return {
         email: String(r[0]).trim().toLowerCase(),
         name: String(r[1] || ''),
-        level: String(r[2] || 'viewer').toLowerCase(),
+        level: String(r[2] || 'agent').toLowerCase(),
         status: String(r[3] || 'active').toLowerCase(),
         passHash: String(r[4] || ''),
         salt: String(r[5] || ''),
         createdAt: r[6] ? String(r[6]) : '',
         lastLogin: r[7] ? String(r[7]) : '',
+        parent: String(r[8] || '').trim().toLowerCase(),
         row: null
       };
     });
@@ -192,7 +209,7 @@ function ensureSeed_() {
     var e = String(em).toLowerCase();
     if (existing.indexOf(e) < 0) {
       var salt = newSalt_();
-      sh.appendRow([e, '', 'admin', 'active', hash_(SEED_PASSWORD, salt), salt, new Date().toISOString(), '']);
+      sh.appendRow([e, '', 'admin', 'active', hash_(SEED_PASSWORD, salt), salt, new Date().toISOString(), '', '']);
     }
   });
 }
@@ -363,42 +380,88 @@ function logout(token) {
 /* ---------------- user management API ---------------- */
 
 function publicUser_(r) {
-  return { email: r.email, name: r.name, level: r.level, status: r.status, createdAt: r.createdAt, lastLogin: r.lastLogin };
+  return {
+    email: r.email, name: r.name, level: r.level, status: r.status,
+    createdAt: r.createdAt, lastLogin: r.lastLogin, parent: r.parent || '',
+    levelLabel: LEVEL_LABELS[r.level] || r.level
+  };
+}
+
+/** ลูกข่ายทั้งหมดใต้สายงาน (ไม่รวมตัวเอง) */
+function descendantsOf_(email) {
+  var all = readRows_();
+  var out = [], queue = [String(email || '').toLowerCase()], guard = 0;
+  while (queue.length && guard++ < 5000) {
+    var cur = queue.shift();
+    all.forEach(function (r) {
+      if (r.parent === cur) { out.push(r); queue.push(r.email); }
+    });
+  }
+  return out;
+}
+
+/** ผู้ใช้ที่มองเห็นได้: admin = ทั้งหมด, อื่น ๆ = ตัวเอง + ลูกข่ายใต้สายงาน */
+function visibleUsers_(me) {
+  var all = readRows_();
+  var myEmail = String(me.email || '').toLowerCase();
+  if (isAdminLevel_(me.level)) return all;
+  var ids = descendantsOf_(myEmail).map(function (r) { return r.email; });
+  return all.filter(function (r) { return r.email === myEmail || ids.indexOf(r.email) >= 0; });
 }
 
 function getUsers(token) {
   var s = session_(token);
-  if (!s || !isAdminLevel_(s.level)) {
-    return { ok: false, error: 'เฉพาะ Admin เท่านั้น', canManage: false, users: [], levels: LEVELS };
-  }
+  if (!s) return { ok: false, error: 'กรุณาเข้าสู่ระบบใหม่', canManage: false, users: [], levels: LEVELS, labels: LEVEL_LABELS };
   ensureSeed_();
-  return { ok: true, canManage: true, me: s.email, users: readRows_().map(publicUser_), levels: LEVELS, admins: ADMIN_EMAILS };
+  var canManage = levelN_(s.level) <= 4;   // Admin / BU / Head Team / Supervisor
+  return {
+    ok: true, canManage: canManage, isAdmin: isAdminLevel_(s.level), me: s.email, myLevel: s.level,
+    users: visibleUsers_(s).map(publicUser_), levels: LEVELS, labels: LEVEL_LABELS, admins: ADMIN_EMAILS
+  };
 }
 
-function addUser(token, email, name, level) {
+function addUser(token, email, name, level, parent) {
   var s = session_(token);
-  if (!s || !isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
+  if (!s) throw new Error('กรุณาเข้าสู่ระบบใหม่');
+  if (levelN_(s.level) > 4) throw new Error('เฉพาะ Admin / BU / Head Team / Supervisor เท่านั้นที่สร้าง ID ได้');
 
   var e = String(email || '').trim().toLowerCase();
   if (!e || e.indexOf('@') < 0) throw new Error('อีเมลไม่ถูกต้อง');
   if (findRow_(e)) throw new Error('มีอีเมลนี้ในระบบแล้ว');
 
-  var lv = String(level || 'viewer').toLowerCase();
-  if (LEVELS.indexOf(lv) < 0) lv = 'viewer';
+  var lv = String(level || 'agent').toLowerCase();
+  if (LEVELS.indexOf(lv) < 0) throw new Error('ระดับสิทธิ์ไม่ถูกต้อง');
+
+  // ต้องเลือกระดับที่ต่ำกว่าตัวเอง (ยกเว้น admin สร้างได้ทุก nível)
+  if (!isAdminLevel_(s.level) && levelN_(lv) <= levelN_(s.level)) {
+    throw new Error('สร้างได้เฉพาะระดับที่ต่ำกว่าตัวเอง');
+  }
+
+  var p = String(parent || '').trim().toLowerCase();
+  if (!p) throw new Error('ต้องเลือกผู้ดูแลต้นสาย');
+  var pr = null, all = readRows_();
+  for (var i = 0; i < all.length; i++) if (all[i].email === p) { pr = all[i]; break; }
+  if (!pr) throw new Error('ไม่พบผู้ดูแลต้นสายในระบบ');
+  if (levelN_(pr.level) >= levelN_(lv)) throw new Error('ผู้ดูแลต้นสายต้องอยู่ระดับสูงกว่า');
+  if (!isAdminLevel_(s.level)) {
+    var myEmail = String(s.email).toLowerCase();
+    var allowed = descendantsOf_(myEmail).map(function (r) { return r.email; }).concat([myEmail]);
+    if (allowed.indexOf(p) < 0) throw new Error('เลือกผู้ดูแลต้นสายได้เฉพาะในสายงานของตัวเอง');
+  }
 
   var pw = randPassword_();
   var salt = newSalt_();
-  var sh = getSheet_();
-  sh.appendRow([e, String(name || ''), lv, 'active', hash_(pw, salt), salt, new Date().toISOString(), '']);
+  getSheet_().appendRow([e, String(name || ''), lv, 'active', hash_(pw, salt), salt, new Date().toISOString(), '', p]);
 
-  return { ok: true, email: e, password: pw, users: readRows_().map(publicUser_) };
+  return { ok: true, email: e, password: pw, users: visibleUsers_(session_(token)).map(publicUser_) };
 }
 
 function resetPassword(token, email) {
   var s = session_(token);
-  if (!s || !isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
+  if (!s || levelN_(s.level) > 4) throw new Error('เฉพาะ Admin / BU / Head Team / Supervisor เท่านั้น');
 
   var e = String(email || '').trim().toLowerCase();
+  if (!canManageTarget_(s, e)) throw new Error('ไม่มีสิทธิ์จัดการผู้ใช้นี้ (นอกสายงาน)');
   var row = findRow_(e);
   if (!row) throw new Error('ไม่พบผู้ใช้นี้');
 
@@ -411,11 +474,20 @@ function resetPassword(token, email) {
   return { ok: true, email: e, password: pw };
 }
 
-function updateUser(token, email, level, status) {
+/** จัดการได้เฉพาะลูกข่ายใต้สายงานของตัวเอง (admin จัดการได้ทุกคน) */
+function canManageTarget_(s, targetEmail) {
+  if (isAdminLevel_(s.level)) return true;
+  var myEmail = String(s.email || '').toLowerCase();
+  if (targetEmail === myEmail) return false;
+  return descendantsOf_(myEmail).some(function (r) { return r.email === targetEmail; });
+}
+
+function updateUser(token, email, level, status, parent) {
   var s = session_(token);
-  if (!s || !isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
+  if (!s || levelN_(s.level) > 4) throw new Error('เฉพาะ Admin / BU / Head Team / Supervisor เท่านั้น');
 
   var e = String(email || '').trim().toLowerCase();
+  if (!canManageTarget_(s, e)) throw new Error('ไม่มีสิทธิ์จัดการผู้ใช้นี้ (นอกสายงาน)');
   var row = findRow_(e);
   if (!row) throw new Error('ไม่พบผู้ใช้นี้');
 
@@ -426,6 +498,7 @@ function updateUser(token, email, level, status) {
     if (isProtected) throw new Error('เปลี่ยนสิทธิ์ของ Admin หลักไม่ได้');
     var lv = String(level).toLowerCase();
     if (LEVELS.indexOf(lv) < 0) throw new Error('ระดับสิทธิ์ไม่ถูกต้อง');
+    if (!isAdminLevel_(s.level) && levelN_(lv) <= levelN_(s.level)) throw new Error('กำหนดได้เฉพาะระดับที่ต่ำกว่าตัวเอง');
     sh.getRange(row, 3).setValue(lv);
   }
   if (status !== undefined && status !== null && String(status) !== '') {
@@ -434,20 +507,33 @@ function updateUser(token, email, level, status) {
     if (['active', 'disabled'].indexOf(st) < 0) throw new Error('สถานะไม่ถูกต้อง');
     sh.getRange(row, 4).setValue(st);
   }
-  return { ok: true, users: readRows_().map(publicUser_) };
+  if (parent !== undefined && parent !== null && String(parent) !== '') {
+    var p = String(parent).toLowerCase();
+    var all = readRows_();
+    var pr = null;
+    for (var i = 0; i < all.length; i++) if (all[i].email === p) { pr = all[i]; break; }
+    if (!pr) throw new Error('ไม่พบผู้ดูแลต้นสาย');
+    if (!canManageTarget_(s, p)) throw new Error('เลือกผู้ดูแลต้นสายได้เฉพาะในสายงานของตัวเอง');
+    var curLevel = String(sh.getRange(row, 3).getValue() || '').toLowerCase();
+    if (levelN_(pr.level) >= levelN_(curLevel)) throw new Error('ผู้ดูแลต้นสายต้องอยู่ระดับสูงกว่า');
+    sh.getRange(row, 9).setValue(p);
+  }
+  return { ok: true, users: visibleUsers_(s).map(publicUser_) };
 }
 
 function deleteUser(token, email) {
   var s = session_(token);
-  if (!s || !isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
+  if (!s || levelN_(s.level) > 4) throw new Error('เฉพาะ Admin / BU / Head Team / Supervisor เท่านั้น');
 
   var e = String(email || '').trim().toLowerCase();
   if (ADMIN_EMAILS.indexOf(e) >= 0) throw new Error('ลบ Admin หลักไม่ได้');
+  if (!canManageTarget_(s, e)) throw new Error('ไม่มีสิทธิ์ลบผู้ใช้นี้ (นอกสายงาน)');
+  if (descendantsOf_(e).length) throw new Error('ลบไม่ได้: ยังมีลูกข่ายใต้สังกัด');
 
   var row = findRow_(e);
   if (!row) throw new Error('ไม่พบผู้ใช้นี้');
   getSheet_().deleteRow(row);
-  return { ok: true, users: readRows_().map(publicUser_) };
+  return { ok: true, users: visibleUsers_(s).map(publicUser_) };
 }
 
 /* ---------------- helpers (รันมือใน editor ถ้าจำเป็น) ---------------- */

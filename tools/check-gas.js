@@ -33,6 +33,13 @@ function get(url, depth = 0) {
     let d = null;
     try { d = JSON.parse(deals.body); } catch (e) {}
     console.log('api deals:', deals.status, d ? 'ok=' + d.ok + ' count=' + (d.deals || []).length : deals.body.slice(0, 120));
+
+    const us = await get(BASE + '?api=1&action=users&token=' + encodeURIComponent(j.token));
+    let u = null;
+    try { u = JSON.parse(us.body); } catch (e) {}
+    console.log('api users:', us.status, u
+      ? 'ok=' + u.ok + ' canManage=' + u.canManage + ' levels=' + (u.levels || []).join('|') + ' count=' + (u.users || []).length
+      : us.body.slice(0, 120));
   }
 
   // ตรวจ Index page (อยู่ใน sandbox iframe ของ Apps Script)

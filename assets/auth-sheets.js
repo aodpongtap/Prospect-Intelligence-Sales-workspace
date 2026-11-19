@@ -90,8 +90,8 @@
     });
   }
 
-  function addUser(email, name, level) {
-    return call('add', { token: token(), email: email, name: name, level: level }).then(function (r) {
+  function addUser(email, name, level, parent) {
+    return call('add', { token: token(), email: email, name: name, level: level, parent: parent || '' }).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'เพิ่มผู้ใช้ไม่สำเร็จ');
       cache = r.users || cache;
       return { email: r.email, password: r.password };
@@ -105,8 +105,8 @@
     });
   }
 
-  function updateUser(email, level, status) {
-    return call('update', { token: token(), email: email, level: level, status: status }).then(function (r) {
+  function updateUser(email, level, status, parent) {
+    return call('update', { token: token(), email: email, level: level, status: status, parent: parent || '' }).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'อัปเดตไม่สำเร็จ');
       cache = r.users || cache;
       return { ok: true };
