@@ -274,7 +274,7 @@
 })(window);
 
 </script>
-  <script src="assets/sales-report.js?v=2"></script>
+  <script src="assets/sales-report.js?v=3"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
     window.__applyMe__ = function (rawMe, opts) {
@@ -663,6 +663,7 @@
 
         var bar = document.getElementById('scopeBar');
         if (!bar) return;
+        bar.setAttribute('data-ready', '1');
         bar.style.display = 'block';
         if (me.isAdmin) {
           bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#ecfdf3;border:1px solid #d1fae5;color:#15803d';
@@ -679,6 +680,7 @@
       PIAuth.listDeals().then(paint).catch(function (e) {
         var bar = document.getElementById('scopeBar');
         if (bar) {
+          bar.setAttribute('data-ready', '1');
           bar.style.display = 'block';
           bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412';
           bar.textContent = 'โหลดดีลจาก Google Sheets ไม่สำเร็จ: ' + e.message;
@@ -786,7 +788,7 @@
     function btn(label,action,icon="",primary=false,extra=""){return `<button class="btn ${primary?"btn-primary":""}" data-action="${action}" ${extra}>${icon?`<i class="${icon}"></i>`:""}${label}</button>`}
     function destroyCharts(){charts.forEach(c=>c.destroy());charts=[]}
     function makeChart(id,config){const canvas=document.getElementById(id);if(canvas&&window.Chart)charts.push(new Chart(canvas,config))}
-    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:renderDashboard,sales:renderSales,partners:renderPartnerCRM,team:renderTeam,projects:renderProjects,service:renderService,intelligence:renderIntelligence,reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=(pageStack.length?"<div class=\"back-wrap\"><button class=\"back-pill\" data-action=\"go-back\"><i class=\"fa-solid fa-arrow-left\"></i> กลับ "+pageTitles[pageStack[pageStack.length-1]]+"</button></div>":"")+views[currentPage]();if(currentPage==="dashboard")drawDashboardCharts();if(currentPage==="intelligence")drawHealthChart();if(currentPage==="reports")drawReportCharts();if(currentPage==="team")loadTeam();if(window.__afterRender__)window.__afterRender__()}
+    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,partners:renderPartnerCRM,team:renderTeam,projects:renderProjects,service:renderService,intelligence:renderIntelligence,reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=(pageStack.length?"<div class=\"back-wrap\"><button class=\"back-pill\" data-action=\"go-back\"><i class=\"fa-solid fa-arrow-left\"></i> กลับ "+pageTitles[pageStack[pageStack.length-1]]+"</button></div>":"")+views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence")drawHealthChart();if(currentPage==="reports")drawReportCharts();if(currentPage==="team")loadTeam();if(window.__afterRender__)window.__afterRender__();var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
 
     /* ===== JavaScript: Dashboard page ===== */
     function renderDashboard(){const today=new Date().toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"});const rows=[...deals].sort((a,b)=>riskScore(b)-riskScore(a)).slice(0,5).map(d=>`<tr class="clickable" data-deal="${d.id}"><td><span class="deal-name">${d.name}</span><br><span class="muted">${d.customer}</span></td><td>${money(d.value)}</td><td>${d.owner}</td><td><span class="risk-pill ${riskClass(riskScore(d))}">${riskScore(d)} / 100</span></td><td>${thaiDate(d.close)}</td></tr>`).join("");return `${pageHead("สวัสดี, Head of Sales",today,btn("ดู Pipeline","go-sales","fa-solid fa-arrow-right",true))}<div class="grid kpi-grid">${kpi("Sales Pipeline","฿12,450,000","fa-solid fa-filter","#2563EB","+12.5%")}${kpi("Forecast เดือนนี้","฿4,850,000","fa-solid fa-chart-column","#16A34A","+8.2%")}${kpi("Deals at Risk","8 Deals","fa-solid fa-triangle-exclamation","#F59E0B","+2 Deals","down")}${kpi("Overdue Actions","14 Tasks","fa-solid fa-clock","#DC2626","-6 Tasks")}</div><div class="grid cols-2" style="margin-bottom:15px">${panel("Pipeline แยกตาม Stage",`<div class="chart-wrap"><canvas id="pipelineChart"></canvas></div>`,"มูลค่าดีลตามสถานะปัจจุบัน")}${panel("Sales Forecast รายเดือน",`<div class="chart-wrap"><canvas id="forecastChart"></canvas></div>`,"Actual และ Forecast")}</div><div class="grid cols-2">${panel("Deals ที่ต้องติดตามด่วน",`<div class="table-wrap"><table><thead><tr><th>Deal / Customer</th><th>มูลค่า</th><th>Owner</th><th>Risk Score</th><th>Close</th></tr></thead><tbody>${rows}</tbody></table></div>`,"เรียงตาม Risk Score สูงสุด")}<div class="grid" style="gap:15px">${panel("Today's Priority Actions",`<div class="action-list"><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>ติดตาม Proposal: Cloud Migration Phase 2</strong><small>พิมพ์ชนก · <span class="due">วันนี้ 11:00</span></small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>ยืนยันงบประมาณระบบ Smart Factory</strong><small>กิตติพงษ์ · วันนี้ 14:30</small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>โทรติดตาม Network Infrastructure</strong><small>อรทัย · <span class="due">เกินกำหนด 2 วัน</span></small></div></div></div>`)}${panel("Alerts",`<div class="alert-list"><div class="alert"><i class="fa-solid fa-clock"></i><span>3 Deals ไม่มีการติดต่อเกิน 7 วัน</span></div><div class="alert red"><i class="fa-solid fa-file-circle-exclamation"></i><span>2 Deals มีโอกาสปิดในเดือนนี้ แต่ยังไม่มี Proposal</span></div><div class="alert blue"><i class="fa-solid fa-headset"></i><span>4 Service Tickets ใกล้เกิน SLA</span></div></div>`)}</div></div>`}

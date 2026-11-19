@@ -591,6 +591,174 @@
       + '</section>';
   }
 
+  /* ---------- Dashboard (เวอร์ชันย่อของ Reports — ใช้สูตร/ข้อมูลชุดเดียวกัน) ---------- */
+  function renderDashboard() {
+    injectCss();
+    var k = kpis();
+    var s = k.sum;
+    var today = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    var teamRows = TEAMS.filter(function (t) { return !state.team || t.code === state.team; }).map(function (t) {
+      var list = k.list.filter(function (d) { return sale(d.saleId).team === t.code; });
+      var ts = summarize(list);
+      var tg = targetOf(t.code, state.year, state.month);
+      var pAch = tg ? ts.s4 / tg * 100 : 0;
+      var pFc = tg ? ts.forecast / tg * 100 : 0;
+      var cnt = SALES.filter(function (r) { return r.team === t.code; }).length;
+      return '<div class="sr-trow">'
+        + '<div class="sr-trow-h"><b>' + esc(t.name) + '</b><span>' + cnt + ' คน</span></div>'
+        + '<div class="sr-trow-n">' + money(ts.s4) + ' <span>/ ' + money(tg) + '</span><em>' + pct(pAch) + '</em></div>'
+        + '<div class="sr-bar"><span style="width:' + Math.max(0, Math.min(100, pAch)) + '%;background:#2563EB"></span></div>'
+        + '<div class="sr-trow-f">Forecast ' + money(ts.forecast) + ' · ' + pct(pFc)
+        + ' · Pipeline ' + money(ts.s1) + '</div>'
+        + '</div>';
+    }).join('');
+
+    var follow = k.list.filter(function (d) { return d.status === 0 || d.status === 1; })
+      .sort(function (a, b) { return num(b.amount) - num(a.amount); }).slice(0, 8);
+
+    var followRows = follow.map(function (d) {
+      var stx = st(d.status);
+      return '<tr class="sr-row" data-sr-deal="' + esc(d.no) + '">'
+        + '<td><span class="sr-badge ' + stx.cls + '">' + d.status + ' · ' + esc(stx.short) + '</span></td>'
+        + '<td><div class="sr-nm">' + esc(d.customer) + '</div><div class="sr-s2">' + esc(d.job) + '</div></td>'
+        + '<td><div>' + esc(sale(d.saleId).name) + '</div><div class="sr-s2">' + esc(teamByCode(sale(d.saleId).team).name) + '</div></td>'
+        + '<td class="sr-num sr-strong">' + money(d.amount) + '</td>'
+        + '<td class="sr-num">' + String(d.month).padStart(2, '0') + '.' + TH_MONTHS[d.month - 1] + ' ' + String(d.year + 543).slice(-2) + '</td>'
+        + '<td class="sr-num">' + (d.status === 1 ? pct(d.prob) : '—') + '</td>'
+        + '</tr>';
+    }).join('');
+
+    var cards = [
+      cardKpi('เป้าหมายทีม (Target)', money(k.target),
+        'Head Count <b>' + k.headCount + '</b> คน · Prod./Head <b>' + money(k.perHead) + '</b>',
+        100, '#0F2B46', 'fa-solid fa-bullseye'),
+      cardKpi('%Ach 4. (Actual ปิดงานแล้ว 100%)', pct(k.ach4),
+        money(s.s4) + ' / ' + money(k.target), k.ach4, '#2563EB', 'fa-solid fa-circle-check'),
+      cardKpi('%Ach 4.+3. (รวมรอส่งของ 90%)', pct(k.ach43),
+        money(s.s4 + s.s3 * 0.9) + ' / ' + money(k.target), k.ach43, '#0EA5E9', 'fa-solid fa-truck-fast'),
+      cardKpi('ประมาณการยอดปิดเดือน (Weighted Forecast)', money(s.forecast),
+        'ยอดการันตี <b>' + money(s.secured) + '</b> + Pipeline ถ่วงน้ำหนัก <b>' + money(s.weighted1) + '</b>',
+        k.forecastPct, '#16A34A', 'fa-solid fa-chart-line')
+    ];
+
+    function opt(v, tx, cur) { return '<option value="' + esc(v) + '"' + (String(cur) === String(v) ? ' selected' : '') + '>' + esc(tx) + '</option>'; }
+    var yearOpts = YEARS.map(function (y) { return opt(y, 'ปี ' + (y + 543), state.year); }).join('');
+    var monthOpts = '<option value=""' + (state.month ? '' : ' selected') + '>ทุกเดือน</option>' +
+      TH_MONTHS.map(function (mth, i) { return opt(i + 1, String(i + 1).padStart(2, '0') + '.' + mth, state.month); }).join('');
+    var teamOpts = '<option value="">ทุกทีม</option>' + TEAMS.map(function (t) { return opt(t.code, t.name, state.team); }).join('');
+
+    return '<div class="sr">'
+      + '<div class="sr-head">'
+      + '  <div><h1>ภาพรวมยอดขาย &amp; Forecast</h1>'
+      + '    <div class="sr-sub">' + esc(today) + ' · ใช้สูตรและข้อมูลชุดเดียวกับหน้า Reports</div></div>'
+      + '  <button class="sr-btn dark" data-sr-goto="reports"><i class="fa-solid fa-chart-pie"></i> เปิด Reports ฉบับเต็ม</button>'
+      + '</div>'
+      + '<div class="sr-filters sr-f3">'
+      + '  <div class="sr-fl"><label>ปี</label><select data-sr-filter="year">' + yearOpts + '</select></div>'
+      + '  <div class="sr-fl"><label>เดือนที่คาดว่าจะปิด</label><select data-sr-filter="month">' + monthOpts + '</select></div>'
+      + '  <div class="sr-fl"><label>ทีม (BU)</label><select data-sr-filter="team">' + teamOpts + '</select></div>'
+      + '  <div class="sr-fbtn"><button class="sr-btn" data-sr-goto="reports"><i class="fa-solid fa-arrow-right"></i> ดูรายละเอียดทั้งหมด</button></div>'
+      + '</div>'
+      + '<div class="sr-scope"><i class="fa-regular fa-calendar"></i> '
+      + esc(state.month ? monthLabel(state.year, state.month) : ('ปี ' + (state.year + 543)))
+      + ' · ' + k.list.length + ' ดีล · Cash In คาดรับ <b>' + money(s.cashIn) + '</b></div>'
+      + '<div class="sr-kpis">' + cards.join('') + '</div>'
+      + '<div class="sr-dash-teams">' + (teamRows || '<div class="sr-trow">ยังไม่มีทีม</div>') + '</div>'
+      + '<div class="sr-dash-charts">'
+      + '  <section class="sr-panel">'
+      + '    <div class="sr-ph"><div><h3>ยอดขายตามทีม แยกตามสถานะ</h3>'
+      + '      <div class="sr-s2">4.Actual · 3.รอส่งของ · 2.รอยืนยัน PO · 1.Pipeline</div></div></div>'
+      + '    <div class="sr-chartbox"><canvas id="srDashBar"></canvas></div>'
+      + '  </section>'
+      + '  <section class="sr-panel">'
+      + '    <div class="sr-ph"><h3>สัดส่วนสถานะงาน</h3></div>'
+      + '    <div class="sr-chartbox"><canvas id="srDashStatus"></canvas></div>'
+      + '  </section>'
+      + '</div>'
+      + '<section class="sr-panel">'
+      + '  <div class="sr-ph"><div><h3>ดีลที่ต้องติดตาม (Pipeline / กำลังคุย)</h3>'
+      + '    <div class="sr-s2">เรียงตามมูลค่าสูงสุด · คลิกแถวเพื่อดูหมายเหตุ</div></div>'
+      + '    <button class="sr-btn" data-sr-goto="reports"><i class="fa-solid fa-list"></i> ดูดีลทั้งหมด</button></div>'
+      + '  <div class="sr-tablewrap"><table class="sr-table"><thead><tr>'
+      + '    <th>สถานะ</th><th>ลูกค้า / งาน</th><th>Sale</th><th class="sr-num">มูลค่า</th>'
+      + '    <th class="sr-num">คาดปิด</th><th class="sr-num">โอกาส</th>'
+      + '  </tr></thead><tbody>' + (followRows || '<tr><td colspan="6" class="sr-empty">ไม่มีดีลที่ต้องติดตาม</td></tr>') + '</tbody></table></div>'
+      + '</section>'
+      + '</div>';
+  }
+
+  function drawDashboardCharts() {
+    destroyCharts();
+    if (!global.Chart) return;
+    Chart.defaults.font.family = 'Prompt, sans-serif';
+    Chart.defaults.font.size = 10;
+    Chart.defaults.color = '#64748B';
+    var k = kpis();
+
+    var bar = document.getElementById('srDashBar');
+    if (bar) {
+      var teams = TEAMS.filter(function (t) { return !state.team || t.code === state.team; });
+      var series = { s4: [], s3: [], s2: [], s1: [] };
+      teams.forEach(function (t) {
+        var ts = summarize(k.list.filter(function (d) { return sale(d.saleId).team === t.code; }));
+        series.s4.push(ts.s4); series.s3.push(ts.s3); series.s2.push(ts.s2); series.s1.push(ts.s1);
+      });
+      charts.push(new Chart(bar, {
+        type: 'bar',
+        data: {
+          labels: teams.map(function (t) { return t.name; }),
+          datasets: [
+            { label: '4.Actual', data: series.s4, backgroundColor: '#2563EB', borderRadius: 4, stack: 'a' },
+            { label: '3.รอส่งของ', data: series.s3, backgroundColor: '#38BDF8', borderRadius: 4, stack: 'a' },
+            { label: '2.รอยืนยัน PO', data: series.s2, backgroundColor: '#F59E0B', borderRadius: 4, stack: 'a' },
+            { label: '1.Pipeline', data: series.s1, backgroundColor: '#A78BFA', borderRadius: 4, stack: 'a' }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 9, usePointStyle: true } },
+            tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + money(c.parsed.y); } } }
+          },
+          scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: {
+              stacked: true, beginAtZero: true,
+              ticks: { callback: function (v) { return v >= 1000000 ? (v / 1000000).toFixed(1) + 'M' : (v / 1000) + 'K'; } },
+              grid: { color: '#EFF3F8' }
+            }
+          }
+        }
+      }));
+    }
+
+    var donut = document.getElementById('srDashStatus');
+    if (donut) {
+      var keys = [4, 3, 2, 1, 0, 5];
+      charts.push(new Chart(donut, {
+        type: 'doughnut',
+        data: {
+          labels: keys.map(function (c) { return c + '. ' + st(c).short; }),
+          datasets: [{
+            data: keys.map(function (c) {
+              return k.list.filter(function (d) { return d.status === c; }).reduce(function (a, d) { return a + num(d.amount); }, 0);
+            }),
+            backgroundColor: keys.map(function (c) { return st(c).color; }),
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '60%',
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 9, usePointStyle: true } },
+            tooltip: { callbacks: { label: function (c) { return c.label + ': ' + money(c.parsed); } } }
+          }
+        }
+      }));
+    }
+  }
+
   function render() {
     var k = kpis();
     return '<div class="sr">'
@@ -910,6 +1078,13 @@
     var actBtn = t.closest('[data-action]');
     if (actBtn && actBtn.getAttribute('data-action') === 'sr-add-team') { doAddTeam(); return; }
 
+    var go = t.closest('[data-sr-goto]');
+    if (go) {
+      var nav = document.querySelector('#navList [data-page="' + go.getAttribute('data-sr-goto') + '"]');
+      if (nav) nav.click();
+      return;
+    }
+
     if (t.closest('[data-sr-export]')) { exportCsv(); return; }
 
     var row = t.closest('[data-sr-deal]');
@@ -994,6 +1169,17 @@
       + '.sr-tools{display:flex;gap:8px;flex-wrap:wrap}'
       + '.sr-xbtn{border:1px solid #FFE4E6;background:#FFF1F2;color:#B91C1C;border-radius:7px;padding:5px 8px;cursor:pointer;font-size:10px}'
       + '.sr-xbtn:hover{background:#FFE4E6}'
+      + '.sr-filters.sr-f3{grid-template-columns:repeat(3,minmax(0,1fr)) auto}'
+      + '.sr-dash-teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:15px}'
+      + '.sr-trow{background:#fff;border:1px solid #EDF0F4;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(15,43,70,.05);min-width:0}'
+      + '.sr-trow-h{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:#667085;margin-bottom:8px}'
+      + '.sr-trow-h b{color:#0F2B46;font-size:12px}'
+      + '.sr-trow-n{font-size:15px;font-weight:600;color:#0F2B46;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis}'
+      + '.sr-trow-n span{color:#98A2B3;font-weight:400;font-size:10.5px}'
+      + '.sr-trow-n em{float:right;font-style:normal;font-size:12px;color:#2563EB}'
+      + '.sr-trow-f{font-size:9.5px;color:#667085;margin-top:8px}'
+      + '.sr-dash-charts{display:grid;grid-template-columns:1.5fr 1fr;gap:15px;margin-bottom:15px}'
+      + '.sr-dash-charts .sr-panel{margin-bottom:0}'
       + '.sr-empty{text-align:center!important;color:#98A2B3;padding:22px!important}'
       /* badges */
       + '.sr-badge{display:inline-flex;align-items:center;gap:4px;border-radius:99px;padding:3px 9px;font-size:9.5px;font-weight:500;white-space:nowrap}'
@@ -1028,8 +1214,9 @@
       /* responsive */
       + '@media(max-width:1280px){.sr-kpis{gap:10px}}'
       + '@media(max-width:1024px){.sr-filters{grid-template-columns:repeat(3,minmax(0,1fr))}.sr-fbtn{grid-column:1/-1}'
-      + '.sr-donuts{grid-template-columns:1fr}}'
-      + '@media(max-width:760px){.sr-filters{position:static;grid-template-columns:1fr 1fr;padding:11px}'
+      + '.sr-donuts{grid-template-columns:1fr}'
+      + '.sr-dash-charts{grid-template-columns:1fr}}'
+      + '@media(max-width:760px){.sr-filters,.sr-filters.sr-f3{position:static;grid-template-columns:1fr 1fr;padding:11px}'
       + '.sr-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}'
       + '.sr-card-val{font-size:16px}.sr-chartbox{height:250px}'
       + '.sr-md-grid{grid-template-columns:1fr 1fr}.sr-head h1{font-size:18px}}'
@@ -1051,6 +1238,12 @@
       return render();
     },
     drawCharts: drawCharts,
+    renderDashboard: function () {
+      injectCss();
+      if (!state.month) state.month = 0;
+      return renderDashboard();
+    },
+    drawDashboardCharts: drawDashboardCharts,
     state: state,
     /* จุดต่อข้อมูลจริง: เรียกด้วยอาร์เรย์รูปแบบเดียวกับ DEALS */
     setDeals: function (list) {
