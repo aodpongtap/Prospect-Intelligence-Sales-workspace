@@ -252,16 +252,55 @@
       }
       return out;
     }
+    function injectTeamCss() {
+      if (document.getElementById('tm-style')) return;
+      var css = ''
+        + '.tm-tree,.tm-tree ul{list-style:none;margin:0;padding:0}'
+        + '.tm-tree{padding-bottom:4px}'
+        + '.tm-tree ul{padding-left:24px;position:relative}'
+        + '.tm-tree>li{padding:0}'
+        + '.tm-tree ul>li{position:relative;padding:6px 0 0 0}'
+        + '.tm-tree ul>li::before{content:"";position:absolute;left:-12px;top:0;bottom:0;border-left:1.5px solid #E3EAF3}'
+        + '.tm-tree ul>li:last-child::before{bottom:calc(100% - 32px)}'
+        + '.tm-tree ul>li::after{content:"";position:absolute;left:-12px;top:32px;width:13px;border-top:1.5px solid #E3EAF3}'
+        + '.tm-node{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E9EEF5;border-radius:11px;'
+        + 'padding:9px 12px;position:relative;z-index:1;transition:box-shadow .16s,border-color .16s}'
+        + '.tm-node:hover{border-color:#C7D7EE;box-shadow:0 8px 18px rgba(15,43,70,.08)}'
+        + '.tm-av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;'
+        + 'color:#fff;flex:0 0 30px;background:#64748B}'
+        + '.tm-l1{background:#0F2B46}.tm-l2{background:#7C3AED}.tm-l3{background:#2563EB}'
+        + '.tm-l4{background:#0E9384}.tm-l5{background:#D97706}.tm-l6{background:#64748B}'
+        + '.tm-name{color:#0F2B46;font-weight:600;font-size:11.5px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+        + '.tm-mail{color:#98A2B3;font-size:9.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+        + '.tm-kids{margin-left:auto;color:#667085;font-size:9.5px;white-space:nowrap;background:#F4F7FB;border-radius:99px;padding:3px 8px}'
+        + '.tm-lv{background:#EEF2FF;color:#3730A3;border-radius:99px;padding:3px 9px;font-size:9px;white-space:nowrap}'
+        + '.tm-me{border-color:#93C5FD;background:#F5F9FF;box-shadow:0 0 0 3px rgba(37,99,235,.08)}'
+        + '@media(max-width:760px){.tm-tree ul{padding-left:16px}.tm-tree ul>li::before{left:-8px}'
+        + '.tm-tree ul>li::after{left:-8px;width:9px}.tm-node{padding:8px 10px;gap:8px}'
+        + '.tm-lv{display:none}}';
+      var el = document.createElement('style');
+      el.id = 'tm-style';
+      el.textContent = css;
+      document.head.appendChild(el);
+    }
+
     function teamTree(u, depth) {
       var kids = teamChildren(u.email);
       var l = ladderOf(u.level);
-      var row = '<div style="display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:8px;margin:0 0 4px ' + (depth * 16) + 'px;'
-        + 'background:' + (depth === 0 ? '#EEF2FF' : '#F8FAFC') + ';border:1px solid ' + (depth === 0 ? '#E0E7FF' : '#EFF3F8') + '">'
-        + '<span class="status" style="background:#E0EAFF;color:#1D4ED8">L' + l.n + ' ' + l.label + '</span>'
-        + '<strong style="font-size:11px;color:#0F2B46">' + String(u.name || u.email) + '</strong>'
-        + (kids.length ? '<span class="muted" style="margin-left:auto;font-size:10px">' + kids.length + ' ใต้สังกัด</span>' : '')
+      var meEmail = (window.__ME__ || {}).email;
+      var isMe = u.email === meEmail;
+      var node = '<div class="tm-node' + (isMe ? ' tm-me' : '') + '">'
+        + '<span class="tm-av tm-l' + l.n + '">' + String(u.name || u.email || '?').trim().charAt(0) + '</span>'
+        + '<div style="min-width:0">'
+        + '  <div class="tm-name">' + String(u.name || u.email) + (isMe ? ' <span style="font-size:9px;color:#2563EB">(คุณ)</span>' : '') + '</div>'
+        + '  <div class="tm-mail">' + String(u.email) + '</div>'
+        + '</div>'
+        + (kids.length ? '<span class="tm-kids">' + kids.length + ' คน</span>' : '')
+        + '<span class="tm-lv">L' + l.n + ' · ' + l.label + '</span>'
         + '</div>';
-      return row + kids.map(function (k) { return teamTree(k, depth + 1); }).join('');
+      return '<li>' + node
+        + (kids.length ? '<ul>' + kids.map(function (k) { return teamTree(k, depth + 1); }).join('') + '</ul>' : '')
+        + '</li>';
     }
 
     function renderTeam() {
@@ -319,6 +358,7 @@
       }
 
       setTimeout(fillTeamUplines, 40);
+      injectTeamCss();
 
       return pageHead('ทีม & สิทธิ์',
           'คุณคือ L' + myN + ' ' + ladderOf(me.level).label + ' · '
@@ -329,7 +369,7 @@
         + formHtml
         + '<div class="grid cols-2" style="margin-top:15px">'
         + panel('แผนผังเครือข่าย',
-            root ? teamTree(root, 0) : '<div class="empty"><i class="fa-solid fa-user-slash"></i>ไม่พบข้อมูลของคุณในระบบ</div>',
+            root ? '<ul class="tm-tree">' + teamTree(root, 0) + '</ul>' : '<div class="empty"><i class="fa-solid fa-user-slash"></i>ไม่พบข้อมูลของคุณในระบบ</div>',
             'เริ่มจาก ' + String(me.name || me.email || '-'))
         + panel('รายชื่อในสายงาน (' + users.length + ')',
             users.length
