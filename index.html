@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prospect Intelligence Sales workspace</title>
-  <meta name="description" content="Prospect Intelligence Sales workspace — ระบบติดตาม Prospect, Pipeline, Project และ Customer Intelligence สำหรับทีมขาย">
+  <meta name="description" content="Prospect Intelligence Sales workspace โ€” เธฃเธฐเธเธเธ•เธดเธ”เธ•เธฒเธก Prospect, Pipeline, Project เนเธฅเธฐ Customer Intelligence เธชเธณเธซเธฃเธฑเธเธ—เธตเธกเธเธฒเธข">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -16,13 +16,13 @@
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Prompt",sans-serif;font-size:13px}button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:100vh}
     .sidebar{width:244px;position:fixed;inset:0 auto 0 0;z-index:20;display:flex;flex-direction:column;background:var(--navy);color:#d8e2ee;padding:22px 14px 16px;transition:transform .25s ease}.brand{display:flex;align-items:center;gap:11px;padding:0 10px 27px;color:white}.brand-mark{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--blue);font-size:16px}.brand strong{display:block;font-size:12px;line-height:1.4}.brand small{color:#9cb0c5;font-size:10px}.nav-label{margin:10px 10px 9px;color:#8ea2b8;font-size:10px;text-transform:uppercase;letter-spacing:.08em}.nav-list{display:grid;gap:5px}.nav-item{border:0;background:transparent;color:#c2d0de;display:flex;align-items:center;gap:12px;text-align:left;width:100%;padding:11px 12px;border-radius:8px;transition:.2s;font-size:12px}.nav-item i{width:17px;text-align:center;font-size:14px}.nav-item:hover,.nav-item.active{color:white;background:rgba(255,255,255,.12)}.nav-item.active{box-shadow:inset 3px 0 #60a5fa}.sidebar-bottom{margin-top:auto;padding:13px 10px 0;border-top:1px solid rgba(255,255,255,.12)}.sidebar-bottom small{color:#9cb0c5;font-size:10px}.main{margin-left:244px;min-height:100vh}
     .topbar{position:sticky;top:0;z-index:10;height:68px;padding:0 30px;background:rgba(255,255,255,.94);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(12px)}.top-left{display:flex;align-items:center;gap:13px}.mobile-menu{display:none!important}.breadcrumb{color:var(--muted);font-size:11px}.top-actions{display:flex;align-items:center;gap:18px}.icon-btn{border:0;background:transparent;color:#445469;width:36px;height:36px;border-radius:9px;position:relative}.icon-btn:hover{background:#f1f5f9}.badge-dot{position:absolute;width:7px;height:7px;right:7px;top:7px;border-radius:50%;background:var(--red);border:1px solid white}.profile{display:flex;align-items:center;gap:9px}.avatar{display:grid;place-items:center;border-radius:50%;width:34px;height:34px;color:#123253;background:#dbeafe;font-weight:600}.profile strong{display:block;font-size:11px}.profile small{color:var(--muted);font-size:10px}.content{max-width:1600px;padding:27px 30px 40px;margin:0 auto}.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:21px}h1{color:var(--navy);margin:0 0 5px;font-size:22px;font-weight:600}
-    /* ===== ปุ่มย้อนกลับระดับหน้า (page-level back) ===== */
+    /* ===== เธเธธเนเธกเธขเนเธญเธเธเธฅเธฑเธเธฃเธฐเธ”เธฑเธเธซเธเนเธฒ (page-level back) ===== */
     .back-wrap{margin:-27px 0 14px}
     .back-pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #E5EAF0;border-radius:999px;padding:6px 15px 6px 7px;font-size:11.5px;color:#344054;box-shadow:0 2px 8px rgba(15,43,70,.06);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
     .back-pill i{width:22px;height:22px;border-radius:50%;background:#EEF2FF;color:#1D4ED8;display:grid;place-items:center;font-size:10px}
     .back-pill:hover{border-color:#C7D3E3;transform:translateX(-2px);box-shadow:0 8px 18px rgba(15,43,70,.12)}
     .back-pill:active{transform:translateX(0) scale(.98)}
-    /* ===== การแจ้งเตือน (dropdown) ===== */
+    /* ===== เธเธฒเธฃเนเธเนเธเน€เธ•เธทเธญเธ (dropdown) ===== */
     .notif-wrap{position:relative}
     .notif-panel{position:absolute;right:0;top:44px;width:330px;max-height:380px;overflow:auto;background:#fff;border:1px solid #E5EAF0;border-radius:12px;box-shadow:0 18px 42px rgba(15,43,70,.18);display:none;z-index:60}
     .notif-panel.open{display:block}
@@ -56,34 +56,34 @@
   <div class="app">
     <aside class="sidebar" id="sidebar">
       <div class="brand"><div class="brand-mark"><i class="fa-solid fa-chart-line"></i></div><div><strong>Prospect Intelligence</strong><small>Sales workspace</small></div></div>
-      <div class="nav-label">เมนูหลัก</div>
+      <div class="nav-label">เน€เธกเธเธนเธซเธฅเธฑเธ</div>
       <nav class="nav-list" id="navList">
         <button class="nav-item active" data-page="dashboard"><i class="fa-solid fa-grid-2"></i>Dashboard</button>
         <button class="nav-item" data-page="sales"><i class="fa-solid fa-bullseye"></i>Sale Monitor</button>
         <button class="nav-item" data-page="partners"><i class="fa-solid fa-handshake"></i>Partnership Business</button>
-        <button class="nav-item" data-page="team"><i class="fa-solid fa-sitemap"></i>ทีม &amp; สิทธิ์</button>
+        <button class="nav-item" data-page="team"><i class="fa-solid fa-sitemap"></i>เธ—เธตเธก &amp; เธชเธดเธ—เธเธดเน</button>
         <button class="nav-item" data-page="projects"><i class="fa-solid fa-diagram-project"></i>Project Tracking</button>
         <button class="nav-item" data-page="service"><i class="fa-solid fa-headset"></i>After-Sale Service</button>
         <button class="nav-item" data-page="intelligence"><i class="fa-solid fa-brain"></i>Customer Intelligence</button>
         <button class="nav-item" data-page="reports"><i class="fa-solid fa-chart-pie"></i>Reports</button>
       </nav>
-      <div class="sidebar-bottom"><small><i class="fa-solid fa-circle-check"></i> ข้อมูลอัปเดตล่าสุด: วันนี้ 09:42</small></div>
+      <div class="sidebar-bottom"><small><i class="fa-solid fa-circle-check"></i> เธเนเธญเธกเธนเธฅเธญเธฑเธเน€เธ”เธ•เธฅเนเธฒเธชเธธเธ”: เธงเธฑเธเธเธตเน 09:42</small></div>
     </aside>
     <main class="main">
-      <header class="topbar"><div class="top-left"><button class="icon-btn mobile-menu" id="mobileMenu" aria-label="เปิดเมนู"><i class="fa-solid fa-bars"></i></button><span class="breadcrumb">Workspace <i class="fa-solid fa-chevron-right" style="font-size:8px;margin:0 6px"></i> <span id="crumbName">Dashboard</span></span></div>
-        <div class="top-actions"><div class="notif-wrap"><button class="icon-btn" id="notificationBtn" title="การแจ้งเตือน"><i class="fa-regular fa-bell"></i><span class="badge-dot" id="notifDot"></span></button><div class="notif-panel" id="notifPanel"></div></div><div class="profile"><div class="avatar" id="avatar">HS</div><div class="profile-copy"><strong id="meName">Head of Sales</strong><small id="meRole">Administrator</small></div></div></div>
+      <header class="topbar"><div class="top-left"><button class="icon-btn mobile-menu" id="mobileMenu" aria-label="เน€เธเธดเธ”เน€เธกเธเธน"><i class="fa-solid fa-bars"></i></button><span class="breadcrumb">Workspace <i class="fa-solid fa-chevron-right" style="font-size:8px;margin:0 6px"></i> <span id="crumbName">Dashboard</span></span></div>
+        <div class="top-actions"><div class="notif-wrap"><button class="icon-btn" id="notificationBtn" title="เธเธฒเธฃเนเธเนเธเน€เธ•เธทเธญเธ"><i class="fa-regular fa-bell"></i><span class="badge-dot" id="notifDot"></span></button><div class="notif-panel" id="notifPanel"></div></div><div class="profile"><div class="avatar" id="avatar">HS</div><div class="profile-copy"><strong id="meName">Head of Sales</strong><small id="meRole">Administrator</small></div></div></div>
       </header>
       <div id="scopeBar" style="display:none"></div>
       <section class="content" id="content"></section>
     </main>
   </div>
-  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true"><div class="modal" id="modal" role="dialog" aria-modal="true"><div class="modal-head"><div><h2 id="modalTitle"></h2><p id="modalSubtitle"></p></div><button class="icon-btn" data-close-modal aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
+  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true"><div class="modal" id="modal" role="dialog" aria-modal="true"><div class="modal-head"><div><h2 id="modalTitle"></h2><p id="modalSubtitle"></p></div><button class="icon-btn" data-close-modal aria-label="เธเธดเธ”"><i class="fa-solid fa-xmark"></i></button></div><div class="modal-body" id="modalBody"></div><div class="modal-foot" id="modalFoot"></div></div></div>
   <div class="toast" id="toast"><i class="fa-solid fa-circle-check"></i><span id="toastText"></span></div>
 
   <!-- ===== JavaScript: Mock data ===== -->
   <script>
-    // RBAC helper มาจาก auth-backend — โหลดเฉพาะเมื่อรันบนเซิร์ฟเวอร์ที่มี /api
-    // (บน GitHub Pages / เปิดไฟล์ในเครื่อง จะข้ามไปเพื่อไม่ให้เกิด 404)
+    // RBAC helper เธกเธฒเธเธฒเธ auth-backend โ€” เนเธซเธฅเธ”เน€เธเธเธฒเธฐเน€เธกเธทเนเธญเธฃเธฑเธเธเธเน€เธเธดเธฃเนเธเน€เธงเธญเธฃเนเธ—เธตเนเธกเธต /api
+    // (เธเธ GitHub Pages / เน€เธเธดเธ”เนเธเธฅเนเนเธเน€เธเธฃเธทเนเธญเธ เธเธฐเธเนเธฒเธกเนเธเน€เธเธทเนเธญเนเธกเนเนเธซเนเน€เธเธดเธ” 404)
     (function () {
       var host = location.hostname;
       var staticHost = location.protocol === 'file:' || host === '' ||
@@ -97,9 +97,9 @@
   </script>
   <script src="assets/auth-sheets.js?v=3"></script>
   <script src="assets/sales-report.js?v=3"></script>
-  <script src="assets/project-tracking.js?v=1"></script>
+  <script src="assets/project-tracking.js?v=2"></script>
   <script>
-    // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
+    // เธ•เธฑเธงเธเนเธงเธขเนเธชเธ”เธเธเนเธญเธกเธนเธฅเธเธนเนเนเธเน/เธชเธดเธ—เธเธดเน โ€” เนเธเนเธฃเนเธงเธกเธเธฑเธเธ—เธฑเนเธ GitHub Pages เนเธฅเธฐ Google Apps Script
     window.__applyMe__ = function (rawMe, opts) {
       opts = opts || {};
       rawMe = rawMe || {};
@@ -110,12 +110,12 @@
         isAdmin: rawMe.isAdmin === true || String(rawMe.level || '').toLowerCase() === 'admin'
       };
 
-      // เก็บข้อมูลผู้ใช้ไว้ให้สคริปต์ถัดไปใช้กรองข้อมูล (ต้องมาก่อน mock data)
+      // เน€เธเนเธเธเนเธญเธกเธนเธฅเธเธนเนเนเธเนเนเธงเนเนเธซเนเธชเธเธฃเธดเธเธ•เนเธ–เธฑเธ”เนเธเนเธเนเธเธฃเธญเธเธเนเธญเธกเธนเธฅ (เธ•เนเธญเธเธกเธฒเธเนเธญเธ mock data)
       window.__ME__ = me;
 
       var av = document.getElementById('avatar'); if (av) av.textContent = String(me.email).substring(0, 2).toUpperCase();
       var nm = document.getElementById('meName'); if (nm) nm.textContent = me.name || me.email;
-      var rl = document.getElementById('meRole'); if (rl) rl.textContent = 'สิทธิ์: ' + String(me.level).toUpperCase();
+      var rl = document.getElementById('meRole'); if (rl) rl.textContent = 'เธชเธดเธ—เธเธดเน: ' + String(me.level).toUpperCase();
 
       if (me.isAdmin) {
         var nav = document.getElementById('navList');
@@ -130,9 +130,9 @@
         }
       }
 
-      // จำกัดเมนูตามระดับสิทธิ์
-      //  - Supervisor (L4): เห็นเฉพาะ "แดชบอร์ดรวมของลูกน้อง"
-      //  - Sale / Agent: เห็นเฉพาะงานขายของตัวเอง
+      // เธเธณเธเธฑเธ”เน€เธกเธเธนเธ•เธฒเธกเธฃเธฐเธ”เธฑเธเธชเธดเธ—เธเธดเน
+      //  - Supervisor (L4): เน€เธซเนเธเน€เธเธเธฒเธฐ "เนเธ”เธเธเธญเธฃเนเธ”เธฃเธงเธกเธเธญเธเธฅเธนเธเธเนเธญเธ"
+      //  - Sale / Agent: เน€เธซเนเธเน€เธเธเธฒเธฐเธเธฒเธเธเธฒเธขเธเธญเธเธ•เธฑเธงเน€เธญเธ
       var lvCode = String(me.level).toLowerCase();
       var NAV_ALLOW = {
         sup: ['dashboard', 'team'],
@@ -149,40 +149,40 @@
         }
       }
 
-      // Sale / Agent: ซ่อน panel ที่ไม่เกี่ยวกับงานขาย + KPI จากดีลของตัวเอง
+      // Sale / Agent: เธเนเธญเธ panel เธ—เธตเนเนเธกเนเน€เธเธตเนเธขเธงเธเธฑเธเธเธฒเธเธเธฒเธข + KPI เธเธฒเธเธ”เธตเธฅเธเธญเธเธ•เธฑเธงเน€เธญเธ
       if (lvCode === 'sale' || lvCode === 'agent') {
         var content = document.getElementById('content');
         if (content && window.MutationObserver) {
           var obs = new MutationObserver(function () {
-            obs.disconnect();               // กัน loop: หยุดฟังชั่วคราวก่อนแก้ DOM
+            obs.disconnect();               // เธเธฑเธ loop: เธซเธขเธธเธ”เธเธฑเธเธเธฑเนเธงเธเธฃเธฒเธงเธเนเธญเธเนเธเน DOM
             try {
               Array.prototype.slice.call(content.querySelectorAll('.panel')).forEach(function (p) {
                 var t = p.querySelector('.panel-title');
                 if (t && /Alerts|Priority Actions/i.test(t.textContent)) p.remove();
               });
-              // ตัวเลข KPI คำนวณจากดีลจริงในสายงาน — ดูแลโดย window.__afterRender__ (paintKpis)
-              // Sale: ซ่อนตัวเลขเทียบท้องตลาด (ข้อมูลสมมติ) ที่ไม่เกี่ยวกับดีลของตัวเอง
+              // เธ•เธฑเธงเน€เธฅเธ KPI เธเธณเธเธงเธ“เธเธฒเธเธ”เธตเธฅเธเธฃเธดเธเนเธเธชเธฒเธขเธเธฒเธ โ€” เธ”เธนเนเธฅเนเธ”เธข window.__afterRender__ (paintKpis)
+              // Sale: เธเนเธญเธเธ•เธฑเธงเน€เธฅเธเน€เธ—เธตเธขเธเธ—เนเธญเธเธ•เธฅเธฒเธ” (เธเนเธญเธกเธนเธฅเธชเธกเธกเธ•เธด) เธ—เธตเนเนเธกเนเน€เธเธตเนเธขเธงเธเธฑเธเธ”เธตเธฅเธเธญเธเธ•เธฑเธงเน€เธญเธ
               if (window.__ME__ && String(window.__ME__.level).toLowerCase() === 'sale') {
                 Array.prototype.slice.call(content.querySelectorAll('.kpi-foot')).forEach(function (f) { f.remove(); });
               }
             } catch (e) { /* ignore */ }
-            obs.observe(content, { childList: true, subtree: true });   // ฟังต่อ
+            obs.observe(content, { childList: true, subtree: true });   // เธเธฑเธเธ•เนเธญ
           });
           obs.observe(content, { childList: true, subtree: true });
         }
       }
 
-      // ปรับคำทักทายตามสิทธิ์: "สวัสดี, Head of Sales" → "สวัสดี, Sale"
+      // เธเธฃเธฑเธเธเธณเธ—เธฑเธเธ—เธฒเธขเธ•เธฒเธกเธชเธดเธ—เธเธดเน: "เธชเธงเธฑเธชเธ”เธต, Head of Sales" โ’ "เธชเธงเธฑเธชเธ”เธต, Sale"
       (function () {
-        var labels = { admin: 'Admin', bu: 'BU', head: 'Head Team', sup: 'Supervisor', sale: 'เซลล์ (Sale)', agent: 'ตัวแทน / MCN', editor: 'Editor', viewer: 'Viewer' };
-        var want = 'สวัสดี, ' + (labels[String(me.level).toLowerCase()] || me.level);
+        var labels = { admin: 'Admin', bu: 'BU', head: 'Head Team', sup: 'Supervisor', sale: 'เน€เธเธฅเธฅเน (Sale)', agent: 'เธ•เธฑเธงเนเธ—เธ / MCN', editor: 'Editor', viewer: 'Viewer' };
+        var want = 'เธชเธงเธฑเธชเธ”เธต, ' + (labels[String(me.level).toLowerCase()] || me.level);
         var content = document.getElementById('content');
         if (!content) return;
         function fixGreeting() {
           var h1 = content.querySelector('h1');
           if (!h1) return;
           var t = h1.textContent || '';
-          if (t.indexOf('Head of Sales') >= 0 || /^สวัสดี/.test(t)) {
+          if (t.indexOf('Head of Sales') >= 0 || /^เธชเธงเธฑเธชเธ”เธต/.test(t)) {
             if (t !== want) h1.textContent = want;
           }
         }
@@ -195,7 +195,7 @@
       var prof = document.querySelector('.profile');
       if (prof) {
         prof.style.cursor = 'pointer';
-        prof.title = 'ออกจากระบบ';
+        prof.title = 'เธญเธญเธเธเธฒเธเธฃเธฐเธเธ';
         prof.addEventListener('click', function () {
           if (opts.onLogout) { opts.onLogout(); return; }
           if (window.PIAuth) { PIAuth.logout(); location.replace('login.html'); }
@@ -204,7 +204,7 @@
       return me;
     };
 
-    // โหมด GitHub Pages / เปิดไฟล์ในเครื่อง / dev server: บังคับล็อกอินด้วย session ในเครื่อง
+    // เนเธซเธกเธ” GitHub Pages / เน€เธเธดเธ”เนเธเธฅเนเนเธเน€เธเธฃเธทเนเธญเธ / dev server: เธเธฑเธเธเธฑเธเธฅเนเธญเธเธญเธดเธเธ”เนเธงเธข session เนเธเน€เธเธฃเธทเนเธญเธ
     (function () {
       var host = location.hostname;
       var isStatic = location.protocol === 'file:' || host === '' ||
@@ -220,7 +220,7 @@
     })();
   </script>
   <script>
-    /* ===== JavaScript: Partner CRM (ฝังเป็นเมนูในเว็บหลัก) + ทีม & สิทธิ์ ===== */
+    /* ===== JavaScript: Partner CRM (เธเธฑเธเน€เธเนเธเน€เธกเธเธนเนเธเน€เธงเนเธเธซเธฅเธฑเธ) + เธ—เธตเธก & เธชเธดเธ—เธเธดเน ===== */
     function renderPartnerCRM() {
       return '<div style="position:relative;margin:0 -30px -40px;height:calc(100vh - 120px)">'
         + '<iframe src="partner-crm/index.html?embed=1" title="TSR Partner Management" '
@@ -233,8 +233,8 @@
       { code: 'bu', n: 2, label: 'BU' },
       { code: 'head', n: 3, label: 'Head Team' },
       { code: 'sup', n: 4, label: 'Supervisor' },
-      { code: 'sale', n: 5, label: 'เซลล์ (Sale)' },
-      { code: 'agent', n: 6, label: 'ตัวแทน / MCN' }
+      { code: 'sale', n: 5, label: 'เน€เธเธฅเธฅเน (Sale)' },
+      { code: 'agent', n: 6, label: 'เธ•เธฑเธงเนเธ—เธ / MCN' }
     ];
     function ladderOf(code) {
       for (var i = 0; i < LADDER.length; i++) if (LADDER[i].code === code) return LADDER[i];
@@ -259,7 +259,7 @@
         + 'background:' + (depth === 0 ? '#EEF2FF' : '#F8FAFC') + ';border:1px solid ' + (depth === 0 ? '#E0E7FF' : '#EFF3F8') + '">'
         + '<span class="status" style="background:#E0EAFF;color:#1D4ED8">L' + l.n + ' ' + l.label + '</span>'
         + '<strong style="font-size:11px;color:#0F2B46">' + String(u.name || u.email) + '</strong>'
-        + (kids.length ? '<span class="muted" style="margin-left:auto;font-size:10px">' + kids.length + ' ใต้สังกัด</span>' : '')
+        + (kids.length ? '<span class="muted" style="margin-left:auto;font-size:10px">' + kids.length + ' เนเธ•เนเธชเธฑเธเธเธฑเธ”</span>' : '')
         + '</div>';
       return row + kids.map(function (k) { return teamTree(k, depth + 1); }).join('');
     }
@@ -274,10 +274,10 @@
       for (var i = 0; i < users.length; i++) if (users[i].email === me.email) { root = users[i]; break; }
 
       var levelOpts = LADDER.filter(function (l) { return l.n >= (ladderOf(me.level).n + 1); }).map(function (l) {
-        return '<option value="' + l.code + '">L' + l.n + ' · ' + l.label + '</option>';
+        return '<option value="' + l.code + '">L' + l.n + ' ยท ' + l.label + '</option>';
       }).join('');
 
-      // สิทธิ์ลงทะเบียน ID: Admin / BU / Head Team เท่านั้น (Supervisor = อ่านอย่างเดียว)
+      // เธชเธดเธ—เธเธดเนเธฅเธเธ—เธฐเน€เธเธตเธขเธ ID: Admin / BU / Head Team เน€เธ—เนเธฒเธเธฑเนเธ (Supervisor = เธญเนเธฒเธเธญเธขเนเธฒเธเน€เธ”เธตเธขเธง)
       window.__CAN_REGISTER__ = ladderOf(me.level).n <= 3;
 
       var rows = users.map(function (u) {
@@ -286,42 +286,42 @@
         for (var j = 0; j < users.length; j++) if (users[j].email === u.parent) up = users[j].name || users[j].email;
         if (u.parent && up === '-') up = u.parent;
         return '<tr><td><div class="deal-name">' + String(u.name || u.email) + '</div><div class="muted" style="font-size:10px">' + String(u.email) + '</div></td>'
-          + '<td><span class="status" style="background:#E0EAFF;color:#1D4ED8">L' + l.n + ' · ' + l.label + '</span></td>'
+          + '<td><span class="status" style="background:#E0EAFF;color:#1D4ED8">L' + l.n + ' ยท ' + l.label + '</span></td>'
           + '<td>' + up + '</td>'
-          + '<td>' + (u.createdAt ? String(u.createdAt).slice(0, 10) : '—') + '</td>'
-          + '<td>' + (u.status === 'disabled' ? '<span class="status at-risk">ปิด</span>' : '<span class="status healthy">ใช้งาน</span>') + '</td></tr>';
+          + '<td>' + (u.createdAt ? String(u.createdAt).slice(0, 10) : 'โ€”') + '</td>'
+          + '<td>' + (u.status === 'disabled' ? '<span class="status at-risk">เธเธดเธ”</span>' : '<span class="status healthy">เนเธเนเธเธฒเธ</span>') + '</td></tr>';
       }).join('');
 
-      return pageHead('ทีม & สิทธิ์ 6 ระดับ',
+      return pageHead('เธ—เธตเธก & เธชเธดเธ—เธเธดเน 6 เธฃเธฐเธ”เธฑเธ',
           window.__CAN_REGISTER__
-            ? 'ผู้ที่อยู่ระดับบนจะเห็นลูกข่ายทั้งหมดใต้สายงานของตัวเอง'
-            : 'อ่านอย่างเดียว — ดูรายชื่อลูกน้องในสายงานของคุณ',
-          window.__CAN_REGISTER__ ? '<button class="btn btn-primary" data-action="add-team"><i class="fa-solid fa-user-plus"></i> ลงทะเบียน ID</button>' : '')
+            ? 'เธเธนเนเธ—เธตเนเธญเธขเธนเนเธฃเธฐเธ”เธฑเธเธเธเธเธฐเน€เธซเนเธเธฅเธนเธเธเนเธฒเธขเธ—เธฑเนเธเธซเธกเธ”เนเธ•เนเธชเธฒเธขเธเธฒเธเธเธญเธเธ•เธฑเธงเน€เธญเธ'
+            : 'เธญเนเธฒเธเธญเธขเนเธฒเธเน€เธ”เธตเธขเธง โ€” เธ”เธนเธฃเธฒเธขเธเธทเนเธญเธฅเธนเธเธเนเธญเธเนเธเธชเธฒเธขเธเธฒเธเธเธญเธเธเธธเธ“',
+          window.__CAN_REGISTER__ ? '<button class="btn btn-primary" data-action="add-team"><i class="fa-solid fa-user-plus"></i> เธฅเธเธ—เธฐเน€เธเธตเธขเธ ID</button>' : '')
         + '<div class="grid kpi-grid" style="margin-bottom:15px">'
-        + '<article class="kpi"><div class="kpi-top">ลูกข่ายในสายงาน<span class="kpi-icon" style="background:#EEF2FF;color:#1D4ED8"><i class="fa-solid fa-users"></i></span></div><div class="kpi-value">' + Math.max(0, users.length - 1) + '</div><div class="kpi-foot">ไม่รวมตัวเอง · L' + ladderOf(me.level).n + '</div></article>'
-        + '<article class="kpi"><div class="kpi-top">Supervisor<span class="kpi-icon" style="background:#CCFBF1;color:#0E9384"><i class="fa-solid fa-user-tie"></i></span></div><div class="kpi-value">' + (byLevel.sup || 0) + '</div><div class="kpi-foot">ทีมในสาย</div></article>'
-        + '<article class="kpi"><div class="kpi-top">เซลล์ (Sale)<span class="kpi-icon" style="background:#FEF3C7;color:#B45309"><i class="fa-solid fa-user-group"></i></span></div><div class="kpi-value">' + (byLevel.sale || 0) + '</div><div class="kpi-foot">ผู้ขาย</div></article>'
-        + '<article class="kpi"><div class="kpi-top">ตัวแทน / MCN<span class="kpi-icon" style="background:#F3E8FF;color:#6941C6"><i class="fa-solid fa-id-card"></i></span></div><div class="kpi-value">' + (byLevel.agent || 0) + '</div><div class="kpi-foot">ปลายสาย</div></article>'
+        + '<article class="kpi"><div class="kpi-top">เธฅเธนเธเธเนเธฒเธขเนเธเธชเธฒเธขเธเธฒเธ<span class="kpi-icon" style="background:#EEF2FF;color:#1D4ED8"><i class="fa-solid fa-users"></i></span></div><div class="kpi-value">' + Math.max(0, users.length - 1) + '</div><div class="kpi-foot">เนเธกเนเธฃเธงเธกเธ•เธฑเธงเน€เธญเธ ยท L' + ladderOf(me.level).n + '</div></article>'
+        + '<article class="kpi"><div class="kpi-top">Supervisor<span class="kpi-icon" style="background:#CCFBF1;color:#0E9384"><i class="fa-solid fa-user-tie"></i></span></div><div class="kpi-value">' + (byLevel.sup || 0) + '</div><div class="kpi-foot">เธ—เธตเธกเนเธเธชเธฒเธข</div></article>'
+        + '<article class="kpi"><div class="kpi-top">เน€เธเธฅเธฅเน (Sale)<span class="kpi-icon" style="background:#FEF3C7;color:#B45309"><i class="fa-solid fa-user-group"></i></span></div><div class="kpi-value">' + (byLevel.sale || 0) + '</div><div class="kpi-foot">เธเธนเนเธเธฒเธข</div></article>'
+        + '<article class="kpi"><div class="kpi-top">เธ•เธฑเธงเนเธ—เธ / MCN<span class="kpi-icon" style="background:#F3E8FF;color:#6941C6"><i class="fa-solid fa-id-card"></i></span></div><div class="kpi-value">' + (byLevel.agent || 0) + '</div><div class="kpi-foot">เธเธฅเธฒเธขเธชเธฒเธข</div></article>'
         + '</div>'
         + '<div class="grid cols-2">'
-        + panel('แผนผังเครือข่าย',
-            root ? teamTree(root, 0) : '<div class="empty"><i class="fa-solid fa-user-slash"></i>ไม่พบข้อมูลของคุณในระบบ</div>',
-            'เริ่มจาก ' + String(me.name || me.email || '-'))
-        + panel('รายชื่อในสายงาน (' + users.length + ')',
+        + panel('เนเธเธเธเธฑเธเน€เธเธฃเธทเธญเธเนเธฒเธข',
+            root ? teamTree(root, 0) : '<div class="empty"><i class="fa-solid fa-user-slash"></i>เนเธกเนเธเธเธเนเธญเธกเธนเธฅเธเธญเธเธเธธเธ“เนเธเธฃเธฐเธเธ</div>',
+            'เน€เธฃเธดเนเธกเธเธฒเธ ' + String(me.name || me.email || '-'))
+        + panel('เธฃเธฒเธขเธเธทเนเธญเนเธเธชเธฒเธขเธเธฒเธ (' + users.length + ')',
             users.length
-              ? '<div class="table-wrap" style="max-height:520px"><table><thead><tr><th>ชื่อ / อีเมล</th><th>ระดับ</th><th>ผู้ดูแลสาย</th><th>สร้างเมื่อ</th><th>สถานะ</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
-              : '<div class="empty"><i class="fa-solid fa-users"></i>ยังไม่มีผู้ใช้ใต้สายงาน</div>',
-            'L1 Admin เห็นทั้งเครือข่าย · ระดับอื่นเห็นเฉพาะลูกข่าย')
+              ? '<div class="table-wrap" style="max-height:520px"><table><thead><tr><th>เธเธทเนเธญ / เธญเธตเน€เธกเธฅ</th><th>เธฃเธฐเธ”เธฑเธ</th><th>เธเธนเนเธ”เธนเนเธฅเธชเธฒเธข</th><th>เธชเธฃเนเธฒเธเน€เธกเธทเนเธญ</th><th>เธชเธ–เธฒเธเธฐ</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+              : '<div class="empty"><i class="fa-solid fa-users"></i>เธขเธฑเธเนเธกเนเธกเธตเธเธนเนเนเธเนเนเธ•เนเธชเธฒเธขเธเธฒเธ</div>',
+            'L1 Admin เน€เธซเนเธเธ—เธฑเนเธเน€เธเธฃเธทเธญเธเนเธฒเธข ยท เธฃเธฐเธ”เธฑเธเธญเธทเนเธเน€เธซเนเธเน€เธเธเธฒเธฐเธฅเธนเธเธเนเธฒเธข')
         + '</div>'
         + '<div id="teamForm" style="display:none;margin-top:15px">'
-        + panel('ลงทะเบียน ID ใหม่ (ต้องมีสิทธิ์ระดับบนกว่า)',
+        + panel('เธฅเธเธ—เธฐเน€เธเธตเธขเธ ID เนเธซเธกเน (เธ•เนเธญเธเธกเธตเธชเธดเธ—เธเธดเนเธฃเธฐเธ”เธฑเธเธเธเธเธงเนเธฒ)',
             '<div class="form-grid">'
-            + '<div class="form-group"><label>อีเมล</label><input id="tuEmail" type="email" placeholder="name@company.com"></div>'
-            + '<div class="form-group"><label>ชื่อ</label><input id="tuName" placeholder="ชื่อ-นามสกุล"></div>'
-            + '<div class="form-group"><label>ระดับสิทธิ์</label><select id="tuLevel">' + (levelOpts || '<option value="">ไม่มีสิทธิ์สร้าง</option>') + '</select></div>'
-            + '<div class="form-group"><label>ผู้ดูแลต้นสาย</label><select id="tuParent"></select></div>'
+            + '<div class="form-group"><label>เธญเธตเน€เธกเธฅ</label><input id="tuEmail" type="email" placeholder="name@company.com"></div>'
+            + '<div class="form-group"><label>เธเธทเนเธญ</label><input id="tuName" placeholder="เธเธทเนเธญ-เธเธฒเธกเธชเธเธธเธฅ"></div>'
+            + '<div class="form-group"><label>เธฃเธฐเธ”เธฑเธเธชเธดเธ—เธเธดเน</label><select id="tuLevel">' + (levelOpts || '<option value="">เนเธกเนเธกเธตเธชเธดเธ—เธเธดเนเธชเธฃเนเธฒเธ</option>') + '</select></div>'
+            + '<div class="form-group"><label>เธเธนเนเธ”เธนเนเธฅเธ•เนเธเธชเธฒเธข</label><select id="tuParent"></select></div>'
             + '</div>'
-            + '<div style="margin-top:12px"><button class="btn btn-primary" data-action="save-team"><i class="fa-solid fa-check"></i> บันทึก + สร้างรหัสผ่าน</button></div>'
+            + '<div style="margin-top:12px"><button class="btn btn-primary" data-action="save-team"><i class="fa-solid fa-check"></i> เธเธฑเธเธ—เธถเธ + เธชเธฃเนเธฒเธเธฃเธซเธฑเธชเธเนเธฒเธ</button></div>'
             + '<div id="tuMsg" style="margin-top:10px;font-size:11px;color:#667085"></div>', '');
         + '</div>';
     }
@@ -332,9 +332,9 @@
       if (!lv || !box) return;
       var n = ladderOf(lv.value).n;
       var opts = teamUsers().filter(function (u) { return ladderOf(u.level).n < n; }).map(function (u) {
-        return '<option value="' + u.email + '">' + String(u.name || u.email) + ' · L' + ladderOf(u.level).n + '</option>';
+        return '<option value="' + u.email + '">' + String(u.name || u.email) + ' ยท L' + ladderOf(u.level).n + '</option>';
       });
-      box.innerHTML = opts.join('') || '<option value="">— ไม่มีผู้ใช้ระดับบน —</option>';
+      box.innerHTML = opts.join('') || '<option value="">โ€” เนเธกเนเธกเธตเธเธนเนเนเธเนเธฃเธฐเธ”เธฑเธเธเธ โ€”</option>';
     }
 
     function loadTeam() {
@@ -354,40 +354,40 @@
   </script>
   <script>
     const deals=[
-      {id:1,name:"ระบบ Smart Factory",customer:"บริษัท ABC จำกัด",owner:"กิตติพงษ์",team:"Enterprise",value:2450000,stage:"Negotiation",probability:75,close:"2026-10-20",lastActivity:"2026-10-01",nextAction:"นัดยืนยันงบประมาณ",status:"Need Attention",activity:["ส่งใบเสนอราคาเวอร์ชันล่าสุด","ประชุมกับทีม IT ลูกค้า","Discovery call"]},
-      {id:2,name:"Cloud Migration Phase 2",customer:"บริษัท XYZ จำกัด",owner:"พิมพ์ชนก",team:"Commercial",value:1850000,stage:"Proposal",probability:60,close:"2026-10-15",lastActivity:"2026-09-25",nextAction:"ติดตามผล Proposal",status:"At Risk",activity:["ส่ง Proposal ให้ผู้จัดการ IT","เก็บ Requirement","โทรแนะนำบริการ"]},
-      {id:3,name:"ระบบ CCTV สำนักงานใหญ่",customer:"บริษัท DEF จำกัด",owner:"ธนกร",team:"Enterprise",value:980000,stage:"Qualified",probability:35,close:"2026-11-12",lastActivity:"2026-10-04",nextAction:"สำรวจพื้นที่",status:"Healthy",activity:["ยืนยันจำนวนจุดติดตั้ง","โทรคัดกรองความต้องการ"]},
-      {id:4,name:"Network Infrastructure",customer:"บริษัท Green Energy",owner:"อรทัย",team:"Commercial",value:1250000,stage:"Prospect",probability:25,close:"2026-10-12",lastActivity:"2026-09-18",nextAction:"",status:"At Risk",activity:["รับ Lead จากเว็บไซต์"]},
-      {id:5,name:"Access Control Upgrade",customer:"โรงพยาบาลเมดิคอลพลัส",owner:"กิตติพงษ์",team:"Enterprise",value:760000,stage:"Negotiation",probability:80,close:"2026-10-28",lastActivity:"2026-10-05",nextAction:"ส่งสัญญาฉบับแก้ไข",status:"Healthy",activity:["เจรจาเงื่อนไขสัญญา","Demo ระบบ","Discovery meeting"]},
-      {id:6,name:"ระบบ ERP Integration",customer:"บริษัท Metro Logistics",owner:"พิมพ์ชนก",team:"Strategic",value:3200000,stage:"Proposal",probability:45,close:"2026-11-05",lastActivity:"2026-09-26",nextAction:"นัด Demo รอบสอง",status:"Need Attention",activity:["ส่ง Proposal","Workshop ฝ่ายบัญชี","เก็บ Requirement"]},
-      {id:7,name:"Wi-Fi 6 Campus",customer:"มหาวิทยาลัยนวัตกรรม",owner:"ธนกร",team:"Commercial",value:690000,stage:"Qualified",probability:50,close:"2026-11-20",lastActivity:"2026-10-02",nextAction:"ยืนยันจำนวน Access Point",status:"Healthy",activity:["ประเมินพื้นที่เบื้องต้น","โทรคุยทีม IT"]},
-      {id:8,name:"SOC Monitoring Service",customer:"บริษัท SecureLife",owner:"อรทัย",team:"Strategic",value:1580000,stage:"Prospect",probability:30,close:"2026-10-10",lastActivity:"2026-09-12",nextAction:"",status:"On Hold",activity:["ส่งข้อมูลบริการ","ติดต่อครั้งแรก"]},
-      {id:9,name:"Data Center Expansion",customer:"บริษัท Northstar จำกัด",owner:"กิตติพงษ์",team:"Enterprise",value:2750000,stage:"Won",probability:100,close:"2026-10-03",lastActivity:"2026-10-03",nextAction:"ส่งต่องานให้ Project",status:"Healthy",activity:["ลูกค้าเซ็นสัญญา","อนุมัติ Proposal","ประชุมสรุปขอบเขต"]},
-      {id:10,name:"Endpoint Security",customer:"บริษัท Bright Retail",owner:"พิมพ์ชนก",team:"Commercial",value:540000,stage:"Lost",probability:0,close:"2026-09-30",lastActivity:"2026-10-01",nextAction:"บันทึกเหตุผลแพ้ดีล",status:"On Hold",activity:["ลูกค้าเลือกผู้ให้บริการรายอื่น","ส่ง Proposal","เก็บ Requirement"]},
-      {id:11,name:"ระบบสำรองข้อมูล",customer:"บริษัท Siam Foods",owner:"ธนกร",team:"Commercial",value:840000,stage:"Proposal",probability:55,close:"2026-11-02",lastActivity:"2026-10-03",nextAction:"ติดตามอนุมัติภายใน",status:"Healthy",activity:["ส่ง Proposal","ประชุมฝ่ายจัดซื้อ"]}
+      {id:1,name:"เธฃเธฐเธเธ Smart Factory",customer:"เธเธฃเธดเธฉเธฑเธ— ABC เธเธณเธเธฑเธ”",owner:"เธเธดเธ•เธ•เธดเธเธเธฉเน",team:"Enterprise",value:2450000,stage:"Negotiation",probability:75,close:"2026-10-20",lastActivity:"2026-10-01",nextAction:"เธเธฑเธ”เธขเธทเธเธขเธฑเธเธเธเธเธฃเธฐเธกเธฒเธ“",status:"Need Attention",activity:["เธชเนเธเนเธเน€เธชเธเธญเธฃเธฒเธเธฒเน€เธงเธญเธฃเนเธเธฑเธเธฅเนเธฒเธชเธธเธ”","เธเธฃเธฐเธเธธเธกเธเธฑเธเธ—เธตเธก IT เธฅเธนเธเธเนเธฒ","Discovery call"]},
+      {id:2,name:"Cloud Migration Phase 2",customer:"เธเธฃเธดเธฉเธฑเธ— XYZ เธเธณเธเธฑเธ”",owner:"เธเธดเธกเธเนเธเธเธ",team:"Commercial",value:1850000,stage:"Proposal",probability:60,close:"2026-10-15",lastActivity:"2026-09-25",nextAction:"เธ•เธดเธ”เธ•เธฒเธกเธเธฅ Proposal",status:"At Risk",activity:["เธชเนเธ Proposal เนเธซเนเธเธนเนเธเธฑเธ”เธเธฒเธฃ IT","เน€เธเนเธ Requirement","เนเธ—เธฃเนเธเธฐเธเธณเธเธฃเธดเธเธฒเธฃ"]},
+      {id:3,name:"เธฃเธฐเธเธ CCTV เธชเธณเธเธฑเธเธเธฒเธเนเธซเธเน",customer:"เธเธฃเธดเธฉเธฑเธ— DEF เธเธณเธเธฑเธ”",owner:"เธเธเธเธฃ",team:"Enterprise",value:980000,stage:"Qualified",probability:35,close:"2026-11-12",lastActivity:"2026-10-04",nextAction:"เธชเธณเธฃเธงเธเธเธทเนเธเธ—เธตเน",status:"Healthy",activity:["เธขเธทเธเธขเธฑเธเธเธณเธเธงเธเธเธธเธ”เธ•เธดเธ”เธ•เธฑเนเธ","เนเธ—เธฃเธเธฑเธ”เธเธฃเธญเธเธเธงเธฒเธกเธ•เนเธญเธเธเธฒเธฃ"]},
+      {id:4,name:"Network Infrastructure",customer:"เธเธฃเธดเธฉเธฑเธ— Green Energy",owner:"เธญเธฃเธ—เธฑเธข",team:"Commercial",value:1250000,stage:"Prospect",probability:25,close:"2026-10-12",lastActivity:"2026-09-18",nextAction:"",status:"At Risk",activity:["เธฃเธฑเธ Lead เธเธฒเธเน€เธงเนเธเนเธเธ•เน"]},
+      {id:5,name:"Access Control Upgrade",customer:"เนเธฃเธเธเธขเธฒเธเธฒเธฅเน€เธกเธ”เธดเธเธญเธฅเธเธฅเธฑเธช",owner:"เธเธดเธ•เธ•เธดเธเธเธฉเน",team:"Enterprise",value:760000,stage:"Negotiation",probability:80,close:"2026-10-28",lastActivity:"2026-10-05",nextAction:"เธชเนเธเธชเธฑเธเธเธฒเธเธเธฑเธเนเธเนเนเธ",status:"Healthy",activity:["เน€เธเธฃเธเธฒเน€เธเธทเนเธญเธเนเธเธชเธฑเธเธเธฒ","Demo เธฃเธฐเธเธ","Discovery meeting"]},
+      {id:6,name:"เธฃเธฐเธเธ ERP Integration",customer:"เธเธฃเธดเธฉเธฑเธ— Metro Logistics",owner:"เธเธดเธกเธเนเธเธเธ",team:"Strategic",value:3200000,stage:"Proposal",probability:45,close:"2026-11-05",lastActivity:"2026-09-26",nextAction:"เธเธฑเธ” Demo เธฃเธญเธเธชเธญเธ",status:"Need Attention",activity:["เธชเนเธ Proposal","Workshop เธเนเธฒเธขเธเธฑเธเธเธต","เน€เธเนเธ Requirement"]},
+      {id:7,name:"Wi-Fi 6 Campus",customer:"เธกเธซเธฒเธงเธดเธ—เธขเธฒเธฅเธฑเธขเธเธงเธฑเธ•เธเธฃเธฃเธก",owner:"เธเธเธเธฃ",team:"Commercial",value:690000,stage:"Qualified",probability:50,close:"2026-11-20",lastActivity:"2026-10-02",nextAction:"เธขเธทเธเธขเธฑเธเธเธณเธเธงเธ Access Point",status:"Healthy",activity:["เธเธฃเธฐเน€เธกเธดเธเธเธทเนเธเธ—เธตเนเน€เธเธทเนเธญเธเธ•เนเธ","เนเธ—เธฃเธเธธเธขเธ—เธตเธก IT"]},
+      {id:8,name:"SOC Monitoring Service",customer:"เธเธฃเธดเธฉเธฑเธ— SecureLife",owner:"เธญเธฃเธ—เธฑเธข",team:"Strategic",value:1580000,stage:"Prospect",probability:30,close:"2026-10-10",lastActivity:"2026-09-12",nextAction:"",status:"On Hold",activity:["เธชเนเธเธเนเธญเธกเธนเธฅเธเธฃเธดเธเธฒเธฃ","เธ•เธดเธ”เธ•เนเธญเธเธฃเธฑเนเธเนเธฃเธ"]},
+      {id:9,name:"Data Center Expansion",customer:"เธเธฃเธดเธฉเธฑเธ— Northstar เธเธณเธเธฑเธ”",owner:"เธเธดเธ•เธ•เธดเธเธเธฉเน",team:"Enterprise",value:2750000,stage:"Won",probability:100,close:"2026-10-03",lastActivity:"2026-10-03",nextAction:"เธชเนเธเธ•เนเธญเธเธฒเธเนเธซเน Project",status:"Healthy",activity:["เธฅเธนเธเธเนเธฒเน€เธเนเธเธชเธฑเธเธเธฒ","เธญเธเธธเธกเธฑเธ•เธด Proposal","เธเธฃเธฐเธเธธเธกเธชเธฃเธธเธเธเธญเธเน€เธเธ•"]},
+      {id:10,name:"Endpoint Security",customer:"เธเธฃเธดเธฉเธฑเธ— Bright Retail",owner:"เธเธดเธกเธเนเธเธเธ",team:"Commercial",value:540000,stage:"Lost",probability:0,close:"2026-09-30",lastActivity:"2026-10-01",nextAction:"เธเธฑเธเธ—เธถเธเน€เธซเธ•เธธเธเธฅเนเธเนเธ”เธตเธฅ",status:"On Hold",activity:["เธฅเธนเธเธเนเธฒเน€เธฅเธทเธญเธเธเธนเนเนเธซเนเธเธฃเธดเธเธฒเธฃเธฃเธฒเธขเธญเธทเนเธ","เธชเนเธ Proposal","เน€เธเนเธ Requirement"]},
+      {id:11,name:"เธฃเธฐเธเธเธชเธณเธฃเธญเธเธเนเธญเธกเธนเธฅ",customer:"เธเธฃเธดเธฉเธฑเธ— Siam Foods",owner:"เธเธเธเธฃ",team:"Commercial",value:840000,stage:"Proposal",probability:55,close:"2026-11-02",lastActivity:"2026-10-03",nextAction:"เธ•เธดเธ”เธ•เธฒเธกเธญเธเธธเธกเธฑเธ•เธดเธ เธฒเธขเนเธ",status:"Healthy",activity:["เธชเนเธ Proposal","เธเธฃเธฐเธเธธเธกเธเนเธฒเธขเธเธฑเธ”เธเธทเนเธญ"]}
     ];
     const projects=[
-      {id:1,name:"ระบบ CCTV",customer:"บริษัท ABC จำกัด",owner:"วรพล",progress:75,deadline:"2026-10-18",risk:"At Risk",blocker:"รออุปกรณ์",stage:"Installation",tasks:[{name:"ตรวจสอบพื้นที่ติดตั้ง",owner:"วรพล",due:"2026-10-09",status:"เสร็จแล้ว"},{name:"ติดตั้งกล้องชั้น 1-3",owner:"ทีม Installation",due:"2026-10-14",status:"กำลังดำเนินการ"},{name:"ทดสอบระบบและส่งมอบ",owner:"ทีม Service",due:"2026-10-18",status:"รอดำเนินการ"}]},
-      {id:2,name:"ระบบ Network",customer:"บริษัท XYZ จำกัด",owner:"ณัฐชา",progress:40,deadline:"2026-10-25",risk:"Need Attention",blocker:"รออนุมัติแบบ",stage:"Sales Handover",tasks:[{name:"รับ Requirement จาก Sales",owner:"ณัฐชา",due:"2026-10-10",status:"เสร็จแล้ว"},{name:"อนุมัติแบบ Network",owner:"ลูกค้า / Sales",due:"2026-10-15",status:"รอดำเนินการ"}]},
-      {id:3,name:"ระบบ Access Control",customer:"บริษัท DEF จำกัด",owner:"ปกรณ์",progress:90,deadline:"2026-10-11",risk:"On Track",blocker:"ไม่มี",stage:"Testing & Acceptance",tasks:[{name:"ติดตั้งอุปกรณ์",owner:"ทีม Installation",due:"2026-10-07",status:"เสร็จแล้ว"},{name:"ทดสอบและอบรมผู้ใช้",owner:"ปกรณ์",due:"2026-10-11",status:"กำลังดำเนินการ"}]},
-      {id:4,name:"Cloud Migration",customer:"Metro Logistics",owner:"ชลธิชา",progress:20,deadline:"2026-11-10",risk:"On Track",blocker:"ไม่มี",stage:"Planning",tasks:[{name:"Kick-off Project",owner:"ชลธิชา",due:"2026-10-12",status:"กำลังดำเนินการ"}]},
-      {id:5,name:"Data Center Expansion",customer:"Northstar จำกัด",owner:"วรพล",progress:100,deadline:"2026-10-04",risk:"On Track",blocker:"ไม่มี",stage:"Completed",tasks:[{name:"ติดตั้งและทดสอบระบบ",owner:"ทีม Installation",due:"2026-10-04",status:"เสร็จแล้ว"}]}
+      {id:1,name:"เธฃเธฐเธเธ CCTV",customer:"เธเธฃเธดเธฉเธฑเธ— ABC เธเธณเธเธฑเธ”",owner:"เธงเธฃเธเธฅ",progress:75,deadline:"2026-10-18",risk:"At Risk",blocker:"เธฃเธญเธญเธธเธเธเธฃเธ“เน",stage:"Installation",tasks:[{name:"เธ•เธฃเธงเธเธชเธญเธเธเธทเนเธเธ—เธตเนเธ•เธดเธ”เธ•เธฑเนเธ",owner:"เธงเธฃเธเธฅ",due:"2026-10-09",status:"เน€เธชเธฃเนเธเนเธฅเนเธง"},{name:"เธ•เธดเธ”เธ•เธฑเนเธเธเธฅเนเธญเธเธเธฑเนเธ 1-3",owner:"เธ—เธตเธก Installation",due:"2026-10-14",status:"เธเธณเธฅเธฑเธเธ”เธณเน€เธเธดเธเธเธฒเธฃ"},{name:"เธ—เธ”เธชเธญเธเธฃเธฐเธเธเนเธฅเธฐเธชเนเธเธกเธญเธ",owner:"เธ—เธตเธก Service",due:"2026-10-18",status:"เธฃเธญเธ”เธณเน€เธเธดเธเธเธฒเธฃ"}]},
+      {id:2,name:"เธฃเธฐเธเธ Network",customer:"เธเธฃเธดเธฉเธฑเธ— XYZ เธเธณเธเธฑเธ”",owner:"เธ“เธฑเธเธเธฒ",progress:40,deadline:"2026-10-25",risk:"Need Attention",blocker:"เธฃเธญเธญเธเธธเธกเธฑเธ•เธดเนเธเธ",stage:"Sales Handover",tasks:[{name:"เธฃเธฑเธ Requirement เธเธฒเธ Sales",owner:"เธ“เธฑเธเธเธฒ",due:"2026-10-10",status:"เน€เธชเธฃเนเธเนเธฅเนเธง"},{name:"เธญเธเธธเธกเธฑเธ•เธดเนเธเธ Network",owner:"เธฅเธนเธเธเนเธฒ / Sales",due:"2026-10-15",status:"เธฃเธญเธ”เธณเน€เธเธดเธเธเธฒเธฃ"}]},
+      {id:3,name:"เธฃเธฐเธเธ Access Control",customer:"เธเธฃเธดเธฉเธฑเธ— DEF เธเธณเธเธฑเธ”",owner:"เธเธเธฃเธ“เน",progress:90,deadline:"2026-10-11",risk:"On Track",blocker:"เนเธกเนเธกเธต",stage:"Testing & Acceptance",tasks:[{name:"เธ•เธดเธ”เธ•เธฑเนเธเธญเธธเธเธเธฃเธ“เน",owner:"เธ—เธตเธก Installation",due:"2026-10-07",status:"เน€เธชเธฃเนเธเนเธฅเนเธง"},{name:"เธ—เธ”เธชเธญเธเนเธฅเธฐเธญเธเธฃเธกเธเธนเนเนเธเน",owner:"เธเธเธฃเธ“เน",due:"2026-10-11",status:"เธเธณเธฅเธฑเธเธ”เธณเน€เธเธดเธเธเธฒเธฃ"}]},
+      {id:4,name:"Cloud Migration",customer:"Metro Logistics",owner:"เธเธฅเธเธดเธเธฒ",progress:20,deadline:"2026-11-10",risk:"On Track",blocker:"เนเธกเนเธกเธต",stage:"Planning",tasks:[{name:"Kick-off Project",owner:"เธเธฅเธเธดเธเธฒ",due:"2026-10-12",status:"เธเธณเธฅเธฑเธเธ”เธณเน€เธเธดเธเธเธฒเธฃ"}]},
+      {id:5,name:"Data Center Expansion",customer:"Northstar เธเธณเธเธฑเธ”",owner:"เธงเธฃเธเธฅ",progress:100,deadline:"2026-10-04",risk:"On Track",blocker:"เนเธกเนเธกเธต",stage:"Completed",tasks:[{name:"เธ•เธดเธ”เธ•เธฑเนเธเนเธฅเธฐเธ—เธ”เธชเธญเธเธฃเธฐเธเธ",owner:"เธ—เธตเธก Installation",due:"2026-10-04",status:"เน€เธชเธฃเนเธเนเธฅเนเธง"}]}
     ];
     const tickets=[
-      {id:"T-2401",customer:"บริษัท ABC จำกัด",product:"CCTV Monitoring",issue:"อุปกรณ์ขัดข้อง",priority:"Critical",tech:"สมชาย",open:"2026-10-06",sla:"2026-10-07",status:"กำลังดำเนินการ",next:"เปลี่ยนอุปกรณ์สำรอง",health:72},
-      {id:"T-2402",customer:"บริษัท XYZ จำกัด",product:"Network Support",issue:"การเชื่อมต่อช้า",priority:"High",tech:"วิชัย",open:"2026-10-05",sla:"2026-10-07",status:"รออะไหล่",next:"แจ้งกำหนดส่งอะไหล่",health:81},
-      {id:"T-2403",customer:"บริษัท DEF จำกัด",product:"Access Control",issue:"เพิ่มสิทธิ์ผู้ใช้งาน",priority:"Medium",tech:"พัชรี",open:"2026-10-06",sla:"2026-10-10",status:"เปิด",next:"ติดต่อผู้ดูแลระบบ",health:90},
-      {id:"T-2404",customer:"Green Energy",product:"Network Maintenance",issue:"ตรวจเช็กประจำเดือน",priority:"Low",tech:"สมชาย",open:"2026-10-04",sla:"2026-10-12",status:"กำหนดนัดแล้ว",next:"เข้าตรวจวันที่ 12 ต.ค.",health:88},
-      {id:"T-2405",customer:"โรงพยาบาลเมดิคอลพลัส",product:"CCTV Monitoring",issue:"ภาพจากกล้องไม่ชัด",priority:"High",tech:"วิชัย",open:"2026-10-03",sla:"2026-10-06",status:"กำลังดำเนินการ",next:"ตรวจสอบกล้องชั้น 4",health:68},
-      {id:"T-2406",customer:"Metro Logistics",product:"Cloud Service",issue:"ขอคำปรึกษาการใช้งาน",priority:"Medium",tech:"พัชรี",open:"2026-10-02",sla:"2026-10-09",status:"เปิด",next:"นัดอบรมผู้ใช้งาน",health:86},
-      {id:"T-2407",customer:"SecureLife",product:"SOC Monitoring",issue:"แจ้งเตือนผิดปกติ",priority:"Critical",tech:"ธวัชชัย",open:"2026-10-06",sla:"2026-10-07",status:"กำลังดำเนินการ",next:"ตรวจสอบ Log ระบบ",health:61},
-      {id:"T-2408",customer:"Bright Retail",product:"Endpoint Security",issue:"ต่ออายุ License",priority:"Low",tech:"พัชรี",open:"2026-10-01",sla:"2026-10-15",status:"รอลูกค้ายืนยัน",next:"ส่งใบเสนอราคาต่ออายุ",health:93}
+      {id:"T-2401",customer:"เธเธฃเธดเธฉเธฑเธ— ABC เธเธณเธเธฑเธ”",product:"CCTV Monitoring",issue:"เธญเธธเธเธเธฃเธ“เนเธเธฑเธ”เธเนเธญเธ",priority:"Critical",tech:"เธชเธกเธเธฒเธข",open:"2026-10-06",sla:"2026-10-07",status:"เธเธณเธฅเธฑเธเธ”เธณเน€เธเธดเธเธเธฒเธฃ",next:"เน€เธเธฅเธตเนเธขเธเธญเธธเธเธเธฃเธ“เนเธชเธณเธฃเธญเธ",health:72},
+      {id:"T-2402",customer:"เธเธฃเธดเธฉเธฑเธ— XYZ เธเธณเธเธฑเธ”",product:"Network Support",issue:"เธเธฒเธฃเน€เธเธทเนเธญเธกเธ•เนเธญเธเนเธฒ",priority:"High",tech:"เธงเธดเธเธฑเธข",open:"2026-10-05",sla:"2026-10-07",status:"เธฃเธญเธญเธฐเนเธซเธฅเน",next:"เนเธเนเธเธเธณเธซเธเธ”เธชเนเธเธญเธฐเนเธซเธฅเน",health:81},
+      {id:"T-2403",customer:"เธเธฃเธดเธฉเธฑเธ— DEF เธเธณเธเธฑเธ”",product:"Access Control",issue:"เน€เธเธดเนเธกเธชเธดเธ—เธเธดเนเธเธนเนเนเธเนเธเธฒเธ",priority:"Medium",tech:"เธเธฑเธเธฃเธต",open:"2026-10-06",sla:"2026-10-10",status:"เน€เธเธดเธ”",next:"เธ•เธดเธ”เธ•เนเธญเธเธนเนเธ”เธนเนเธฅเธฃเธฐเธเธ",health:90},
+      {id:"T-2404",customer:"Green Energy",product:"Network Maintenance",issue:"เธ•เธฃเธงเธเน€เธเนเธเธเธฃเธฐเธเธณเน€เธ”เธทเธญเธ",priority:"Low",tech:"เธชเธกเธเธฒเธข",open:"2026-10-04",sla:"2026-10-12",status:"เธเธณเธซเธเธ”เธเธฑเธ”เนเธฅเนเธง",next:"เน€เธเนเธฒเธ•เธฃเธงเธเธงเธฑเธเธ—เธตเน 12 เธ•.เธ.",health:88},
+      {id:"T-2405",customer:"เนเธฃเธเธเธขเธฒเธเธฒเธฅเน€เธกเธ”เธดเธเธญเธฅเธเธฅเธฑเธช",product:"CCTV Monitoring",issue:"เธ เธฒเธเธเธฒเธเธเธฅเนเธญเธเนเธกเนเธเธฑเธ”",priority:"High",tech:"เธงเธดเธเธฑเธข",open:"2026-10-03",sla:"2026-10-06",status:"เธเธณเธฅเธฑเธเธ”เธณเน€เธเธดเธเธเธฒเธฃ",next:"เธ•เธฃเธงเธเธชเธญเธเธเธฅเนเธญเธเธเธฑเนเธ 4",health:68},
+      {id:"T-2406",customer:"Metro Logistics",product:"Cloud Service",issue:"เธเธญเธเธณเธเธฃเธถเธเธฉเธฒเธเธฒเธฃเนเธเนเธเธฒเธ",priority:"Medium",tech:"เธเธฑเธเธฃเธต",open:"2026-10-02",sla:"2026-10-09",status:"เน€เธเธดเธ”",next:"เธเธฑเธ”เธญเธเธฃเธกเธเธนเนเนเธเนเธเธฒเธ",health:86},
+      {id:"T-2407",customer:"SecureLife",product:"SOC Monitoring",issue:"เนเธเนเธเน€เธ•เธทเธญเธเธเธดเธ”เธเธเธ•เธด",priority:"Critical",tech:"เธเธงเธฑเธเธเธฑเธข",open:"2026-10-06",sla:"2026-10-07",status:"เธเธณเธฅเธฑเธเธ”เธณเน€เธเธดเธเธเธฒเธฃ",next:"เธ•เธฃเธงเธเธชเธญเธ Log เธฃเธฐเธเธ",health:61},
+      {id:"T-2408",customer:"Bright Retail",product:"Endpoint Security",issue:"เธ•เนเธญเธญเธฒเธขเธธ License",priority:"Low",tech:"เธเธฑเธเธฃเธต",open:"2026-10-01",sla:"2026-10-15",status:"เธฃเธญเธฅเธนเธเธเนเธฒเธขเธทเธเธขเธฑเธ",next:"เธชเนเธเนเธเน€เธชเธเธญเธฃเธฒเธเธฒเธ•เนเธญเธญเธฒเธขเธธ",health:93}
     ];
-    // ===== Data scoping: ผู้ใช้ทั่วไปเห็นเฉพาะงานของตัวเอง (Admin เห็นทั้งหมด) =====
+    // ===== Data scoping: เธเธนเนเนเธเนเธ—เธฑเนเธงเนเธเน€เธซเนเธเน€เธเธเธฒเธฐเธเธฒเธเธเธญเธเธ•เธฑเธงเน€เธญเธ (Admin เน€เธซเนเธเธ—เธฑเนเธเธซเธกเธ”) =====
     (function () {
       var me = window.__ME__;
-      if (!me || me.isAdmin) return;   // ไม่มี session (เช่นโหมดเซิร์ฟเวอร์) หรือเป็น Admin → ไม่กรอง
-      if (['bu', 'head', 'sup'].indexOf(String(me.level).toLowerCase()) >= 0) return;  // เซิร์ฟเวอร์ส่งดีลของลูกข่ายมาแล้ว
+      if (!me || me.isAdmin) return;   // เนเธกเนเธกเธต session (เน€เธเนเธเนเธซเธกเธ”เน€เธเธดเธฃเนเธเน€เธงเธญเธฃเน) เธซเธฃเธทเธญเน€เธเนเธ Admin โ’ เนเธกเนเธเธฃเธญเธ
+      if (['bu', 'head', 'sup'].indexOf(String(me.level).toLowerCase()) >= 0) return;  // เน€เธเธดเธฃเนเธเน€เธงเธญเธฃเนเธชเนเธเธ”เธตเธฅเธเธญเธเธฅเธนเธเธเนเธฒเธขเธกเธฒเนเธฅเนเธง
 
       var mine = String(me.name || '').trim().toLowerCase();
       function keepOnly(arr, field) {
@@ -408,32 +408,32 @@
         bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;' +
           'background:#eff6ff;border:1px solid #dbeafe;color:#1e40af;display:flex;gap:8px;align-items:center';
         bar.innerHTML = mine
-          ? '<i class="fa-solid fa-user-lock"></i> แสดงเฉพาะงานของคุณ: <strong>' + me.name + '</strong>' +
-            ' <span style="color:#64748b">(' + (deals.length + projects.length + tickets.length) + ' รายการ)</span>'
-          : '<i class="fa-solid fa-triangle-exclamation"></i> ยังไม่ได้กำหนดชื่อผู้รับผิดชอบงานให้บัญชีนี้ — ' +
-            'กรุณาแจ้ง Admin ให้เพิ่มชื่อของท่านในหน้า User Management';
+          ? '<i class="fa-solid fa-user-lock"></i> เนเธชเธ”เธเน€เธเธเธฒเธฐเธเธฒเธเธเธญเธเธเธธเธ“: <strong>' + me.name + '</strong>' +
+            ' <span style="color:#64748b">(' + (deals.length + projects.length + tickets.length) + ' เธฃเธฒเธขเธเธฒเธฃ)</span>'
+          : '<i class="fa-solid fa-triangle-exclamation"></i> เธขเธฑเธเนเธกเนเนเธ”เนเธเธณเธซเธเธ”เธเธทเนเธญเธเธนเนเธฃเธฑเธเธเธดเธ”เธเธญเธเธเธฒเธเนเธซเนเธเธฑเธเธเธตเธเธตเน โ€” ' +
+            'เธเธฃเธธเธ“เธฒเนเธเนเธ Admin เนเธซเนเน€เธเธดเนเธกเธเธทเนเธญเธเธญเธเธ—เนเธฒเธเนเธเธซเธเนเธฒ User Management';
       });
     })();
 
-    // ===== โหมด static + Google Sheets: ใช้ดีลจริงจาก Sheet (Sale เห็นเฉพาะของตัวเอง) =====
+    // ===== เนเธซเธกเธ” static + Google Sheets: เนเธเนเธ”เธตเธฅเธเธฃเธดเธเธเธฒเธ Sheet (Sale เน€เธซเนเธเน€เธเธเธฒเธฐเธเธญเธเธ•เธฑเธงเน€เธญเธ) =====
     (function () {
       var me = window.__ME__;
       if (!me || !window.PIAuth || !PIAuth.listDeals) return;
 
       var canFill = me.isAdmin || me.level === 'sale' || me.level === 'editor';
       var lvNow = String(me.level).toLowerCase();
-      var isBoss = ['admin', 'bu', 'head', 'sup'].indexOf(lvNow) >= 0;   // เห็นภาพรวมของทั้งสายงาน
+      var isBoss = ['admin', 'bu', 'head', 'sup'].indexOf(lvNow) >= 0;   // เน€เธซเนเธเธ เธฒเธเธฃเธงเธกเธเธญเธเธ—เธฑเนเธเธชเธฒเธขเธเธฒเธ
       var SCOPE_TXT = {
-        admin: 'ทั้งระบบ',
-        bu: 'ทั้งสายงาน (ทีมของคุณ)',
-        head: 'ทั้งสายงาน (ทีมของคุณ)',
-        sup: 'ทีมที่คุณดูแล',
-        sale: 'เฉพาะดีลของคุณ',
-        agent: 'เฉพาะดีลของคุณ'
+        admin: 'เธ—เธฑเนเธเธฃเธฐเธเธ',
+        bu: 'เธ—เธฑเนเธเธชเธฒเธขเธเธฒเธ (เธ—เธตเธกเธเธญเธเธเธธเธ“)',
+        head: 'เธ—เธฑเนเธเธชเธฒเธขเธเธฒเธ (เธ—เธตเธกเธเธญเธเธเธธเธ“)',
+        sup: 'เธ—เธตเธกเธ—เธตเนเธเธธเธ“เธ”เธนเนเธฅ',
+        sale: 'เน€เธเธเธฒเธฐเธ”เธตเธฅเธเธญเธเธเธธเธ“',
+        agent: 'เน€เธเธเธฒเธฐเธ”เธตเธฅเธเธญเธเธเธธเธ“'
       };
-      var scopeTxt = SCOPE_TXT[lvNow] || 'ตามสิทธิ์ของคุณ';
+      var scopeTxt = SCOPE_TXT[lvNow] || 'เธ•เธฒเธกเธชเธดเธ—เธเธดเนเธเธญเธเธเธธเธ“';
 
-      /** คำนวณ KPI บน Dashboard จากดีลจริงในขอบเขตสิทธิ์ (Admin/BU/Head/Sup = ยอดรวมทั้งสายงาน) */
+      /** เธเธณเธเธงเธ“ KPI เธเธ Dashboard เธเธฒเธเธ”เธตเธฅเธเธฃเธดเธเนเธเธเธญเธเน€เธเธ•เธชเธดเธ—เธเธดเน (Admin/BU/Head/Sup = เธขเธญเธ”เธฃเธงเธกเธ—เธฑเนเธเธชเธฒเธขเธเธฒเธ) */
       function paintKpis() {
         if (typeof currentPage === 'undefined' || currentPage !== 'dashboard') return;
         var grid = document.querySelector('#content .kpi-grid');
@@ -451,18 +451,18 @@
           }
           if (String(d.status) === 'At Risk') atRisk++;
         });
-        var fmtM = function (n) { return '฿' + Math.round(Number(n)).toLocaleString('th-TH'); };
+        var fmtM = function (n) { return 'เธฟ' + Math.round(Number(n)).toLocaleString('th-TH'); };
         var out = [fmtM(pipe), fmtM(Math.round(forecast)), atRisk + ' Deals', overdue + ' Tasks'];
         for (var i = 0; i < 4; i++) {
           if (vals[i].textContent !== out[i]) vals[i].textContent = out[i];
         }
-        // แทน “จากเดือนก่อน” (ข้อมูลสมมติ) ด้วยขอบเขตข้อมูลจริง
+        // เนเธ—เธ โ€เธเธฒเธเน€เธ”เธทเธญเธเธเนเธญเธโ€ (เธเนเธญเธกเธนเธฅเธชเธกเธกเธ•เธด) เธ”เนเธงเธขเธเธญเธเน€เธเธ•เธเนเธญเธกเธนเธฅเธเธฃเธดเธ
         var feet = grid.querySelectorAll('.kpi-foot');
         var footTxt = [
-          'รวม ' + openCount + ' ดีลที่ยังเปิดอยู่ · ' + scopeTxt,
-          'ถ่วงน้ำหนักด้วย Probability · ' + scopeTxt,
-          'ดีลที่สถานะ At Risk',
-          'ดีลที่ยังไม่มี Next Action'
+          'เธฃเธงเธก ' + openCount + ' เธ”เธตเธฅเธ—เธตเนเธขเธฑเธเน€เธเธดเธ”เธญเธขเธนเน ยท ' + scopeTxt,
+          'เธ–เนเธงเธเธเนเธณเธซเธเธฑเธเธ”เนเธงเธข Probability ยท ' + scopeTxt,
+          'เธ”เธตเธฅเธ—เธตเนเธชเธ–เธฒเธเธฐ At Risk',
+          'เธ”เธตเธฅเธ—เธตเนเธขเธฑเธเนเธกเนเธกเธต Next Action'
         ];
         for (var j = 0; j < feet.length && j < 4; j++) {
           if (feet[j].textContent !== footTxt[j]) feet[j].textContent = footTxt[j];
@@ -490,13 +490,13 @@
         bar.style.display = 'block';
         if (me.isAdmin) {
           bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#ecfdf3;border:1px solid #d1fae5;color:#15803d';
-          bar.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Admin — เห็นดีลทั้งหมด <strong>' + list.length + '</strong> รายการ (ข้อมูลจาก Google Sheets)';
+          bar.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Admin โ€” เน€เธซเนเธเธ”เธตเธฅเธ—เธฑเนเธเธซเธกเธ” <strong>' + list.length + '</strong> เธฃเธฒเธขเธเธฒเธฃ (เธเนเธญเธกเธนเธฅเธเธฒเธ Google Sheets)';
         } else if (isBoss) {
           bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#eef2ff;border:1px solid #e0e7ff;color:#3730a3';
-          bar.innerHTML = '<i class="fa-solid fa-users-viewfinder"></i> แดชบอร์ดรวมของสายงาน — เห็นดีลของทีมทั้งหมดใต้สังกัดคุณ <strong>' + list.length + '</strong> รายการ (<strong>' + (me.name || me.email) + '</strong>)';
+          bar.innerHTML = '<i class="fa-solid fa-users-viewfinder"></i> เนเธ”เธเธเธญเธฃเนเธ”เธฃเธงเธกเธเธญเธเธชเธฒเธขเธเธฒเธ โ€” เน€เธซเนเธเธ”เธตเธฅเธเธญเธเธ—เธตเธกเธ—เธฑเนเธเธซเธกเธ”เนเธ•เนเธชเธฑเธเธเธฑเธ”เธเธธเธ“ <strong>' + list.length + '</strong> เธฃเธฒเธขเธเธฒเธฃ (<strong>' + (me.name || me.email) + '</strong>)';
         } else {
           bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#eff6ff;border:1px solid #dbeafe;color:#1e40af';
-          bar.innerHTML = '<i class="fa-solid fa-user-lock"></i> เห็นเฉพาะดีลของคุณ: <strong>' + (me.name || me.email) + '</strong> · <strong>' + list.length + '</strong> รายการ';
+          bar.innerHTML = '<i class="fa-solid fa-user-lock"></i> เน€เธซเนเธเน€เธเธเธฒเธฐเธ”เธตเธฅเธเธญเธเธเธธเธ“: <strong>' + (me.name || me.email) + '</strong> ยท <strong>' + list.length + '</strong> เธฃเธฒเธขเธเธฒเธฃ';
         }
       }
 
@@ -506,11 +506,11 @@
           bar.setAttribute('data-ready', '1');
           bar.style.display = 'block';
           bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412';
-          bar.textContent = 'โหลดดีลจาก Google Sheets ไม่สำเร็จ: ' + e.message;
+          bar.textContent = 'เนเธซเธฅเธ”เธ”เธตเธฅเธเธฒเธ Google Sheets เนเธกเนเธชเธณเน€เธฃเนเธ: ' + e.message;
         }
       });
 
-      // ให้ปุ่ม "Add Deal" ใน Sale Monitor บันทึกลง Google Sheets ได้
+      // เนเธซเนเธเธธเนเธก "Add Deal" เนเธ Sale Monitor เธเธฑเธเธ—เธถเธเธฅเธ Google Sheets เนเธ”เน
       window.__paintDeals__ = paint;
       window.__saveDealSheet__ = function (f) {
         PIAuth.addDeal({
@@ -521,20 +521,20 @@
         }).then(function (r) {
           try { closeModal(); } catch (e) {}
           paint((r && r.deals) || []);
-          try { toast('บันทึกดีลลง Google Sheets เรียบร้อย'); } catch (e) {}
+          try { toast('เธเธฑเธเธ—เธถเธเธ”เธตเธฅเธฅเธ Google Sheets เน€เธฃเธตเธขเธเธฃเนเธญเธข'); } catch (e) {}
         }).catch(function (e) {
-          try { toast('บันทึกไม่สำเร็จ: ' + (e.message || e)); } catch (err) {}
+          try { toast('เธเธฑเธเธ—เธถเธเนเธกเนเธชเธณเน€เธฃเนเธ: ' + (e.message || e)); } catch (err) {}
         });
       };
 
-      // ปุ่มลอย "เพิ่มดีลของฉัน" + ฟอร์มเพิ่มดีล ถูกนำออกตามคำขอ
-      // (ใช้ปุ่ม "Add Deal" ในหน้า Sale Monitor แทน — บันทึกลงชีตเดียวกัน)
+      // เธเธธเนเธกเธฅเธญเธข "เน€เธเธดเนเธกเธ”เธตเธฅเธเธญเธเธเธฑเธ" + เธเธญเธฃเนเธกเน€เธเธดเนเธกเธ”เธตเธฅ เธ–เธนเธเธเธณเธญเธญเธเธ•เธฒเธกเธเธณเธเธญ
+      // (เนเธเนเธเธธเนเธก "Add Deal" เนเธเธซเธเนเธฒ Sale Monitor เนเธ—เธ โ€” เธเธฑเธเธ—เธถเธเธฅเธเธเธตเธ•เน€เธ”เธตเธขเธงเธเธฑเธ)
       return;
       /* eslint-disable no-unreachable */
 
       document.addEventListener('DOMContentLoaded', function () {
         var btn = document.createElement('button');
-        btn.innerHTML = '<i class="fa-solid fa-plus"></i> เพิ่มดีลของฉัน';
+        btn.innerHTML = '<i class="fa-solid fa-plus"></i> เน€เธเธดเนเธกเธ”เธตเธฅเธเธญเธเธเธฑเธ';
         btn.style.cssText = 'position:fixed;right:22px;bottom:22px;z-index:80;border:0;border-radius:24px;padding:13px 18px;' +
           'background:#2563EB;color:#fff;font:500 13px Prompt,sans-serif;box-shadow:0 10px 24px rgba(37,99,235,.35);cursor:pointer';
         document.body.appendChild(btn);
@@ -543,25 +543,25 @@
         box.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;place-items:center;z-index:90;padding:16px';
         box.innerHTML =
           '<form id="dealForm" style="background:#fff;border-radius:14px;padding:22px;width:min(520px,100%);font-family:Prompt,sans-serif">' +
-          '<h3 style="margin:0 0 4px;color:#0F2B46;font-size:16px">เพิ่มดีลของฉัน</h3>' +
-          '<div style="color:#667085;font-size:11px;margin-bottom:14px">บันทึกลง Google Sheets ในชื่อ ' + (me.name || me.email) + '</div>' +
+          '<h3 style="margin:0 0 4px;color:#0F2B46;font-size:16px">เน€เธเธดเนเธกเธ”เธตเธฅเธเธญเธเธเธฑเธ</h3>' +
+          '<div style="color:#667085;font-size:11px;margin-bottom:14px">เธเธฑเธเธ—เธถเธเธฅเธ Google Sheets เนเธเธเธทเนเธญ ' + (me.name || me.email) + '</div>' +
           '<div style="display:grid;gap:10px">' +
-          '<label style="font-size:11px;color:#475467">ชื่องาน/ดีล<input name="name" required style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
-          '<label style="font-size:11px;color:#475467">ลูกค้า<input name="customer" required style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
+          '<label style="font-size:11px;color:#475467">เธเธทเนเธญเธเธฒเธ/เธ”เธตเธฅ<input name="name" required style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
+          '<label style="font-size:11px;color:#475467">เธฅเธนเธเธเนเธฒ<input name="customer" required style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-          '<label style="font-size:11px;color:#475467">มูลค่า (บาท)<input name="value" type="number" min="0" value="0" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
-          '<label style="font-size:11px;color:#475467">โอกาสปิด (%)<input name="probability" type="number" min="0" max="100" value="30" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
+          '<label style="font-size:11px;color:#475467">เธกเธนเธฅเธเนเธฒ (เธเธฒเธ—)<input name="value" type="number" min="0" value="0" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
+          '<label style="font-size:11px;color:#475467">เนเธญเธเธฒเธชเธเธดเธ” (%)<input name="probability" type="number" min="0" max="100" value="30" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
           '</div>' +
           '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-          '<label style="font-size:11px;color:#475467">สถานะดีล<select name="stage" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px">' +
+          '<label style="font-size:11px;color:#475467">เธชเธ–เธฒเธเธฐเธ”เธตเธฅ<select name="stage" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px">' +
           '<option>Prospect</option><option>Qualified</option><option>Proposal</option><option>Negotiation</option><option>Won</option><option>Lost</option></select></label>' +
-          '<label style="font-size:11px;color:#475467">คาดว่าจะปิด<input name="close" type="date" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
+          '<label style="font-size:11px;color:#475467">เธเธฒเธ”เธงเนเธฒเธเธฐเธเธดเธ”<input name="close" type="date" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
           '</div>' +
-          '<label style="font-size:11px;color:#475467">สิ่งที่ต้องทำต่อ<input name="nextAction" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
+          '<label style="font-size:11px;color:#475467">เธชเธดเนเธเธ—เธตเนเธ•เนเธญเธเธ—เธณเธ•เนเธญ<input name="nextAction" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px"></label>' +
           '<div id="dealMsg" style="font-size:12px;color:#b91c1c;display:none"></div>' +
           '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px">' +
-          '<button type="button" id="dealCancel" style="border:1px solid #E5EAF0;background:#fff;border-radius:8px;padding:9px 14px;font:500 12px Prompt;cursor:pointer">ยกเลิก</button>' +
-          '<button type="submit" style="border:0;background:#2563EB;color:#fff;border-radius:8px;padding:9px 16px;font:500 12px Prompt;cursor:pointer">บันทึก</button>' +
+          '<button type="button" id="dealCancel" style="border:1px solid #E5EAF0;background:#fff;border-radius:8px;padding:9px 14px;font:500 12px Prompt;cursor:pointer">เธขเธเน€เธฅเธดเธ</button>' +
+          '<button type="submit" style="border:0;background:#2563EB;color:#fff;border-radius:8px;padding:9px 16px;font:500 12px Prompt;cursor:pointer">เธเธฑเธเธ—เธถเธ</button>' +
           '</div></div></form>';
         document.body.appendChild(box);
 
@@ -591,13 +591,13 @@
     })();
 
 
-    const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",partners:"Partnership Business",team:"ทีม & สิทธิ์",projects:"Project Tracking",service:"After-Sale Service",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
+    const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",partners:"Partnership Business",team:"เธ—เธตเธก & เธชเธดเธ—เธเธดเน",projects:"Project Tracking",service:"After-Sale Service",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
     const stageNames=["Planning","Sales Handover","Installation","Testing & Acceptance","Completed"];
     const stageLabels=["Prospect","Qualified","Proposal","Negotiation","Won","Lost"];
     let currentPage="dashboard",charts=[],sortDesc=true,toastTimer,pageStack=[];
-    const money=n=>"฿"+Number(n).toLocaleString("th-TH");
-    const shortMoney=n=>n>=1000000?"฿"+(n/1000000).toFixed(1)+"M":"฿"+(n/1000).toFixed(0)+"K";
-    const thaiDate=date=>{if(!date)return '—';const d=new Date(String(date).length<=10?date+"T00:00:00":date);return isNaN(d.getTime())?'—':d.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});};
+    const money=n=>"เธฟ"+Number(n).toLocaleString("th-TH");
+    const shortMoney=n=>n>=1000000?"เธฟ"+(n/1000000).toFixed(1)+"M":"เธฟ"+(n/1000).toFixed(0)+"K";
+    const thaiDate=date=>{if(!date)return 'โ€”';const d=new Date(String(date).length<=10?date+"T00:00:00":date);return isNaN(d.getTime())?'โ€”':d.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});};
     const dayDiff=date=>Math.floor((new Date("2026-10-07T00:00:00")-new Date(date+"T00:00:00"))/86400000);
     const statusClass=status=>status==="Healthy"?"healthy":status==="Need Attention"?"attention":status==="At Risk"?"at-risk":"on-hold";
     function riskScore(d){let score=0;const inactive=dayDiff(d.lastActivity);if(inactive>7)score+=Math.min(30,15+(inactive-7));const closeDays=Math.ceil((new Date(d.close+"T00:00:00")-new Date("2026-10-07T00:00:00"))/86400000);if(closeDays<=14&&["Prospect","Qualified"].includes(d.stage))score+=25;if(d.probability<40)score+=20;if(!d.nextAction)score+=15;if(d.status==="On Hold")score+=20;return Math.min(100,score)}
@@ -605,125 +605,125 @@
     function toast(message){const el=document.getElementById("toast");document.getElementById("toastText").textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2800)}
     function setModal(title,subtitle,body,buttons=[],large=false){document.getElementById("modalTitle").textContent=title;document.getElementById("modalSubtitle").textContent=subtitle||"";document.getElementById("modalBody").innerHTML=body;document.getElementById("modalFoot").innerHTML=buttons.map(b=>`<button class="btn ${b.primary?"btn-primary":""}" ${b.action?`data-action="${b.action}"`:"data-close-modal"}>${b.icon?`<i class="${b.icon}"></i>`:""}${b.label}</button>`).join("");document.getElementById("modal").classList.toggle("large",large);document.getElementById("modalBackdrop").classList.add("open");document.getElementById("modalBackdrop").setAttribute("aria-hidden","false")}
     function closeModal(){document.getElementById("modalBackdrop").classList.remove("open");document.getElementById("modalBackdrop").setAttribute("aria-hidden","true")}
-    function kpi(title,value,icon,color,compare,direction="up"){return `<article class="kpi"><div class="kpi-top">${title}<span class="kpi-icon" style="background:${color}18;color:${color}"><i class="${icon}"></i></span></div><div class="kpi-value">${value}</div><div class="kpi-foot"><span class="${direction}"><i class="fa-solid fa-arrow-${direction==="up"?"up":"down"}"></i> ${compare}</span> จากเดือนก่อน</div></article>`}
+    function kpi(title,value,icon,color,compare,direction="up"){return `<article class="kpi"><div class="kpi-top">${title}<span class="kpi-icon" style="background:${color}18;color:${color}"><i class="${icon}"></i></span></div><div class="kpi-value">${value}</div><div class="kpi-foot"><span class="${direction}"><i class="fa-solid fa-arrow-${direction==="up"?"up":"down"}"></i> ${compare}</span> เธเธฒเธเน€เธ”เธทเธญเธเธเนเธญเธ</div></article>`}
     function panel(title,body,subtitle=""){return `<section class="panel"><div class="panel-head"><div><h2 class="panel-title">${title}</h2>${subtitle?`<div class="panel-sub">${subtitle}</div>`:""}</div></div>${body}</section>`}
     function pageHead(title,subtitle,actions=""){return `<div class="page-head"><div><h1>${title}</h1><div class="subtitle">${subtitle}</div></div><div class="head-actions">${actions}</div></div>`}
     function btn(label,action,icon="",primary=false,extra=""){return `<button class="btn ${primary?"btn-primary":""}" data-action="${action}" ${extra}>${icon?`<i class="${icon}"></i>`:""}${label}</button>`}
     function destroyCharts(){charts.forEach(c=>c.destroy());charts=[]}
     function makeChart(id,config){const canvas=document.getElementById(id);if(canvas&&window.Chart)charts.push(new Chart(canvas,config))}
-    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,partners:renderPartnerCRM,team:renderTeam,projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),service:renderService,intelligence:renderIntelligence,reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=(pageStack.length?"<div class=\"back-wrap\"><button class=\"back-pill\" data-action=\"go-back\"><i class=\"fa-solid fa-arrow-left\"></i> กลับ "+pageTitles[pageStack[pageStack.length-1]]+"</button></div>":"")+views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence")drawHealthChart();if(currentPage==="reports")drawReportCharts();if(currentPage==="team")loadTeam();if(window.__afterRender__)window.__afterRender__();var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
+    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,partners:renderPartnerCRM,team:renderTeam,projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),service:renderService,intelligence:renderIntelligence,reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=(pageStack.length?"<div class=\"back-wrap\"><button class=\"back-pill\" data-action=\"go-back\"><i class=\"fa-solid fa-arrow-left\"></i> เธเธฅเธฑเธ "+pageTitles[pageStack[pageStack.length-1]]+"</button></div>":"")+views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence")drawHealthChart();if(currentPage==="reports")drawReportCharts();if(currentPage==="team")loadTeam();if(window.__afterRender__)window.__afterRender__();var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
 
     /* ===== JavaScript: Dashboard page ===== */
-    function renderDashboard(){const today=new Date().toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"});const rows=[...deals].sort((a,b)=>riskScore(b)-riskScore(a)).slice(0,5).map(d=>`<tr class="clickable" data-deal="${d.id}"><td><span class="deal-name">${d.name}</span><br><span class="muted">${d.customer}</span></td><td>${money(d.value)}</td><td>${d.owner}</td><td><span class="risk-pill ${riskClass(riskScore(d))}">${riskScore(d)} / 100</span></td><td>${thaiDate(d.close)}</td></tr>`).join("");return `${pageHead("สวัสดี, Head of Sales",today,btn("ดู Pipeline","go-sales","fa-solid fa-arrow-right",true))}<div class="grid kpi-grid">${kpi("Sales Pipeline","฿12,450,000","fa-solid fa-filter","#2563EB","+12.5%")}${kpi("Forecast เดือนนี้","฿4,850,000","fa-solid fa-chart-column","#16A34A","+8.2%")}${kpi("Deals at Risk","8 Deals","fa-solid fa-triangle-exclamation","#F59E0B","+2 Deals","down")}${kpi("Overdue Actions","14 Tasks","fa-solid fa-clock","#DC2626","-6 Tasks")}</div><div class="grid cols-2" style="margin-bottom:15px">${panel("Pipeline แยกตาม Stage",`<div class="chart-wrap"><canvas id="pipelineChart"></canvas></div>`,"มูลค่าดีลตามสถานะปัจจุบัน")}${panel("Sales Forecast รายเดือน",`<div class="chart-wrap"><canvas id="forecastChart"></canvas></div>`,"Actual และ Forecast")}</div><div class="grid cols-2">${panel("Deals ที่ต้องติดตามด่วน",`<div class="table-wrap"><table><thead><tr><th>Deal / Customer</th><th>มูลค่า</th><th>Owner</th><th>Risk Score</th><th>Close</th></tr></thead><tbody>${rows}</tbody></table></div>`,"เรียงตาม Risk Score สูงสุด")}<div class="grid" style="gap:15px">${panel("Today's Priority Actions",`<div class="action-list"><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>ติดตาม Proposal: Cloud Migration Phase 2</strong><small>พิมพ์ชนก · <span class="due">วันนี้ 11:00</span></small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>ยืนยันงบประมาณระบบ Smart Factory</strong><small>กิตติพงษ์ · วันนี้ 14:30</small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>โทรติดตาม Network Infrastructure</strong><small>อรทัย · <span class="due">เกินกำหนด 2 วัน</span></small></div></div></div>`)}${panel("Alerts",`<div class="alert-list"><div class="alert"><i class="fa-solid fa-clock"></i><span>3 Deals ไม่มีการติดต่อเกิน 7 วัน</span></div><div class="alert red"><i class="fa-solid fa-file-circle-exclamation"></i><span>2 Deals มีโอกาสปิดในเดือนนี้ แต่ยังไม่มี Proposal</span></div><div class="alert blue"><i class="fa-solid fa-headset"></i><span>4 Service Tickets ใกล้เกิน SLA</span></div></div>`)}</div></div>`}
-    function drawDashboardCharts(){const colors=["#93c5fd","#60a5fa","#2563eb","#0f2b46","#16a34a","#dc2626"];const vals=stageLabels.map(s=>deals.filter(d=>d.stage===s).reduce((sum,d)=>sum+d.value,0));makeChart("pipelineChart",{type:"bar",data:{labels:stageLabels,datasets:[{data:vals,backgroundColor:colors,borderRadius:5,maxBarThickness:35}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>shortMoney(v)}}}}});makeChart("forecastChart",{type:"line",data:{labels:["พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย."],datasets:[{label:"Forecast",data:[3.1,3.6,3.4,4.2,4,4.85,5.1],borderColor:"#2563eb",backgroundColor:"rgba(37,99,235,.12)",fill:true,tension:.35},{label:"Actual",data:[2.8,3.2,3.7,3.9,4.2,3.9,null],borderColor:"#16a34a",tension:.35}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{boxWidth:9,usePointStyle:true}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>"฿"+v+"M"}},x:{grid:{display:false}}}}})}
+    function renderDashboard(){const today=new Date().toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"});const rows=[...deals].sort((a,b)=>riskScore(b)-riskScore(a)).slice(0,5).map(d=>`<tr class="clickable" data-deal="${d.id}"><td><span class="deal-name">${d.name}</span><br><span class="muted">${d.customer}</span></td><td>${money(d.value)}</td><td>${d.owner}</td><td><span class="risk-pill ${riskClass(riskScore(d))}">${riskScore(d)} / 100</span></td><td>${thaiDate(d.close)}</td></tr>`).join("");return `${pageHead("เธชเธงเธฑเธชเธ”เธต, Head of Sales",today,btn("เธ”เธน Pipeline","go-sales","fa-solid fa-arrow-right",true))}<div class="grid kpi-grid">${kpi("Sales Pipeline","เธฟ12,450,000","fa-solid fa-filter","#2563EB","+12.5%")}${kpi("Forecast เน€เธ”เธทเธญเธเธเธตเน","เธฟ4,850,000","fa-solid fa-chart-column","#16A34A","+8.2%")}${kpi("Deals at Risk","8 Deals","fa-solid fa-triangle-exclamation","#F59E0B","+2 Deals","down")}${kpi("Overdue Actions","14 Tasks","fa-solid fa-clock","#DC2626","-6 Tasks")}</div><div class="grid cols-2" style="margin-bottom:15px">${panel("Pipeline เนเธขเธเธ•เธฒเธก Stage",`<div class="chart-wrap"><canvas id="pipelineChart"></canvas></div>`,"เธกเธนเธฅเธเนเธฒเธ”เธตเธฅเธ•เธฒเธกเธชเธ–เธฒเธเธฐเธเธฑเธเธเธธเธเธฑเธ")}${panel("Sales Forecast เธฃเธฒเธขเน€เธ”เธทเธญเธ",`<div class="chart-wrap"><canvas id="forecastChart"></canvas></div>`,"Actual เนเธฅเธฐ Forecast")}</div><div class="grid cols-2">${panel("Deals เธ—เธตเนเธ•เนเธญเธเธ•เธดเธ”เธ•เธฒเธกเธ”เนเธงเธ",`<div class="table-wrap"><table><thead><tr><th>Deal / Customer</th><th>เธกเธนเธฅเธเนเธฒ</th><th>Owner</th><th>Risk Score</th><th>Close</th></tr></thead><tbody>${rows}</tbody></table></div>`,"เน€เธฃเธตเธขเธเธ•เธฒเธก Risk Score เธชเธนเธเธชเธธเธ”")}<div class="grid" style="gap:15px">${panel("Today's Priority Actions",`<div class="action-list"><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>เธ•เธดเธ”เธ•เธฒเธก Proposal: Cloud Migration Phase 2</strong><small>เธเธดเธกเธเนเธเธเธ ยท <span class="due">เธงเธฑเธเธเธตเน 11:00</span></small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>เธขเธทเธเธขเธฑเธเธเธเธเธฃเธฐเธกเธฒเธ“เธฃเธฐเธเธ Smart Factory</strong><small>เธเธดเธ•เธ•เธดเธเธเธฉเน ยท เธงเธฑเธเธเธตเน 14:30</small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>เนเธ—เธฃเธ•เธดเธ”เธ•เธฒเธก Network Infrastructure</strong><small>เธญเธฃเธ—เธฑเธข ยท <span class="due">เน€เธเธดเธเธเธณเธซเธเธ” 2 เธงเธฑเธ</span></small></div></div></div>`)}${panel("Alerts",`<div class="alert-list"><div class="alert"><i class="fa-solid fa-clock"></i><span>3 Deals เนเธกเนเธกเธตเธเธฒเธฃเธ•เธดเธ”เธ•เนเธญเน€เธเธดเธ 7 เธงเธฑเธ</span></div><div class="alert red"><i class="fa-solid fa-file-circle-exclamation"></i><span>2 Deals เธกเธตเนเธญเธเธฒเธชเธเธดเธ”เนเธเน€เธ”เธทเธญเธเธเธตเน เนเธ•เนเธขเธฑเธเนเธกเนเธกเธต Proposal</span></div><div class="alert blue"><i class="fa-solid fa-headset"></i><span>4 Service Tickets เนเธเธฅเนเน€เธเธดเธ SLA</span></div></div>`)}</div></div>`}
+    function drawDashboardCharts(){const colors=["#93c5fd","#60a5fa","#2563eb","#0f2b46","#16a34a","#dc2626"];const vals=stageLabels.map(s=>deals.filter(d=>d.stage===s).reduce((sum,d)=>sum+d.value,0));makeChart("pipelineChart",{type:"bar",data:{labels:stageLabels,datasets:[{data:vals,backgroundColor:colors,borderRadius:5,maxBarThickness:35}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>shortMoney(v)}}}}});makeChart("forecastChart",{type:"line",data:{labels:["เธ.เธ.","เธกเธด.เธข.","เธ.เธ.","เธช.เธ.","เธ.เธข.","เธ•.เธ.","เธ.เธข."],datasets:[{label:"Forecast",data:[3.1,3.6,3.4,4.2,4,4.85,5.1],borderColor:"#2563eb",backgroundColor:"rgba(37,99,235,.12)",fill:true,tension:.35},{label:"Actual",data:[2.8,3.2,3.7,3.9,4.2,3.9,null],borderColor:"#16a34a",tension:.35}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{boxWidth:9,usePointStyle:true}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>"เธฟ"+v+"M"}},x:{grid:{display:false}}}}})}
 
     /* ===== JavaScript: Sale Monitor and Deal details ===== */
-    function renderDealsTable(list=deals){if(!list.length)return `<div class="empty"><i class="fa-solid fa-magnifying-glass"></i>ไม่พบ Deal ที่ตรงกับการค้นหา</div>`;return `<div class="table-wrap"><table><thead><tr><th>Deal Name</th><th>Customer</th><th>Owner</th><th>Value</th><th>Stage</th><th>Probability</th><th>Expected Close</th><th>Last Activity</th><th>Risk Score</th><th>Next Action</th><th>Status</th></tr></thead><tbody>${list.map(d=>`<tr class="clickable" data-deal="${d.id}"><td><span class="deal-name">${d.name}</span></td><td>${d.customer}</td><td>${d.owner}</td><td>${money(d.value)}</td><td>${d.stage}</td><td>${d.probability}%</td><td>${thaiDate(d.close)}</td><td>${thaiDate(d.lastActivity)}</td><td><span class="risk-number ${riskClass(riskScore(d))}">${riskScore(d)}</span></td><td>${d.nextAction||'<span class="muted">ยังไม่ระบุ</span>'}</td><td><span class="status ${statusClass(d.status)}">${d.status}</span></td></tr>`).join("")}</tbody></table></div>`}
-    function renderSales(){const owners=[...new Set(deals.map(d=>d.owner))],teams=[...new Set(deals.map(d=>d.team))];return `${pageHead("Sale Monitor: Pipeline, Risk & Forecast","ติดตาม Pipeline, ความเสี่ยง และ Forecast ของทีมขาย",`${btn("Export Report","export-deals","fa-solid fa-download")}${btn("Refresh Data","refresh","fa-solid fa-rotate")}${btn("Add Deal","add-deal","fa-solid fa-plus",true)}`)}<div class="panel"><div class="toolbar"><div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="field" id="dealSearch" placeholder="ค้นหาชื่อลูกค้า หรือชื่อ Deal"></div><div class="filters"><select class="select filter-select" id="ownerFilter"><option value="">ทุก Sales Owner</option>${owners.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="teamFilter"><option value="">ทุก Sales Team</option>${teams.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="stageFilter"><option value="">ทุก Stage</option>${stageLabels.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="riskFilter"><option value="">ทุก Risk Level</option><option value="high">High Risk</option><option value="mid">Medium Risk</option><option value="low">Low Risk</option></select><select class="select filter-select" id="periodFilter"><option value="">ทุกช่วงเวลา</option><option value="month">ปิดภายในเดือนนี้</option><option value="quarter">ปิดภายใน 90 วัน</option></select></div><button class="btn btn-soft" id="sortRisk"><i class="fa-solid fa-arrow-down-wide-short"></i>Sort Risk</button></div><div id="dealTable">${renderDealsTable()}</div><div class="panel-sub" style="margin-top:12px">แสดง <span id="dealCount">${deals.length}</span> ดีล · คลิกแถวเพื่อดูรายละเอียด</div></div>`}
+    function renderDealsTable(list=deals){if(!list.length)return `<div class="empty"><i class="fa-solid fa-magnifying-glass"></i>เนเธกเนเธเธ Deal เธ—เธตเนเธ•เธฃเธเธเธฑเธเธเธฒเธฃเธเนเธเธซเธฒ</div>`;return `<div class="table-wrap"><table><thead><tr><th>Deal Name</th><th>Customer</th><th>Owner</th><th>Value</th><th>Stage</th><th>Probability</th><th>Expected Close</th><th>Last Activity</th><th>Risk Score</th><th>Next Action</th><th>Status</th></tr></thead><tbody>${list.map(d=>`<tr class="clickable" data-deal="${d.id}"><td><span class="deal-name">${d.name}</span></td><td>${d.customer}</td><td>${d.owner}</td><td>${money(d.value)}</td><td>${d.stage}</td><td>${d.probability}%</td><td>${thaiDate(d.close)}</td><td>${thaiDate(d.lastActivity)}</td><td><span class="risk-number ${riskClass(riskScore(d))}">${riskScore(d)}</span></td><td>${d.nextAction||'<span class="muted">เธขเธฑเธเนเธกเนเธฃเธฐเธเธธ</span>'}</td><td><span class="status ${statusClass(d.status)}">${d.status}</span></td></tr>`).join("")}</tbody></table></div>`}
+    function renderSales(){const owners=[...new Set(deals.map(d=>d.owner))],teams=[...new Set(deals.map(d=>d.team))];return `${pageHead("Sale Monitor: Pipeline, Risk & Forecast","เธ•เธดเธ”เธ•เธฒเธก Pipeline, เธเธงเธฒเธกเน€เธชเธตเนเธขเธ เนเธฅเธฐ Forecast เธเธญเธเธ—เธตเธกเธเธฒเธข",`${btn("Export Report","export-deals","fa-solid fa-download")}${btn("Refresh Data","refresh","fa-solid fa-rotate")}${btn("Add Deal","add-deal","fa-solid fa-plus",true)}`)}<div class="panel"><div class="toolbar"><div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="field" id="dealSearch" placeholder="เธเนเธเธซเธฒเธเธทเนเธญเธฅเธนเธเธเนเธฒ เธซเธฃเธทเธญเธเธทเนเธญ Deal"></div><div class="filters"><select class="select filter-select" id="ownerFilter"><option value="">เธ—เธธเธ Sales Owner</option>${owners.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="teamFilter"><option value="">เธ—เธธเธ Sales Team</option>${teams.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="stageFilter"><option value="">เธ—เธธเธ Stage</option>${stageLabels.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="riskFilter"><option value="">เธ—เธธเธ Risk Level</option><option value="high">High Risk</option><option value="mid">Medium Risk</option><option value="low">Low Risk</option></select><select class="select filter-select" id="periodFilter"><option value="">เธ—เธธเธเธเนเธงเธเน€เธงเธฅเธฒ</option><option value="month">เธเธดเธ”เธ เธฒเธขเนเธเน€เธ”เธทเธญเธเธเธตเน</option><option value="quarter">เธเธดเธ”เธ เธฒเธขเนเธ 90 เธงเธฑเธ</option></select></div><button class="btn btn-soft" id="sortRisk"><i class="fa-solid fa-arrow-down-wide-short"></i>Sort Risk</button></div><div id="dealTable">${renderDealsTable()}</div><div class="panel-sub" style="margin-top:12px">เนเธชเธ”เธ <span id="dealCount">${deals.length}</span> เธ”เธตเธฅ ยท เธเธฅเธดเธเนเธ–เธงเน€เธเธทเนเธญเธ”เธนเธฃเธฒเธขเธฅเธฐเน€เธญเธตเธขเธ”</div></div>`}
     function applyDealFilters(){const search=(document.getElementById("dealSearch")?.value||"").toLowerCase(),owner=document.getElementById("ownerFilter")?.value||"",team=document.getElementById("teamFilter")?.value||"",stage=document.getElementById("stageFilter")?.value||"",risk=document.getElementById("riskFilter")?.value||"",period=document.getElementById("periodFilter")?.value||"";let list=deals.filter(d=>(!search||`${d.name} ${d.customer}`.toLowerCase().includes(search))&&(!owner||d.owner===owner)&&(!team||d.team===team)&&(!stage||d.stage===stage)&&(!risk||(risk==="high"?riskScore(d)>=60:risk==="mid"?riskScore(d)>=35&&riskScore(d)<60:riskScore(d)<35))&&(!period||(period==="month"?d.close<="2026-10-31":d.close<="2027-01-05")));list.sort((a,b)=>sortDesc?riskScore(b)-riskScore(a):riskScore(a)-riskScore(b));document.getElementById("dealTable").innerHTML=renderDealsTable(list);document.getElementById("dealCount").textContent=list.length}
-    function openDeal(id){const d=deals.find(x=>x.id===Number(id));if(!d)return;const score=riskScore(d),reasons=[];if(dayDiff(d.lastActivity)>7)reasons.push(`ไม่มี Activity มาแล้ว ${dayDiff(d.lastActivity)} วัน`);if(Math.ceil((new Date(d.close)-new Date("2026-10-07"))/86400000)<=14&&["Prospect","Qualified"].includes(d.stage))reasons.push("ใกล้วันปิดการขาย แต่ยังอยู่ใน Stage เริ่มต้น");if(d.probability<40)reasons.push(`Probability ต่ำ (${d.probability}%)`);if(!d.nextAction)reasons.push("ยังไม่ได้กำหนด Next Action");if(d.status==="On Hold")reasons.push("สถานะ Deal เป็น On Hold");const activity=d.activity.map((a,i)=>`<div class="timeline-entry"><strong>${a}</strong><small>${thaiDate(d.lastActivity)} · ${i===0?"ล่าสุด":"Activity ก่อนหน้า"}</small></div>`).join("");const body=`<div class="detail-grid"><div class="detail-cell"><small>มูลค่า Deal</small><strong>${money(d.value)}</strong></div><div class="detail-cell"><small>Stage ปัจจุบัน</small><strong>${d.stage}</strong></div><div class="detail-cell"><small>Probability</small><strong>${d.probability}%</strong></div><div class="detail-cell"><small>Expected Close</small><strong>${thaiDate(d.close)}</strong></div><div class="detail-cell"><small>Sales Owner</small><strong>${d.owner} · ${d.team}</strong></div><div class="detail-cell"><small>Risk Score</small><strong><span class="risk-pill ${riskClass(score)}">${score} / 100</span></strong></div></div><h3 class="modal-section-title">Activity Timeline</h3><div class="timeline">${activity}</div><h3 class="modal-section-title">เหตุผลที่ระบบประเมินความเสี่ยง</h3><div class="alert ${score>=60?"red":""}"><i class="fa-solid fa-triangle-exclamation"></i><span>${reasons.length?reasons.join(" · "):"ไม่มีความเสี่ยงที่ตรวจพบในขณะนี้"}</span></div><h3 class="modal-section-title">AI Suggested Action</h3><div class="suggestion">ควรนัดประชุมกับผู้มีอำนาจตัดสินใจภายใน 3 วัน เนื่องจากดีลใกล้วันปิดการขาย แต่ยังไม่มีการยืนยันงบประมาณ</div>`;setModal(d.name,d.customer,body,[{label:"Cancel"},{label:"Add Activity",icon:"fa-solid fa-plus",action:`add-activity-${d.id}`},{label:"Mark as Follow-up",icon:"fa-solid fa-flag",action:`follow-${d.id}`},{label:"Update Deal",icon:"fa-solid fa-pen",action:`edit-deal-${d.id}`,primary:true}],true)}
-    function showDealForm(deal=null){const d=deal||{};const body=`<form id="dealForm"><div class="form-grid"><div class="form-group"><label>ชื่อ Deal</label><input name="name" required value="${d.name||""}" placeholder="เช่น ระบบ Cloud Solution"></div><div class="form-group"><label>ชื่อลูกค้า</label><input name="customer" required value="${d.customer||""}" placeholder="ชื่อลูกค้า"></div><div class="form-group"><label>Sales Owner</label><input name="owner" required value="${d.owner||""}" placeholder="ชื่อผู้รับผิดชอบ"></div><div class="form-group"><label>Sales Team</label><select name="team"><option>Enterprise</option><option>Commercial</option><option>Strategic</option></select></div><div class="form-group"><label>มูลค่า (บาท)</label><input name="value" type="number" min="0" required value="${d.value||""}"></div><div class="form-group"><label>Stage</label><select name="stage">${stageLabels.map(s=>`<option ${d.stage===s?"selected":""}>${s}</option>`).join("")}</select></div><div class="form-group"><label>Probability (%)</label><input name="probability" type="number" min="0" max="100" value="${d.probability??50}"></div><div class="form-group"><label>Expected Close</label><input name="close" type="date" value="${d.close||"2026-11-07"}"></div><div class="form-group full"><label>Next Action</label><input name="nextAction" value="${d.nextAction||""}" placeholder="ระบุ Action ถัดไป"></div></div></form>`;setModal(deal?"Update Deal":"เพิ่ม Deal ใหม่","กรอกข้อมูล Pipeline",body,[{label:"Cancel"},{label:deal?"บันทึกการแก้ไข":"เพิ่ม Deal",icon:"fa-solid fa-check",action:deal?`save-deal-${deal.id}`:"save-new-deal",primary:true}])}
+    function openDeal(id){const d=deals.find(x=>x.id===Number(id));if(!d)return;const score=riskScore(d),reasons=[];if(dayDiff(d.lastActivity)>7)reasons.push(`เนเธกเนเธกเธต Activity เธกเธฒเนเธฅเนเธง ${dayDiff(d.lastActivity)} เธงเธฑเธ`);if(Math.ceil((new Date(d.close)-new Date("2026-10-07"))/86400000)<=14&&["Prospect","Qualified"].includes(d.stage))reasons.push("เนเธเธฅเนเธงเธฑเธเธเธดเธ”เธเธฒเธฃเธเธฒเธข เนเธ•เนเธขเธฑเธเธญเธขเธนเนเนเธ Stage เน€เธฃเธดเนเธกเธ•เนเธ");if(d.probability<40)reasons.push(`Probability เธ•เนเธณ (${d.probability}%)`);if(!d.nextAction)reasons.push("เธขเธฑเธเนเธกเนเนเธ”เนเธเธณเธซเธเธ” Next Action");if(d.status==="On Hold")reasons.push("เธชเธ–เธฒเธเธฐ Deal เน€เธเนเธ On Hold");const activity=d.activity.map((a,i)=>`<div class="timeline-entry"><strong>${a}</strong><small>${thaiDate(d.lastActivity)} ยท ${i===0?"เธฅเนเธฒเธชเธธเธ”":"Activity เธเนเธญเธเธซเธเนเธฒ"}</small></div>`).join("");const body=`<div class="detail-grid"><div class="detail-cell"><small>เธกเธนเธฅเธเนเธฒ Deal</small><strong>${money(d.value)}</strong></div><div class="detail-cell"><small>Stage เธเธฑเธเธเธธเธเธฑเธ</small><strong>${d.stage}</strong></div><div class="detail-cell"><small>Probability</small><strong>${d.probability}%</strong></div><div class="detail-cell"><small>Expected Close</small><strong>${thaiDate(d.close)}</strong></div><div class="detail-cell"><small>Sales Owner</small><strong>${d.owner} ยท ${d.team}</strong></div><div class="detail-cell"><small>Risk Score</small><strong><span class="risk-pill ${riskClass(score)}">${score} / 100</span></strong></div></div><h3 class="modal-section-title">Activity Timeline</h3><div class="timeline">${activity}</div><h3 class="modal-section-title">เน€เธซเธ•เธธเธเธฅเธ—เธตเนเธฃเธฐเธเธเธเธฃเธฐเน€เธกเธดเธเธเธงเธฒเธกเน€เธชเธตเนเธขเธ</h3><div class="alert ${score>=60?"red":""}"><i class="fa-solid fa-triangle-exclamation"></i><span>${reasons.length?reasons.join(" ยท "):"เนเธกเนเธกเธตเธเธงเธฒเธกเน€เธชเธตเนเธขเธเธ—เธตเนเธ•เธฃเธงเธเธเธเนเธเธเธ“เธฐเธเธตเน"}</span></div><h3 class="modal-section-title">AI Suggested Action</h3><div class="suggestion">เธเธงเธฃเธเธฑเธ”เธเธฃเธฐเธเธธเธกเธเธฑเธเธเธนเนเธกเธตเธญเธณเธเธฒเธเธ•เธฑเธ”เธชเธดเธเนเธเธ เธฒเธขเนเธ 3 เธงเธฑเธ เน€เธเธทเนเธญเธเธเธฒเธเธ”เธตเธฅเนเธเธฅเนเธงเธฑเธเธเธดเธ”เธเธฒเธฃเธเธฒเธข เนเธ•เนเธขเธฑเธเนเธกเนเธกเธตเธเธฒเธฃเธขเธทเธเธขเธฑเธเธเธเธเธฃเธฐเธกเธฒเธ“</div>`;setModal(d.name,d.customer,body,[{label:"Cancel"},{label:"Add Activity",icon:"fa-solid fa-plus",action:`add-activity-${d.id}`},{label:"Mark as Follow-up",icon:"fa-solid fa-flag",action:`follow-${d.id}`},{label:"Update Deal",icon:"fa-solid fa-pen",action:`edit-deal-${d.id}`,primary:true}],true)}
+    function showDealForm(deal=null){const d=deal||{};const body=`<form id="dealForm"><div class="form-grid"><div class="form-group"><label>เธเธทเนเธญ Deal</label><input name="name" required value="${d.name||""}" placeholder="เน€เธเนเธ เธฃเธฐเธเธ Cloud Solution"></div><div class="form-group"><label>เธเธทเนเธญเธฅเธนเธเธเนเธฒ</label><input name="customer" required value="${d.customer||""}" placeholder="เธเธทเนเธญเธฅเธนเธเธเนเธฒ"></div><div class="form-group"><label>Sales Owner</label><input name="owner" required value="${d.owner||""}" placeholder="เธเธทเนเธญเธเธนเนเธฃเธฑเธเธเธดเธ”เธเธญเธ"></div><div class="form-group"><label>Sales Team</label><select name="team"><option>Enterprise</option><option>Commercial</option><option>Strategic</option></select></div><div class="form-group"><label>เธกเธนเธฅเธเนเธฒ (เธเธฒเธ—)</label><input name="value" type="number" min="0" required value="${d.value||""}"></div><div class="form-group"><label>Stage</label><select name="stage">${stageLabels.map(s=>`<option ${d.stage===s?"selected":""}>${s}</option>`).join("")}</select></div><div class="form-group"><label>Probability (%)</label><input name="probability" type="number" min="0" max="100" value="${d.probability??50}"></div><div class="form-group"><label>Expected Close</label><input name="close" type="date" value="${d.close||"2026-11-07"}"></div><div class="form-group full"><label>Next Action</label><input name="nextAction" value="${d.nextAction||""}" placeholder="เธฃเธฐเธเธธ Action เธ–เธฑเธ”เนเธ"></div></div></form>`;setModal(deal?"Update Deal":"เน€เธเธดเนเธก Deal เนเธซเธกเน","เธเธฃเธญเธเธเนเธญเธกเธนเธฅ Pipeline",body,[{label:"Cancel"},{label:deal?"เธเธฑเธเธ—เธถเธเธเธฒเธฃเนเธเนเนเธ":"เน€เธเธดเนเธก Deal",icon:"fa-solid fa-check",action:deal?`save-deal-${deal.id}`:"save-new-deal",primary:true}])}
 
     /* ===== JavaScript: Project Tracking ===== */
-    function renderProjects(){const onTrack=projects.filter(p=>p.risk==="On Track").length,atRisk=projects.filter(p=>p.risk==="At Risk").length,delayed=projects.filter(p=>p.deadline<"2026-10-07"&&p.progress<100).length;const board=stageNames.map(stage=>{const list=projects.filter(p=>p.stage===stage);return `<div class="kanban-col" data-stage="${stage}"><div class="kanban-head">${stage}<span class="kanban-count">${list.length}</span></div>${list.map(p=>`<article class="project-card" draggable="true" data-project="${p.id}"><h3>${p.name}</h3><div class="customer-name">${p.customer}</div><div class="project-meta"><span><i class="fa-regular fa-user"></i> ${p.owner}</span><span class="status ${p.risk==="On Track"?"on-track":statusClass(p.risk)}">${p.risk}</span></div><div class="project-meta"><span>Progress</span><strong>${p.progress}%</strong></div><div class="progress"><span style="width:${p.progress}%"></span></div><div class="project-meta"><span><i class="fa-regular fa-calendar"></i> ${thaiDate(p.deadline)}</span></div><div class="blocker"><i class="fa-solid fa-circle-exclamation"></i> ${p.blocker}</div></article>`).join("")}</div>`}).join("");return `${pageHead("Project Tracking: End-to-End Project Visibility","ติดตามโครงการตั้งแต่รับช่วงงานจนถึงส่งมอบลูกค้า",btn("Add Project","add-project","fa-solid fa-plus",true))}<div class="grid kpi-grid">${kpi("Total Projects",projects.length,"fa-solid fa-diagram-project","#2563EB","+2")}${kpi("On Track",onTrack,"fa-solid fa-circle-check","#16A34A","+1")}${kpi("At Risk",atRisk,"fa-solid fa-triangle-exclamation","#F59E0B","-1")}${kpi("Delayed Projects",delayed,"fa-solid fa-calendar-xmark","#DC2626","0","down")}</div><div class="panel"><div class="panel-head"><div><h2 class="panel-title">Project Kanban Board</h2><div class="panel-sub">ลากการ์ดไปยัง Stage ใหม่เพื่ออัปเดตสถานะ · คลิกการ์ดเพื่อดูรายละเอียด</div></div></div><div class="kanban">${board}</div></div>`}
-    function openProject(id){const p=projects.find(x=>x.id===Number(id));if(!p)return;const tasks=p.tasks.map(t=>`<tr><td>${t.name}</td><td>${t.owner}</td><td>${thaiDate(t.due)}</td><td><span class="status ${t.status==="เสร็จแล้ว"?"healthy":t.status==="กำลังดำเนินการ"?"attention":"on-hold"}">${t.status}</span></td></tr>`).join("");const stages=stageNames.map((s,i)=>`<div class="journey-step ${stageNames.indexOf(p.stage)>=i?"done":""} ${p.stage===s?"current":""}"><div class="journey-dot"><i class="fa-solid ${stageNames.indexOf(p.stage)>i?"fa-check":"fa-circle"}"></i></div>${s}</div>`).join("");const body=`<div class="detail-grid"><div class="detail-cell"><small>ลูกค้า</small><strong>${p.customer}</strong></div><div class="detail-cell"><small>Project Owner</small><strong>${p.owner}</strong></div><div class="detail-cell"><small>Deadline</small><strong>${thaiDate(p.deadline)}</strong></div><div class="detail-cell"><small>Progress</small><strong>${p.progress}%</strong></div><div class="detail-cell"><small>สถานะ</small><strong>${p.stage}</strong></div><div class="detail-cell"><small>Blocker</small><strong>${p.blocker}</strong></div></div><h3 class="modal-section-title">Project Timeline</h3><div class="journey">${stages}</div><h3 class="modal-section-title">รายการ Task</h3><div class="table-wrap"><table><thead><tr><th>Task</th><th>Owner</th><th>Deadline</th><th>สถานะ</th></tr></thead><tbody>${tasks}</tbody></table></div><h3 class="modal-section-title">ผู้เกี่ยวข้อง</h3><div class="detail-grid"><div class="detail-cell"><small>Sales</small><strong>กิตติพงษ์</strong></div><div class="detail-cell"><small>Marketing</small><strong>พิมพ์ชนก</strong></div><div class="detail-cell"><small>Service &amp; Installation</small><strong>ทีมภาคสนาม</strong></div></div>`;setModal(p.name,p.customer,body,[{label:"Cancel"},{label:"Add Task",icon:"fa-solid fa-plus",action:`add-task-${p.id}`},{label:"Update Status",icon:"fa-solid fa-pen",action:`project-status-${p.id}`,primary:true}],true)}
-    function showTaskForm(id){const body=`<form id="taskForm"><div class="form-grid"><div class="form-group full"><label>ชื่องาน</label><input name="name" required placeholder="ระบุ Task"></div><div class="form-group"><label>Owner</label><input name="owner" required placeholder="ผู้รับผิดชอบ"></div><div class="form-group"><label>Deadline</label><input name="due" type="date" required></div><input type="hidden" name="projectId" value="${id}"></div></form>`;setModal("เพิ่ม Task","กำหนดงานและผู้รับผิดชอบ",body,[{label:"Cancel"},{label:"เพิ่ม Task",icon:"fa-solid fa-check",action:`save-task-${id}`,primary:true}])}
+    function renderProjects(){const onTrack=projects.filter(p=>p.risk==="On Track").length,atRisk=projects.filter(p=>p.risk==="At Risk").length,delayed=projects.filter(p=>p.deadline<"2026-10-07"&&p.progress<100).length;const board=stageNames.map(stage=>{const list=projects.filter(p=>p.stage===stage);return `<div class="kanban-col" data-stage="${stage}"><div class="kanban-head">${stage}<span class="kanban-count">${list.length}</span></div>${list.map(p=>`<article class="project-card" draggable="true" data-project="${p.id}"><h3>${p.name}</h3><div class="customer-name">${p.customer}</div><div class="project-meta"><span><i class="fa-regular fa-user"></i> ${p.owner}</span><span class="status ${p.risk==="On Track"?"on-track":statusClass(p.risk)}">${p.risk}</span></div><div class="project-meta"><span>Progress</span><strong>${p.progress}%</strong></div><div class="progress"><span style="width:${p.progress}%"></span></div><div class="project-meta"><span><i class="fa-regular fa-calendar"></i> ${thaiDate(p.deadline)}</span></div><div class="blocker"><i class="fa-solid fa-circle-exclamation"></i> ${p.blocker}</div></article>`).join("")}</div>`}).join("");return `${pageHead("Project Tracking: End-to-End Project Visibility","เธ•เธดเธ”เธ•เธฒเธกเนเธเธฃเธเธเธฒเธฃเธ•เธฑเนเธเนเธ•เนเธฃเธฑเธเธเนเธงเธเธเธฒเธเธเธเธ–เธถเธเธชเนเธเธกเธญเธเธฅเธนเธเธเนเธฒ",btn("Add Project","add-project","fa-solid fa-plus",true))}<div class="grid kpi-grid">${kpi("Total Projects",projects.length,"fa-solid fa-diagram-project","#2563EB","+2")}${kpi("On Track",onTrack,"fa-solid fa-circle-check","#16A34A","+1")}${kpi("At Risk",atRisk,"fa-solid fa-triangle-exclamation","#F59E0B","-1")}${kpi("Delayed Projects",delayed,"fa-solid fa-calendar-xmark","#DC2626","0","down")}</div><div class="panel"><div class="panel-head"><div><h2 class="panel-title">Project Kanban Board</h2><div class="panel-sub">เธฅเธฒเธเธเธฒเธฃเนเธ”เนเธเธขเธฑเธ Stage เนเธซเธกเนเน€เธเธทเนเธญเธญเธฑเธเน€เธ”เธ•เธชเธ–เธฒเธเธฐ ยท เธเธฅเธดเธเธเธฒเธฃเนเธ”เน€เธเธทเนเธญเธ”เธนเธฃเธฒเธขเธฅเธฐเน€เธญเธตเธขเธ”</div></div></div><div class="kanban">${board}</div></div>`}
+    function openProject(id){const p=projects.find(x=>x.id===Number(id));if(!p)return;const tasks=p.tasks.map(t=>`<tr><td>${t.name}</td><td>${t.owner}</td><td>${thaiDate(t.due)}</td><td><span class="status ${t.status==="เน€เธชเธฃเนเธเนเธฅเนเธง"?"healthy":t.status==="เธเธณเธฅเธฑเธเธ”เธณเน€เธเธดเธเธเธฒเธฃ"?"attention":"on-hold"}">${t.status}</span></td></tr>`).join("");const stages=stageNames.map((s,i)=>`<div class="journey-step ${stageNames.indexOf(p.stage)>=i?"done":""} ${p.stage===s?"current":""}"><div class="journey-dot"><i class="fa-solid ${stageNames.indexOf(p.stage)>i?"fa-check":"fa-circle"}"></i></div>${s}</div>`).join("");const body=`<div class="detail-grid"><div class="detail-cell"><small>เธฅเธนเธเธเนเธฒ</small><strong>${p.customer}</strong></div><div class="detail-cell"><small>Project Owner</small><strong>${p.owner}</strong></div><div class="detail-cell"><small>Deadline</small><strong>${thaiDate(p.deadline)}</strong></div><div class="detail-cell"><small>Progress</small><strong>${p.progress}%</strong></div><div class="detail-cell"><small>เธชเธ–เธฒเธเธฐ</small><strong>${p.stage}</strong></div><div class="detail-cell"><small>Blocker</small><strong>${p.blocker}</strong></div></div><h3 class="modal-section-title">Project Timeline</h3><div class="journey">${stages}</div><h3 class="modal-section-title">เธฃเธฒเธขเธเธฒเธฃ Task</h3><div class="table-wrap"><table><thead><tr><th>Task</th><th>Owner</th><th>Deadline</th><th>เธชเธ–เธฒเธเธฐ</th></tr></thead><tbody>${tasks}</tbody></table></div><h3 class="modal-section-title">เธเธนเนเน€เธเธตเนเธขเธงเธเนเธญเธ</h3><div class="detail-grid"><div class="detail-cell"><small>Sales</small><strong>เธเธดเธ•เธ•เธดเธเธเธฉเน</strong></div><div class="detail-cell"><small>Marketing</small><strong>เธเธดเธกเธเนเธเธเธ</strong></div><div class="detail-cell"><small>Service &amp; Installation</small><strong>เธ—เธตเธกเธ เธฒเธเธชเธเธฒเธก</strong></div></div>`;setModal(p.name,p.customer,body,[{label:"Cancel"},{label:"Add Task",icon:"fa-solid fa-plus",action:`add-task-${p.id}`},{label:"Update Status",icon:"fa-solid fa-pen",action:`project-status-${p.id}`,primary:true}],true)}
+    function showTaskForm(id){const body=`<form id="taskForm"><div class="form-grid"><div class="form-group full"><label>เธเธทเนเธญเธเธฒเธ</label><input name="name" required placeholder="เธฃเธฐเธเธธ Task"></div><div class="form-group"><label>Owner</label><input name="owner" required placeholder="เธเธนเนเธฃเธฑเธเธเธดเธ”เธเธญเธ"></div><div class="form-group"><label>Deadline</label><input name="due" type="date" required></div><input type="hidden" name="projectId" value="${id}"></div></form>`;setModal("เน€เธเธดเนเธก Task","เธเธณเธซเธเธ”เธเธฒเธเนเธฅเธฐเธเธนเนเธฃเธฑเธเธเธดเธ”เธเธญเธ",body,[{label:"Cancel"},{label:"เน€เธเธดเนเธก Task",icon:"fa-solid fa-check",action:`save-task-${id}`,primary:true}])}
 
     /* ===== JavaScript: After-Sale Service ===== */
     function renderTicketTable(){return `<div class="table-wrap"><table><thead><tr><th>Ticket No.</th><th>Customer</th><th>Product / Service</th><th>Issue Type</th><th>Priority</th><th>Technician</th><th>Open Date</th><th>SLA Due</th><th>Status</th><th>Next Action</th></tr></thead><tbody>${tickets.map(t=>`<tr><td><span class="deal-name">${t.id}</span></td><td><a href="#" class="customer-link" data-customer="${t.customer}" style="color:#2563eb">${t.customer}</a></td><td>${t.product}</td><td>${t.issue}</td><td><span class="priority priority-${t.priority.toLowerCase()}">${t.priority}</span></td><td>${t.tech}</td><td>${thaiDate(t.open)}</td><td>${thaiDate(t.sla)}</td><td>${t.status}</td><td>${t.next}</td></tr>`).join("")}</tbody></table></div>`}
-    function renderService(){const avg=Math.round(tickets.reduce((s,t)=>s+t.health,0)/tickets.length),over=tickets.filter(t=>t.sla<"2026-10-07"&&t.status!=="ปิดแล้ว").length;return `${pageHead("After-Sale Service Tracking System","ติดตาม Customer Journey, Service Ticket และโอกาสรักษาลูกค้า",btn("Create Ticket","create-ticket","fa-solid fa-plus",true))}${panel("Customer Journey",`<div class="journey">${["Installation","Active Use","Service","Maintenance","Complaint","Follow-up","Repeat Purchase"].map((x,i)=>`<div class="journey-step ${i<3?"done":""} ${i===3?"current":""}"><div class="journey-dot"><i class="fa-solid ${i<3?"fa-check":["fa-screwdriver-wrench","fa-gears","fa-triangle-exclamation","fa-phone","fa-cart-shopping"][i-3]}"></i></div>${x}</div>`).join("")}</div>`)}<div class="grid kpi-grid" style="margin-top:15px">${kpi("Customer Health Score",avg+"/100","fa-solid fa-heart-pulse","#16A34A","+4.2")}${kpi("Open Tickets",tickets.length,"fa-solid fa-ticket","#2563EB","+2","down")}${kpi("Tickets Over SLA",over,"fa-solid fa-clock","#DC2626","-1")}${kpi("Repeat Purchase Opportunities","12","fa-solid fa-rotate","#F59E0B","+3")}</div><div class="grid cols-2" style="margin-bottom:15px"><div class="panel"><div class="panel-head"><div><h2 class="panel-title">Service Tickets</h2><div class="panel-sub">คลิกชื่อลูกค้าเพื่อดู Customer Intelligence</div></div></div>${renderTicketTable()}</div><div class="grid" style="gap:15px">${panel("Open Complaints",`<div class="kpi-value" style="margin:5px 0">3 <span class="mini-tag">รายการ</span></div><div class="alert red"><i class="fa-solid fa-triangle-exclamation"></i><span>มี Complaint ที่ต้องติดตามเร่งด่วน 2 ราย</span></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>ติดตามผลแก้ไข CCTV บริษัท ABC</strong><small>Owner: ทีม Service · วันนี้</small></div></div>`)}<section class="panel line-card"><div class="panel-head"><div><h2 class="panel-title"><i class="fa-brands fa-line" style="color:#16a34a"></i> LINE OA Service Update</h2><div class="panel-sub">จำลองการส่งสถานะงานให้ลูกค้า</div></div><span class="status healthy" id="lineStatus">Pending</span></div><div class="form-group"><label>เลือก Ticket</label><select class="select" style="width:100%" id="lineTicket">${tickets.map(t=>`<option value="${t.id}">${t.id} · ${t.customer}</option>`).join("")}</select></div><div class="line-preview" id="linePreview"></div><button class="btn btn-primary" data-action="send-line" style="width:100%"><i class="fa-brands fa-line"></i>Send LINE Update</button></section></div></div>`}
-    function updateLinePreview(){const id=document.getElementById("lineTicket")?.value,t=tickets.find(x=>x.id===id);if(t)document.getElementById("linePreview").textContent=`เรียนคุณ ${t.customer} ขณะนี้ทีมช่างกำลังดำเนินการตรวจสอบ Ticket #${t.id} คาดว่าจะอัปเดตผลภายใน 2 ชั่วโมง`}
-    function openCustomer(customer){const ct=tickets.filter(t=>t.customer===customer),health=ct.length?ct[0].health:82;const body=`<div class="detail-grid"><div class="detail-cell"><small>Customer Health Score</small><strong>${health}/100</strong></div><div class="detail-cell"><small>กลุ่มลูกค้า</small><strong>${health>=85?"High Value":"ต้องติดตาม"}</strong></div><div class="detail-cell"><small>ผู้ดูแลลูกค้า</small><strong>ทีม Account Management</strong></div></div><h3 class="modal-section-title">สินค้าและบริการที่ใช้งาน</h3><div class="detail-cell"><strong>Network Support · CCTV Monitoring · Managed Service</strong></div><h3 class="modal-section-title">ประวัติการติดตั้งและ Maintenance</h3><div class="timeline"><div class="timeline-entry"><strong>ติดตั้งระบบและส่งมอบงาน</strong><small>18 มิ.ย. 2569 · ทีม Installation</small></div><div class="timeline-entry"><strong>บำรุงรักษาตามรอบ</strong><small>10 ก.ย. 2569 · ทีม Service</small></div></div><h3 class="modal-section-title">Complaint History และ Ticket ที่ยังเปิดอยู่</h3>${ct.length?`<div class="table-wrap"><table><thead><tr><th>Ticket</th><th>Issue</th><th>สถานะ</th><th>SLA Due</th></tr></thead><tbody>${ct.map(t=>`<tr><td>${t.id}</td><td>${t.issue}</td><td>${t.status}</td><td>${thaiDate(t.sla)}</td></tr>`).join("")}</tbody></table></div>`:`<div class="muted">ไม่มี Ticket ที่เปิดอยู่</div>`}<h3 class="modal-section-title">Suggested Follow-up</h3><div class="suggestion">ติดต่อลูกค้าภายใน 3 วันเพื่อสอบถามความพึงพอใจหลังรับบริการ และทบทวนแผน Maintenance รอบถัดไป</div><h3 class="modal-section-title">Repeat Purchase Opportunity</h3><div class="alert blue"><i class="fa-solid fa-lightbulb"></i><span>มีโอกาสนำเสนอ Upgrade ระบบและแพ็กเกจ Maintenance รายปี</span></div>`;setModal(customer,"Customer 360° Profile",body,[{label:"Close"},{label:"Contact Customer",icon:"fa-solid fa-phone",action:"contact-customer"},{label:"Schedule Maintenance",icon:"fa-solid fa-calendar",action:"schedule-maintenance"},{label:"Create Ticket",icon:"fa-solid fa-plus",action:"create-ticket",primary:true}],true)}
+    function renderService(){const avg=Math.round(tickets.reduce((s,t)=>s+t.health,0)/tickets.length),over=tickets.filter(t=>t.sla<"2026-10-07"&&t.status!=="เธเธดเธ”เนเธฅเนเธง").length;return `${pageHead("After-Sale Service Tracking System","เธ•เธดเธ”เธ•เธฒเธก Customer Journey, Service Ticket เนเธฅเธฐเนเธญเธเธฒเธชเธฃเธฑเธเธฉเธฒเธฅเธนเธเธเนเธฒ",btn("Create Ticket","create-ticket","fa-solid fa-plus",true))}${panel("Customer Journey",`<div class="journey">${["Installation","Active Use","Service","Maintenance","Complaint","Follow-up","Repeat Purchase"].map((x,i)=>`<div class="journey-step ${i<3?"done":""} ${i===3?"current":""}"><div class="journey-dot"><i class="fa-solid ${i<3?"fa-check":["fa-screwdriver-wrench","fa-gears","fa-triangle-exclamation","fa-phone","fa-cart-shopping"][i-3]}"></i></div>${x}</div>`).join("")}</div>`)}<div class="grid kpi-grid" style="margin-top:15px">${kpi("Customer Health Score",avg+"/100","fa-solid fa-heart-pulse","#16A34A","+4.2")}${kpi("Open Tickets",tickets.length,"fa-solid fa-ticket","#2563EB","+2","down")}${kpi("Tickets Over SLA",over,"fa-solid fa-clock","#DC2626","-1")}${kpi("Repeat Purchase Opportunities","12","fa-solid fa-rotate","#F59E0B","+3")}</div><div class="grid cols-2" style="margin-bottom:15px"><div class="panel"><div class="panel-head"><div><h2 class="panel-title">Service Tickets</h2><div class="panel-sub">เธเธฅเธดเธเธเธทเนเธญเธฅเธนเธเธเนเธฒเน€เธเธทเนเธญเธ”เธน Customer Intelligence</div></div></div>${renderTicketTable()}</div><div class="grid" style="gap:15px">${panel("Open Complaints",`<div class="kpi-value" style="margin:5px 0">3 <span class="mini-tag">เธฃเธฒเธขเธเธฒเธฃ</span></div><div class="alert red"><i class="fa-solid fa-triangle-exclamation"></i><span>เธกเธต Complaint เธ—เธตเนเธ•เนเธญเธเธ•เธดเธ”เธ•เธฒเธกเน€เธฃเนเธเธ”เนเธงเธ 2 เธฃเธฒเธข</span></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>เธ•เธดเธ”เธ•เธฒเธกเธเธฅเนเธเนเนเธ CCTV เธเธฃเธดเธฉเธฑเธ— ABC</strong><small>Owner: เธ—เธตเธก Service ยท เธงเธฑเธเธเธตเน</small></div></div>`)}<section class="panel line-card"><div class="panel-head"><div><h2 class="panel-title"><i class="fa-brands fa-line" style="color:#16a34a"></i> LINE OA Service Update</h2><div class="panel-sub">เธเธณเธฅเธญเธเธเธฒเธฃเธชเนเธเธชเธ–เธฒเธเธฐเธเธฒเธเนเธซเนเธฅเธนเธเธเนเธฒ</div></div><span class="status healthy" id="lineStatus">Pending</span></div><div class="form-group"><label>เน€เธฅเธทเธญเธ Ticket</label><select class="select" style="width:100%" id="lineTicket">${tickets.map(t=>`<option value="${t.id}">${t.id} ยท ${t.customer}</option>`).join("")}</select></div><div class="line-preview" id="linePreview"></div><button class="btn btn-primary" data-action="send-line" style="width:100%"><i class="fa-brands fa-line"></i>Send LINE Update</button></section></div></div>`}
+    function updateLinePreview(){const id=document.getElementById("lineTicket")?.value,t=tickets.find(x=>x.id===id);if(t)document.getElementById("linePreview").textContent=`เน€เธฃเธตเธขเธเธเธธเธ“ ${t.customer} เธเธ“เธฐเธเธตเนเธ—เธตเธกเธเนเธฒเธเธเธณเธฅเธฑเธเธ”เธณเน€เธเธดเธเธเธฒเธฃเธ•เธฃเธงเธเธชเธญเธ Ticket #${t.id} เธเธฒเธ”เธงเนเธฒเธเธฐเธญเธฑเธเน€เธ”เธ•เธเธฅเธ เธฒเธขเนเธ 2 เธเธฑเนเธงเนเธกเธ`}
+    function openCustomer(customer){const ct=tickets.filter(t=>t.customer===customer),health=ct.length?ct[0].health:82;const body=`<div class="detail-grid"><div class="detail-cell"><small>Customer Health Score</small><strong>${health}/100</strong></div><div class="detail-cell"><small>เธเธฅเธธเนเธกเธฅเธนเธเธเนเธฒ</small><strong>${health>=85?"High Value":"เธ•เนเธญเธเธ•เธดเธ”เธ•เธฒเธก"}</strong></div><div class="detail-cell"><small>เธเธนเนเธ”เธนเนเธฅเธฅเธนเธเธเนเธฒ</small><strong>เธ—เธตเธก Account Management</strong></div></div><h3 class="modal-section-title">เธชเธดเธเธเนเธฒเนเธฅเธฐเธเธฃเธดเธเธฒเธฃเธ—เธตเนเนเธเนเธเธฒเธ</h3><div class="detail-cell"><strong>Network Support ยท CCTV Monitoring ยท Managed Service</strong></div><h3 class="modal-section-title">เธเธฃเธฐเธงเธฑเธ•เธดเธเธฒเธฃเธ•เธดเธ”เธ•เธฑเนเธเนเธฅเธฐ Maintenance</h3><div class="timeline"><div class="timeline-entry"><strong>เธ•เธดเธ”เธ•เธฑเนเธเธฃเธฐเธเธเนเธฅเธฐเธชเนเธเธกเธญเธเธเธฒเธ</strong><small>18 เธกเธด.เธข. 2569 ยท เธ—เธตเธก Installation</small></div><div class="timeline-entry"><strong>เธเธณเธฃเธธเธเธฃเธฑเธเธฉเธฒเธ•เธฒเธกเธฃเธญเธ</strong><small>10 เธ.เธข. 2569 ยท เธ—เธตเธก Service</small></div></div><h3 class="modal-section-title">Complaint History เนเธฅเธฐ Ticket เธ—เธตเนเธขเธฑเธเน€เธเธดเธ”เธญเธขเธนเน</h3>${ct.length?`<div class="table-wrap"><table><thead><tr><th>Ticket</th><th>Issue</th><th>เธชเธ–เธฒเธเธฐ</th><th>SLA Due</th></tr></thead><tbody>${ct.map(t=>`<tr><td>${t.id}</td><td>${t.issue}</td><td>${t.status}</td><td>${thaiDate(t.sla)}</td></tr>`).join("")}</tbody></table></div>`:`<div class="muted">เนเธกเนเธกเธต Ticket เธ—เธตเนเน€เธเธดเธ”เธญเธขเธนเน</div>`}<h3 class="modal-section-title">Suggested Follow-up</h3><div class="suggestion">เธ•เธดเธ”เธ•เนเธญเธฅเธนเธเธเนเธฒเธ เธฒเธขเนเธ 3 เธงเธฑเธเน€เธเธทเนเธญเธชเธญเธเธ–เธฒเธกเธเธงเธฒเธกเธเธถเธเธเธญเนเธเธซเธฅเธฑเธเธฃเธฑเธเธเธฃเธดเธเธฒเธฃ เนเธฅเธฐเธ—เธเธ—เธงเธเนเธเธ Maintenance เธฃเธญเธเธ–เธฑเธ”เนเธ</div><h3 class="modal-section-title">Repeat Purchase Opportunity</h3><div class="alert blue"><i class="fa-solid fa-lightbulb"></i><span>เธกเธตเนเธญเธเธฒเธชเธเธณเน€เธชเธเธญ Upgrade เธฃเธฐเธเธเนเธฅเธฐเนเธเนเธเน€เธเธ Maintenance เธฃเธฒเธขเธเธต</span></div>`;setModal(customer,"Customer 360ยฐ Profile",body,[{label:"Close"},{label:"Contact Customer",icon:"fa-solid fa-phone",action:"contact-customer"},{label:"Schedule Maintenance",icon:"fa-solid fa-calendar",action:"schedule-maintenance"},{label:"Create Ticket",icon:"fa-solid fa-plus",action:"create-ticket",primary:true}],true)}
 
     /* ===== JavaScript: Customer Intelligence, Reports, Settings ===== */
-    function renderIntelligence(){const seg=[["High Value Customers","48","fa-solid fa-gem","#2563EB","#dbeafe"],["At-Risk Customers","12","fa-solid fa-shield-halved","#DC2626","#fee2e2"],["Repeat Purchase Opportunity","26","fa-solid fa-rotate","#16A34A","#dcfce7"],["New Customers","18","fa-solid fa-user-plus","#F59E0B","#fef3c7"]].map(s=>`<article class="kpi segment-card" style="--wash:${s[4]}"><div class="kpi-top">${s[0]}<span class="kpi-icon" style="color:${s[3]};background:${s[4]}"><i class="${s[2]}"></i></span></div><div class="segment-count">${s[1]}</div><div class="kpi-foot">ลูกค้าในกลุ่มนี้</div></article>`).join("");const repeat=[["บริษัท XYZ จำกัด","92%","Upgrade Network"],["บริษัท ABC จำกัด","88%","CCTV Analytics"],["Metro Logistics","84%","Cloud Storage"],["บริษัท DEF จำกัด","79%","Access Control"],["Siam Foods","76%","Backup Service"]],churn=[["SecureLife","38","ไม่มีการติดต่อ 35 วัน"],["Green Energy","45","Ticket เพิ่มขึ้น"],["บริษัท ABC จำกัด","52","Complaint ล่าสุด"],["Bright Retail","56","ต่ออายุใน 30 วัน"],["Metro Logistics","61","Health Score ลดลง"]];const table=(rows,type)=>`<div class="table-wrap"><table><thead><tr><th>ลูกค้า</th><th>${type==="repeat"?"โอกาสซื้อซ้ำ":"Health Score"}</th><th>${type==="repeat"?"โอกาส":"ความเสี่ยง"}</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${type==="repeat"?r[1]:`<span class="risk-pill risk-high">${r[1]}</span>`}</td><td>${r[2]}</td></tr>`).join("")}</tbody></table></div>`;return `${pageHead("Customer Intelligence: AI Insights","วิเคราะห์สุขภาพลูกค้า ความเสี่ยง Churn และโอกาสเติบโต",btn("Export Insights","export-deals","fa-solid fa-download"))}<div class="grid kpi-grid">${seg}</div><div class="grid cols-2" style="margin-bottom:15px">${panel("Customer Health Score","<div class='chart-wrap short'><canvas id='healthChart'></canvas></div>","แนวโน้มคะแนนเฉลี่ยลูกค้า")}${panel("AI Insight Cards",`<div class="insight"><span class="insight-icon"><i class="fa-solid fa-chart-line"></i></span><div><p>บริษัท ABC มีการเปิด Service Ticket เพิ่มขึ้น 35% ในช่วง 30 วันที่ผ่านมา</p><small>ความเชื่อมั่น 92% · วันนี้</small></div></div><div class="insight"><span class="insight-icon"><i class="fa-solid fa-arrow-up-right-dots"></i></span><div><p>บริษัท XYZ มีโอกาสซื้อ Upgrade สูง เนื่องจากการใช้งานใกล้เต็ม Capacity</p><small>ความเชื่อมั่น 87% · วันนี้</small></div></div><div class="insight"><span class="insight-icon"><i class="fa-solid fa-phone-volume"></i></span><div><p>ลูกค้า 12 รายยังไม่มีการ Follow-up หลังปิดงาน Service</p><small>Action แนะนำ · วันนี้</small></div></div><div class="insight"><span class="insight-icon"><i class="fa-solid fa-user-clock"></i></span><div><p>ลูกค้ากลุ่ม High Value จำนวน 5 ราย ไม่มีการติดต่อจากทีมขายเกิน 30 วัน</p><small>ควรจัดลำดับติดตาม · วันนี้</small></div></div>`)}</div><div class="grid cols-2">${panel("Top 5 ลูกค้าที่มีโอกาสซื้อซ้ำสูง",table(repeat,"repeat"))}${panel("Top 5 ลูกค้าที่มีความเสี่ยงเลิกใช้บริการ",table(churn,"risk"))}</div>`}
-    function drawHealthChart(){makeChart("healthChart",{type:"line",data:{labels:["พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค."],datasets:[{label:"Health Score",data:[78,81,79,84,82,86],borderColor:"#16a34a",backgroundColor:"rgba(22,163,74,.12)",fill:true,tension:.35},{label:"เป้าหมาย",data:[80,80,80,80,80,80],borderColor:"#94a3b8",borderDash:[5,5],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{boxWidth:9,usePointStyle:true}}},scales:{y:{min:50,max:100},x:{grid:{display:false}}}}})}
-    function renderReports(){return (window.SalesReport?SalesReport.render():'<div class="empty"><i class="fa-solid fa-file-circle-question"></i>โหลด Reports ไม่สำเร็จ</div>')}
+    function renderIntelligence(){const seg=[["High Value Customers","48","fa-solid fa-gem","#2563EB","#dbeafe"],["At-Risk Customers","12","fa-solid fa-shield-halved","#DC2626","#fee2e2"],["Repeat Purchase Opportunity","26","fa-solid fa-rotate","#16A34A","#dcfce7"],["New Customers","18","fa-solid fa-user-plus","#F59E0B","#fef3c7"]].map(s=>`<article class="kpi segment-card" style="--wash:${s[4]}"><div class="kpi-top">${s[0]}<span class="kpi-icon" style="color:${s[3]};background:${s[4]}"><i class="${s[2]}"></i></span></div><div class="segment-count">${s[1]}</div><div class="kpi-foot">เธฅเธนเธเธเนเธฒเนเธเธเธฅเธธเนเธกเธเธตเน</div></article>`).join("");const repeat=[["เธเธฃเธดเธฉเธฑเธ— XYZ เธเธณเธเธฑเธ”","92%","Upgrade Network"],["เธเธฃเธดเธฉเธฑเธ— ABC เธเธณเธเธฑเธ”","88%","CCTV Analytics"],["Metro Logistics","84%","Cloud Storage"],["เธเธฃเธดเธฉเธฑเธ— DEF เธเธณเธเธฑเธ”","79%","Access Control"],["Siam Foods","76%","Backup Service"]],churn=[["SecureLife","38","เนเธกเนเธกเธตเธเธฒเธฃเธ•เธดเธ”เธ•เนเธญ 35 เธงเธฑเธ"],["Green Energy","45","Ticket เน€เธเธดเนเธกเธเธถเนเธ"],["เธเธฃเธดเธฉเธฑเธ— ABC เธเธณเธเธฑเธ”","52","Complaint เธฅเนเธฒเธชเธธเธ”"],["Bright Retail","56","เธ•เนเธญเธญเธฒเธขเธธเนเธ 30 เธงเธฑเธ"],["Metro Logistics","61","Health Score เธฅเธ”เธฅเธ"]];const table=(rows,type)=>`<div class="table-wrap"><table><thead><tr><th>เธฅเธนเธเธเนเธฒ</th><th>${type==="repeat"?"เนเธญเธเธฒเธชเธเธทเนเธญเธเนเธณ":"Health Score"}</th><th>${type==="repeat"?"เนเธญเธเธฒเธช":"เธเธงเธฒเธกเน€เธชเธตเนเธขเธ"}</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${type==="repeat"?r[1]:`<span class="risk-pill risk-high">${r[1]}</span>`}</td><td>${r[2]}</td></tr>`).join("")}</tbody></table></div>`;return `${pageHead("Customer Intelligence: AI Insights","เธงเธดเน€เธเธฃเธฒเธฐเธซเนเธชเธธเธเธ เธฒเธเธฅเธนเธเธเนเธฒ เธเธงเธฒเธกเน€เธชเธตเนเธขเธ Churn เนเธฅเธฐเนเธญเธเธฒเธชเน€เธ•เธดเธเนเธ•",btn("Export Insights","export-deals","fa-solid fa-download"))}<div class="grid kpi-grid">${seg}</div><div class="grid cols-2" style="margin-bottom:15px">${panel("Customer Health Score","<div class='chart-wrap short'><canvas id='healthChart'></canvas></div>","เนเธเธงเนเธเนเธกเธเธฐเนเธเธเน€เธเธฅเธตเนเธขเธฅเธนเธเธเนเธฒ")}${panel("AI Insight Cards",`<div class="insight"><span class="insight-icon"><i class="fa-solid fa-chart-line"></i></span><div><p>เธเธฃเธดเธฉเธฑเธ— ABC เธกเธตเธเธฒเธฃเน€เธเธดเธ” Service Ticket เน€เธเธดเนเธกเธเธถเนเธ 35% เนเธเธเนเธงเธ 30 เธงเธฑเธเธ—เธตเนเธเนเธฒเธเธกเธฒ</p><small>เธเธงเธฒเธกเน€เธเธทเนเธญเธกเธฑเนเธ 92% ยท เธงเธฑเธเธเธตเน</small></div></div><div class="insight"><span class="insight-icon"><i class="fa-solid fa-arrow-up-right-dots"></i></span><div><p>เธเธฃเธดเธฉเธฑเธ— XYZ เธกเธตเนเธญเธเธฒเธชเธเธทเนเธญ Upgrade เธชเธนเธ เน€เธเธทเนเธญเธเธเธฒเธเธเธฒเธฃเนเธเนเธเธฒเธเนเธเธฅเนเน€เธ•เนเธก Capacity</p><small>เธเธงเธฒเธกเน€เธเธทเนเธญเธกเธฑเนเธ 87% ยท เธงเธฑเธเธเธตเน</small></div></div><div class="insight"><span class="insight-icon"><i class="fa-solid fa-phone-volume"></i></span><div><p>เธฅเธนเธเธเนเธฒ 12 เธฃเธฒเธขเธขเธฑเธเนเธกเนเธกเธตเธเธฒเธฃ Follow-up เธซเธฅเธฑเธเธเธดเธ”เธเธฒเธ Service</p><small>Action เนเธเธฐเธเธณ ยท เธงเธฑเธเธเธตเน</small></div></div><div class="insight"><span class="insight-icon"><i class="fa-solid fa-user-clock"></i></span><div><p>เธฅเธนเธเธเนเธฒเธเธฅเธธเนเธก High Value เธเธณเธเธงเธ 5 เธฃเธฒเธข เนเธกเนเธกเธตเธเธฒเธฃเธ•เธดเธ”เธ•เนเธญเธเธฒเธเธ—เธตเธกเธเธฒเธขเน€เธเธดเธ 30 เธงเธฑเธ</p><small>เธเธงเธฃเธเธฑเธ”เธฅเธณเธ”เธฑเธเธ•เธดเธ”เธ•เธฒเธก ยท เธงเธฑเธเธเธตเน</small></div></div>`)}</div><div class="grid cols-2">${panel("Top 5 เธฅเธนเธเธเนเธฒเธ—เธตเนเธกเธตเนเธญเธเธฒเธชเธเธทเนเธญเธเนเธณเธชเธนเธ",table(repeat,"repeat"))}${panel("Top 5 เธฅเธนเธเธเนเธฒเธ—เธตเนเธกเธตเธเธงเธฒเธกเน€เธชเธตเนเธขเธเน€เธฅเธดเธเนเธเนเธเธฃเธดเธเธฒเธฃ",table(churn,"risk"))}</div>`}
+    function drawHealthChart(){makeChart("healthChart",{type:"line",data:{labels:["เธ.เธ.","เธกเธด.เธข.","เธ.เธ.","เธช.เธ.","เธ.เธข.","เธ•.เธ."],datasets:[{label:"Health Score",data:[78,81,79,84,82,86],borderColor:"#16a34a",backgroundColor:"rgba(22,163,74,.12)",fill:true,tension:.35},{label:"เน€เธเนเธฒเธซเธกเธฒเธข",data:[80,80,80,80,80,80],borderColor:"#94a3b8",borderDash:[5,5],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{boxWidth:9,usePointStyle:true}}},scales:{y:{min:50,max:100},x:{grid:{display:false}}}}})}
+    function renderReports(){return (window.SalesReport?SalesReport.render():'<div class="empty"><i class="fa-solid fa-file-circle-question"></i>เนเธซเธฅเธ” Reports เนเธกเนเธชเธณเน€เธฃเนเธ</div>')}
     function drawReportCharts(){if(window.SalesReport)SalesReport.drawCharts()}
-    function renderSettings(){return `${pageHead("Settings","ตั้งค่าการใช้งานและการแจ้งเตือน")}<div class="grid cols-2">${panel("ตั้งค่าทั่วไป",`<div class="form-grid"><div class="form-group"><label>ชื่อ Workspace</label><input value="Prospect Intelligence"></div><div class="form-group"><label>สกุลเงิน</label><select><option>THB - บาทไทย</option><option>USD - US Dollar</option></select></div><div class="form-group"><label>Timezone</label><select><option>Asia/Bangkok (GMT+7)</option></select></div><div class="form-group"><label>รูปแบบวันที่</label><select><option>DD/MM/YYYY</option></select></div></div><div style="margin-top:15px">${btn("บันทึกการตั้งค่า","save-settings","fa-solid fa-floppy-disk",true)}</div>`)}${panel("การแจ้งเตือน",`<div class="action-list">${["แจ้งเตือนเมื่อ Deal มีความเสี่ยงสูง","แจ้งเตือนเมื่อมี Task เกินกำหนด","แจ้งเตือน Ticket ใกล้เกิน SLA","สรุป Pipeline ประจำสัปดาห์"].map((x,i)=>`<div class="action-item"><div class="action-copy"><strong>${x}</strong><small>รับการแจ้งเตือนผ่าน Dashboard</small></div><input type="checkbox" ${i<3?"checked":""} aria-label="${x}"></div>`).join("")}</div>`)}</div>`}
+    function renderSettings(){return `${pageHead("Settings","เธ•เธฑเนเธเธเนเธฒเธเธฒเธฃเนเธเนเธเธฒเธเนเธฅเธฐเธเธฒเธฃเนเธเนเธเน€เธ•เธทเธญเธ")}<div class="grid cols-2">${panel("เธ•เธฑเนเธเธเนเธฒเธ—เธฑเนเธงเนเธ",`<div class="form-grid"><div class="form-group"><label>เธเธทเนเธญ Workspace</label><input value="Prospect Intelligence"></div><div class="form-group"><label>เธชเธเธธเธฅเน€เธเธดเธ</label><select><option>THB - เธเธฒเธ—เนเธ—เธข</option><option>USD - US Dollar</option></select></div><div class="form-group"><label>Timezone</label><select><option>Asia/Bangkok (GMT+7)</option></select></div><div class="form-group"><label>เธฃเธนเธเนเธเธเธงเธฑเธเธ—เธตเน</label><select><option>DD/MM/YYYY</option></select></div></div><div style="margin-top:15px">${btn("เธเธฑเธเธ—เธถเธเธเธฒเธฃเธ•เธฑเนเธเธเนเธฒ","save-settings","fa-solid fa-floppy-disk",true)}</div>`)}${panel("เธเธฒเธฃเนเธเนเธเน€เธ•เธทเธญเธ",`<div class="action-list">${["เนเธเนเธเน€เธ•เธทเธญเธเน€เธกเธทเนเธญ Deal เธกเธตเธเธงเธฒเธกเน€เธชเธตเนเธขเธเธชเธนเธ","เนเธเนเธเน€เธ•เธทเธญเธเน€เธกเธทเนเธญเธกเธต Task เน€เธเธดเธเธเธณเธซเธเธ”","เนเธเนเธเน€เธ•เธทเธญเธ Ticket เนเธเธฅเนเน€เธเธดเธ SLA","เธชเธฃเธธเธ Pipeline เธเธฃเธฐเธเธณเธชเธฑเธเธ”เธฒเธซเน"].map((x,i)=>`<div class="action-item"><div class="action-copy"><strong>${x}</strong><small>เธฃเธฑเธเธเธฒเธฃเนเธเนเธเน€เธ•เธทเธญเธเธเนเธฒเธ Dashboard</small></div><input type="checkbox" ${i<3?"checked":""} aria-label="${x}"></div>`).join("")}</div>`)}</div>`}
 
     /* ===== JavaScript: AI Prompts (CRM) ===== */
     const promptCell = s => String(s === null || s === undefined ? '' : s).replace(/\|/g,'/').replace(/\r?\n/g,' ').trim();
     const promptHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     function mdTable(head,rows){
-      const body = rows.length ? rows : [head.map((h,i)=>i===0?'ไม่พบข้อมูล':'—')];
+      const body = rows.length ? rows : [head.map((h,i)=>i===0?'เนเธกเนเธเธเธเนเธญเธกเธนเธฅ':'โ€”')];
       return [head, head.map(()=> '---'), ...body].map(r=>'| '+r.map(promptCell).join(' | ')+' |').join('\n');
     }
     function promptPipelineDeals(){return deals.filter(d=>!["Won","Lost"].includes(d.stage))}
     function promptInstallDeals(){return deals.filter(d=>d.stage==="Won"||d.status==="On Hold")}
     function promptDealTable(list){
       return mdTable(
-        ["ชื่องาน/ลูกค้า","สินค้า/Stage","มูลค่า (บาท)","ผู้รับผิดชอบ","คาดว่าปิด","หมายเหตุ / Action Plan","สถานะ"],
-        list.map(d=>[d.name+" ("+d.customer+")",d.stage,Number(d.value||0).toLocaleString("th-TH"),d.owner,thaiDate(d.close),d.nextAction||"ไม่ระบุ",d.status])
+        ["เธเธทเนเธญเธเธฒเธ/เธฅเธนเธเธเนเธฒ","เธชเธดเธเธเนเธฒ/Stage","เธกเธนเธฅเธเนเธฒ (เธเธฒเธ—)","เธเธนเนเธฃเธฑเธเธเธดเธ”เธเธญเธ","เธเธฒเธ”เธงเนเธฒเธเธดเธ”","เธซเธกเธฒเธขเน€เธซเธ•เธธ / Action Plan","เธชเธ–เธฒเธเธฐ"],
+        list.map(d=>[d.name+" ("+d.customer+")",d.stage,Number(d.value||0).toLocaleString("th-TH"),d.owner,thaiDate(d.close),d.nextAction||"เนเธกเนเธฃเธฐเธเธธ",d.status])
       );
     }
     function prompt1Text(){
       const list=promptPipelineDeals();
       const total=list.reduce((s,d)=>s+Number(d.value||0),0);
-      return `บทบาท (Role): คุณคือผู้เชี่ยวชาญด้าน B2B Sales Operations & CRM Analyst
+      return `เธเธ—เธเธฒเธ— (Role): เธเธธเธ“เธเธทเธญเธเธนเนเน€เธเธตเนเธขเธงเธเธฒเธเธ”เนเธฒเธ B2B Sales Operations & CRM Analyst
 
-บริบท (Context): ข้อมูลรายการขายของทีมขาย B2B Partner สถานะ Pipeline (ยังไม่ปิด) จำนวน ${list.length} ดีล มูลค่ารวม ${money(total)}
-Stage อ้างอิง: 1.Pipeline = รอตัดสินใจ | 2.รอติดตั้ง | 3.Actual = ปิดงาน/ติดตั้งแล้ว | 0.ยกเลิกใบงาน
+เธเธฃเธดเธเธ— (Context): เธเนเธญเธกเธนเธฅเธฃเธฒเธขเธเธฒเธฃเธเธฒเธขเธเธญเธเธ—เธตเธกเธเธฒเธข B2B Partner เธชเธ–เธฒเธเธฐ Pipeline (เธขเธฑเธเนเธกเนเธเธดเธ”) เธเธณเธเธงเธ ${list.length} เธ”เธตเธฅ เธกเธนเธฅเธเนเธฒเธฃเธงเธก ${money(total)}
+Stage เธญเนเธฒเธเธญเธดเธ: 1.Pipeline = เธฃเธญเธ•เธฑเธ”เธชเธดเธเนเธ | 2.เธฃเธญเธ•เธดเธ”เธ•เธฑเนเธ | 3.Actual = เธเธดเธ”เธเธฒเธ/เธ•เธดเธ”เธ•เธฑเนเธเนเธฅเนเธง | 0.เธขเธเน€เธฅเธดเธเนเธเธเธฒเธ
 
-ข้อมูลนำเข้า (Data):
+เธเนเธญเธกเธนเธฅเธเธณเน€เธเนเธฒ (Data):
 ${promptDealTable(list)}
 
-ภารกิจ (Task):
-1. จัดกลุ่มดีลเป็น 3 ระดับ พร้อมเหตุผลสั้น ๆ ต่อดีล
-   - Hot (โอกาสปิดสูง/พร้อมติดตั้ง): ลูกค้าพร้อม งบชัดเจน มีกำหนดวันชัด
-   - Warm (มีโอกาสแต่ติดเงื่อนไข): รอพื้นที่ รอราคา รอเทียบข้อเสนอ
-   - Cold / At-Risk (เสี่ยงหลุด/เงียบ): ไม่มี Follow-up หรือเลื่อนกำหนดปิดหลายรอบ
-2. สรุปมูลค่ารวมที่คาดว่าจะเปลี่ยนเป็นยอด Actual ได้จริงในเดือนนี้ (แยกตามระดับ Hot/Warm/Cold)
-3. เสนอ 1 Action เร่งด่วนต่อดีลมูลค่าสูงสุด 3 อันดับแรก (ระบุผู้รับผิดชอบ + กำหนดวันที่ควรทำ)
+เธ เธฒเธฃเธเธดเธ (Task):
+1. เธเธฑเธ”เธเธฅเธธเนเธกเธ”เธตเธฅเน€เธเนเธ 3 เธฃเธฐเธ”เธฑเธ เธเธฃเนเธญเธกเน€เธซเธ•เธธเธเธฅเธชเธฑเนเธ เน เธ•เนเธญเธ”เธตเธฅ
+   - Hot (เนเธญเธเธฒเธชเธเธดเธ”เธชเธนเธ/เธเธฃเนเธญเธกเธ•เธดเธ”เธ•เธฑเนเธ): เธฅเธนเธเธเนเธฒเธเธฃเนเธญเธก เธเธเธเธฑเธ”เน€เธเธ เธกเธตเธเธณเธซเธเธ”เธงเธฑเธเธเธฑเธ”
+   - Warm (เธกเธตเนเธญเธเธฒเธชเนเธ•เนเธ•เธดเธ”เน€เธเธทเนเธญเธเนเธ): เธฃเธญเธเธทเนเธเธ—เธตเน เธฃเธญเธฃเธฒเธเธฒ เธฃเธญเน€เธ—เธตเธขเธเธเนเธญเน€เธชเธเธญ
+   - Cold / At-Risk (เน€เธชเธตเนเธขเธเธซเธฅเธธเธ”/เน€เธเธตเธขเธ): เนเธกเนเธกเธต Follow-up เธซเธฃเธทเธญเน€เธฅเธทเนเธญเธเธเธณเธซเธเธ”เธเธดเธ”เธซเธฅเธฒเธขเธฃเธญเธ
+2. เธชเธฃเธธเธเธกเธนเธฅเธเนเธฒเธฃเธงเธกเธ—เธตเนเธเธฒเธ”เธงเนเธฒเธเธฐเน€เธเธฅเธตเนเธขเธเน€เธเนเธเธขเธญเธ” Actual เนเธ”เนเธเธฃเธดเธเนเธเน€เธ”เธทเธญเธเธเธตเน (เนเธขเธเธ•เธฒเธกเธฃเธฐเธ”เธฑเธ Hot/Warm/Cold)
+3. เน€เธชเธเธญ 1 Action เน€เธฃเนเธเธ”เนเธงเธเธ•เนเธญเธ”เธตเธฅเธกเธนเธฅเธเนเธฒเธชเธนเธเธชเธธเธ” 3 เธญเธฑเธเธ”เธฑเธเนเธฃเธ (เธฃเธฐเธเธธเธเธนเนเธฃเธฑเธเธเธดเธ”เธเธญเธ + เธเธณเธซเธเธ”เธงเธฑเธเธ—เธตเนเธเธงเธฃเธ—เธณ)
 
-รูปแบบผลลัพธ์ (Format): ตารางสรุปตามระดับความพร้อม + คอลัมน์ Action เร่งด่วน แล้วปิดท้ายด้วยข้อสรุป 1 ย่อหน้า
-กติกา: ใช้ภาษาไทย กระชับ ถ้าข้อมูลใดว่างให้เขียน "ไม่ระบุ" ห้ามสร้างข้อมูลขึ้นเอง`;
+เธฃเธนเธเนเธเธเธเธฅเธฅเธฑเธเธเน (Format): เธ•เธฒเธฃเธฒเธเธชเธฃเธธเธเธ•เธฒเธกเธฃเธฐเธ”เธฑเธเธเธงเธฒเธกเธเธฃเนเธญเธก + เธเธญเธฅเธฑเธกเธเน Action เน€เธฃเนเธเธ”เนเธงเธ เนเธฅเนเธงเธเธดเธ”เธ—เนเธฒเธขเธ”เนเธงเธขเธเนเธญเธชเธฃเธธเธ 1 เธขเนเธญเธซเธเนเธฒ
+เธเธ•เธดเธเธฒ: เนเธเนเธ เธฒเธฉเธฒเนเธ—เธข เธเธฃเธฐเธเธฑเธ เธ–เนเธฒเธเนเธญเธกเธนเธฅเนเธ”เธงเนเธฒเธเนเธซเนเน€เธเธตเธขเธ "เนเธกเนเธฃเธฐเธเธธ" เธซเนเธฒเธกเธชเธฃเนเธฒเธเธเนเธญเธกเธนเธฅเธเธถเนเธเน€เธญเธ`;
     }
     function prompt2Text(){
       const list=promptInstallDeals();
-      return `บทบาท (Role): คุณคือผู้จัดการฝ่ายประสานงานขายและติดตั้ง (Project & Installation Coordinator)
+      return `เธเธ—เธเธฒเธ— (Role): เธเธธเธ“เธเธทเธญเธเธนเนเธเธฑเธ”เธเธฒเธฃเธเนเธฒเธขเธเธฃเธฐเธชเธฒเธเธเธฒเธเธเธฒเธขเนเธฅเธฐเธ•เธดเธ”เธ•เธฑเนเธ (Project & Installation Coordinator)
 
-บริบท (Context): รายการขายที่ปิดการขายแล้วแต่ยังไม่จบเป็น Actual (สถานะ 2.รอติดตั้ง / On Hold) จำนวน ${list.length} รายการ ซึ่งหลายเคสติดปัญหาหน้างาน เช่น พื้นที่ยังไม่พร้อม หรือรอนัดหมายช่าง
+เธเธฃเธดเธเธ— (Context): เธฃเธฒเธขเธเธฒเธฃเธเธฒเธขเธ—เธตเนเธเธดเธ”เธเธฒเธฃเธเธฒเธขเนเธฅเนเธงเนเธ•เนเธขเธฑเธเนเธกเนเธเธเน€เธเนเธ Actual (เธชเธ–เธฒเธเธฐ 2.เธฃเธญเธ•เธดเธ”เธ•เธฑเนเธ / On Hold) เธเธณเธเธงเธ ${list.length} เธฃเธฒเธขเธเธฒเธฃ เธเธถเนเธเธซเธฅเธฒเธขเน€เธเธชเธ•เธดเธ”เธเธฑเธเธซเธฒเธซเธเนเธฒเธเธฒเธ เน€เธเนเธ เธเธทเนเธเธ—เธตเนเธขเธฑเธเนเธกเนเธเธฃเนเธญเธก เธซเธฃเธทเธญเธฃเธญเธเธฑเธ”เธซเธกเธฒเธขเธเนเธฒเธ
 
-ข้อมูลนำเข้า (Data):
-${mdTable(["SO/ชื่องาน","ลูกค้า","สินค้า/Stage","ผู้รับผิดชอบ","คาดว่าปิด","ปัญหา / Action Plan","สถานะ"],
-  list.map(d=>["#"+d.id,d.customer,d.stage,d.owner,thaiDate(d.close),d.nextAction||"ไม่ระบุ",d.status]))}
+เธเนเธญเธกเธนเธฅเธเธณเน€เธเนเธฒ (Data):
+${mdTable(["SO/เธเธทเนเธญเธเธฒเธ","เธฅเธนเธเธเนเธฒ","เธชเธดเธเธเนเธฒ/Stage","เธเธนเนเธฃเธฑเธเธเธดเธ”เธเธญเธ","เธเธฒเธ”เธงเนเธฒเธเธดเธ”","เธเธฑเธเธซเธฒ / Action Plan","เธชเธ–เธฒเธเธฐ"],
+  list.map(d=>["#"+d.id,d.customer,d.stage,d.owner,thaiDate(d.close),d.nextAction||"เนเธกเนเธฃเธฐเธเธธ",d.status]))}
 
-ภารกิจ (Task):
-1. จัดหมวดหมู่ปัญหาหลักที่ทำให้ยังไม่จบเป็น Actual เช่น (ก) เตรียมสถานที่ (ข) สินค้า/สต็อก (ค) การนัดหมายช่าง (ง) เอกสาร/เงื่อนไขการชำระเงิน
-2. สร้างเช็กลิสต์คำถาม 5 ข้อ ที่พนักงานขาย/ผู้ประสานงานต้องถามลูกค้าเพื่อปลดล็อกหน้างาน
-3. จัดลำดับ Priority งานที่ควรเร่งติดตั้งก่อน โดยพิจารณาจากมูลค่างาน + ความพร้อมของลูกค้า + ระยะเวลาที่ค้างอยู่
+เธ เธฒเธฃเธเธดเธ (Task):
+1. เธเธฑเธ”เธซเธกเธงเธ”เธซเธกเธนเนเธเธฑเธเธซเธฒเธซเธฅเธฑเธเธ—เธตเนเธ—เธณเนเธซเนเธขเธฑเธเนเธกเนเธเธเน€เธเนเธ Actual เน€เธเนเธ (เธ) เน€เธ•เธฃเธตเธขเธกเธชเธ–เธฒเธเธ—เธตเน (เธ) เธชเธดเธเธเนเธฒ/เธชเธ•เนเธญเธ (เธ) เธเธฒเธฃเธเธฑเธ”เธซเธกเธฒเธขเธเนเธฒเธ (เธ) เน€เธญเธเธชเธฒเธฃ/เน€เธเธทเนเธญเธเนเธเธเธฒเธฃเธเธณเธฃเธฐเน€เธเธดเธ
+2. เธชเธฃเนเธฒเธเน€เธเนเธเธฅเธดเธชเธ•เนเธเธณเธ–เธฒเธก 5 เธเนเธญ เธ—เธตเนเธเธเธฑเธเธเธฒเธเธเธฒเธข/เธเธนเนเธเธฃเธฐเธชเธฒเธเธเธฒเธเธ•เนเธญเธเธ–เธฒเธกเธฅเธนเธเธเนเธฒเน€เธเธทเนเธญเธเธฅเธ”เธฅเนเธญเธเธซเธเนเธฒเธเธฒเธ
+3. เธเธฑเธ”เธฅเธณเธ”เธฑเธ Priority เธเธฒเธเธ—เธตเนเธเธงเธฃเน€เธฃเนเธเธ•เธดเธ”เธ•เธฑเนเธเธเนเธญเธ เนเธ”เธขเธเธดเธเธฒเธฃเธ“เธฒเธเธฒเธเธกเธนเธฅเธเนเธฒเธเธฒเธ + เธเธงเธฒเธกเธเธฃเนเธญเธกเธเธญเธเธฅเธนเธเธเนเธฒ + เธฃเธฐเธขเธฐเน€เธงเธฅเธฒเธ—เธตเนเธเนเธฒเธเธญเธขเธนเน
 
-รูปแบบผลลัพธ์ (Format): บุลเล็ตสรุปปัญหาภาพรวม + ตาราง Priority (ลำดับ, งาน, เจ้าของ, สิ่งที่ต้องทำต่อ, กำหนดเสร็จ)
-กติกา: ใช้ภาษาไทย ระบุวันที่ในรูปแบบ วว/ดด/ปปปป`;
+เธฃเธนเธเนเธเธเธเธฅเธฅเธฑเธเธเน (Format): เธเธธเธฅเน€เธฅเนเธ•เธชเธฃเธธเธเธเธฑเธเธซเธฒเธ เธฒเธเธฃเธงเธก + เธ•เธฒเธฃเธฒเธ Priority (เธฅเธณเธ”เธฑเธ, เธเธฒเธ, เน€เธเนเธฒเธเธญเธ, เธชเธดเนเธเธ—เธตเนเธ•เนเธญเธเธ—เธณเธ•เนเธญ, เธเธณเธซเธเธ”เน€เธชเธฃเนเธ)
+เธเธ•เธดเธเธฒ: เนเธเนเธ เธฒเธฉเธฒเนเธ—เธข เธฃเธฐเธเธธเธงเธฑเธเธ—เธตเนเนเธเธฃเธนเธเนเธเธ เธงเธง/เธ”เธ”/เธเธเธเธ`;
     }
     function prompt3Text(d){
-      if(!d)return "ยังไม่มีดีลให้สร้างข้อความติดตาม";
-      return `บทบาท (Role): คุณคือที่ปรึกษาการขาย B2B (B2B Sales Coach)
+      if(!d)return "เธขเธฑเธเนเธกเนเธกเธตเธ”เธตเธฅเนเธซเนเธชเธฃเนเธฒเธเธเนเธญเธเธงเธฒเธกเธ•เธดเธ”เธ•เธฒเธก";
+      return `เธเธ—เธเธฒเธ— (Role): เธเธธเธ“เธเธทเธญเธ—เธตเนเธเธฃเธถเธเธฉเธฒเธเธฒเธฃเธเธฒเธข B2B (B2B Sales Coach)
 
-บริบท (Context): ต้องการร่างข้อความติดตามลูกค้าทาง LINE / Email อย่างมืออาชีพ ไม่กดดันเกินไป และเน้นการช่วยเหลือ
+เธเธฃเธดเธเธ— (Context): เธ•เนเธญเธเธเธฒเธฃเธฃเนเธฒเธเธเนเธญเธเธงเธฒเธกเธ•เธดเธ”เธ•เธฒเธกเธฅเธนเธเธเนเธฒเธ—เธฒเธ LINE / Email เธญเธขเนเธฒเธเธกเธทเธญเธญเธฒเธเธตเธ เนเธกเนเธเธ”เธ”เธฑเธเน€เธเธดเธเนเธ เนเธฅเธฐเน€เธเนเธเธเธฒเธฃเธเนเธงเธขเน€เธซเธฅเธทเธญ
 
-ข้อมูลลูกค้า (Input):
-- ชื่อลูกค้า/บริษัท: ${d.customer}
-- ชื่องาน/สิ่งที่เสนอ: ${d.name}
-- มูลค่าโดยประมาณ: ${money(d.value)}
-- Stage ปัจจุบัน: ${d.stage} (Probability ${d.probability}%)
-- กำหนดปิดที่คาดไว้: ${thaiDate(d.close)}
-- เงื่อนไขการชำระ: [เงินสด / เงินผ่อน / เครดิตเทอม] ← ถ้าไม่ทราบให้ใช้ข้อความกลาง ๆ ไม่ระบุตัวเลข
-- สถานะล่าสุด / ปัญหาที่ติด: ${d.nextAction||"ไม่ระบุ"}
-- ผู้ดูแลฝั่งเรา: ${d.owner}
+เธเนเธญเธกเธนเธฅเธฅเธนเธเธเนเธฒ (Input):
+- เธเธทเนเธญเธฅเธนเธเธเนเธฒ/เธเธฃเธดเธฉเธฑเธ—: ${d.customer}
+- เธเธทเนเธญเธเธฒเธ/เธชเธดเนเธเธ—เธตเนเน€เธชเธเธญ: ${d.name}
+- เธกเธนเธฅเธเนเธฒเนเธ”เธขเธเธฃเธฐเธกเธฒเธ“: ${money(d.value)}
+- Stage เธเธฑเธเธเธธเธเธฑเธ: ${d.stage} (Probability ${d.probability}%)
+- เธเธณเธซเธเธ”เธเธดเธ”เธ—เธตเนเธเธฒเธ”เนเธงเน: ${thaiDate(d.close)}
+- เน€เธเธทเนเธญเธเนเธเธเธฒเธฃเธเธณเธฃเธฐ: [เน€เธเธดเธเธชเธ” / เน€เธเธดเธเธเนเธญเธ / เน€เธเธฃเธ”เธดเธ•เน€เธ—เธญเธก] โ เธ–เนเธฒเนเธกเนเธ—เธฃเธฒเธเนเธซเนเนเธเนเธเนเธญเธเธงเธฒเธกเธเธฅเธฒเธ เน เนเธกเนเธฃเธฐเธเธธเธ•เธฑเธงเน€เธฅเธ
+- เธชเธ–เธฒเธเธฐเธฅเนเธฒเธชเธธเธ” / เธเธฑเธเธซเธฒเธ—เธตเนเธ•เธดเธ”: ${d.nextAction||"เนเธกเนเธฃเธฐเธเธธ"}
+- เธเธนเนเธ”เธนเนเธฅเธเธฑเนเธเน€เธฃเธฒ: ${d.owner}
 
-ภารกิจ (Task): ร่างข้อความติดตาม 2 แบบ
-1. แบบสุภาพ เป็นกันเอง (สำหรับ LINE Official / แชตส่วนตัว): ถามความคืบหน้า เสนอช่วยดูหน้างาน หรือส่งเอกสารเพิ่ม
-2. แบบทางการ (สำหรับ Email / หนังสือสอบถาม): สรุปสถานะใบเสนอราคา/SO เงื่อนไขการชำระ และกำหนดเวลารอบส่งมอบหรือโปรโมชัน
+เธ เธฒเธฃเธเธดเธ (Task): เธฃเนเธฒเธเธเนเธญเธเธงเธฒเธกเธ•เธดเธ”เธ•เธฒเธก 2 เนเธเธ
+1. เนเธเธเธชเธธเธ เธฒเธ เน€เธเนเธเธเธฑเธเน€เธญเธ (เธชเธณเธซเธฃเธฑเธ LINE Official / เนเธเธ•เธชเนเธงเธเธ•เธฑเธง): เธ–เธฒเธกเธเธงเธฒเธกเธเธทเธเธซเธเนเธฒ เน€เธชเธเธญเธเนเธงเธขเธ”เธนเธซเธเนเธฒเธเธฒเธ เธซเธฃเธทเธญเธชเนเธเน€เธญเธเธชเธฒเธฃเน€เธเธดเนเธก
+2. เนเธเธเธ—เธฒเธเธเธฒเธฃ (เธชเธณเธซเธฃเธฑเธ Email / เธซเธเธฑเธเธชเธทเธญเธชเธญเธเธ–เธฒเธก): เธชเธฃเธธเธเธชเธ–เธฒเธเธฐเนเธเน€เธชเธเธญเธฃเธฒเธเธฒ/SO เน€เธเธทเนเธญเธเนเธเธเธฒเธฃเธเธณเธฃเธฐ เนเธฅเธฐเธเธณเธซเธเธ”เน€เธงเธฅเธฒเธฃเธญเธเธชเนเธเธกเธญเธเธซเธฃเธทเธญเนเธเธฃเนเธกเธเธฑเธ
 
-รูปแบบผลลัพธ์ (Format): ข้อความพร้อมคัดลอก 2 บล็อก (ระบุหัวข้อ "แบบ LINE" และ "แบบ Email") โดยใช้ช่องว่าง [ ... ] สำหรับชื่อผู้ติดต่อหรือวันที่ที่ยังไม่ทราบ
-กติกา: ห้ามแต่งราคา/เงื่อนไขที่ไม่มีในข้อมูล, ความยาวไม่เกิน 120 คำต่อแบบ`;
+เธฃเธนเธเนเธเธเธเธฅเธฅเธฑเธเธเน (Format): เธเนเธญเธเธงเธฒเธกเธเธฃเนเธญเธกเธเธฑเธ”เธฅเธญเธ 2 เธเธฅเนเธญเธ (เธฃเธฐเธเธธเธซเธฑเธงเธเนเธญ "เนเธเธ LINE" เนเธฅเธฐ "เนเธเธ Email") เนเธ”เธขเนเธเนเธเนเธญเธเธงเนเธฒเธ [ ... ] เธชเธณเธซเธฃเธฑเธเธเธทเนเธญเธเธนเนเธ•เธดเธ”เธ•เนเธญเธซเธฃเธทเธญเธงเธฑเธเธ—เธตเนเธ—เธตเนเธขเธฑเธเนเธกเนเธ—เธฃเธฒเธ
+เธเธ•เธดเธเธฒ: เธซเนเธฒเธกเนเธ•เนเธเธฃเธฒเธเธฒ/เน€เธเธทเนเธญเธเนเธเธ—เธตเนเนเธกเนเธกเธตเนเธเธเนเธญเธกเธนเธฅ, เธเธงเธฒเธกเธขเธฒเธงเนเธกเนเน€เธเธดเธ 120 เธเธณเธ•เนเธญเนเธเธ`;
     }
     function promptOwnerRows(){
       const map={};
       deals.forEach(d=>{
-        const k=d.owner||"ไม่ระบุ";
+        const k=d.owner||"เนเธกเนเธฃเธฐเธเธธ";
         const m=map[k]||(map[k]={owner:k,actual:0,actualN:0,install:0,installN:0,pipe:0,pipeN:0,lost:0,lostN:0});
         const v=Number(d.value||0);
         if(d.stage==="Won"){m.actual+=v;m.actualN++}
@@ -737,51 +737,51 @@ ${mdTable(["SO/ชื่องาน","ลูกค้า","สินค้า/S
       });
     }
     function prompt4Text(){
-      return `บทบาท (Role): คุณคือ Head of BU & Sales Director
+      return `เธเธ—เธเธฒเธ— (Role): เธเธธเธ“เธเธทเธญ Head of BU & Sales Director
 
-บริบท (Context): ข้อมูลสรุปยอดรายบุคคลของทีมขาย B2B Partner (มูลค่าเป็นบาท)
-คอลัมน์: Actual = ปิดงานแล้ว (Won) | รอติดตั้ง = ปิดขายแล้ว/On Hold รอติดตั้ง | Pipeline = ยังไม่ปิด | Conversion = Won ÷ (Won + Lost)
+เธเธฃเธดเธเธ— (Context): เธเนเธญเธกเธนเธฅเธชเธฃเธธเธเธขเธญเธ”เธฃเธฒเธขเธเธธเธเธเธฅเธเธญเธเธ—เธตเธกเธเธฒเธข B2B Partner (เธกเธนเธฅเธเนเธฒเน€เธเนเธเธเธฒเธ—)
+เธเธญเธฅเธฑเธกเธเน: Actual = เธเธดเธ”เธเธฒเธเนเธฅเนเธง (Won) | เธฃเธญเธ•เธดเธ”เธ•เธฑเนเธ = เธเธดเธ”เธเธฒเธขเนเธฅเนเธง/On Hold เธฃเธญเธ•เธดเธ”เธ•เธฑเนเธ | Pipeline = เธขเธฑเธเนเธกเนเธเธดเธ” | Conversion = Won รท (Won + Lost)
 
-ข้อมูลนำเข้า (Data):
-${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำนวน Actual","รอติดตั้ง (บาท)","จำนวน","Pipeline (บาท)","จำนวน","Conversion"],promptOwnerRows())}
+เธเนเธญเธกเธนเธฅเธเธณเน€เธเนเธฒ (Data):
+${mdTable(["เธเธนเนเธฃเธฑเธเธเธดเธ”เธเธญเธ","Actual (เธเธฒเธ—)","เธเธณเธเธงเธ Actual","เธฃเธญเธ•เธดเธ”เธ•เธฑเนเธ (เธเธฒเธ—)","เธเธณเธเธงเธ","Pipeline (เธเธฒเธ—)","เธเธณเธเธงเธ","Conversion"],promptOwnerRows())}
 
-เป้าหมายยอดขายเดือนนี้: [ระบุเป้าเป็นบาท หรือระบุว่า "ยังไม่มีเป้าให้ใช้ค่าเฉลี่ย 3 เดือนย้อนหลัง"]
+เน€เธเนเธฒเธซเธกเธฒเธขเธขเธญเธ”เธเธฒเธขเน€เธ”เธทเธญเธเธเธตเน: [เธฃเธฐเธเธธเน€เธเนเธฒเน€เธเนเธเธเธฒเธ— เธซเธฃเธทเธญเธฃเธฐเธเธธเธงเนเธฒ "เธขเธฑเธเนเธกเนเธกเธตเน€เธเนเธฒเนเธซเนเนเธเนเธเนเธฒเน€เธเธฅเธตเนเธข 3 เน€เธ”เธทเธญเธเธขเนเธญเธเธซเธฅเธฑเธ"]
 
-ภารกิจ (Task):
-1. คำนวณ Conversion Rate จาก Pipeline → Actual ของทีมและรายบุคคล พร้อมชี้ว่าใครต่ำ/สูงกว่าค่าเฉลี่ยทีม
-2. วิเคราะห์ช่องว่าง (GAP) ระหว่างยอดปัจจุบันกับเป้าหมาย และประเมินว่าต้องปิดดีลเพิ่มกี่รายการ/มูลค่าเท่าไร
-3. เขียนจุดแข็งและจุดที่ต้องเร่งผลักดันรายบุคคล สำหรับใช้คุย 1-on-1 ประจำสัปดาห์
+เธ เธฒเธฃเธเธดเธ (Task):
+1. เธเธณเธเธงเธ“ Conversion Rate เธเธฒเธ Pipeline โ’ Actual เธเธญเธเธ—เธตเธกเนเธฅเธฐเธฃเธฒเธขเธเธธเธเธเธฅ เธเธฃเนเธญเธกเธเธตเนเธงเนเธฒเนเธเธฃเธ•เนเธณ/เธชเธนเธเธเธงเนเธฒเธเนเธฒเน€เธเธฅเธตเนเธขเธ—เธตเธก
+2. เธงเธดเน€เธเธฃเธฒเธฐเธซเนเธเนเธญเธเธงเนเธฒเธ (GAP) เธฃเธฐเธซเธงเนเธฒเธเธขเธญเธ”เธเธฑเธเธเธธเธเธฑเธเธเธฑเธเน€เธเนเธฒเธซเธกเธฒเธข เนเธฅเธฐเธเธฃเธฐเน€เธกเธดเธเธงเนเธฒเธ•เนเธญเธเธเธดเธ”เธ”เธตเธฅเน€เธเธดเนเธกเธเธตเนเธฃเธฒเธขเธเธฒเธฃ/เธกเธนเธฅเธเนเธฒเน€เธ—เนเธฒเนเธฃ
+3. เน€เธเธตเธขเธเธเธธเธ”เนเธเนเธเนเธฅเธฐเธเธธเธ”เธ—เธตเนเธ•เนเธญเธเน€เธฃเนเธเธเธฅเธฑเธเธ”เธฑเธเธฃเธฒเธขเธเธธเธเธเธฅ เธชเธณเธซเธฃเธฑเธเนเธเนเธเธธเธข 1-on-1 เธเธฃเธฐเธเธณเธชเธฑเธเธ”เธฒเธซเน
 
-รูปแบบผลลัพธ์ (Format): Executive Summary 3 หัวข้อสั้น ๆ — (1) ภาพรวมทีม (2) รายบุคคล (3) แผนขับเคลื่อนสัปดาห์หน้า
-กติกา: ตัวเลขต้องคำนวณจากตารางเท่านั้น ห้ามประมาณเกินข้อมูล ใช้ภาษาไทย`;
+เธฃเธนเธเนเธเธเธเธฅเธฅเธฑเธเธเน (Format): Executive Summary 3 เธซเธฑเธงเธเนเธญเธชเธฑเนเธ เน โ€” (1) เธ เธฒเธเธฃเธงเธกเธ—เธตเธก (2) เธฃเธฒเธขเธเธธเธเธเธฅ (3) เนเธเธเธเธฑเธเน€เธเธฅเธทเนเธญเธเธชเธฑเธเธ”เธฒเธซเนเธซเธเนเธฒ
+เธเธ•เธดเธเธฒ: เธ•เธฑเธงเน€เธฅเธเธ•เนเธญเธเธเธณเธเธงเธ“เธเธฒเธเธ•เธฒเธฃเธฒเธเน€เธ—เนเธฒเธเธฑเนเธ เธซเนเธฒเธกเธเธฃเธฐเธกเธฒเธ“เน€เธเธดเธเธเนเธญเธกเธนเธฅ เนเธเนเธ เธฒเธฉเธฒเนเธ—เธข`;
     }
     function promptCard(id,title,subtitle,text){
       return panel(title,
         `<textarea class="field" id="${id}" readonly spellcheck="false" style="width:100%;min-height:250px;font-family:ui-monospace,Consolas,monospace;font-size:11px;line-height:1.65;white-space:pre;overflow:auto">${promptHtml(text)}</textarea>
          <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-           <button class="btn btn-primary" data-action="copy-prompt" data-copy="${id}"><i class="fa-regular fa-copy"></i>คัดลอก Prompt</button>
-           <span class="panel-sub">วางใน AI (ChatGPT / Copilot / Gemini) ได้ทันที</span>
+           <button class="btn btn-primary" data-action="copy-prompt" data-copy="${id}"><i class="fa-regular fa-copy"></i>เธเธฑเธ”เธฅเธญเธ Prompt</button>
+           <span class="panel-sub">เธงเธฒเธเนเธ AI (ChatGPT / Copilot / Gemini) เนเธ”เนเธ—เธฑเธเธ—เธต</span>
          </div>`,subtitle);
     }
     function renderPrompts(){
       const pipe=promptPipelineDeals(),inst=promptInstallDeals();
-      const options=deals.map(d=>`<option value="${d.id}">${promptHtml(d.customer)} — ${promptHtml(d.name)}</option>`).join("");
-      return `${pageHead("AI Prompts สำหรับงานขาย","ชุดคำสั่งสำเร็จรูป 4 ชุด — ระบบเติมข้อมูลดีลของคุณให้อัตโนมัติ แล้วกดคัดลอกไปวางใน AI",btn("คัดลอกทั้ง 4 ชุด","copy-all-prompts","fa-regular fa-copy",true))}
-        ${promptCard("promptText1","1) วิเคราะห์ Pipeline & ประเมินโอกาสปิดงาน",`Pipeline ${pipe.length} ดีล · ${money(pipe.reduce((s,d)=>s+Number(d.value||0),0))}`,prompt1Text())}
-        ${promptCard("promptText2","2) งานค้าง/รอติดตั้ง — หาจุดติดและแผนปลดล็อก",`รอติดตั้ง/On Hold ${inst.length} รายการ`,prompt2Text())}
-        ${panel("3) ร่างข้อความติดตามลูกค้ารายบุคคล",
-          `<div class="toolbar" style="margin-bottom:10px"><select class="select" id="pf3Deal" style="min-width:260px">${options||'<option value="">ไม่มีดีล</option>'}</select><span class="panel-sub">เลือกดีล → ข้อความด้านล่างจะเปลี่ยนตาม</span></div>
+      const options=deals.map(d=>`<option value="${d.id}">${promptHtml(d.customer)} โ€” ${promptHtml(d.name)}</option>`).join("");
+      return `${pageHead("AI Prompts เธชเธณเธซเธฃเธฑเธเธเธฒเธเธเธฒเธข","เธเธธเธ”เธเธณเธชเธฑเนเธเธชเธณเน€เธฃเนเธเธฃเธนเธ 4 เธเธธเธ” โ€” เธฃเธฐเธเธเน€เธ•เธดเธกเธเนเธญเธกเธนเธฅเธ”เธตเธฅเธเธญเธเธเธธเธ“เนเธซเนเธญเธฑเธ•เนเธเธกเธฑเธ•เธด เนเธฅเนเธงเธเธ”เธเธฑเธ”เธฅเธญเธเนเธเธงเธฒเธเนเธ AI",btn("เธเธฑเธ”เธฅเธญเธเธ—เธฑเนเธ 4 เธเธธเธ”","copy-all-prompts","fa-regular fa-copy",true))}
+        ${promptCard("promptText1","1) เธงเธดเน€เธเธฃเธฒเธฐเธซเน Pipeline & เธเธฃเธฐเน€เธกเธดเธเนเธญเธเธฒเธชเธเธดเธ”เธเธฒเธ",`Pipeline ${pipe.length} เธ”เธตเธฅ ยท ${money(pipe.reduce((s,d)=>s+Number(d.value||0),0))}`,prompt1Text())}
+        ${promptCard("promptText2","2) เธเธฒเธเธเนเธฒเธ/เธฃเธญเธ•เธดเธ”เธ•เธฑเนเธ โ€” เธซเธฒเธเธธเธ”เธ•เธดเธ”เนเธฅเธฐเนเธเธเธเธฅเธ”เธฅเนเธญเธ",`เธฃเธญเธ•เธดเธ”เธ•เธฑเนเธ/On Hold ${inst.length} เธฃเธฒเธขเธเธฒเธฃ`,prompt2Text())}
+        ${panel("3) เธฃเนเธฒเธเธเนเธญเธเธงเธฒเธกเธ•เธดเธ”เธ•เธฒเธกเธฅเธนเธเธเนเธฒเธฃเธฒเธขเธเธธเธเธเธฅ",
+          `<div class="toolbar" style="margin-bottom:10px"><select class="select" id="pf3Deal" style="min-width:260px">${options||'<option value="">เนเธกเนเธกเธตเธ”เธตเธฅ</option>'}</select><span class="panel-sub">เน€เธฅเธทเธญเธเธ”เธตเธฅ โ’ เธเนเธญเธเธงเธฒเธกเธ”เนเธฒเธเธฅเนเธฒเธเธเธฐเน€เธเธฅเธตเนเธขเธเธ•เธฒเธก</span></div>
            <textarea class="field" id="promptText3" readonly spellcheck="false" style="width:100%;min-height:250px;font-family:ui-monospace,Consolas,monospace;font-size:11px;line-height:1.65;white-space:pre;overflow:auto">${promptHtml(prompt3Text(deals[0]))}</textarea>
-           <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn btn-primary" data-action="copy-prompt" data-copy="promptText3"><i class="fa-regular fa-copy"></i>คัดลอก Prompt</button><span class="panel-sub">LINE + Email 2 แบบในชุดเดียว</span></div>`,
-          "เลือกดีลรายตัวเพื่อสร้างข้อความติดตาม")}
-        ${promptCard("promptText4","4) สรุปผลงาน & คาดการณ์เป้ายอดขายรายบุคคล","คำนวณ Actual / รอติดตั้ง / Pipeline / Conversion จากข้อมูลจริง",prompt4Text())}
-        ${panel("หมายเหตุการใช้งาน",`<div class="suggestion"><strong>ยังไม่มีฟิลด์ "เงื่อนไขการชำระเงิน" ในระบบ</strong> — Prompt ที่ 3 จะให้ AI ใช้ข้อความกลาง ๆ แทน ถ้าต้องการให้แม่นขึ้น แจ้ง Admin ให้เพิ่มคอลัมน์ <code>payment</code> ในชีต <code>Deals</code> แล้วเชื่อมฟอร์ม "เพิ่มดีลของฉัน"<br><br>
-        • ข้อมูลที่ส่งให้ AI คือดีลที่คุณมีสิทธิ์เห็นเท่านั้น (Sale เห็นเฉพาะของตัวเอง)<br>
-        • ชุดข้อมูลอ้างอิงจาก Google Sheets ล่าสุด — กด Refresh ที่หน้า Sale Monitor ก่อนถ้าเพิ่งเพิ่มดีล</div>`)}`;
+           <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn btn-primary" data-action="copy-prompt" data-copy="promptText3"><i class="fa-regular fa-copy"></i>เธเธฑเธ”เธฅเธญเธ Prompt</button><span class="panel-sub">LINE + Email 2 เนเธเธเนเธเธเธธเธ”เน€เธ”เธตเธขเธง</span></div>`,
+          "เน€เธฅเธทเธญเธเธ”เธตเธฅเธฃเธฒเธขเธ•เธฑเธงเน€เธเธทเนเธญเธชเธฃเนเธฒเธเธเนเธญเธเธงเธฒเธกเธ•เธดเธ”เธ•เธฒเธก")}
+        ${promptCard("promptText4","4) เธชเธฃเธธเธเธเธฅเธเธฒเธ & เธเธฒเธ”เธเธฒเธฃเธ“เนเน€เธเนเธฒเธขเธญเธ”เธเธฒเธขเธฃเธฒเธขเธเธธเธเธเธฅ","เธเธณเธเธงเธ“ Actual / เธฃเธญเธ•เธดเธ”เธ•เธฑเนเธ / Pipeline / Conversion เธเธฒเธเธเนเธญเธกเธนเธฅเธเธฃเธดเธ",prompt4Text())}
+        ${panel("เธซเธกเธฒเธขเน€เธซเธ•เธธเธเธฒเธฃเนเธเนเธเธฒเธ",`<div class="suggestion"><strong>เธขเธฑเธเนเธกเนเธกเธตเธเธดเธฅเธ”เน "เน€เธเธทเนเธญเธเนเธเธเธฒเธฃเธเธณเธฃเธฐเน€เธเธดเธ" เนเธเธฃเธฐเธเธ</strong> โ€” Prompt เธ—เธตเน 3 เธเธฐเนเธซเน AI เนเธเนเธเนเธญเธเธงเธฒเธกเธเธฅเธฒเธ เน เนเธ—เธ เธ–เนเธฒเธ•เนเธญเธเธเธฒเธฃเนเธซเนเนเธกเนเธเธเธถเนเธ เนเธเนเธ Admin เนเธซเนเน€เธเธดเนเธกเธเธญเธฅเธฑเธกเธเน <code>payment</code> เนเธเธเธตเธ• <code>Deals</code> เนเธฅเนเธงเน€เธเธทเนเธญเธกเธเธญเธฃเนเธก "เน€เธเธดเนเธกเธ”เธตเธฅเธเธญเธเธเธฑเธ"<br><br>
+        โ€ข เธเนเธญเธกเธนเธฅเธ—เธตเนเธชเนเธเนเธซเน AI เธเธทเธญเธ”เธตเธฅเธ—เธตเนเธเธธเธ“เธกเธตเธชเธดเธ—เธเธดเนเน€เธซเนเธเน€เธ—เนเธฒเธเธฑเนเธ (Sale เน€เธซเนเธเน€เธเธเธฒเธฐเธเธญเธเธ•เธฑเธงเน€เธญเธ)<br>
+        โ€ข เธเธธเธ”เธเนเธญเธกเธนเธฅเธญเนเธฒเธเธญเธดเธเธเธฒเธ Google Sheets เธฅเนเธฒเธชเธธเธ” โ€” เธเธ” Refresh เธ—เธตเนเธซเธเนเธฒ Sale Monitor เธเนเธญเธเธ–เนเธฒเน€เธเธดเนเธเน€เธเธดเนเธกเธ”เธตเธฅ</div>`)}`;
     }
     function copyToClipboard(text){
-      const fallback=()=>{const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy")}catch(err){}document.body.removeChild(ta);toast("คัดลอก Prompt แล้ว")};
-      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>toast("คัดลอก Prompt แล้ว"),fallback)}else fallback();
+      const fallback=()=>{const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy")}catch(err){}document.body.removeChild(ta);toast("เธเธฑเธ”เธฅเธญเธ Prompt เนเธฅเนเธง")};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>toast("เธเธฑเธ”เธฅเธญเธ Prompt เนเธฅเนเธง"),fallback)}else fallback();
     }
     function copyPromptText(id){const el=document.getElementById(id);if(!el)return;copyToClipboard(el.value!==undefined?el.value:el.textContent)}
     function copyAllPrompts(){const parts=["promptText1","promptText2","promptText3","promptText4"].map(id=>{const el=document.getElementById(id);return el?"### "+id+"\n\n"+(el.value!==undefined?el.value:el.textContent):""}).filter(Boolean);copyToClipboard(parts.join("\n\n---\n\n"))}
@@ -789,17 +789,17 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
 
     /* ===== JavaScript: Event handlers and actions ===== */
     document.getElementById("navList").addEventListener("click",e=>{const item=e.target.closest(".nav-item");if(!item)return;if(item.dataset.page!==currentPage)pageStack.push(currentPage);currentPage=item.dataset.page;render()});
-    // เปิดหน้าที่ระบุจาก URL เช่น index.html?page=team
+    // เน€เธเธดเธ”เธซเธเนเธฒเธ—เธตเนเธฃเธฐเธเธธเธเธฒเธ URL เน€เธเนเธ index.html?page=team
     (function(){try{const p=new URLSearchParams(location.search).get("page");if(p&&pageTitles[p]){currentPage=p;render()}}catch(err){}})();
     document.getElementById("mobileMenu").addEventListener("click",()=>document.getElementById("sidebar").classList.toggle("open"));
     document.getElementById("notificationBtn").addEventListener("click",function(e){e.stopPropagation();toggleNotif()});
 
-    /* ===== การแจ้งเตือน: dropdown พร้อมสถานะ อ่าน / ไม่อ่าน ===== */
+    /* ===== เธเธฒเธฃเนเธเนเธเน€เธ•เธทเธญเธ: dropdown เธเธฃเนเธญเธกเธชเธ–เธฒเธเธฐ เธญเนเธฒเธ / เนเธกเนเธญเนเธฒเธ ===== */
     const NOTIFS=[
-      {id:"n1",t:"ดีลเสี่ยงสูง",d:"Network Infrastructure ไม่มีความเคลื่อนไหว 12 วัน",time:"10 นาทีที่แล้ว"},
-      {id:"n2",t:"ใกล้ถึงกำหนดปิด",d:"Cloud Migration Phase 2 คาดปิดใน 5 วัน",time:"1 ชั่วโมงที่แล้ว"},
-      {id:"n3",t:"คู่ค้าใหม่ผ่าน MOU",d:"หจก. บ้านสะอาด นครปฐม — เริ่มอบรมสินค้า",time:"เมื่อวาน"},
-      {id:"n4",t:"งานค้างติดตั้ง",d:"4 งานรอพื้นที่/ระบบไฟฟ้า เกิน 7 วัน",time:"2 วันที่แล้ว"}
+      {id:"n1",t:"เธ”เธตเธฅเน€เธชเธตเนเธขเธเธชเธนเธ",d:"Network Infrastructure เนเธกเนเธกเธตเธเธงเธฒเธกเน€เธเธฅเธทเนเธญเธเนเธซเธง 12 เธงเธฑเธ",time:"10 เธเธฒเธ—เธตเธ—เธตเนเนเธฅเนเธง"},
+      {id:"n2",t:"เนเธเธฅเนเธ–เธถเธเธเธณเธซเธเธ”เธเธดเธ”",d:"Cloud Migration Phase 2 เธเธฒเธ”เธเธดเธ”เนเธ 5 เธงเธฑเธ",time:"1 เธเธฑเนเธงเนเธกเธเธ—เธตเนเนเธฅเนเธง"},
+      {id:"n3",t:"เธเธนเนเธเนเธฒเนเธซเธกเนเธเนเธฒเธ MOU",d:"เธซเธเธ. เธเนเธฒเธเธชเธฐเธญเธฒเธ” เธเธเธฃเธเธเธก โ€” เน€เธฃเธดเนเธกเธญเธเธฃเธกเธชเธดเธเธเนเธฒ",time:"เน€เธกเธทเนเธญเธงเธฒเธ"},
+      {id:"n4",t:"เธเธฒเธเธเนเธฒเธเธ•เธดเธ”เธ•เธฑเนเธ",d:"4 เธเธฒเธเธฃเธญเธเธทเนเธเธ—เธตเน/เธฃเธฐเธเธเนเธเธเนเธฒ เน€เธเธดเธ 7 เธงเธฑเธ",time:"2 เธงเธฑเธเธ—เธตเนเนเธฅเนเธง"}
     ];
     const NOTIF_KEY="pi_notif_read_v1";
     function notifReadList(){try{return JSON.parse(localStorage.getItem(NOTIF_KEY)||"[]")}catch(e){return []}}
@@ -808,11 +808,11 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
     function renderNotif(){
       const read=notifReadList(),panel=document.getElementById("notifPanel");if(!panel)return;
       const unread=NOTIFS.filter(n=>read.indexOf(n.id)<0).length;
-      panel.innerHTML='<div class="notif-head"><strong>การแจ้งเตือน'+(unread?' ('+unread+')':'')+'</strong><button data-notif-all>อ่านทั้งหมด</button></div>'
+      panel.innerHTML='<div class="notif-head"><strong>เธเธฒเธฃเนเธเนเธเน€เธ•เธทเธญเธ'+(unread?' ('+unread+')':'')+'</strong><button data-notif-all>เธญเนเธฒเธเธ—เธฑเนเธเธซเธกเธ”</button></div>'
         +(NOTIFS.length?NOTIFS.map(n=>{
           const isRead=read.indexOf(n.id)>=0;
-          return '<div class="notif-item '+(isRead?'read':'unread')+'" data-notif="'+n.id+'"><span class="nd"></span><div><div class="nt">'+n.t+'</div><div class="nx">'+n.d+'</div><div class="nx" style="color:#98A2B3;margin-top:3px">'+n.time+' · '+(isRead?'อ่านแล้ว':'ยังไม่อ่าน')+'</div></div></div>';
-        }).join(""):'<div class="notif-empty">ไม่มีการแจ้งเตือน</div>');
+          return '<div class="notif-item '+(isRead?'read':'unread')+'" data-notif="'+n.id+'"><span class="nd"></span><div><div class="nt">'+n.t+'</div><div class="nx">'+n.d+'</div><div class="nx" style="color:#98A2B3;margin-top:3px">'+n.time+' ยท '+(isRead?'เธญเนเธฒเธเนเธฅเนเธง':'เธขเธฑเธเนเธกเนเธญเนเธฒเธ')+'</div></div></div>';
+        }).join(""):'<div class="notif-empty">เนเธกเนเธกเธตเธเธฒเธฃเนเธเนเธเน€เธ•เธทเธญเธ</div>');
       const dot=document.getElementById("notifDot");
       if(dot)dot.style.display=unread?"block":"none";
     }
@@ -823,7 +823,7 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
     document.addEventListener("click",function(e){
       const panel=document.getElementById("notifPanel");if(!panel||!panel.classList.contains("open"))return;
       if(e.target.closest("[data-notif-all]")){
-        notifSaveList(NOTIFS.map(n=>n.id));renderNotif();toast("ทำเครื่องหมายอ่านทั้งหมดแล้ว");return;
+        notifSaveList(NOTIFS.map(n=>n.id));renderNotif();toast("เธ—เธณเน€เธเธฃเธทเนเธญเธเธซเธกเธฒเธขเธญเนเธฒเธเธ—เธฑเนเธเธซเธกเธ”เนเธฅเนเธง");return;
       }
       const item=e.target.closest("[data-notif]");
       if(item){
@@ -845,47 +845,47 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
       const action=e.target.closest("[data-action]")?.dataset.action;if(!action)return;
       if(action==="go-back"){const p=pageStack.pop();currentPage=p||"dashboard";render();return}
       if(action==="go-sales"){currentPage="sales";render()}
-      else if(action==="add-team"){if(!window.__CAN_REGISTER__){toast("สิทธิ์ Supervisor ดูได้อย่างเดียว");return}var f=document.getElementById("teamForm");if(f){f.style.display="block";fillTeamUplines();f.scrollIntoView({behavior:"smooth",block:"center"})}}
+      else if(action==="add-team"){if(!window.__CAN_REGISTER__){toast("เธชเธดเธ—เธเธดเน Supervisor เธ”เธนเนเธ”เนเธญเธขเนเธฒเธเน€เธ”เธตเธขเธง");return}var f=document.getElementById("teamForm");if(f){f.style.display="block";fillTeamUplines();f.scrollIntoView({behavior:"smooth",block:"center"})}}
       else if(action==="save-team"){
-        if(!window.__CAN_REGISTER__){toast("สิทธิ์ Supervisor ดูได้อย่างเดียว");return}
+        if(!window.__CAN_REGISTER__){toast("เธชเธดเธ—เธเธดเน Supervisor เธ”เธนเนเธ”เนเธญเธขเนเธฒเธเน€เธ”เธตเธขเธง");return}
         var em=(document.getElementById("tuEmail")||{}).value||"";
         var nm=(document.getElementById("tuName")||{}).value||"";
         var lv=(document.getElementById("tuLevel")||{}).value||"";
         var pr=(document.getElementById("tuParent")||{}).value||"";
         var msg=document.getElementById("tuMsg");
-        if(!em||em.indexOf("@")<0){toast("กรอกอีเมลให้ถูกต้อง");return}
-        if(!pr){toast("เลือกผู้ดูแลต้นสาย");return}
-        if(msg)msg.textContent="กำลังบันทึก...";
+        if(!em||em.indexOf("@")<0){toast("เธเธฃเธญเธเธญเธตเน€เธกเธฅเนเธซเนเธ–เธนเธเธ•เนเธญเธ");return}
+        if(!pr){toast("เน€เธฅเธทเธญเธเธเธนเนเธ”เธนเนเธฅเธ•เนเธเธชเธฒเธข");return}
+        if(msg)msg.textContent="เธเธณเธฅเธฑเธเธเธฑเธเธ—เธถเธ...";
         PIAuth.addUser(em.trim(),nm.trim(),lv,pr).then(function(r){
           window.__lastPw__={ email:r.email, password:r.password };
-          setModal('สร้าง ID สำเร็จ','กรุณาส่งรหัสผ่านนี้ให้ผู้ใช้ — ระบบจะแสดงเพียงครั้งเดียว',
+          setModal('เธชเธฃเนเธฒเธ ID เธชเธณเน€เธฃเนเธ','เธเธฃเธธเธ“เธฒเธชเนเธเธฃเธซเธฑเธชเธเนเธฒเธเธเธตเนเนเธซเนเธเธนเนเนเธเน โ€” เธฃเธฐเธเธเธเธฐเนเธชเธ”เธเน€เธเธตเธขเธเธเธฃเธฑเนเธเน€เธ”เธตเธขเธง',
             '<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:14px">'
             + '<div style="font-size:12px;color:#92400E;margin-bottom:6px">' + String(r.email) + '</div>'
             + '<code style="font-size:17px;font-weight:600;letter-spacing:1px;color:#0F2B46">' + String(r.password) + '</code>'
             + '</div>',
-            [{label:'คัดลอกรหัสผ่าน',icon:'fa-regular fa-copy',action:'copy-pw'},{label:'ปิด',primary:true}]);
+            [{label:'เธเธฑเธ”เธฅเธญเธเธฃเธซเธฑเธชเธเนเธฒเธ',icon:'fa-regular fa-copy',action:'copy-pw'},{label:'เธเธดเธ”',primary:true}]);
           var cbtn=document.querySelector('#modalFoot [data-action="copy-pw"]');
           if(cbtn)cbtn.addEventListener('click',function(){
             var txt=String((window.__lastPw__||{}).password||'');
-            if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('คัดลอกรหัสผ่านแล้ว')},function(){toast('คัดลอกไม่สำเร็จ')})}
-            else{toast('คัดลอกไม่สำเร็จ')}
+            if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('เธเธฑเธ”เธฅเธญเธเธฃเธซเธฑเธชเธเนเธฒเธเนเธฅเนเธง')},function(){toast('เธเธฑเธ”เธฅเธญเธเนเธกเนเธชเธณเน€เธฃเนเธ')})}
+            else{toast('เธเธฑเธ”เธฅเธญเธเนเธกเนเธชเธณเน€เธฃเนเธ')}
           });
           if(msg)msg.textContent='';
           loadTeam();
-        }).catch(function(e){if(msg)msg.textContent=e.message;toast("ไม่สำเร็จ: "+e.message)});
+        }).catch(function(e){if(msg)msg.textContent=e.message;toast("เนเธกเนเธชเธณเน€เธฃเนเธ: "+e.message)});
       }
       else if(action==="add-deal")showDealForm()
-      else if(action==="refresh"){const button=e.target.closest("[data-action]");button.classList.add("loading");button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>กำลัง Refresh...';setTimeout(()=>{button.classList.remove("loading");render();toast("Refresh Data สำเร็จ")},1000)}
+      else if(action==="refresh"){const button=e.target.closest("[data-action]");button.classList.add("loading");button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>เธเธณเธฅเธฑเธ Refresh...';setTimeout(()=>{button.classList.remove("loading");render();toast("Refresh Data เธชเธณเน€เธฃเนเธ")},1000)}
       else if(action==="export-deals")exportDeals()
-      else if(action==="add-project")toast("ฟังก์ชันสร้าง Project พร้อมใช้งาน")
-      else if(action==="add-task")toast("กรุณาเลือก Project ก่อนเพิ่ม Task")
+      else if(action==="add-project")toast("เธเธฑเธเธเนเธเธฑเธเธชเธฃเนเธฒเธ Project เธเธฃเนเธญเธกเนเธเนเธเธฒเธ")
+      else if(action==="add-task")toast("เธเธฃเธธเธ“เธฒเน€เธฅเธทเธญเธ Project เธเนเธญเธเน€เธเธดเนเธก Task")
       else if(action==="create-ticket")showTicketForm()
-      else if(action==="send-line"){document.getElementById("lineStatus").textContent="Sent";document.getElementById("lineStatus").className="status healthy";toast("ส่งข้อความอัปเดตให้ลูกค้าเรียบร้อยแล้ว")}
-      else if(action==="save-settings")toast("บันทึกการตั้งค่าเรียบร้อยแล้ว")
-      else if(action==="contact-customer")toast("บันทึกการติดต่อลูกค้าแล้ว")
-      else if(action==="schedule-maintenance")toast("เพิ่มนัดหมาย Maintenance แล้ว")
+      else if(action==="send-line"){document.getElementById("lineStatus").textContent="Sent";document.getElementById("lineStatus").className="status healthy";toast("เธชเนเธเธเนเธญเธเธงเธฒเธกเธญเธฑเธเน€เธ”เธ•เนเธซเนเธฅเธนเธเธเนเธฒเน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธง")}
+      else if(action==="save-settings")toast("เธเธฑเธเธ—เธถเธเธเธฒเธฃเธ•เธฑเนเธเธเนเธฒเน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธง")
+      else if(action==="contact-customer")toast("เธเธฑเธเธ—เธถเธเธเธฒเธฃเธ•เธดเธ”เธ•เนเธญเธฅเธนเธเธเนเธฒเนเธฅเนเธง")
+      else if(action==="schedule-maintenance")toast("เน€เธเธดเนเธกเธเธฑเธ”เธซเธกเธฒเธข Maintenance เนเธฅเนเธง")
       else if(action.startsWith("add-activity-"))showActivityForm(Number(action.split("-").pop()))
-      else if(action.startsWith("follow-")){closeModal();toast("เพิ่ม Deal เข้า Follow-up แล้ว")}
+      else if(action.startsWith("follow-")){closeModal();toast("เน€เธเธดเนเธก Deal เน€เธเนเธฒ Follow-up เนเธฅเนเธง")}
       else if(action.startsWith("edit-deal-"))showDealForm(deals.find(d=>d.id===Number(action.split("-").pop())))
       else if(action==="save-new-deal")saveDeal()
       else if(action.startsWith("save-deal-"))saveDeal(Number(action.split("-").pop()))
@@ -896,22 +896,22 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
       else if(action==="save-activity")saveActivity()
       else if(action==="save-project-status")saveProjectStatus()
     });
-    function exportDeals(){const headers=["Deal Name","Customer","Owner","Value","Stage","Probability","Expected Close","Risk Score","Status"],rows=deals.map(d=>[d.name,d.customer,d.owner,d.value,d.stage,d.probability,d.close,riskScore(d),d.status]),csv=[headers,...rows].map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n"),link=document.createElement("a");link.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));link.download="sales-report.csv";link.click();URL.revokeObjectURL(link.href);toast("Export Report สำเร็จ")}
-    function saveDeal(id=null){const form=document.getElementById("dealForm");if(!form.reportValidity())return;const f=Object.fromEntries(new FormData(form));if(window.__saveDealSheet__&&!id){window.__saveDealSheet__(f);return}if(id){const d=deals.find(x=>x.id===id);Object.assign(d,{...f,value:Number(f.value),probability:Number(f.probability),lastActivity:"2026-10-07",status:"Healthy"});closeModal();render();toast("อัปเดต Deal เรียบร้อยแล้ว")}else{deals.unshift({id:Date.now(),...f,value:Number(f.value),probability:Number(f.probability),lastActivity:"2026-10-07",status:"Healthy",activity:["สร้าง Deal ใหม่"]});closeModal();render();toast("เพิ่ม Deal ใหม่เรียบร้อยแล้ว")}}
-    function showActivityForm(id){setModal("Add Activity","บันทึกกิจกรรมสำหรับ Deal",`<form id="activityForm"><div class="form-group"><label>รายละเอียด Activity</label><textarea name="activity" required placeholder="ระบุรายละเอียดการติดต่อ"></textarea><input type="hidden" name="id" value="${id}"></div></form>`,[{label:"Cancel"},{label:"บันทึก Activity",action:"save-activity",primary:true}])}
-    function saveActivity(){const form=document.getElementById("activityForm");if(!form.reportValidity())return;const f=Object.fromEntries(new FormData(form)),d=deals.find(x=>x.id===Number(f.id));d.activity.unshift(f.activity);d.lastActivity="2026-10-07";closeModal();render();toast("บันทึก Activity เรียบร้อยแล้ว")}
-    function saveTask(id){const form=document.getElementById("taskForm");if(!form.reportValidity())return;const f=Object.fromEntries(new FormData(form));projects.find(p=>p.id===id).tasks.push({...f,status:"รอดำเนินการ"});closeModal();render();toast("เพิ่ม Task เรียบร้อยแล้ว")}
-    function showProjectStatus(id){const p=projects.find(x=>x.id===id),body=`<div class="form-grid"><div class="form-group"><label>Project Stage</label><select id="newProjectStage">${stageNames.map(s=>`<option ${s===p.stage?"selected":""}>${s}</option>`).join("")}</select></div><div class="form-group"><label>Progress (%)</label><input id="newProjectProgress" type="number" min="0" max="100" value="${p.progress}"></div><div class="form-group full"><label>Blocker</label><input id="newProjectBlocker" value="${p.blocker}"></div><input type="hidden" id="statusProjectId" value="${id}"></div>`;setModal("Update Project Status",p.name,body,[{label:"Cancel"},{label:"บันทึกสถานะ",action:"save-project-status",primary:true}])}
-    function saveProjectStatus(){const p=projects.find(x=>x.id===Number(document.getElementById("statusProjectId").value));p.stage=document.getElementById("newProjectStage").value;p.progress=Number(document.getElementById("newProjectProgress").value);p.blocker=document.getElementById("newProjectBlocker").value;closeModal();render();toast("อัปเดต Project เรียบร้อยแล้ว")}
-    function showTicketForm(){const body=`<form id="ticketForm"><div class="form-grid"><div class="form-group"><label>Customer</label><input name="customer" required></div><div class="form-group"><label>Product / Service</label><input name="product" required></div><div class="form-group"><label>Issue Type</label><input name="issue" required></div><div class="form-group"><label>Priority</label><select name="priority"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select></div></div></form>`;setModal("Create Service Ticket","บันทึก Ticket ใหม่",body,[{label:"Cancel"},{label:"สร้าง Ticket",action:"save-ticket",primary:true}])}
-    function saveTicket(){const form=document.getElementById("ticketForm");if(!form.reportValidity())return;const f=Object.fromEntries(new FormData(form));tickets.unshift({id:"T-"+(2409+tickets.length),...f,tech:"ทีม Service",open:"2026-10-07",sla:"2026-10-10",status:"เปิด",next:"ตรวจสอบรายละเอียด",health:82});closeModal();render();toast("สร้าง Service Ticket เรียบร้อยแล้ว")}
+    function exportDeals(){const headers=["Deal Name","Customer","Owner","Value","Stage","Probability","Expected Close","Risk Score","Status"],rows=deals.map(d=>[d.name,d.customer,d.owner,d.value,d.stage,d.probability,d.close,riskScore(d),d.status]),csv=[headers,...rows].map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(",")).join("\n"),link=document.createElement("a");link.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));link.download="sales-report.csv";link.click();URL.revokeObjectURL(link.href);toast("Export Report เธชเธณเน€เธฃเนเธ")}
+    function saveDeal(id=null){const form=document.getElementById("dealForm");if(!form.reportValidity())return;const f=Object.fromEntries(new FormData(form));if(window.__saveDealSheet__&&!id){window.__saveDealSheet__(f);return}if(id){const d=deals.find(x=>x.id===id);Object.assign(d,{...f,value:Number(f.value),probability:Number(f.probability),lastActivity:"2026-10-07",status:"Healthy"});closeModal();render();toast("เธญเธฑเธเน€เธ”เธ• Deal เน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธง")}else{deals.unshift({id:Date.now(),...f,value:Number(f.value),probability:Number(f.probability),lastActivity:"2026-10-07",status:"Healthy",activity:["เธชเธฃเนเธฒเธ Deal เนเธซเธกเน"]});closeModal();render();toast("เน€เธเธดเนเธก Deal เนเธซเธกเนเน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธง")}}
+    function showActivityForm(id){setModal("Add Activity","เธเธฑเธเธ—เธถเธเธเธดเธเธเธฃเธฃเธกเธชเธณเธซเธฃเธฑเธ Deal",`<form id="activityForm"><div class="form-group"><label>เธฃเธฒเธขเธฅเธฐเน€เธญเธตเธขเธ” Activity</label><textarea name="activity" required placeholder="เธฃเธฐเธเธธเธฃเธฒเธขเธฅเธฐเน€เธญเธตเธขเธ”เธเธฒเธฃเธ•เธดเธ”เธ•เนเธญ"></textarea><input type="hidden" name="id" value="${id}"></div></form>`,[{label:"Cancel"},{label:"เธเธฑเธเธ—เธถเธ Activity",action:"save-activity",primary:true}])}
+    function saveActivity(){const form=document.getElementById("activityForm");if(!form.reportValidity())return;const f=Object.fromEntries(new FormData(form)),d=deals.find(x=>x.id===Number(f.id));d.activity.unshift(f.activity);d.lastActivity="2026-10-07";closeModal();render();toast("เธเธฑเธเธ—เธถเธ Activity เน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธง")}
+    function saveTask(id){const form=document.getElementById("taskForm");if(!form.reportValidity())return;const f=Object.fromEntries(new FormData(form));projects.find(p=>p.id===id).tasks.push({...f,status:"เธฃเธญเธ”เธณเน€เธเธดเธเธเธฒเธฃ"});closeModal();render();toast("เน€เธเธดเนเธก Task เน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธง")}
+    function showProjectStatus(id){const p=projects.find(x=>x.id===id),body=`<div class="form-grid"><div class="form-group"><label>Project Stage</label><select id="newProjectStage">${stageNames.map(s=>`<option ${s===p.stage?"selected":""}>${s}</option>`).join("")}</select></div><div class="form-group"><label>Progress (%)</label><input id="newProjectProgress" type="number" min="0" max="100" value="${p.progress}"></div><div class="form-group full"><label>Blocker</label><input id="newProjectBlocker" value="${p.blocker}"></div><input type="hidden" id="statusProjectId" value="${id}"></div>`;setModal("Update Project Status",p.name,body,[{label:"Cancel"},{label:"เธเธฑเธเธ—เธถเธเธชเธ–เธฒเธเธฐ",action:"save-project-status",primary:true}])}
+    function saveProjectStatus(){const p=projects.find(x=>x.id===Number(document.getElementById("statusProjectId").value));p.stage=document.getElementById("newProjectStage").value;p.progress=Number(document.getElementById("newProjectProgress").value);p.blocker=document.getElementById("newProjectBlocker").value;closeModal();render();toast("เธญเธฑเธเน€เธ”เธ• Project เน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธง")}
+    function showTicketForm(){const body=`<form id="ticketForm"><div class="form-grid"><div class="form-group"><label>Customer</label><input name="customer" required></div><div class="form-group"><label>Product / Service</label><input name="product" required></div><div class="form-group"><label>Issue Type</label><input name="issue" required></div><div class="form-group"><label>Priority</label><select name="priority"><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select></div></div></form>`;setModal("Create Service Ticket","เธเธฑเธเธ—เธถเธ Ticket เนเธซเธกเน",body,[{label:"Cancel"},{label:"เธชเธฃเนเธฒเธ Ticket",action:"save-ticket",primary:true}])}
+    function saveTicket(){const form=document.getElementById("ticketForm");if(!form.reportValidity())return;const f=Object.fromEntries(new FormData(form));tickets.unshift({id:"T-"+(2409+tickets.length),...f,tech:"เธ—เธตเธก Service",open:"2026-10-07",sla:"2026-10-10",status:"เน€เธเธดเธ”",next:"เธ•เธฃเธงเธเธชเธญเธเธฃเธฒเธขเธฅเธฐเน€เธญเธตเธขเธ”",health:82});closeModal();render();toast("เธชเธฃเนเธฒเธ Service Ticket เน€เธฃเธตเธขเธเธฃเนเธญเธขเนเธฅเนเธง")}
 
     /* ===== JavaScript: Kanban drag and drop ===== */
     let draggedProject=null;
     document.getElementById("content").addEventListener("dragstart",e=>{const card=e.target.closest(".project-card");if(!card)return;draggedProject=Number(card.dataset.project);e.dataTransfer.setData("text/plain",String(draggedProject));e.dataTransfer.effectAllowed="move"});
     document.getElementById("content").addEventListener("dragover",e=>{const col=e.target.closest(".kanban-col");if(!col)return;e.preventDefault();col.classList.add("drag-over")});
     document.getElementById("content").addEventListener("dragleave",e=>{const col=e.target.closest(".kanban-col");if(col&&!col.contains(e.relatedTarget))col.classList.remove("drag-over")});
-    document.getElementById("content").addEventListener("drop",e=>{const col=e.target.closest(".kanban-col");if(!col)return;e.preventDefault();col.classList.remove("drag-over");const id=Number(e.dataTransfer.getData("text/plain")||draggedProject),p=projects.find(x=>x.id===id);if(p&&p.stage!==col.dataset.stage){p.stage=col.dataset.stage;render();toast("ย้ายสถานะ Project สำเร็จ")}});
+    document.getElementById("content").addEventListener("drop",e=>{const col=e.target.closest(".kanban-col");if(!col)return;e.preventDefault();col.classList.remove("drag-over");const id=Number(e.dataTransfer.getData("text/plain")||draggedProject),p=projects.find(x=>x.id===id);if(p&&p.stage!==col.dataset.stage){p.stage=col.dataset.stage;render();toast("เธขเนเธฒเธขเธชเธ–เธฒเธเธฐ Project เธชเธณเน€เธฃเนเธ")}});
     render();if(document.getElementById("lineTicket"))updateLinePreview();
   </script>
 </body>
