@@ -422,7 +422,8 @@
       + '.lg-sub{font-size:11px;color:#667085}'
       + '.lg-acts{display:flex;gap:8px;flex-wrap:wrap}'
       + '.lg-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #DCE3EB;background:#fff;color:#0F2B46;'
-      + 'border-radius:9px;padding:8px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:.15s}'
+      + 'border-radius:9px;padding:8px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}'
+      + '.lg-acts{display:flex;gap:8px;flex-wrap:wrap}'
       + '.lg-btn:hover{border-color:#C7D7EE;box-shadow:0 6px 14px rgba(15,43,70,.07)}'
       + '.lg-btn.dark{background:#0F2B46;border-color:#0F2B46;color:#fff}'
       + '.lg-btn.green{background:#16A34A;border-color:#16A34A;color:#fff}'
@@ -455,7 +456,15 @@
       + '.lg-embed .lg-tablewrap{max-height:440px}'
       + '.lg-embed .lg-table th{position:sticky;top:0;z-index:1}'
       + '@media(max-width:860px){.lg-kpis{grid-template-columns:repeat(2,1fr)}'
-      + '.lg-embed .lg-ph .lg-acts{width:100%}.lg-embed .lg-ph .lg-btn{flex:1;justify-content:center}}';
+      + '.lg-embed .lg-ph .lg-acts{width:100%}.lg-embed .lg-ph .lg-btn{flex:1;justify-content:center}}'
+      + '@media(max-width:560px){'
+      + '.lg-embed .lg-ph .lg-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}'
+      + '.lg-embed .lg-ph .lg-acts .lg-btn:last-child{grid-column:1/-1}'
+      + '.lg-filters{gap:8px}'
+      + '.lg-fl{flex:1 1 calc(50% - 4px);min-width:0}'
+      + '.lg-fl:first-child{flex:1 1 100%}'
+      + '.lg-fl input,.lg-fl select{width:100%;min-width:0}'
+      + '.lg-fl .lg-btn{width:100%;justify-content:center}}';
     var el = document.createElement('style');
     el.id = 'lg-style';
     el.textContent = css;
@@ -494,9 +503,9 @@
         + '</tr>';
     }).join('');
 
-    var actBtns = '<button class="lg-btn green" data-lg-action="export-log"><i class="fa-solid fa-file-excel"></i> ดาวน์โหลด Excel (Log)</button>'
-      + '<button class="lg-btn dark" data-lg-action="export-all"><i class="fa-solid fa-file-arrow-down"></i> ดาวน์โหลดทั้งหมด (.xlsx)</button>'
-      + '<button class="lg-btn" data-lg-action="clear"><i class="fa-solid fa-eraser"></i> ล้าง Log</button>';
+    var actBtns = '<button class="lg-btn green" data-lg-action="export-log" title="ดาวน์โหลดบันทึกกิจกรรมตามตัวกรองเป็นไฟล์ Excel"><i class="fa-solid fa-file-excel"></i> Excel (Log)</button>'
+      + '<button class="lg-btn dark" data-lg-action="export-all" title="ดาวน์โหลดข้อมูลทั้งระบบ 6 ชีต เป็นไฟล์ Excel"><i class="fa-solid fa-file-arrow-down"></i> Excel ทั้งระบบ</button>'
+      + '<button class="lg-btn" data-lg-action="clear" title="ล้างบันทึกกิจกรรมทั้งหมด"><i class="fa-solid fa-eraser"></i> ล้าง Log</button>';
 
     var headBlock = embed
       ? ''
