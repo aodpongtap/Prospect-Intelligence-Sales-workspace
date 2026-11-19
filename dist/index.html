@@ -494,8 +494,10 @@
       var l = ladderOf(u.level);
       var meEmail = (window.__ME__ || {}).email;
       var isMe = u.email === meEmail;
+      var label = String(u.name || '').trim();
+      var initial = label ? label.charAt(0) : String(u.email || '?').slice(0, 2).toUpperCase();
       var node = '<div class="tm-node' + (isMe ? ' tm-me' : '') + '">'
-        + '<span class="tm-av tm-l' + l.n + '">' + String(u.name || u.email || '?').trim().charAt(0) + '</span>'
+        + '<span class="tm-av tm-l' + l.n + '">' + initial + '</span>'
         + '<div style="min-width:0">'
         + '  <div class="tm-name">' + String(u.name || u.email) + (isMe ? ' <span style="font-size:9px;color:#2563EB">(คุณ)</span>' : '') + '</div>'
         + '  <div class="tm-mail">' + String(u.email) + '</div>'
