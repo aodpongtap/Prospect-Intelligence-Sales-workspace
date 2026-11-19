@@ -446,7 +446,7 @@
   }
 
   /* ============================ 4) VIEW ============================ */
-  var state = { year: 2026, month: 11, team: '', sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1, perfTeam: '' };
+  var state = { year: 2026, month: 11, team: '', sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1, perfTeam: '', view: 'report' };
   var ui = { targets: false };
   var __editNo = '';    // เลขที่ SO ของดีลที่กำลังแก้ไข
   var __openNo = '';    // เลขที่ SO ของดีลที่เปิดดูอยู่
@@ -1131,7 +1131,38 @@
     openDealForm(d);
   }
 
+  /** แท็บ Report / Log — แสดงเฉพาะผู้ที่มีสิทธิ์ดูบันทึกกิจกรรม (admin / bu / head) */
+  function canSeeLog() {
+    var lv = String(((global.__ME__ || {}).level) || '').toLowerCase();
+    return lv === '' || lv === 'admin' || lv === 'bu' || lv === 'head' || lv === 'editor';
+  }
+  function renderTabs() {
+    if (!canSeeLog()) return '';
+    var isLog = state.view === 'log';
+    return '<div class="sr-tabsbar">'
+      + '  <button class="sr-tabbtn' + (isLog ? '' : ' on') + '" data-sr-view="report"><i class="fa-solid fa-chart-pie"></i> รายงานยอดขาย</button>'
+      + '  <button class="sr-tabbtn' + (isLog ? ' on' : '') + '" data-sr-view="log"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติกิจกรรม (Log)</button>'
+      + '</div>';
+  }
+
   function render() {
+    /* ถ้าเปิดมาด้วย ?page=log (บุ๊กมาร์กเดิม) ให้เริ่มที่แท็บ Log */
+    try {
+      if (!ui.__logInit && /[?&]page=log\b/.test(location.search)) { state.view = 'log'; ui.__logInit = true; }
+    } catch (e) {}
+
+    if (state.view === 'log' && canSeeLog()) {
+      var kp = kpis();
+      return '<div class="sr">'
+        + '<div class="sr-head">'
+        + '  <div><h1>Reports &amp; Log</h1>'
+        + '    <div class="sr-sub">รายงานยอดขาย และประวัติกิจกรรมที่เกิดขึ้นในระบบ</div></div>'
+        + '</div>'
+        + renderTabs()
+        + (global.PILog ? global.PILog.render({ embedded: true }) : '<div class="sr-panel">โหลดบันทึกกิจกรรมไม่สำเร็จ</div>')
+        + '</div>';
+    }
+
     var k = kpis();
     var notice = scopeOf().type === 'none'
       ? '<div class="sr-panel" style="display:flex;gap:10px;align-items:flex-start;background:#FFF7ED;border-color:#FFEDD5">'
@@ -1141,9 +1172,10 @@
       : '';
     return '<div class="sr">'
       + '<div class="sr-head">'
-      + '  <div><h1>Sales Report &amp; Forecast</h1>'
+      + '  <div><h1>Reports &amp; Log</h1>'
       + '    <div class="sr-sub">สรุปยอดขาย ผลงานรายบุคคล และประมาณการปิดเดือน</div></div>'
       + '</div>'
+      + renderTabs()
       + notice
       + renderFilters(k)
       + renderKpis(k)
@@ -1466,6 +1498,12 @@
     }
 
     if (t.closest('[data-sr-addteam]')) { addTeamModal(); return; }
+    var vw = t.closest('[data-sr-view]');
+    if (vw) {
+      state.view = vw.getAttribute('data-sr-view') === 'log' ? 'log' : 'report';
+      if (typeof global.render === 'function') global.render();
+      return;
+    }
     var ptBtn = t.closest('[data-sr-perfteam]');
     if (ptBtn) { state.perfTeam = ptBtn.getAttribute('data-sr-perfteam'); if (typeof global.render === 'function') global.render(); return; }
     var saleBtn = t.closest('[data-sr-sale]');
@@ -1510,6 +1548,13 @@
       + '.sr-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px;flex-wrap:wrap}'
       + '.sr-head h1{margin:0;color:#0F2B46;font-size:21px;font-weight:600}'
       + '.sr-sub{color:#667085;font-size:11.5px;margin-top:4px}'
+      + '.sr-tabsbar{display:inline-flex;gap:4px;background:#F1F5F9;border:1px solid #E5EAF0;border-radius:11px;padding:4px;margin-bottom:14px}'
+      + '.sr-tabbtn{display:inline-flex;align-items:center;gap:7px;border:0;background:transparent;color:#475467;'
+      + 'font:inherit;font-size:11.5px;font-weight:500;padding:8px 15px;border-radius:8px;cursor:pointer;transition:.15s}'
+      + '.sr-tabbtn:hover{color:#0F2B46;background:#E8EEF6}'
+      + '.sr-tabbtn.on{background:#fff;color:#0F2B46;box-shadow:0 2px 6px rgba(15,43,70,.10)}'
+      + '.sr-tabbtn i{font-size:11px}'
+      + '@media(max-width:640px){.sr-tabsbar{display:flex;width:100%}.sr-tabbtn{flex:1;justify-content:center;padding:8px 8px;font-size:10.5px}}'
       /* sticky filter bar */
       + '.sr-filters{position:sticky;top:0;z-index:25;display:grid;grid-template-columns:repeat(6,minmax(0,1fr)) auto;gap:10px;'
       + 'background:#fff;border:1px solid #E5EAF0;border-radius:12px;padding:12px 14px;box-shadow:0 6px 18px rgba(15,43,70,.07);margin-bottom:15px}'

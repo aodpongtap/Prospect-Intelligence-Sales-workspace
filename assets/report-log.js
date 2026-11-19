@@ -445,15 +445,27 @@
       + '.lg-mail{color:#98A2B3;font-size:10px}'
       + '.lg-empty{text-align:center;color:#98A2B3;padding:26px 10px;font-size:11px}'
       + '.lg-foot{font-size:10px;color:#98A2B3;margin-top:8px}'
-      + '@media(max-width:860px){.lg-kpis{grid-template-columns:repeat(2,1fr)}}';
+      + '.lg-embed{gap:12px}'
+      + '.lg-embed .lg-panel{padding:14px 16px}'
+      + '.lg-ph{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}'
+      + '.lg-title{display:block;font-size:13px;color:#0F2B46;font-weight:600}'
+      + '.lg-kpis-mini{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}'
+      + '.lg-kpis-mini .lg-kpi{padding:9px 12px;border-radius:10px}'
+      + '.lg-kpis-mini .lg-kpi b{font-size:15px}'
+      + '.lg-embed .lg-tablewrap{max-height:440px}'
+      + '.lg-embed .lg-table th{position:sticky;top:0;z-index:1}'
+      + '@media(max-width:860px){.lg-kpis{grid-template-columns:repeat(2,1fr)}'
+      + '.lg-embed .lg-ph .lg-acts{width:100%}.lg-embed .lg-ph .lg-btn{flex:1;justify-content:center}}';
     var el = document.createElement('style');
     el.id = 'lg-style';
     el.textContent = css;
     document.head.appendChild(el);
   }
 
-  /* ---------------- render page ---------------- */
-  function render() {
+  /* ---------------- render (รองรับทั้งหน้าเดี่ยว และฝังใน Reports) ---------------- */
+  function render(opts) {
+    opts = opts || {};
+    var embed = !!opts.embedded;
     injectCss();
     var all = readAll();
     var rows = filtered();
@@ -482,21 +494,37 @@
         + '</tr>';
     }).join('');
 
-    return '<div class="lg">'
-      + '<div class="lg-head"><div><h1>Report Log</h1>'
-      + '<div class="lg-sub">บันทึกทุกกิจกรรมที่เกิดขึ้นในระบบ (เพิ่ม/แก้ไข/ลบดีล · โครงการ · ผู้ใช้ · เป้าหมาย) — ดาวน์โหลดเป็นไฟล์ Excel ได้</div></div>'
-      + '<div class="lg-acts">'
-      + '<button class="lg-btn green" data-lg-action="export-log"><i class="fa-solid fa-file-excel"></i> ดาวน์โหลด Excel (Log)</button>'
-      + '<button class="lg-btn dark" data-lg-action="export-all"><i class="fa-solid fa-file-arrow-down"></i> ดาวน์โหลดข้อมูลทั้งหมด (.xlsx)</button>'
-      + '<button class="lg-btn" data-lg-action="clear"><i class="fa-solid fa-eraser"></i> ล้าง Log</button>'
-      + '</div></div>'
-      + '<div class="lg-kpis">'
-      + '<div class="lg-kpi"><small>รายการทั้งหมด</small><b>' + all.length + ' รายการ</b></div>'
-      + '<div class="lg-kpi"><small>วันนี้</small><b>' + todayCount + ' รายการ</b></div>'
-      + '<div class="lg-kpi"><small>ผู้ใช้ที่ทำรายการ</small><b>' + Object.keys(users).length + ' คน</b></div>'
-      + '<div class="lg-kpi"><small>รายการล่าสุด</small><b style="font-size:13px">' + esc(lastT) + '</b></div>'
-      + '</div>'
+    var actBtns = '<button class="lg-btn green" data-lg-action="export-log"><i class="fa-solid fa-file-excel"></i> ดาวน์โหลด Excel (Log)</button>'
+      + '<button class="lg-btn dark" data-lg-action="export-all"><i class="fa-solid fa-file-arrow-down"></i> ดาวน์โหลดทั้งหมด (.xlsx)</button>'
+      + '<button class="lg-btn" data-lg-action="clear"><i class="fa-solid fa-eraser"></i> ล้าง Log</button>';
+
+    var headBlock = embed
+      ? ''
+      : '<div class="lg-head"><div><h1>Report Log</h1>'
+        + '<div class="lg-sub">บันทึกทุกกิจกรรมที่เกิดขึ้นในระบบ (เพิ่ม/แก้ไข/ลบดีล · โครงการ · ผู้ใช้ · เป้าหมาย) — ดาวน์โหลดเป็นไฟล์ Excel ได้</div></div>'
+        + '<div class="lg-acts">' + actBtns + '</div></div>';
+
+    return '<div class="lg' + (embed ? ' lg-embed' : '') + '">'
+      + headBlock
+      + (embed
+        ? '<div class="lg-kpis lg-kpis-mini">'
+          + '<div class="lg-kpi"><small>รายการทั้งหมด</small><b>' + all.length + ' รายการ</b></div>'
+          + '<div class="lg-kpi"><small>วันนี้</small><b>' + todayCount + ' รายการ</b></div>'
+          + '<div class="lg-kpi"><small>ผู้ใช้ที่ทำรายการ</small><b>' + Object.keys(users).length + ' คน</b></div>'
+          + '<div class="lg-kpi"><small>รายการล่าสุด</small><b style="font-size:12px">' + esc(lastT) + '</b></div>'
+          + '</div>'
+        : '<div class="lg-kpis">'
+          + '<div class="lg-kpi"><small>รายการทั้งหมด</small><b>' + all.length + ' รายการ</b></div>'
+          + '<div class="lg-kpi"><small>วันนี้</small><b>' + todayCount + ' รายการ</b></div>'
+          + '<div class="lg-kpi"><small>ผู้ใช้ที่ทำรายการ</small><b>' + Object.keys(users).length + ' คน</b></div>'
+          + '<div class="lg-kpi"><small>รายการล่าสุด</small><b style="font-size:13px">' + esc(lastT) + '</b></div>'
+          + '</div>')
       + '<div class="lg-panel">'
+      + (embed
+        ? '<div class="lg-ph"><div><b class="lg-title">ประวัติกิจกรรม (Report Log)</b>'
+          + '<div class="lg-sub">บันทึกทุกกิจกรรมในระบบ — เพิ่ม/แก้ไข/ลบดีล · โครงการ · ผู้ใช้ · เป้าหมาย</div></div>'
+          + '<div class="lg-acts">' + actBtns + '</div></div>'
+        : '')
       + '<div class="lg-filters">'
       + '<div class="lg-fl"><label>ค้นหา</label><input id="lgSearch" placeholder="ผู้ใช้ / รายการ / รายละเอียด" value="' + esc(state.q) + '"></div>'
       + '<div class="lg-fl"><label>กิจกรรม</label><select data-lg-filter="action">' + actOpts + '</select></div>'
