@@ -50,20 +50,75 @@
     return { code: code, name: code, cashRatio: 0, color: '#94A3B8' };
   }
 
+  /* ---------- ทีม (BU) ---------- */
+  var TEAM_DEFAULT = [
+    { code: 'BU-DLAG', name: 'BU-DLAG' },
+    { code: 'BU-SML',  name: 'BU-SML' }
+  ];
+  var TEAMS = loadTeams();
+  function loadTeams() {
+    try {
+      var a = JSON.parse(localStorage.getItem('pi_sr_teams_v1') || 'null');
+      if (Object.prototype.toString.call(a) === '[object Array]' && a.length) return a;
+    } catch (e) {}
+    return JSON.parse(JSON.stringify(TEAM_DEFAULT));
+  }
+  function saveTeams() {
+    try { localStorage.setItem('pi_sr_teams_v1', JSON.stringify(TEAMS)); } catch (e) {}
+  }
+  function teamByCode(code) {
+    for (var i = 0; i < TEAMS.length; i++) if (TEAMS[i].code === code) return TEAMS[i];
+    return { code: code, name: code || '-' };
+  }
+
   var SALES = [
-    { id: 'S01', name: 'ณัฐพงษ์ ศรีสุข',      team: 'Enterprise' },
-    { id: 'S02', name: 'พิมพ์ชนก วัฒนกุล',    team: 'Commercial' },
-    { id: 'S03', name: 'ธนกร ใจดี',           team: 'Commercial' },
-    { id: 'S04', name: 'อรทัย บุญมาก',        team: 'Strategic' },
-    { id: 'S05', name: 'กิตติพงษ์ แก้วประเสริฐ', team: 'Enterprise' }
+    { id: 'S01', name: 'ณัฐพงษ์ ศรีสุข',      team: 'BU-DLAG' },
+    { id: 'S02', name: 'พิมพ์ชนก วัฒนกุล',    team: 'BU-DLAG' },
+    { id: 'S03', name: 'ธนกร ใจดี',           team: 'BU-DLAG' },
+    { id: 'S04', name: 'อรทัย บุญมาก',        team: 'BU-SML' },
+    { id: 'S05', name: 'กิตติพงษ์ แก้วประเสริฐ', team: 'BU-SML' }
   ];
   function sale(id) {
     for (var i = 0; i < SALES.length; i++) if (SALES[i].id === id) return SALES[i];
     return { id: id, name: id, team: '-' };
   }
 
-  /* เป้าหมายทีมต่อเดือน (บาท) — แก้ที่เดียวเมื่อเชื่อมข้อมูลจริง */
-  var TEAM_TARGET = { 2026: 3500000, 2027: 4200000 };
+  /* ---------- เป้าหมายรายทีม รายเดือน ---------- */
+  var TARGET_DEFAULT = {
+    'BU-DLAG': [1500000, 1600000, 1700000, 1700000, 1800000, 1800000, 1900000, 1900000, 2000000, 2000000, 2000000, 2200000],
+    'BU-SML':  [1100000, 1200000, 1200000, 1300000, 1300000, 1400000, 1400000, 1500000, 1500000, 1500000, 1500000, 1600000]
+  };
+  var TARGETS = loadTargets();
+  function loadTargets() {
+    try {
+      var o = JSON.parse(localStorage.getItem('pi_sr_targets_v2') || 'null');
+      if (o && typeof o === 'object') return o;
+    } catch (e) {}
+    return {};
+  }
+  function saveTargets() {
+    try { localStorage.setItem('pi_sr_targets_v2', JSON.stringify(TARGETS)); } catch (e) {}
+  }
+  /** อาร์เรย์เป้าหมาย 12 เดือนของทีมในปีที่กำหนด (สร้างค่าเริ่มต้นให้ถ้ายังไม่มี) */
+  function targetsOfTeam(code, year) {
+    var y = TARGETS[year] || (TARGETS[year] = {});
+    if (!y[code]) {
+      var def = TARGET_DEFAULT[code];
+      y[code] = def ? def.slice() : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    }
+    return y[code];
+  }
+  function setTarget(code, year, monthIdx, value) {
+    var arr = targetsOfTeam(code, year);
+    arr[monthIdx] = num(value);
+    saveTargets();
+  }
+  /** เป้าหมายของทีม: month = 0 หมายถึงรวมทั้งปี */
+  function targetOf(code, year, month) {
+    var arr = targetsOfTeam(code, year);
+    if (!month) return arr.reduce(function (a, b) { return a + num(b); }, 0);
+    return num(arr[month - 1]);
+  }
 
   /* ============================ 2) MOCK DATA ============================ */
   /* prob = โอกาสปิด (%) ใช้เฉพาะสถานะ 1 (Pipeline) ตามที่กำหนด 3 ระดับ 50/40/30 */
@@ -192,6 +247,7 @@
   function matchFilters(d, f) {
     if (d.year !== f.year) return false;
     if (f.month && d.month !== f.month) return false;
+    if (f.team && sale(d.saleId).team !== f.team) return false;
     if (f.sale && d.saleId !== f.sale) return false;
     if (f.product && d.product !== f.product) return false;
     if (f.payment && d.payment !== f.payment) return false;
@@ -229,24 +285,29 @@
   function kpis() {
     var list = filteredDeals();
     var sum = summarize(list);
-    var target = num(TEAM_TARGET[state.year]) * (state.month ? 1 : 12);
-    var headCount = state.sale
-      ? 1
-      : SALES.filter(function (r) {
-          return list.some(function (d) { return d.saleId === r.id; });
-        }).length || 1;
+    var scopeTeams = state.team ? TEAMS.filter(function (t) { return t.code === state.team; }) : TEAMS;
+    var monthTargets = scopeTeams.map(function (t) {
+      return { code: t.code, name: t.name, amount: targetOf(t.code, state.year, state.month) };
+    });
+    var target = monthTargets.reduce(function (a, x) { return a + x.amount; }, 0);
+    var headCount = SALES.filter(function (r) {
+      if (state.sale) return r.id === state.sale;
+      return scopeTeams.some(function (t) { return t.code === r.team; });
+    }).length || 1;
     var perHead = target / headCount;
+    if (state.sale) { target = perHead; }   // เลือกคนเดียว → เทียบกับเป้าหมายต่อคน
     return {
       sum: sum, list: list, target: target, headCount: headCount, perHead: perHead,
-      ach4: sum.s4 / target * 100,
-      ach43: (sum.s4 + sum.s3 * 0.9) / target * 100,
-      ach432: sum.secured / target * 100,
-      forecastPct: sum.forecast / target * 100
+      teams: scopeTeams, monthTargets: monthTargets,
+      ach4: target ? sum.s4 / target * 100 : 0,
+      ach43: target ? (sum.s4 + sum.s3 * 0.9) / target * 100 : 0,
+      ach432: target ? sum.secured / target * 100 : 0,
+      forecastPct: target ? sum.forecast / target * 100 : 0
     };
   }
 
   /* ============================ 4) VIEW ============================ */
-  var state = { year: 2026, month: 11, sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1 };
+  var state = { year: 2026, month: 11, team: '', sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1 };
   var charts = [];
 
   function cardKpi(label, value, sub, barPct, color, icon) {
@@ -266,7 +327,10 @@
     var yearOpts = YEARS.map(function (y) { return opt(y, 'ปี ' + (y + 543) + ' (' + y + ')', state.year); }).join('');
     var monthOpts = '<option value=""' + (state.month ? '' : ' selected') + '>ทุกเดือน</option>' +
       TH_MONTHS.map(function (m, i) { return opt(i + 1, String(i + 1).padStart(2, '0') + '.' + m, state.month); }).join('');
-    var saleOpts = '<option value="">ทุกคน</option>' + SALES.map(function (s) { return opt(s.id, s.name, state.sale); }).join('');
+    var saleOpts = '<option value="">ทุกคน</option>' + SALES.map(function (s) {
+      return opt(s.id, teamByCode(s.team).name + ' · ' + s.name, state.sale);
+    }).join('');
+    var teamOpts = '<option value="">ทุกทีม</option>' + TEAMS.map(function (t) { return opt(t.code, t.name, state.team); }).join('');
     var prodOpts = '<option value="">ทุกสินค้า</option>' + PRODUCTS.map(function (p) { return opt(p.code, p.name, state.product); }).join('');
     var payOpts = '<option value="">ทุกรูปแบบ</option>' + PAYMENTS.map(function (p) { return opt(p.code, p.name, state.payment); }).join('');
 
@@ -274,6 +338,7 @@
       + '<div class="sr-filters" id="srFilters">'
       + '  <div class="sr-fl"><label>ปี</label><select data-sr-filter="year">' + yearOpts + '</select></div>'
       + '  <div class="sr-fl"><label>เดือนที่คาดว่าจะปิด</label><select data-sr-filter="month">' + monthOpts + '</select></div>'
+      + '  <div class="sr-fl"><label>ทีม (BU)</label><select data-sr-filter="team">' + teamOpts + '</select></div>'
       + '  <div class="sr-fl"><label>พนักงานขาย</label><select data-sr-filter="sale">' + saleOpts + '</select></div>'
       + '  <div class="sr-fl"><label>สินค้า</label><select data-sr-filter="product">' + prodOpts + '</select></div>'
       + '  <div class="sr-fl"><label>รูปแบบการซื้อ</label><select data-sr-filter="payment">' + payOpts + '</select></div>'
@@ -287,10 +352,12 @@
   function renderKpis(k) {
     var s = k.sum;
     var scope = state.month ? monthLabel(state.year, state.month) : ('ปี ' + (state.year + 543));
+    var teamLine = k.monthTargets.map(function (x) { return esc(x.name) + ' ' + money(x.amount); }).join(' · ');
     var cards = [
       cardKpi('เป้าหมายทีม (Target)',
         money(k.target),
-        'Head Count <b>' + k.headCount + '</b> คน · Prod./Head เฉลี่ย <b>' + money(k.perHead) + '</b>',
+        'Head Count <b>' + k.headCount + '</b> คน · Prod./Head เฉลี่ย <b>' + money(k.perHead) + '</b>'
+          + (teamLine ? '<br>' + teamLine : ''),
         100, '#0F2B46', 'fa-solid fa-bullseye'),
       cardKpi('%Ach 4. (Actual ปิดงานแล้ว 100%)',
         pct(k.ach4),
@@ -316,49 +383,68 @@
 
   function renderSummaryTable() {
     var y = state.year, m = state.month;
-    var rows = SALES.map(function (r) {
-      var monthDeals = DEALS.filter(function (d) {
-        return d.saleId === r.id && inMonth(d, y, m) &&
-          (!state.product || d.product === state.product) &&
-          (!state.payment || d.payment === state.payment);
-      });
-      var otherDeals = DEALS.filter(function (d) {
-        return d.saleId === r.id && d.year === y && !inMonth(d, y, m) &&
-          (!state.product || d.product === state.product) &&
-          (!state.payment || d.payment === state.payment);
-      });
-      /* 0.กำลังคุย และ 5.ยกเลิก นับทั้งปี (รวมเดือนที่เลือก) เพื่อไม่ให้ดีลที่ยกเลิกในเดือนนี้หายไป */
-      var restDeals = DEALS.filter(function (d) {
-        return d.saleId === r.id && d.year === y &&
-          (!state.product || d.product === state.product) &&
-          (!state.payment || d.payment === state.payment);
-      });
-      var s = summarize(monthDeals);
-      var o = summarize(otherDeals);
-      var rest = summarize(restDeals);
-      o.s0 = rest.s0; o.s5 = rest.s5;
-      return { sale: r, s: s, other: o, empty: monthDeals.length === 0 && otherDeals.length === 0 };
-    }).filter(function (x) { return !x.empty && (!state.sale || x.sale.id === state.sale); });
+    var monF = function (d) { return (!state.product || d.product === state.product) && (!state.payment || d.payment === state.payment); };
 
-    var tot = { m: { s4: 0, s3: 0, s2: 0, s1: 0, totalSale: 0 }, o: { s1: 0, s0: 0, s5: 0 } };
-    rows.forEach(function (x) {
-      tot.m.s4 += x.s.s4; tot.m.s3 += x.s.s3; tot.m.s2 += x.s.s2; tot.m.s1 += x.s.s1; tot.m.totalSale += x.s.totalSale;
-      tot.o.s1 += x.other.s1; tot.o.s0 += x.other.s0; tot.o.s5 += x.other.s5;
+    /* จัดกลุ่มตามทีม (BU) */
+    var blocks = [];
+    TEAMS.forEach(function (t) {
+      if (state.team && state.team !== t.code) return;
+      var members = SALES.filter(function (r) { return r.team === t.code && (!state.sale || r.id === state.sale); });
+      if (!members.length) return;
+      var rows = [];
+      members.forEach(function (r) {
+        var monthDeals = DEALS.filter(function (d) { return d.saleId === r.id && inMonth(d, y, m) && monF(d); });
+        var otherDeals = DEALS.filter(function (d) { return d.saleId === r.id && d.year === y && !inMonth(d, y, m) && monF(d); });
+        /* 0.กำลังคุย และ 5.ยกเลิก นับทั้งปี (รวมเดือนที่เลือก) */
+        var restDeals = DEALS.filter(function (d) { return d.saleId === r.id && d.year === y && monF(d); });
+        if (!monthDeals.length && !restDeals.length) return;
+        var o = summarize(otherDeals), rest = summarize(restDeals);
+        o.s0 = rest.s0; o.s5 = rest.s5;
+        rows.push({ sale: r, s: summarize(monthDeals), other: o });
+      });
+      if (!rows.length) return;
+      var teamSum = summarize(DEALS.filter(function (d) {
+        return d.year === y && inMonth(d, y, m) && monF(d) &&
+          members.some(function (r) { return r.id === d.saleId; });
+      }));
+      blocks.push({ team: t, rows: rows, sum: teamSum, target: targetOf(t.code, y, m) });
+    });
+
+    var tot = { m: { s4: 0, s3: 0, s2: 0, s1: 0, totalSale: 0 }, o: { s1: 0, s0: 0, s5: 0 }, target: 0 };
+    blocks.forEach(function (b) {
+      b.rows.forEach(function (x) {
+        tot.m.s4 += x.s.s4; tot.m.s3 += x.s.s3; tot.m.s2 += x.s.s2; tot.m.s1 += x.s.s1; tot.m.totalSale += x.s.totalSale;
+        tot.o.s1 += x.other.s1; tot.o.s0 += x.other.s0; tot.o.s5 += x.other.s5;
+      });
+      tot.target += b.target;
     });
 
     var head = m ? ('01.' + TH_MONTHS[m - 1] + ' ' + (y + 543)) : ('ทั้งปี ' + (y + 543));
-    var body = rows.map(function (x) {
-      return '<tr>'
-        + '<td class="sr-td-sale"><div class="sr-nm">' + esc(x.sale.name) + '</div><div class="sr-s2">' + esc(x.sale.team) + ' · ' + x.sale.id + '</div></td>'
-        + '<td class="sr-num">' + (x.s.s4 ? money(x.s.s4) : '<span class="sr-dim">—</span>') + '</td>'
-        + '<td class="sr-num">' + (x.s.s3 ? money(x.s.s3) + '<div class="sr-s2">ถ่วง 90% = ' + money(x.s.s3 * 0.9) + '</div>' : '<span class="sr-dim">—</span>') + '</td>'
-        + '<td class="sr-num">' + (x.s.s2 ? money(x.s.s2) + '<div class="sr-s2">ถ่วง 80% = ' + money(x.s.s2 * 0.8) + '</div>' : '<span class="sr-dim">—</span>') + '</td>'
-        + '<td class="sr-num">' + (x.s.s1 ? money(x.s.s1) + '<div class="sr-s2">ถ่วงตามโอกาส = ' + money(x.s.weighted1) + '</div>' : '<span class="sr-dim">—</span>') + '</td>'
-        + '<td class="sr-num sr-strong">' + money(x.s.totalSale) + '</td>'
-        + '<td class="sr-num sr-sep">' + (x.other.s1 ? money(x.other.s1) : '<span class="sr-dim">—</span>') + '</td>'
-        + '<td class="sr-num">' + (x.other.s0 ? money(x.other.s0) : '<span class="sr-dim">—</span>') + '</td>'
-        + '<td class="sr-num ' + (x.other.s5 ? 'sr-neg' : '') + '">' + (x.other.s5 ? ('-' + money(x.other.s5)) : '<span class="sr-dim">—</span>') + '</td>'
-        + '</tr>';
+
+    var body = blocks.map(function (b) {
+      var ach4 = b.target ? (b.sum.s4 / b.target * 100) : 0;
+      var achFc = b.target ? (b.sum.forecast / b.target * 100) : 0;
+      var headRow = '<tr class="sr-teamhead"><td colspan="9">'
+        + '<i class="fa-solid fa-users"></i> <b>' + esc(b.team.name) + '</b>'
+        + '<span class="sr-s2" style="display:inline;margin-left:8px">' + b.rows.length + ' คน</span>'
+        + '<span class="sr-th-meta">เป้าหมาย ' + (m ? 'เดือนนี้ ' : 'ทั้งปี ') + '<b>' + money(b.target) + '</b>'
+        + ' · Ach 4. <b>' + pct(ach4) + '</b>'
+        + ' · Forecast (4+3+2+Pipeline) <b>' + pct(achFc) + '</b></span>'
+        + '</td></tr>';
+      var saleRows = b.rows.map(function (x) {
+        return '<tr>'
+          + '<td class="sr-td-sale"><div class="sr-nm">' + esc(x.sale.name) + '</div><div class="sr-s2">' + x.sale.id + '</div></td>'
+          + '<td class="sr-num">' + (x.s.s4 ? money(x.s.s4) : '<span class="sr-dim">—</span>') + '</td>'
+          + '<td class="sr-num">' + (x.s.s3 ? money(x.s.s3) + '<div class="sr-s2">ถ่วง 90% = ' + money(x.s.s3 * 0.9) + '</div>' : '<span class="sr-dim">—</span>') + '</td>'
+          + '<td class="sr-num">' + (x.s.s2 ? money(x.s.s2) + '<div class="sr-s2">ถ่วง 80% = ' + money(x.s.s2 * 0.8) + '</div>' : '<span class="sr-dim">—</span>') + '</td>'
+          + '<td class="sr-num">' + (x.s.s1 ? money(x.s.s1) + '<div class="sr-s2">ถ่วงตามโอกาส = ' + money(x.s.weighted1) + '</div>' : '<span class="sr-dim">—</span>') + '</td>'
+          + '<td class="sr-num sr-strong">' + money(x.s.totalSale) + '</td>'
+          + '<td class="sr-num sr-sep">' + (x.other.s1 ? money(x.other.s1) : '<span class="sr-dim">—</span>') + '</td>'
+          + '<td class="sr-num">' + (x.other.s0 ? money(x.other.s0) : '<span class="sr-dim">—</span>') + '</td>'
+          + '<td class="sr-num ' + (x.other.s5 ? 'sr-neg' : '') + '">' + (x.other.s5 ? ('-' + money(x.other.s5)) : '<span class="sr-dim">—</span>') + '</td>'
+          + '</tr>';
+      }).join('');
+      return headRow + saleRows;
     }).join('');
 
     return ''
@@ -394,8 +480,7 @@
   var SORTABLE = {
     no: 'เลขที่', status: 'สถานะ', customer: 'ชื่อลูกค้า', quoteDate: 'วันที่เสนอราคา',
     month: 'เดือนที่คาดว่าจะปิด', saleId: 'Sale', product: 'สินค้า', amount: 'มูลค่า', payment: 'รูปแบบ', cashIn: 'Cash In'
-  };
-  function sortValue(d, key) {
+  };  function sortValue(d, key) {
     if (key === 'saleId') return sale(d.saleId).name;
     if (key === 'product') return product(d.product).name;
     if (key === 'payment') return payment(d.payment).name;
@@ -427,7 +512,7 @@
         + '<td><div>' + esc(d.so) + '</div><div class="sr-s2">' + esc(d.no) + '</div></td>'
         + '<td class="sr-num">' + shortDate(d.quoteDate) + '</td>'
         + '<td class="sr-num">' + String(d.month).padStart(2, '0') + '.' + TH_MONTHS[d.month - 1] + ' ' + String(d.year + 543).slice(-2) + '</td>'
-        + '<td>' + esc(sale(d.saleId).name) + '</td>'
+        + '<td><div class="sr-nm">' + esc(sale(d.saleId).name) + '</div><div class="sr-s2">' + esc(teamByCode(sale(d.saleId).team).name) + '</div></td>'
         + '<td><span class="sr-dot" style="background:' + p.color + '"></span>' + esc(p.short) + '</td>'
         + '<td class="sr-num sr-strong">' + money(d.amount) + '</td>'
         + '<td>' + esc(pay.name) + '</td>'
@@ -463,6 +548,53 @@
       + '</section>';
   }
 
+  /* ---------- เป้าหมายรายทีม × รายเดือน (แก้ไขได้) ---------- */
+  function renderTargets() {
+    var y = state.year;
+    var monthTh = TH_MONTHS.map(function (mth, i) {
+      return '<th class="sr-num' + (state.month === i + 1 ? ' sr-hl' : '') + '">' + String(i + 1).padStart(2, '0') + '.' + mth.slice(0, 3) + '.</th>';
+    }).join('');
+
+    var rows = TEAMS.map(function (t) {
+      var arr = targetsOfTeam(t.code, y);
+      var total = arr.reduce(function (a, b) { return a + num(b); }, 0);
+      var cnt = SALES.filter(function (r) { return r.team === t.code; }).length;
+      var cells = arr.map(function (v, i) {
+        return '<td class="sr-num' + (state.month === i + 1 ? ' sr-hl' : '') + '">'
+          + '<input class="sr-tinp" type="number" min="0" step="50000" inputmode="numeric"'
+          + ' data-sr-target="' + esc(t.code) + '|' + i + '" value="' + num(v) + '"></td>';
+      }).join('');
+      return '<tr>'
+        + '<td class="sr-td-team"><div class="sr-nm">' + esc(t.name) + '</div><div class="sr-s2">' + cnt + ' คน</div></td>'
+        + cells
+        + '<td class="sr-num sr-strong">' + money(total) + '</td>'
+        + '<td class="sr-num"><button class="sr-xbtn" data-sr-delteam="' + esc(t.code) + '" title="ลบทีมนี้"><i class="fa-solid fa-trash"></i></button></td>'
+        + '</tr>';
+    }).join('');
+
+    /* แถวรวมรายเดือน */
+    var monthTot = TH_MONTHS.map(function (mth, i) {
+      var s = TEAMS.reduce(function (a, t) { return a + num(targetsOfTeam(t.code, y)[i]); }, 0);
+      return '<td class="sr-num' + (state.month === i + 1 ? ' sr-hl' : '') + '">' + (s ? money(s) : '<span class="sr-dim">—</span>') + '</td>';
+    }).join('');
+    var grand = TEAMS.reduce(function (a, t) {
+      return a + targetsOfTeam(t.code, y).reduce(function (x, v) { return x + num(v); }, 0);
+    }, 0);
+
+    return ''
+      + '<section class="sr-panel">'
+      + '  <div class="sr-ph"><div><h3>เป้าหมายการขายรายทีม (บาท/เดือน) — ปี ' + (y + 543) + '</h3>'
+      + '    <div class="sr-s2">แก้ตัวเลขในช่องได้ทันที (บันทึกอัตโนมัติ) · KPI ด้านบนจะคำนวณใหม่ทันที</div></div>'
+      + '    <div class="sr-tools"><button class="sr-btn" data-sr-addteam><i class="fa-solid fa-plus"></i> เพิ่มทีม</button>'
+      + '      <button class="sr-btn" data-sr-resettargets title="คืนค่าเป้าหมายเริ่มต้น"><i class="fa-solid fa-rotate-left"></i> ค่าเริ่มต้น</button></div></div>'
+      + '  <div class="sr-tablewrap"><table class="sr-table sr-targets"><thead><tr>'
+      + '    <th class="sr-td-team">ทีม (BU)</th>' + monthTh + '<th class="sr-num">รวมทั้งปี</th><th></th>'
+      + '  </tr></thead><tbody>' + (rows || '<tr><td colspan="15" class="sr-empty">ยังไม่มีทีม — กด “เพิ่มทีม”</td></tr>') + '</tbody>'
+      + '  <tfoot><tr><td class="sr-td-team"><b>รวมทุกทีม</b></td>' + monthTot + '<td class="sr-num sr-strong">' + money(grand) + '</td><td></td></tr></tfoot>'
+      + '  </table></div>'
+      + '</section>';
+  }
+
   function render() {
     var k = kpis();
     return '<div class="sr">'
@@ -472,10 +604,11 @@
       + '</div>'
       + renderFilters(k)
       + renderKpis(k)
+      + renderTargets()
       + '<div class="sr-charts">'
       + '  <section class="sr-panel sr-chart-wide">'
       + '    <div class="sr-ph"><div><h3>ผลงานรายบุคคล (Sale Performance)</h3>'
-      + '      <div class="sr-s2">แท่งซ้อนแยกตามสถานะ · เส้นประสีแดงคือเป้าหมายต่อคน (Prod./Head ' + money(k.perHead) + ')</div></div></div>'
+      + '      <div class="sr-s2">แท่งซ้อนแยกตามสถานะ · เส้นประสีแดงคือเป้าหมายต่อคน (เป้าหมายทีม ÷ Head Count = ' + money(k.perHead) + ')</div></div></div>'
       + '    <div class="sr-chartbox"><canvas id="srBarChart"></canvas></div>'
       + '  </section>'
       + '  <div class="sr-donuts">'
@@ -675,6 +808,50 @@
     if (typeof global.toast === 'function') global.toast('Export CSV เรียบร้อย (' + rows.length + ' ดีล)');
   }
 
+  /* ---------- จัดการทีม / เป้าหมาย ---------- */
+  function addTeamModal() {
+    if (typeof global.setModal !== 'function') return;
+    global.setModal('เพิ่มทีม (BU)', 'ตั้งชื่อทีมให้ตรงกับโครงสร้างองค์กร เช่น BU-CENTRAL',
+      '<label style="font-size:11px;color:#475467">ชื่อทีม</label>'
+      + '<input id="srNewTeam" placeholder="BU-CENTRAL" style="width:100%;margin-top:6px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px;font-family:inherit;font-size:12px">'
+      + '<div style="font-size:10.5px;color:#98A2B3;margin-top:8px">ทีมใหม่เริ่มด้วยเป้าหมาย 0 ทุกเดือน — แก้ไขได้ในตารางเป้าหมาย</div>',
+      [{ label: 'ยกเลิก' }, { label: 'เพิ่มทีม', action: 'sr-add-team', primary: true }]);
+  }
+
+  function doAddTeam() {
+    var inp = document.getElementById('srNewTeam');
+    var name = inp ? String(inp.value || '').trim().toUpperCase() : '';
+    if (!name) { if (global.toast) global.toast('กรอกชื่อทีมก่อน'); return; }
+    var dup = TEAMS.some(function (t) { return t.code === name || String(t.name).toUpperCase() === name; });
+    if (dup) { if (global.toast) global.toast('มีทีมนี้อยู่แล้ว'); return; }
+    TEAMS.push({ code: name, name: name });
+    saveTeams();
+    targetsOfTeam(name, state.year);
+    saveTargets();
+    if (typeof global.closeModal === 'function') global.closeModal();
+    if (typeof global.render === 'function') global.render();
+    if (global.toast) global.toast('เพิ่มทีม ' + name + ' แล้ว');
+  }
+
+  function deleteTeam(code) {
+    var members = SALES.filter(function (r) { return r.team === code; }).length;
+    if (members) { if (global.toast) global.toast('ลบไม่ได้: ยังมีพนักงานขาย ' + members + ' คนในทีมนี้'); return; }
+    if (!global.confirm('ลบทีม ' + code + ' ?')) return;
+    TEAMS = TEAMS.filter(function (t) { return t.code !== code; });
+    saveTeams();
+    if (state.team === code) state.team = '';
+    if (typeof global.render === 'function') global.render();
+    if (global.toast) global.toast('ลบทีมแล้ว');
+  }
+
+  function resetTargets() {
+    if (!global.confirm('คืนค่าเป้าหมายเริ่มต้นของปี ' + (state.year + 543) + ' ?')) return;
+    TARGETS[state.year] = {};
+    saveTargets();
+    if (typeof global.render === 'function') global.render();
+    if (global.toast) global.toast('คืนค่าเป้าหมายเริ่มต้นแล้ว');
+  }
+
   /* ============================ 5) EVENTS ============================ */
   function repaintDeals() {
     var body = document.getElementById('srDealBody');
@@ -690,6 +867,14 @@
   }
 
   document.addEventListener('change', function (e) {
+    var tin = e.target.closest && e.target.closest('[data-sr-target]');
+    if (tin) {
+      var parts = tin.getAttribute('data-sr-target').split('|');
+      setTarget(parts[0], state.year, Number(parts[1]), tin.value);
+      if (typeof global.render === 'function') global.render();
+      if (typeof global.toast === 'function') global.toast('บันทึกเป้าหมาย ' + parts[0] + ' เดือน ' + (Number(parts[1]) + 1) + ' แล้ว');
+      return;
+    }
     var sel = e.target.closest && e.target.closest('[data-sr-filter]');
     if (!sel) return;
     var key = sel.getAttribute('data-sr-filter');
@@ -717,10 +902,17 @@
     }
 
     if (t.closest('[data-sr-reset]')) {
-      state.month = 11; state.sale = ''; state.product = ''; state.payment = ''; state.q = '';
+      state.month = 11; state.team = ''; state.sale = ''; state.product = ''; state.payment = ''; state.q = '';
       if (typeof global.render === 'function') global.render();
       return;
     }
+
+    if (t.closest('[data-sr-addteam]')) { addTeamModal(); return; }
+    if (t.closest('[data-sr-resettargets]')) { resetTargets(); return; }
+    var delBtn = t.closest('[data-sr-delteam]');
+    if (delBtn) { deleteTeam(delBtn.getAttribute('data-sr-delteam')); return; }
+    var actBtn = t.closest('[data-action]');
+    if (actBtn && actBtn.getAttribute('data-action') === 'sr-add-team') { doAddTeam(); return; }
 
     if (t.closest('[data-sr-export]')) { exportCsv(); return; }
 
@@ -737,7 +929,7 @@
       + '.sr-head h1{margin:0;color:#0F2B46;font-size:21px;font-weight:600}'
       + '.sr-sub{color:#667085;font-size:11.5px;margin-top:4px}'
       /* sticky filter bar */
-      + '.sr-filters{position:sticky;top:0;z-index:25;display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) auto;gap:10px;'
+      + '.sr-filters{position:sticky;top:0;z-index:25;display:grid;grid-template-columns:repeat(6,minmax(0,1fr)) auto;gap:10px;'
       + 'background:#fff;border:1px solid #E5EAF0;border-radius:12px;padding:12px 14px;box-shadow:0 6px 18px rgba(15,43,70,.07);margin-bottom:15px}'
       + '.sr-fl{display:grid;gap:5px;min-width:0}'
       + '.sr-fl label{font-size:10px;color:#667085;font-weight:500}'
@@ -794,6 +986,18 @@
       + '.sr-neg{color:#DC2626}'
       + '.sr-dim{color:#C2CBD8}'
       + '.sr-td-sale{min-width:150px}'
+      + '.sr-td-team{min-width:150px}'
+      + '.sr-teamhead td{background:#F5F8FF;color:#1E3A8A;font-size:10.5px;padding:8px 9px;border-top:1px solid #E4EBF7;border-bottom:1px solid #E4EBF7}'
+      + '.sr-teamhead i{font-size:9px;margin-right:4px}'
+      + '.sr-th-meta{margin-left:12px;color:#475569}'
+      + '.sr-th-meta b{color:#0F2B46}'
+      + '.sr-tinp{width:104px;border:1px solid #DCE3EB;border-radius:7px;padding:5px 6px;font-size:10.5px;text-align:right;'
+      + 'font-family:inherit;color:#344054;outline:none;background:#fff}'
+      + '.sr-tinp:focus{border-color:#60A5FA;box-shadow:0 0 0 3px rgba(37,99,235,.1)}'
+      + '.sr-hl{background:#FFFBEB!important}'
+      + '.sr-tools{display:flex;gap:8px;flex-wrap:wrap}'
+      + '.sr-xbtn{border:1px solid #FFE4E6;background:#FFF1F2;color:#B91C1C;border-radius:7px;padding:5px 8px;cursor:pointer;font-size:10px}'
+      + '.sr-xbtn:hover{background:#FFE4E6}'
       + '.sr-empty{text-align:center!important;color:#98A2B3;padding:22px!important}'
       /* badges */
       + '.sr-badge{display:inline-flex;align-items:center;gap:4px;border-radius:99px;padding:3px 9px;font-size:9.5px;font-weight:500;white-space:nowrap}'
