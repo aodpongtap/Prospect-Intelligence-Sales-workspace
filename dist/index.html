@@ -63,7 +63,6 @@
         <button class="nav-item" data-page="partners"><i class="fa-solid fa-handshake"></i>Partnership Business</button>
         <button class="nav-item" data-page="team"><i class="fa-solid fa-sitemap"></i>ทีม &amp; สิทธิ์</button>
         <button class="nav-item" data-page="projects"><i class="fa-solid fa-diagram-project"></i>Project Tracking</button>
-        <button class="nav-item" data-page="service"><i class="fa-solid fa-headset"></i>After-Sale Service</button>
         <button class="nav-item" data-page="intelligence"><i class="fa-solid fa-brain"></i>Customer Intelligence</button>
         <button class="nav-item" data-page="reports"><i class="fa-solid fa-chart-pie"></i>Reports</button>
       </nav>
@@ -277,7 +276,6 @@
   <script src="assets/sales-report.js?v=8"></script>
   <script src="assets/project-tracking.js?v=3"></script>
   <script src="assets/customer-intelligence.js?v=2"></script>
-  <script src="assets/after-sale.js?v=1"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
     window.__applyMe__ = function (rawMe, opts) {
@@ -837,7 +835,7 @@
     })();
 
 
-    const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",partners:"Partnership Business",team:"ทีม & สิทธิ์",projects:"Project Tracking",service:"After-Sale Service",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
+    const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",partners:"Partnership Business",team:"ทีม & สิทธิ์",projects:"Project Tracking",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
     const stageNames=["Planning","Sales Handover","Installation","Testing & Acceptance","Completed"];
     const stageLabels=["Prospect","Qualified","Proposal","Negotiation","Won","Lost"];
     let currentPage="dashboard",charts=[],sortDesc=true,toastTimer,pageStack=[];
@@ -857,7 +855,7 @@
     function btn(label,action,icon="",primary=false,extra=""){return `<button class="btn ${primary?"btn-primary":""}" data-action="${action}" ${extra}>${icon?`<i class="${icon}"></i>`:""}${label}</button>`}
     function destroyCharts(){charts.forEach(c=>c.destroy());charts=[]}
     function makeChart(id,config){const canvas=document.getElementById(id);if(canvas&&window.Chart)charts.push(new Chart(canvas,config))}
-    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,partners:renderPartnerCRM,team:renderTeam,projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),service:(window.AfterSale?AfterSale.render:renderService),intelligence:(window.CustomerIntel?CustomerIntel.render:renderIntelligence),reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=(canGoBack()?"<div class=\"back-wrap\"><button class=\"back-pill\" data-action=\"go-back\"><i class=\"fa-solid fa-arrow-left\"></i> ย้อนกลับ"+(prevTitle()?" · "+prevTitle():"")+"</button></div>":"")+views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence"){window.CustomerIntel?CustomerIntel.drawCharts():drawHealthChart()}if(currentPage==="reports")drawReportCharts();if(currentPage==="team")loadTeam();if(window.__afterRender__)window.__afterRender__();var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
+    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,partners:renderPartnerCRM,team:renderTeam,projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),intelligence:(window.CustomerIntel?CustomerIntel.render:renderIntelligence),reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=(canGoBack()?"<div class=\"back-wrap\"><button class=\"back-pill\" data-action=\"go-back\"><i class=\"fa-solid fa-arrow-left\"></i> ย้อนกลับ"+(prevTitle()?" · "+prevTitle():"")+"</button></div>":"")+views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence"){window.CustomerIntel?CustomerIntel.drawCharts():drawHealthChart()}if(currentPage==="reports")drawReportCharts();if(currentPage==="team")loadTeam();if(window.__afterRender__)window.__afterRender__();var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
 
     /* ===== การนำทางแบบเว็บทั่วไป: URL เปลี่ยน + ปุ่ม Back ของเบราว์เซอร์ใช้ได้ ===== */
     function pageUrl(p){return p&&p!=="dashboard"?"index.html?page="+encodeURIComponent(p):"index.html"}
