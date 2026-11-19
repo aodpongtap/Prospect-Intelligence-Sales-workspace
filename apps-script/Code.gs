@@ -56,6 +56,7 @@ function doGet(e) {
  */
 function apiResponse_(p) {
   var cb = String(p.callback || '');
+  if (cb && !/^[A-Za-z0-9_$.]+$/.test(cb)) cb = '';   // กัน JS injection ผ่าน callback
   var out;
   try {
     var action = String(p.action || '');
@@ -246,9 +247,10 @@ function saveSession_(token, data) {
 }
 
 function isAdminLevel_(level) { return String(level).toLowerCase() === 'admin'; }
+/** ใครบันทึกดีลได้: Admin / BU / Head Team / Supervisor / เซลล์ (L1–L5) */
 function canSell_(level) {
   var l = String(level).toLowerCase();
-  return l === 'admin' || l === 'sale' || l === 'editor';
+  return ['admin', 'bu', 'head', 'sup', 'sale', 'editor'].indexOf(l) >= 0;
 }
 
 /* ---------------- deals (Google Sheet tab "Deals") ---------------- */

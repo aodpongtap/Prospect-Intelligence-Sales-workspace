@@ -21,6 +21,12 @@
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
   }
   function monthTH(y, m) { return String(m).padStart(2, '0') + '.' + TH_MONTHS()[m - 1] + ' ' + (y + 543); }
+  /** yyyymm -> "พ.ย. 69" */
+  function monthShort(ym) {
+    if (!ym) return '—';
+    var y = Math.floor(ym / 100), m = ym % 100;
+    return TH_MONTHS()[m - 1].slice(0, 3) + '. ' + String(y + 543).slice(-2);
+  }
 
   var STATUS = {
     0: { label: 'กำลังคุย', cls: 's0' },
@@ -172,7 +178,7 @@
         + '<td class="ci-num">' + c.dealCount + '</td>'
         + '<td class="ci-num ci-strong">' + (c.won ? money(c.won) : '<span class="ci-dim">—</span>') + '</td>'
         + '<td class="ci-num">' + (c.open + c.talking ? money(c.open + c.talking) : '<span class="ci-dim">—</span>') + '</td>'
-        + '<td class="ci-num">' + String(Math.floor(c.latest / 100) + 543).slice(-2) + '.' + String(c.latest % 100).padStart(2, '0') + '</td>'
+        + '<td class="ci-num">' + monthShort(c.latest) + '</td>'
         + '<td><span class="ci-badge ' + h.cls + '"><i class="' + h.icon + '"></i> ' + esc(h.label) + '</span></td>'
         + '<td class="ci-rec-cell">' + esc(rec.title) + '</td>'
         + '<td class="ci-acts"><button class="ci-btn sm" data-ci-cust="' + esc(c.name) + '"><i class="fa-solid fa-eye"></i> ดู</button></td>'

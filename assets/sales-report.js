@@ -802,7 +802,7 @@
     return '<div class="sr">'
       + '<div class="sr-head">'
       + '  <div><h1>Sales Report &amp; Forecast</h1>'
-      + '    <div class="sr-sub">สรุปยอดขาย ผลงานรายบุคคล และประมาณการปิดเดือน จากสถานะงาน 0–5</div></div>'
+      + '    <div class="sr-sub">สรุปยอดขาย ผลงานรายบุคคล และประมาณการปิดเดือน</div></div>'
       + '</div>'
       + renderFilters(k)
       + renderKpis(k)
