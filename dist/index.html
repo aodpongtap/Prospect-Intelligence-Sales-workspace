@@ -692,7 +692,9 @@
           bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#eff6ff;border:1px solid #dbeafe;color:#1e40af';
           bar.innerHTML = '<i class="fa-solid fa-user-lock"></i> เห็นเฉพาะดีลของคุณ: <strong>' + (me.name || me.email) + '</strong> · <strong>' + list.length + '</strong> รายการ';
         }
-        if (typeof currentPage !== 'undefined' && currentPage !== 'sales') bar.style.display = 'none';
+        try {
+          if (currentPage !== 'sales') bar.style.display = 'none';
+        } catch (e) { bar.style.display = 'none'; }
       }
 
       /* ใช้ดีลชุดเดียวกับหน้า Reports / Dashboard / Customer Intelligence */
