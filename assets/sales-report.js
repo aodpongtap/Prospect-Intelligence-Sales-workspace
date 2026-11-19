@@ -87,6 +87,29 @@
   }
   function lvLvlAdmin(l) { return l === 'admin'; }
 
+  /** ขอบเขตข้อมูลของผู้ใช้ปัจจุบัน: all | team | sale | none */
+  function scopeOf() {
+    var me = global.__ME__ || {};
+    var lvl = String(me.level || '').toLowerCase();
+    if (lvl === 'admin') return { type: 'all' };
+    var team = TEAM_HEADS[String(me.email || '').toLowerCase()];
+    if (team) return { type: 'team', team: team };
+    var nm = String(me.name || '').trim();
+    if (nm) {
+      for (var i = 0; i < SALES.length; i++) {
+        if (String(SALES[i].name).trim() === nm) return { type: 'sale', saleId: SALES[i].id };
+      }
+    }
+    return { type: 'none' };
+  }
+  function inScope(d) {
+    var sc = scopeOf();
+    if (sc.type === 'all') return true;
+    if (sc.type === 'team') return sale(d.saleId).team === sc.team;
+    if (sc.type === 'sale') return d.saleId === sc.saleId;
+    return false;
+  }
+
   var SALES = [
     { id: 'S01', name: 'ณัฐพงษ์ ศรีสุข',      team: 'BU-DLAG' },
     { id: 'S02', name: 'พิมพ์ชนก วัฒนกุล',    team: 'BU-DLAG' },
@@ -323,7 +346,7 @@
   }
 
   function filteredDeals() {
-    return DEALS.filter(function (d) { return matchFilters(d, state); });
+    return DEALS.filter(function (d) { return inScope(d) && matchFilters(d, state); });
   }
 
   /**
@@ -351,9 +374,13 @@
   }
 
   function kpis() {
+    var sc = scopeOf();
     var list = filteredDeals();
     var sum = summarize(list);
-    var scopeTeams = state.team ? TEAMS.filter(function (t) { return t.code === state.team; }) : TEAMS;
+    var scopeTeams = [];
+    if (sc.type === 'all') scopeTeams = state.team ? TEAMS.filter(function (t) { return t.code === state.team; }) : TEAMS;
+    else if (sc.type === 'team') scopeTeams = TEAMS.filter(function (t) { return t.code === sc.team; });
+    else if (sc.type === 'sale') scopeTeams = TEAMS.filter(function (t) { return t.code === sale(sc.saleId).team; });
     var monthTargets = scopeTeams.map(function (t) {
       return { code: t.code, name: t.name, amount: targetOf(t.code, state.year, state.month) };
     });
@@ -363,7 +390,8 @@
       return scopeTeams.some(function (t) { return t.code === r.team; });
     }).length || 1;
     var perHead = target / headCount;
-    if (state.sale) { target = perHead; }   // เลือกคนเดียว → เทียบกับเป้าหมายต่อคน
+    if (sc.type === 'sale') { target = perHead; headCount = 1; }
+    else if (state.sale) { target = perHead; headCount = 1; }
     return {
       sum: sum, list: list, target: target, headCount: headCount, perHead: perHead,
       teams: scopeTeams, monthTargets: monthTargets,
@@ -456,9 +484,17 @@
 
     /* จัดกลุ่มตามทีม (BU) */
     var blocks = [];
+    var sc0 = scopeOf();
     TEAMS.forEach(function (t) {
       if (state.team && state.team !== t.code) return;
-      var members = SALES.filter(function (r) { return r.team === t.code && (!state.sale || r.id === state.sale); });
+      if (sc0.type === 'team' && t.code !== sc0.team) return;
+      if (sc0.type === 'sale' && sale(sc0.saleId).team !== t.code) return;
+      if (sc0.type === 'none') return;
+      var members = SALES.filter(function (r) {
+        if (r.team !== t.code) return false;
+        if (sc0.type === 'sale') return r.id === sc0.saleId;
+        return !state.sale || r.id === state.sale;
+      });
       if (!members.length) return;
       var rows = [];
       members.forEach(function (r) {
@@ -759,6 +795,12 @@
       + '    <div class="sr-sub">' + esc(today) + ' · ใช้สูตรและข้อมูลชุดเดียวกับหน้า Reports</div></div>'
       + '  <button class="sr-btn dark" data-sr-goto="reports"><i class="fa-solid fa-chart-pie"></i> เปิด Reports ฉบับเต็ม</button>'
       + '</div>'
+      + (scopeOf().type === 'none'
+        ? '<div class="sr-panel" style="display:flex;gap:10px;background:#FFF7ED;border-color:#FFEDD5;margin-bottom:14px">'
+          + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
+          + '<div><b style="color:#9A3412;font-size:12px">บัญชีนี้ยังไม่ถูกผูกกับข้อมูลเซลส์</b>'
+          + '<div class="sr-s2" style="color:#B45309">กรุณาแจ้ง Admin ให้ผูกชื่อของคุณกับรายชื่อเซลส์หรือทีม BU</div></div></div>'
+        : '')
       + '<div class="sr-filters sr-f3">'
       + '  <div class="sr-fl"><label>ปี</label><select data-sr-filter="year">' + yearOpts + '</select></div>'
       + '  <div class="sr-fl"><label>เดือนที่คาดว่าจะปิด</label><select data-sr-filter="month">' + monthOpts + '</select></div>'
@@ -866,8 +908,14 @@
 
   /* ---------- ผลงานรายบุคคล: ชิปเซลส์ + รายงานรายเดือน ---------- */
   function saleChips() {
+    var sc = scopeOf();
     var tm = state.perfTeam || state.team || '';
-    var list = SALES.filter(function (s) { return !tm || s.team === tm; });
+    if (sc.type === 'team') tm = sc.team;
+    var list = SALES.filter(function (s) {
+      if (sc.type === 'sale') return s.id === sc.saleId;
+      if (sc.type === 'none') return false;
+      return !tm || s.team === tm;
+    });
     if (!list.length) return '<div class="sr-s2">ไม่มีเซลส์ในทีมนี้</div>';
     return list.map(function (s) {
       var deals = DEALS.filter(function (d) {
@@ -993,11 +1041,18 @@
 
   function render() {
     var k = kpis();
+    var notice = scopeOf().type === 'none'
+      ? '<div class="sr-panel" style="display:flex;gap:10px;align-items:flex-start;background:#FFF7ED;border-color:#FFEDD5">'
+        + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
+        + '<div><b style="color:#9A3412;font-size:12px">บัญชีนี้ยังไม่ถูกผูกกับข้อมูลเซลส์</b>'
+        + '<div class="sr-s2" style="color:#B45309">ระบบแสดงข้อมูลตามชื่อผู้ใช้ — กรุณาแจ้ง Admin ให้ผูกชื่อของคุณกับรายชื่อเซลส์ หรือกำหนดทีม BU เพื่อให้เห็นยอดขายของตัวเอง</div></div></div>'
+      : '';
     return '<div class="sr">'
       + '<div class="sr-head">'
       + '  <div><h1>Sales Report &amp; Forecast</h1>'
       + '    <div class="sr-sub">สรุปยอดขาย ผลงานรายบุคคล และประมาณการปิดเดือน</div></div>'
       + '</div>'
+      + notice
       + renderFilters(k)
       + renderKpis(k)
       + renderTargets()
