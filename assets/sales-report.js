@@ -65,6 +65,7 @@
   }
   function saveTeams() {
     try { localStorage.setItem('pi_sr_teams_v1', JSON.stringify(TEAMS)); } catch (e) {}
+    __listeners.forEach(function (f) { try { f(); } catch (e) {} });
   }
   function teamByCode(code) {
     for (var i = 0; i < TEAMS.length; i++) if (TEAMS[i].code === code) return TEAMS[i];
@@ -113,6 +114,7 @@
   }
   function saveTargets() {
     try { localStorage.setItem('pi_sr_targets_v2', JSON.stringify(TARGETS)); } catch (e) {}
+    __listeners.forEach(function (f) { try { f(); } catch (e) {} });
   }
   /** อาร์เรย์เป้าหมาย 12 เดือนของทีมในปีที่กำหนด (สร้างค่าเริ่มต้นให้ถ้ายังไม่มี) */
   function targetsOfTeam(code, year) {
@@ -228,6 +230,57 @@
       amount: 320000, payment: 'term', status: 1, prob: 50,
       note: 'โครงการขยายสาขาภาคเหนือ เริ่มก่อสร้าง ม.ค. 2570 คาดเซ็นสัญญา ก.พ. 2570' }
   ];
+
+  /* ---------- เก็บดีลลงเครื่อง (ให้ทุกหน้าใช้ชุดข้อมูลเดียวกัน) ---------- */
+  var LS_DEALS = 'pi_sr_deals_v1';
+  var __listeners = [];
+  var __SEED_DEALS__ = JSON.parse(JSON.stringify(DEALS));   // เก็บชุดตั้งต้นไว้สำหรับ Reset
+  (function restoreDeals() {
+    try {
+      var a = JSON.parse(localStorage.getItem(LS_DEALS) || 'null');
+      if (Object.prototype.toString.call(a) === '[object Array]' && a.length) {
+        DEALS.length = 0;
+        Array.prototype.push.apply(DEALS, a);
+      }
+    } catch (e) {}
+  })();
+  function saveDeals() {
+    try { localStorage.setItem(LS_DEALS, JSON.stringify(DEALS)); } catch (e) {}
+    __listeners.forEach(function (f) { try { f(); } catch (e) {} });
+  }
+  function onChange(fn) { if (typeof fn === 'function') __listeners.push(fn); }
+
+  /** เพิ่มดีลใหม่ (ใช้ร่วมกับหน้า Sale Monitor) */
+  function addDeal(o) {
+    var yr = Number(o.year) || new Date().getFullYear();
+    var mo = Number(o.month) || (new Date().getMonth() + 1);
+    var d = {
+      no: o.no || ('SO-' + yr + '-' + String(DEALS.length + 1).padStart(4, '0')),
+      so: o.so || ('QT-' + yr + '-' + String(DEALS.length + 1).padStart(4, '0')),
+      customer: String(o.customer || '').trim(),
+      job: String(o.job || o.name || '').trim(),
+      quoteDate: o.quoteDate || new Date().toISOString().slice(0, 10),
+      year: yr, month: mo,
+      saleId: o.saleId || (SALES[0] && SALES[0].id) || 'S01',
+      product: o.product || 'P1',
+      amount: Number(o.amount || 0),
+      payment: o.payment || 'cash',
+      status: Number(o.status),
+      prob: Number(o.prob || 0),
+      note: String(o.note || '')
+    };
+    if (!d.customer || !d.job) throw new Error('กรอกชื่อลูกค้าและชื่องาน');
+    if (isNaN(d.status)) d.status = 1;
+    DEALS.push(d);
+    saveDeals();
+    return d;
+  }
+  function removeDeal(no) {
+    for (var i = 0; i < DEALS.length; i++) {
+      if (DEALS[i].no === no) { DEALS.splice(i, 1); saveDeals(); return true; }
+    }
+    return false;
+  }
 
   /* ============================ 3) CALC ============================ */
   function num(n) { return Number(n || 0); }
@@ -1284,6 +1337,19 @@
     viewerTeam: viewerTeam,
     data: function () {
       return { deals: DEALS, teams: TEAMS, sales: SALES, viewerTeam: viewerTeam() };
+    },
+    addDeal: addDeal,
+    removeDeal: removeDeal,
+    saveDeals: saveDeals,
+    onChange: onChange,
+    statusList: STATUS,
+    products: PRODUCTS,
+    payments: PAYMENTS,
+    resetDeals: function () {
+      try { localStorage.removeItem(LS_DEALS); } catch (e) {}
+      DEALS.length = 0;
+      Array.prototype.push.apply(DEALS, JSON.parse(JSON.stringify(__SEED_DEALS__)));
+      saveDeals();
     },
     drawCharts: drawCharts,
     renderDashboard: function () {

@@ -99,6 +99,7 @@
   <script src="assets/sales-report.js?v=8"></script>
   <script src="assets/project-tracking.js?v=3"></script>
   <script src="assets/customer-intelligence.js?v=2"></script>
+  <script src="assets/after-sale.js?v=1"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
     window.__applyMe__ = function (rawMe, opts) {
@@ -505,7 +506,7 @@
         if (ls) ls.innerHTML = '<i class="fa-solid fa-circle-check"></i> ข้อมูลอัปเดตล่าสุด: ' + new Date().toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
         if (me.isAdmin) {
           bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#ecfdf3;border:1px solid #d1fae5;color:#15803d';
-          bar.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Admin — เห็นดีลทั้งหมด <strong>' + list.length + '</strong> รายการ (ข้อมูลจาก Google Sheets)';
+          bar.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Admin — เห็นดีลทั้งหมด <strong>' + list.length + '</strong> รายการ (ข้อมูลชุดเดียวกับ Reports)';
         } else if (isBoss) {
           bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#eef2ff;border:1px solid #e0e7ff;color:#3730a3';
           bar.innerHTML = '<i class="fa-solid fa-users-viewfinder"></i> แดชบอร์ดรวมของสายงาน — เห็นดีลของทีมทั้งหมดใต้สังกัดคุณ <strong>' + list.length + '</strong> รายการ (<strong>' + (me.name || me.email) + '</strong>)';
@@ -516,31 +517,80 @@
         if (typeof currentPage !== 'undefined' && currentPage !== 'sales') bar.style.display = 'none';
       }
 
-      PIAuth.listDeals().then(paint).catch(function (e) {
-        var bar = document.getElementById('scopeBar');
-        if (bar) {
-          bar.setAttribute('data-ready', '1');
-          bar.style.display = 'block';
-          bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412';
-          bar.textContent = 'โหลดดีลจาก Google Sheets ไม่สำเร็จ: ' + e.message;
-        }
-      });
+      /* ใช้ดีลชุดเดียวกับหน้า Reports / Dashboard / Customer Intelligence */
+      var STAGE_OF_STATUS = { 0: 'Prospect', 1: 'Qualified', 2: 'Proposal', 3: 'Negotiation', 4: 'Won', 5: 'Lost' };
+      var STATUS_OF_STAGE = { Prospect: 0, Qualified: 1, Proposal: 2, Negotiation: 3, Won: 4, Lost: 5 };
 
-      // ให้ปุ่ม "Add Deal" ใน Sale Monitor บันทึกลง Google Sheets ได้
+      function reportDeals() {
+        var d = (window.SalesReport && SalesReport.data) ? SalesReport.data() : null;
+        if (!d) return null;
+        var out = [];
+        d.deals.forEach(function (x) {
+          var s = null;
+          for (var i = 0; i < d.sales.length; i++) if (d.sales[i].id === x.saleId) s = d.sales[i];
+          if (!s) return;
+          if (d.viewerTeam && s.team !== d.viewerTeam) return;
+          out.push({
+            id: x.no, name: x.job || x.customer, customer: x.customer,
+            ownerName: s.name, ownerEmail: '', value: Number(x.amount || 0),
+            stage: STAGE_OF_STATUS[x.status] || 'Prospect',
+            probability: Number(x.prob || 0),
+            close: x.year + '-' + String(x.month).padStart(2, '0') + '-28',
+            lastActivity: x.quoteDate,
+            nextAction: x.status === 4 ? 'ส่งต่องานติดตั้ง' : (x.status === 5 ? '' : 'ติดตามงานขาย'),
+            status: x.status === 5 ? 'At Risk' : (x.status === 3 ? 'Need Attention' : 'Healthy'),
+            activity: []
+          });
+        });
+        return out;
+      }
+
+      function refreshFromReport() {
+        var list = reportDeals();
+        if (list) { paint(list); return true; }
+        return false;
+      }
+
+      if (!refreshFromReport()) {
+        PIAuth.listDeals().then(paint).catch(function (e) {
+          var bar = document.getElementById('scopeBar');
+          if (bar) {
+            bar.setAttribute('data-ready', '1');
+            bar.style.display = 'block';
+            bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412';
+            bar.textContent = 'โหลดข้อมูลดีลไม่สำเร็จ: ' + e.message;
+          }
+        });
+      }
+      if (window.SalesReport && SalesReport.onChange) SalesReport.onChange(refreshFromReport);
+
+      // ปุ่ม "Add Deal" ใน Sale Monitor → บันทึกเข้าชุดข้อมูลเดียวกับ Reports
       window.__paintDeals__ = paint;
       window.__saveDealSheet__ = function (f) {
-        PIAuth.addDeal({
-          name: f.name, customer: f.customer,
-          value: Number(f.value || 0), probability: Number(f.probability || 0),
-          stage: f.stage, close: f.close,
-          nextAction: f.nextAction || '', status: 'Healthy'
-        }).then(function (r) {
+        try {
+          if (!window.SalesReport || !SalesReport.addDeal) throw new Error('ไม่พบโมดูล Reports');
+          var d = SalesReport.data();
+          var tm = d.viewerTeam || '';
+          var cand = null;
+          for (var i = 0; i < d.sales.length; i++) {
+            if (!tm || d.sales[i].team === tm) { cand = d.sales[i]; break; }
+          }
+          if (!cand) cand = d.sales[0];
+          var close = String(f.close || '');
+          var y = Number(close.slice(0, 4)) || new Date().getFullYear();
+          var m = Number(close.slice(5, 7)) || (new Date().getMonth() + 1);
+          var st = STATUS_OF_STAGE[f.stage];
+          SalesReport.addDeal({
+            customer: f.customer, job: f.name, amount: f.value,
+            status: (st === undefined ? 1 : st),
+            prob: Number(f.probability || 0), year: y, month: m,
+            saleId: cand ? cand.id : 'S01', note: f.nextAction || ''
+          });
           try { closeModal(); } catch (e) {}
-          paint((r && r.deals) || []);
-          try { toast('บันทึกดีลลง Google Sheets เรียบร้อย'); } catch (e) {}
-        }).catch(function (e) {
+          toast('บันทึกดีลแล้ว — ข้อมูลนี้ใช้ร่วมกับ Reports / Dashboard / Customer Intelligence');
+        } catch (e) {
           try { toast('บันทึกไม่สำเร็จ: ' + (e.message || e)); } catch (err) {}
-        });
+        }
       };
 
       // ปุ่มลอย "เพิ่มดีลของฉัน" + ฟอร์มเพิ่มดีล ถูกนำออกตามคำขอ
@@ -627,7 +677,7 @@
     function btn(label,action,icon="",primary=false,extra=""){return `<button class="btn ${primary?"btn-primary":""}" data-action="${action}" ${extra}>${icon?`<i class="${icon}"></i>`:""}${label}</button>`}
     function destroyCharts(){charts.forEach(c=>c.destroy());charts=[]}
     function makeChart(id,config){const canvas=document.getElementById(id);if(canvas&&window.Chart)charts.push(new Chart(canvas,config))}
-    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,partners:renderPartnerCRM,team:renderTeam,projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),service:renderService,intelligence:(window.CustomerIntel?CustomerIntel.render:renderIntelligence),reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=(canGoBack()?"<div class=\"back-wrap\"><button class=\"back-pill\" data-action=\"go-back\"><i class=\"fa-solid fa-arrow-left\"></i> ย้อนกลับ"+(prevTitle()?" · "+prevTitle():"")+"</button></div>":"")+views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence"){window.CustomerIntel?CustomerIntel.drawCharts():drawHealthChart()}if(currentPage==="reports")drawReportCharts();if(currentPage==="team")loadTeam();if(window.__afterRender__)window.__afterRender__();var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
+    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,partners:renderPartnerCRM,team:renderTeam,projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),service:(window.AfterSale?AfterSale.render:renderService),intelligence:(window.CustomerIntel?CustomerIntel.render:renderIntelligence),reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=(canGoBack()?"<div class=\"back-wrap\"><button class=\"back-pill\" data-action=\"go-back\"><i class=\"fa-solid fa-arrow-left\"></i> ย้อนกลับ"+(prevTitle()?" · "+prevTitle():"")+"</button></div>":"")+views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence"){window.CustomerIntel?CustomerIntel.drawCharts():drawHealthChart()}if(currentPage==="reports")drawReportCharts();if(currentPage==="team")loadTeam();if(window.__afterRender__)window.__afterRender__();var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
 
     /* ===== การนำทางแบบเว็บทั่วไป: URL เปลี่ยน + ปุ่ม Back ของเบราว์เซอร์ใช้ได้ ===== */
     function pageUrl(p){return p&&p!=="dashboard"?"index.html?page="+encodeURIComponent(p):"index.html"}
@@ -833,17 +883,34 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
     document.getElementById("notificationBtn").addEventListener("click",function(e){e.stopPropagation();toggleNotif()});
 
     /* ===== การแจ้งเตือน: dropdown พร้อมสถานะ อ่าน / ไม่อ่าน ===== */
-    const NOTIFS=[
-      {id:"n1",t:"ดีลเสี่ยงสูง",d:"Network Infrastructure ไม่มีความเคลื่อนไหว 12 วัน",time:"10 นาทีที่แล้ว"},
-      {id:"n2",t:"ใกล้ถึงกำหนดปิด",d:"Cloud Migration Phase 2 คาดปิดใน 5 วัน",time:"1 ชั่วโมงที่แล้ว"},
-      {id:"n3",t:"คู่ค้าใหม่ผ่าน MOU",d:"หจก. บ้านสะอาด นครปฐม — เริ่มอบรมสินค้า",time:"เมื่อวาน"},
-      {id:"n4",t:"งานค้างติดตั้ง",d:"4 งานรอพื้นที่/ระบบไฟฟ้า เกิน 7 วัน",time:"2 วันที่แล้ว"}
-    ];
+    let NOTIFS=[];
+    function buildNotifs(){
+      const out=[];
+      const money=n=>"ยท"+Number(n||0).toLocaleString("th-TH");
+      const sr=(window.SalesReport&&SalesReport.data)?SalesReport.data():null;
+      if(sr){
+        const risky=sr.deals.filter(d=>d.status===1&&Number(d.prob)<=40);
+        if(risky.length)out.push({id:"n-risk",t:"ดีล Pipeline ที่ต้องติดตาม",d:risky.length+" ดีล โอกาสปิด ≤ 40%",time:"จาก Reports"});
+        const po=sr.deals.filter(d=>d.status===2);
+        if(po.length)out.push({id:"n-po",t:"รอยืนยัน PO",d:po.length+" ดีล · รวม "+money(po.reduce((a,d)=>a+Number(d.amount||0),0)),time:"จาก Reports"});
+        const cancel=sr.deals.filter(d=>d.status===5);
+        if(cancel.length)out.push({id:"n-cancel",t:"ดีลยกเลิก",d:cancel.length+" ดีล · รวม "+money(cancel.reduce((a,d)=>a+Number(d.amount||0),0)),time:"จาก Reports"});
+      }
+      const pr=(window.ProjectTracking&&ProjectTracking.list)?ProjectTracking.list():[];
+      let over=0;
+      pr.forEach(p=>(p.tasks||[]).forEach(t=>{if(t.status!=="เสร็จแล้ว"&&t.due&&new Date(t.due+"T00:00:00")<new Date(new Date().toDateString()))over++;}));
+      if(over)out.push({id:"n-task",t:"งานเลยกำหนด",d:over+" งานใน Project Tracking",time:"จาก Projects"});
+      const blocked=pr.filter(p=>p.blocker&&p.blocker!=="ไม่มี"&&p.blocker!=="-").length;
+      if(blocked)out.push({id:"n-block",t:"โครงการติด Blocker",d:blocked+" โครงการ",time:"จาก Projects"});
+      if(!out.length)out.push({id:"n-none",t:"ไม่มีการแจ้งเตือน",d:"ทุกอย่างเรียบร้อย",time:"-"});
+      return out;
+    }
     const NOTIF_KEY="pi_notif_read_v1";
     function notifReadList(){try{return JSON.parse(localStorage.getItem(NOTIF_KEY)||"[]")}catch(e){return []}}
     function notifSaveList(a){try{localStorage.setItem(NOTIF_KEY,JSON.stringify(a))}catch(e){}}
     function notifUnreadCount(){const r=notifReadList();return NOTIFS.filter(n=>r.indexOf(n.id)<0).length}
     function renderNotif(){
+      NOTIFS=buildNotifs();
       const read=notifReadList(),panel=document.getElementById("notifPanel");if(!panel)return;
       const unread=NOTIFS.filter(n=>read.indexOf(n.id)<0).length;
       panel.innerHTML='<div class="notif-head"><strong>การแจ้งเตือน'+(unread?' ('+unread+')':'')+'</strong><button data-notif-all>อ่านทั้งหมด</button></div>'
