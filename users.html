@@ -64,7 +64,14 @@ td{padding:9px;border-bottom:1px solid #eef1f5;font-size:12px}
     <div class="fg">
       <div><label for="email">อีเมล</label><input id="email" type="email" placeholder="name@gmail.com" autocomplete="off"></div>
       <div><label for="name">ชื่อ (ไม่บังคับ)</label><input id="name" type="text" placeholder="ชื่อ-นามสกุล"></div>
-      <div><label for="level">สิทธิ์</label><select id="level"><option value="viewer">Viewer</option><option value="sale">Sale (กรอกดีลของตัวเอง)</option><option value="editor">Editor</option><option value="admin">Admin</option></select></div>
+      <div><label for="level">ระดับสิทธิ์</label><select id="level">
+        <option value="bu">L2 · BU</option>
+        <option value="head">L3 · Head Team</option>
+        <option value="sup">L4 · Supervisor</option>
+        <option value="sale" selected>L5 · เซลล์ (Sale)</option>
+        <option value="agent">L6 · ตัวแทน / MCN</option>
+      </select></div>
+      <div><label for="parent">ผู้ดูแลต้นสาย (Upline) *</label><select id="parent"><option value="">— เลือก —</option></select></div>
       <div><button class="btn btn-primary" id="addBtn"><i class="fa-solid fa-user-plus"></i> เพิ่ม + สร้างรหัส</button></div>
     </div>
   </section>
@@ -73,18 +80,21 @@ td{padding:9px;border-bottom:1px solid #eef1f5;font-size:12px}
     <h3>รายชื่อผู้ใช้ (<span id="count">0</span>)</h3>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>อีเมล</th><th>ชื่อ</th><th>สิทธิ์</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead>
-        <tbody id="tb"><tr><td colspan="6" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
+        <thead><tr><th>อีเมล</th><th>ชื่อ</th><th>ระดับสิทธิ์</th><th>ผู้ดูแลสาย</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead>
+        <tbody id="tb"><tr><td colspan="7" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
       </table>
     </div>
   </section>
 
   <section class="panel">
-    <h3>ระดับสิทธิ์</h3>
+    <h3>ระดับสิทธิ์ 6 ระดับ</h3>
     <div class="legend">
-      <div><span class="pill l-admin">Admin</span><br>จัดการผู้ใช้ + ดู/แก้ข้อมูลทั้งหมด + Export + Settings</div>
-      <div><span class="pill l-editor">Editor</span><br>ดู + แก้ไขข้อมูล + Export</div>
-      <div><span class="pill l-viewer">Viewer</span><br>ดูข้อมูลเท่านั้น</div>
+      <div><span class="pill l-admin">L1 · Admin</span><br>เห็นทั้งเครือข่าย</div>
+      <div><span class="pill l-editor">L2 · BU</span><br>เห็นทุกทีมใต้ BU</div>
+      <div><span class="pill l-editor">L3 · Head Team</span><br>เห็นทั้งทีม</div>
+      <div><span class="pill l-viewer">L4 · Supervisor</span><br>เห็นเซลล์+ตัวแทนใต้ทีม</div>
+      <div><span class="pill l-viewer">L5 · เซลล์</span><br>เห็นตัวแทนใต้ตัวเอง</div>
+      <div><span class="pill l-viewer">L6 · ตัวแทน/MCN</span><br>เห็นเฉพาะงานตัวเอง</div>
     </div>
   </section>
 </div>
@@ -127,17 +137,35 @@ function showPw(email, pw) {
 }
 function isCore(email) { return PIAuth.coreAdmins.indexOf(String(email).toLowerCase()) >= 0; }
 
+var LVLS = [
+  ['admin', 'L1 · Admin'], ['bu', 'L2 · BU'], ['head', 'L3 · Head Team'],
+  ['sup', 'L4 · Supervisor'], ['sale', 'L5 · เซลล์'], ['agent', 'L6 · ตัวแทน/MCN']
+];
+function lvlLabel(code) {
+  for (var i = 0; i < LVLS.length; i++) if (LVLS[i][0] === code) return LVLS[i][1];
+  return code || '-';
+}
+function lvlN(code) {
+  for (var i = 0; i < LVLS.length; i++) if (LVLS[i][0] === code) return i + 1;
+  return LVLS.length;
+}
+
 function render(users) {
+  window.__USERS__ = users || [];
   el('count').textContent = users.length;
   var rows = users.map(function (u) {
     var core = isCore(u.email);
     var levelCell = core
-      ? '<span class="pill l-core">Admin (หลัก)</span>'
+      ? '<span class="pill l-core">L1 · Admin (หลัก)</span>'
       : '<select data-act="level" data-email="' + esc(u.email) + '" style="padding:4px 6px;font-size:11px">' +
-        ['admin', 'sale', 'editor', 'viewer'].map(function (l) {
-          var label = l === 'sale' ? 'Sale' : l.charAt(0).toUpperCase() + l.slice(1);
-          return '<option value="' + l + '"' + (u.level === l ? ' selected' : '') + '>' + label + '</option>';
+        LVLS.map(function (p) {
+          return '<option value="' + p[0] + '"' + (u.level === p[0] ? ' selected' : '') + '>' + p[1] + '</option>';
         }).join('') + '</select>';
+    var parentName = '-';
+    (window.__USERS__ || []).forEach(function (x) {
+      if (x.email === u.parent) parentName = x.name || x.email;
+    });
+    if (u.parent && parentName === '-') parentName = u.parent;
     var statusCell = u.status === 'disabled'
       ? '<span class="off"><i class="fa-solid fa-circle-xmark"></i> ปิด</span>'
       : '<span class="on"><i class="fa-solid fa-circle-check"></i> ใช้งาน</span>';
@@ -149,9 +177,23 @@ function render(users) {
         '<button class="btn btn-danger" data-act="del" data-email="' + esc(u.email) + '"><i class="fa-solid fa-trash"></i> ลบ</button>') +
       '</div>';
     return '<tr><td>' + esc(u.email) + '</td><td>' + esc(u.name || '—') + '</td><td>' + levelCell + '</td>' +
-      '<td>' + statusCell + '</td><td>' + fmt(u.lastLogin) + '</td><td>' + acts + '</td></tr>';
+      '<td>' + esc(parentName) + '</td><td>' + statusCell + '</td><td>' + fmt(u.lastLogin) + '</td><td>' + acts + '</td></tr>';
   }).join('');
-  el('tb').innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
+  el('tb').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
+  refreshUplines();
+}
+
+/** รายชื่อผู้ดูแลต้นสาย: ระดับสูงกว่าระดับที่เลือก */
+function refreshUplines() {
+  var sel = el('level'), box = el('parent');
+  if (!sel || !box) return;
+  var myN = lvlN(sel.value);
+  var opts = (window.__USERS__ || []).filter(function (u) {
+    return lvlN(u.level) < myN;
+  }).map(function (u) {
+    return '<option value="' + esc(u.email) + '">' + esc((u.name || u.email) + ' · ' + lvlLabel(u.level)) + '</option>';
+  });
+  box.innerHTML = '<option value="">— เลือก —</option>' + opts.join('');
 }
 
 function load() {
@@ -161,13 +203,16 @@ function load() {
 el('addBtn').addEventListener('click', function () {
   var email = el('email').value.trim();
   if (!email || email.indexOf('@') < 0) return showMsg('กรอกอีเมลให้ถูกต้อง', 'err');
-  PIAuth.addUser(email, el('name').value.trim(), el('level').value).then(function (res) {
+  if (!el('parent').value) return showMsg('กรุณาเลือกผู้ดูแลต้นสาย (Upline)', 'err');
+  PIAuth.addUser(email, el('name').value.trim(), el('level').value, el('parent').value).then(function (res) {
     el('email').value = ''; el('name').value = '';
     render(PIAuth.listUsers());
     showPw(res.email, res.password);
     showMsg('เพิ่มผู้ใช้และสร้างรหัสผ่านแล้ว', 'ok');
   }).catch(function (e) { showMsg(e.message || String(e), 'err'); });
 });
+
+el('level').addEventListener('change', refreshUplines);
 
 el('tb').addEventListener('change', function (e) {
   var sel = e.target.closest('[data-act="level"]');
