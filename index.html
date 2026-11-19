@@ -22,6 +22,23 @@
     .back-pill i{width:22px;height:22px;border-radius:50%;background:#EEF2FF;color:#1D4ED8;display:grid;place-items:center;font-size:10px}
     .back-pill:hover{border-color:#C7D3E3;transform:translateX(-2px);box-shadow:0 8px 18px rgba(15,43,70,.12)}
     .back-pill:active{transform:translateX(0) scale(.98)}
+    /* ===== การแจ้งเตือน (dropdown) ===== */
+    .notif-wrap{position:relative}
+    .notif-panel{position:absolute;right:0;top:44px;width:330px;max-height:380px;overflow:auto;background:#fff;border:1px solid #E5EAF0;border-radius:12px;box-shadow:0 18px 42px rgba(15,43,70,.18);display:none;z-index:60}
+    .notif-panel.open{display:block}
+    .notif-head{position:sticky;top:0;background:#fff;padding:11px 13px;border-bottom:1px solid #EFF3F8;display:flex;align-items:center;justify-content:space-between;gap:8px}
+    .notif-head strong{font-size:12px;color:#0F2B46}
+    .notif-head button{border:0;background:transparent;color:#2563EB;font-size:10.5px}
+    .notif-item{display:flex;gap:9px;padding:10px 13px;border-bottom:1px solid #F4F7FB;cursor:pointer;transition:.15s}
+    .notif-item:last-child{border-bottom:0}
+    .notif-item:hover{background:#F8FBFF}
+    .notif-item.unread{background:#F5F9FF}
+    .notif-item.unread:hover{background:#EEF5FF}
+    .notif-item .nd{width:7px;height:7px;border-radius:50%;background:transparent;margin-top:6px;flex:0 0 7px}
+    .notif-item.unread .nd{background:#2563EB}
+    .notif-item .nt{font-size:11.5px;color:#0F2B46;font-weight:500}
+    .notif-item .nx{font-size:10.5px;color:#667085;line-height:1.55;margin-top:2px}
+    .notif-empty{padding:26px 12px;text-align:center;color:#98a2b3;font-size:11.5px}
     @media(max-width:760px){.back-pill{width:100%;justify-content:center;padding:10px 14px}}.subtitle{color:var(--muted);font-size:11px}.head-actions{display:flex;flex-wrap:wrap;gap:8px}
     .btn{border:1px solid var(--line);background:white;color:#344054;border-radius:8px;padding:9px 12px;display:inline-flex;gap:7px;align-items:center;justify-content:center;transition:.2s;font-size:11px;white-space:nowrap}.btn:hover{border-color:#b7c5d6;box-shadow:0 3px 9px rgba(15,43,70,.08);transform:translateY(-1px)}.btn-primary{color:white;background:var(--blue);border-color:var(--blue)}.btn-primary:hover{background:#1d4ed8;border-color:#1d4ed8}.btn-soft{background:#eff6ff;color:#1d4ed8;border-color:#dbeafe}.btn-danger{background:#fff1f2;border-color:#ffe4e6;color:var(--red)}.grid{display:grid;gap:15px}.kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:17px}.kpi{background:white;border:1px solid #edf0f4;border-radius:var(--radius);padding:17px;box-shadow:var(--shadow);min-width:0}.kpi-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:11px}.kpi-icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:14px}.kpi-value{font-weight:600;font-size:22px;color:var(--navy);margin:11px 0 5px}.kpi-foot{color:var(--muted);font-size:10px}.up{color:var(--green);font-weight:500}.down{color:var(--red);font-weight:500}.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.panel{background:white;border:1px solid #edf0f4;border-radius:var(--radius);padding:17px;box-shadow:var(--shadow);min-width:0}.panel+.panel{margin-top:15px}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.panel-title{margin:0;color:var(--navy);font-size:13px;font-weight:600}.panel-sub{color:var(--muted);font-size:10px;margin-top:3px}.chart-wrap{height:240px;position:relative}.chart-wrap.short{height:205px}
     .table-wrap{overflow:auto;width:100%}table{width:100%;border-collapse:collapse;white-space:nowrap}th{color:#667085;font-size:10px;font-weight:500;background:#f8fafc;text-align:left;padding:10px 11px}td{padding:11px;border-bottom:1px solid #eef1f5;font-size:10px;color:#344054}tr:last-child td{border-bottom:0}tbody tr.clickable{cursor:pointer;transition:background .16s}tbody tr.clickable:hover{background:#f8fbff}.deal-name{color:var(--navy);font-weight:500;font-size:11px}.muted{color:var(--muted)}.status,.priority,.risk-pill{display:inline-flex;align-items:center;border-radius:20px;padding:4px 8px;font-size:9px;font-weight:500;white-space:nowrap}.healthy,.on-track,.priority-low{color:#15803d;background:#dcfce7}.attention,.priority-high{color:#b45309;background:#fef3c7}.at-risk,.priority-critical{color:#b91c1c;background:#fee2e2}.on-hold{color:#475569;background:#e2e8f0}.priority-medium{color:#a16207;background:#fef9c3}.risk-high{color:#b91c1c;background:#fee2e2}.risk-mid{color:#b45309;background:#fef3c7}.risk-low{color:#15803d;background:#dcfce7}.risk-number{font-weight:600}
@@ -54,7 +71,7 @@
     </aside>
     <main class="main">
       <header class="topbar"><div class="top-left"><button class="icon-btn mobile-menu" id="mobileMenu" aria-label="เปิดเมนู"><i class="fa-solid fa-bars"></i></button><span class="breadcrumb">Workspace <i class="fa-solid fa-chevron-right" style="font-size:8px;margin:0 6px"></i> <span id="crumbName">Dashboard</span></span></div>
-        <div class="top-actions"><button class="icon-btn" id="notificationBtn" title="การแจ้งเตือน"><i class="fa-regular fa-bell"></i><span class="badge-dot"></span></button><div class="profile"><div class="avatar" id="avatar">HS</div><div class="profile-copy"><strong id="meName">Head of Sales</strong><small id="meRole">Administrator</small></div></div></div>
+        <div class="top-actions"><div class="notif-wrap"><button class="icon-btn" id="notificationBtn" title="การแจ้งเตือน"><i class="fa-regular fa-bell"></i><span class="badge-dot" id="notifDot"></span></button><div class="notif-panel" id="notifPanel"></div></div><div class="profile"><div class="avatar" id="avatar">HS</div><div class="profile-copy"><strong id="meName">Head of Sales</strong><small id="meRole">Administrator</small></div></div></div>
       </header>
       <div id="scopeBar" style="display:none"></div>
       <section class="content" id="content"></section>
@@ -735,7 +752,48 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
     // เปิดหน้าที่ระบุจาก URL เช่น index.html?page=team
     (function(){try{const p=new URLSearchParams(location.search).get("page");if(p&&pageTitles[p]){currentPage=p;render()}}catch(err){}})();
     document.getElementById("mobileMenu").addEventListener("click",()=>document.getElementById("sidebar").classList.toggle("open"));
-    document.getElementById("notificationBtn").addEventListener("click",()=>toast("คุณมีการแจ้งเตือนใหม่ 3 รายการ"));
+    document.getElementById("notificationBtn").addEventListener("click",function(e){e.stopPropagation();toggleNotif()});
+
+    /* ===== การแจ้งเตือน: dropdown พร้อมสถานะ อ่าน / ไม่อ่าน ===== */
+    const NOTIFS=[
+      {id:"n1",t:"ดีลเสี่ยงสูง",d:"Network Infrastructure ไม่มีความเคลื่อนไหว 12 วัน",time:"10 นาทีที่แล้ว"},
+      {id:"n2",t:"ใกล้ถึงกำหนดปิด",d:"Cloud Migration Phase 2 คาดปิดใน 5 วัน",time:"1 ชั่วโมงที่แล้ว"},
+      {id:"n3",t:"คู่ค้าใหม่ผ่าน MOU",d:"หจก. บ้านสะอาด นครปฐม — เริ่มอบรมสินค้า",time:"เมื่อวาน"},
+      {id:"n4",t:"งานค้างติดตั้ง",d:"4 งานรอพื้นที่/ระบบไฟฟ้า เกิน 7 วัน",time:"2 วันที่แล้ว"}
+    ];
+    const NOTIF_KEY="pi_notif_read_v1";
+    function notifReadList(){try{return JSON.parse(localStorage.getItem(NOTIF_KEY)||"[]")}catch(e){return []}}
+    function notifSaveList(a){try{localStorage.setItem(NOTIF_KEY,JSON.stringify(a))}catch(e){}}
+    function notifUnreadCount(){const r=notifReadList();return NOTIFS.filter(n=>r.indexOf(n.id)<0).length}
+    function renderNotif(){
+      const read=notifReadList(),panel=document.getElementById("notifPanel");if(!panel)return;
+      const unread=NOTIFS.filter(n=>read.indexOf(n.id)<0).length;
+      panel.innerHTML='<div class="notif-head"><strong>การแจ้งเตือน'+(unread?' ('+unread+')':'')+'</strong><button data-notif-all>อ่านทั้งหมด</button></div>'
+        +(NOTIFS.length?NOTIFS.map(n=>{
+          const isRead=read.indexOf(n.id)>=0;
+          return '<div class="notif-item '+(isRead?'read':'unread')+'" data-notif="'+n.id+'"><span class="nd"></span><div><div class="nt">'+n.t+'</div><div class="nx">'+n.d+'</div><div class="nx" style="color:#98A2B3;margin-top:3px">'+n.time+' · '+(isRead?'อ่านแล้ว':'ยังไม่อ่าน')+'</div></div></div>';
+        }).join(""):'<div class="notif-empty">ไม่มีการแจ้งเตือน</div>');
+      const dot=document.getElementById("notifDot");
+      if(dot)dot.style.display=unread?"block":"none";
+    }
+    function toggleNotif(){
+      const p=document.getElementById("notifPanel");if(!p)return;
+      renderNotif();p.classList.toggle("open");
+    }
+    document.addEventListener("click",function(e){
+      const panel=document.getElementById("notifPanel");if(!panel||!panel.classList.contains("open"))return;
+      if(e.target.closest("[data-notif-all]")){
+        notifSaveList(NOTIFS.map(n=>n.id));renderNotif();toast("ทำเครื่องหมายอ่านทั้งหมดแล้ว");return;
+      }
+      const item=e.target.closest("[data-notif]");
+      if(item){
+        const id=item.dataset.notif,read=notifReadList();
+        if(read.indexOf(id)<0){read.push(id);notifSaveList(read);}
+        renderNotif();return;
+      }
+      if(!e.target.closest(".notif-wrap"))panel.classList.remove("open");
+    });
+    renderNotif();
     document.getElementById("modalBackdrop").addEventListener("click",e=>{if(e.target.id==="modalBackdrop"||e.target.closest("[data-close-modal]"))closeModal()});
     document.getElementById("content").addEventListener("input",e=>{if(e.target.id==="dealSearch")applyDealFilters()});
     document.getElementById("content").addEventListener("change",e=>{if(["ownerFilter","teamFilter","stageFilter","riskFilter","periodFilter"].includes(e.target.id))applyDealFilters();if(e.target.id==="lineTicket")updateLinePreview()});
