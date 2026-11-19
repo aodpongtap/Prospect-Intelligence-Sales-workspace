@@ -755,8 +755,9 @@
     return ''
       + '<section class="sr-panel">'
       + '  <div class="sr-ph"><div><h3>เป้าหมายการขายรายทีม (Target) — ปี ' + (y + 543) + '</h3>'
-      + '    <div class="sr-s2">กดปุ่ม “ใส่ Target” เพื่อกรอกเป้าหมายของแต่ละเดือน · ' + (state.month ? 'เดือนที่เลือก: ' + TH_MONTHS[state.month - 1] : 'รวมทั้งปี') + '</div></div>'
+      + '    <div class="sr-s2">กดปุ่ม “ใส่ Target” เพื่อกรอกเป้าหมายของแต่ละเดือน · เพิ่มทีมใหม่ได้ที่ปุ่ม “+ เพิ่มทีม” · ' + (state.month ? 'เดือนที่เลือก: ' + TH_MONTHS[state.month - 1] : 'รวมทั้งปี') + '</div></div>'
       + '    <div class="sr-tools">'
+      + (lockedTeam ? '' : '      <button class="sr-btn" data-sr-addteam title="เพิ่มทีม (BU) ใหม่"><i class="fa-solid fa-plus"></i> เพิ่มทีม</button>')
       + (ui.targets
         ? '      <button class="sr-btn" data-sr-toggletargets><i class="fa-solid fa-chevron-up"></i> ซ่อนตาราง</button>'
         : '      <button class="sr-btn dark" data-sr-toggletargets><i class="fa-solid fa-pen-to-square"></i> ใส่ Target</button>')
@@ -1417,6 +1418,7 @@
     targetsOfTeam(name, state.year);
     saveTargets();
     if (global.PILog) global.PILog.add('team.add', name, 'เพิ่มทีมใหม่เข้าสู่ระบบ');
+    ui.targets = true;                      // เปิดตารางเป้าหมายให้เห็นทีมใหม่ทันที
     if (typeof global.closeModal === 'function') global.closeModal();
     if (typeof global.render === 'function') global.render();
     if (global.toast) global.toast('เพิ่มทีม ' + name + ' แล้ว');
