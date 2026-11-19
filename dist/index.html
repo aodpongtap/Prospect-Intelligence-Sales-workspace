@@ -865,6 +865,8 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
 
     /* ===== JavaScript: Event handlers and actions ===== */
     document.getElementById("navList").addEventListener("click",e=>{const item=e.target.closest(".nav-item");if(!item)return;currentPage=item.dataset.page;render()});
+    // เปิดหน้าที่ระบุจาก URL เช่น index.html?page=team
+    (function(){try{const p=new URLSearchParams(location.search).get("page");if(p&&pageTitles[p]){currentPage=p;render()}}catch(err){}})();
     document.getElementById("mobileMenu").addEventListener("click",()=>document.getElementById("sidebar").classList.toggle("open"));
     document.getElementById("notificationBtn").addEventListener("click",()=>toast("คุณมีการแจ้งเตือนใหม่ 3 รายการ"));
     document.getElementById("modalBackdrop").addEventListener("click",e=>{if(e.target.id==="modalBackdrop"||e.target.closest("[data-close-modal]"))closeModal()});

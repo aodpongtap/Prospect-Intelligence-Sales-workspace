@@ -78,10 +78,16 @@ td{padding:9px;border-bottom:1px solid #eef1f5;font-size:12px}
 
   <section class="panel">
     <h3>รายชื่อผู้ใช้ (<span id="count">0</span>)</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px">
+      <input id="fSearch" placeholder="ค้นหาชื่อ / อีเมล" style="padding:7px 10px;border:1px solid #E5EAF0;border-radius:8px;font-size:11.5px;min-width:180px">
+      <select id="fLevel" style="padding:7px 10px;border:1px solid #E5EAF0;border-radius:8px;font-size:11.5px"><option value="">ทุกระดับ</option></select>
+      <select id="fParent" style="padding:7px 10px;border:1px solid #E5EAF0;border-radius:8px;font-size:11.5px"><option value="">ทุกผู้ดูแลสาย</option></select>
+      <button class="btn" id="fClear" type="button"><i class="fa-solid fa-filter-circle-xmark"></i> ล้างตัวกรอง</button>
+    </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>อีเมล</th><th>ชื่อ</th><th>ระดับสิทธิ์</th><th>ผู้ดูแลสาย</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead>
-        <tbody id="tb"><tr><td colspan="7" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
+        <thead><tr><th>อีเมล</th><th>ชื่อ</th><th>ระดับสิทธิ์</th><th>ผู้ดูแลสาย</th><th>ลูกข่าย</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead>
+        <tbody id="tb"><tr><td colspan="8" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -166,22 +172,90 @@ function render(users) {
       if (x.email === u.parent) parentName = x.name || x.email;
     });
     if (u.parent && parentName === '-') parentName = u.parent;
+
+    // จำนวนลูกข่าย: ตรง / ทั้งหมด (ทุกชั้น)
+    var direct = (window.__USERS__ || []).filter(function (x) { return x.parent === u.email; }).length;
+    var total = descOf(u.email).length;
+    var downCell = direct || total
+      ? '<span class="pill l-editor" title="ลูกข่ายตรง ' + direct + ' · ทั้งหมด ' + total + '">' + direct + ' / ' + total + '</span>'
+      : '<span style="color:#98a2b3">—</span>';
+
     var statusCell = u.status === 'disabled'
       ? '<span class="off"><i class="fa-solid fa-circle-xmark"></i> ปิด</span>'
       : '<span class="on"><i class="fa-solid fa-circle-check"></i> ใช้งาน</span>';
     var acts = '<div class="acts">' +
+      '<a class="btn" href="index.html?page=team&focus=' + encodeURIComponent(u.email) + '" target="_blank" title="ดูสายงาน"><i class="fa-solid fa-sitemap"></i></a>' +
+      (core ? '' : '<button class="btn" data-act="move" data-email="' + esc(u.email) + '" title="ย้ายสายงาน (เปลี่ยนผู้ดูแล)"><i class="fa-solid fa-arrows-turn-to-dots"></i></button>') +
       '<button class="btn" data-act="reset" data-email="' + esc(u.email) + '"><i class="fa-solid fa-rotate"></i> รีเซ็ตรหัส</button>' +
       (core ? '' :
         '<button class="btn" data-act="toggle" data-email="' + esc(u.email) + '" data-status="' + (u.status === 'disabled' ? 'active' : 'disabled') + '">' +
         (u.status === 'disabled' ? '<i class="fa-solid fa-play"></i> เปิดใช้' : '<i class="fa-solid fa-pause"></i> ปิด') + '</button>' +
         '<button class="btn btn-danger" data-act="del" data-email="' + esc(u.email) + '"><i class="fa-solid fa-trash"></i> ลบ</button>') +
       '</div>';
-    return '<tr><td>' + esc(u.email) + '</td><td>' + esc(u.name || '—') + '</td><td>' + levelCell + '</td>' +
-      '<td>' + esc(parentName) + '</td><td>' + statusCell + '</td><td>' + fmt(u.lastLogin) + '</td><td>' + acts + '</td></tr>';
+    return '<tr data-search="' + esc(((u.name || '') + ' ' + u.email).toLowerCase()) + '" data-level="' + esc(u.level) + '" data-parent="' + esc(u.parent || '') + '">'
+      + '<td>' + esc(u.email) + '</td><td>' + esc(u.name || '—') + '</td><td>' + levelCell + '</td>'
+      + '<td>' + esc(parentName) + '</td><td>' + downCell + '</td>'
+      + '<td>' + statusCell + '</td><td>' + fmt(u.lastLogin) + '</td><td>' + acts + '</td></tr>';
   }).join('');
-  el('tb').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
+  el('tb').innerHTML = rows || '<tr><td colspan="8" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
   refreshUplines();
+  buildFilterOptions();
+  applyFilters();
 }
+
+/** รายชื่อลูกข่ายทั้งหมด (ทุกชั้น) ของอีเมลที่กำหนด */
+function descOf(email) {
+  var out = [], queue = [email], guard = 0;
+  while (queue.length && guard++ < 3000) {
+    var cur = queue.shift();
+    (window.__USERS__ || []).forEach(function (u) {
+      if (u.parent === cur) { out.push(u.email); queue.push(u.email); }
+    });
+  }
+  return out;
+}
+
+function buildFilterOptions() {
+  var lv = el('fLevel'), pr = el('fParent');
+  if (lv) {
+    var cur = lv.value;
+    lv.innerHTML = '<option value="">ทุกระดับ</option>' + LVLS.map(function (p) {
+      return '<option value="' + p[0] + '"' + (cur === p[0] ? ' selected' : '') + '>' + p[1] + '</option>';
+    }).join('');
+  }
+  if (pr) {
+    var cur2 = pr.value;
+    pr.innerHTML = '<option value="">ทุกผู้ดูแลสาย</option>' + (window.__USERS__ || []).map(function (u) {
+      return '<option value="' + esc(u.email) + '"' + (cur2 === u.email ? ' selected' : '') + '>' + esc(u.name || u.email) + '</option>';
+    }).join('');
+  }
+}
+
+function applyFilters() {
+  var q = ((el('fSearch') || {}).value || '').toLowerCase();
+  var lv = (el('fLevel') || {}).value || '';
+  var pr = (el('fParent') || {}).value || '';
+  var shown = 0;
+  Array.prototype.forEach.call(document.querySelectorAll('#tb tr[data-level]'), function (tr) {
+    var ok = (!q || tr.dataset.search.indexOf(q) >= 0)
+      && (!lv || tr.dataset.level === lv)
+      && (!pr || tr.dataset.parent === pr);
+    tr.style.display = ok ? '' : 'none';
+    if (ok) shown++;
+  });
+  var c = el('count');
+  if (c) c.textContent = shown + ' / ' + (window.__USERS__ || []).length;
+}
+
+el('fSearch') && el('fSearch').addEventListener('input', applyFilters);
+el('fLevel') && el('fLevel').addEventListener('change', applyFilters);
+el('fParent') && el('fParent').addEventListener('change', applyFilters);
+el('fClear') && el('fClear').addEventListener('click', function () {
+  if (el('fSearch')) el('fSearch').value = '';
+  if (el('fLevel')) el('fLevel').value = '';
+  if (el('fParent')) el('fParent').value = '';
+  applyFilters();
+});
 
 /** รายชื่อผู้ดูแลต้นสาย: ระดับสูงกว่าระดับที่เลือก */
 function refreshUplines() {
@@ -204,6 +278,17 @@ el('addBtn').addEventListener('click', function () {
   var email = el('email').value.trim();
   if (!email || email.indexOf('@') < 0) return showMsg('กรอกอีเมลให้ถูกต้อง', 'err');
   if (!el('parent').value) return showMsg('กรุณาเลือกผู้ดูแลต้นสาย (Upline)', 'err');
+
+  // ตรวจชั้นสิทธิ์ก่อนส่ง: ต้องสร้างได้เฉพาะระดับที่ต่ำกว่าตัวเอง (ยกเว้น Admin)
+  var myN = lvlN(me.level);
+  var newN = lvlN(el('level').value);
+  if (myN !== 1 && newN <= myN) return showMsg('สร้างได้เฉพาะระดับที่ต่ำกว่าตัวเอง (L' + (myN + 1) + ' ลงไป)', 'err');
+
+  var pv = el('parent').value, pn = 99, pFound = null;
+  (window.__USERS__ || []).forEach(function (u) { if (u.email === pv) { pn = lvlN(u.level); pFound = u; } });
+  if (!pFound) return showMsg('ไม่พบผู้ดูแลต้นสายในระบบ', 'err');
+  if (pn >= newN) return showMsg('ผู้ดูแลต้นสายต้องอยู่ระดับสูงกว่าระดับที่เลือก', 'err');
+
   PIAuth.addUser(email, el('name').value.trim(), el('level').value, el('parent').value).then(function (res) {
     el('email').value = ''; el('name').value = '';
     render(PIAuth.listUsers());
@@ -211,6 +296,41 @@ el('addBtn').addEventListener('click', function () {
     showMsg('เพิ่มผู้ใช้และสร้างรหัสผ่านแล้ว', 'ok');
   }).catch(function (e) { showMsg(e.message || String(e), 'err'); });
 });
+
+/** ย้ายสายงาน: เลือกผู้ดูแลใหม่ได้เฉพาะที่อยู่สูงกว่า และไม่ใช่ตัวเอง/ลูกข่ายตัวเอง (กัน loop) */
+function moveParent(email) {
+  var target = null;
+  (window.__USERS__ || []).forEach(function (u) { if (u.email === email) target = u; });
+  if (!target) return;
+  var banned = descOf(email).concat([email]);
+  var cands = (window.__USERS__ || []).filter(function (u) {
+    return lvlN(u.level) < lvlN(target.level) && banned.indexOf(u.email) < 0;
+  });
+  if (!cands.length) return showMsg('ไม่มีผู้ใช้ระดับสูงกว่าที่สามารถเป็นผู้ดูแลได้', 'err');
+
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);display:grid;place-items:center;z-index:99;padding:16px';
+  wrap.innerHTML = '<div style="background:#fff;border-radius:14px;padding:20px;width:min(460px,100%);font-family:Prompt,sans-serif">'
+    + '<h3 style="margin:0 0 4px;color:#0F2B46;font-size:15px">ย้ายสายงาน</h3>'
+    + '<div style="color:#667085;font-size:11.5px;margin-bottom:12px">' + esc(target.name || email) + ' · ' + lvlLabel(target.level) + '</div>'
+    + '<label style="font-size:11px;color:#475467">ผู้ดูแลคนใหม่</label>'
+    + '<select id="mvSel" style="width:100%;margin:5px 0 14px;padding:9px;border:1px solid #E5EAF0;border-radius:8px">'
+    + cands.map(function (u) { return '<option value="' + esc(u.email) + '"' + (u.email === target.parent ? ' selected' : '') + '>' + esc((u.name || u.email) + ' · ' + lvlLabel(u.level)) + '</option>'; }).join('')
+    + '</select>'
+    + '<div style="display:flex;justify-content:flex-end;gap:8px">'
+    + '<button class="btn" id="mvCancel">ยกเลิก</button>'
+    + '<button class="btn btn-primary" id="mvOk">ย้ายสาย</button></div></div>';
+  document.body.appendChild(wrap);
+  wrap.addEventListener('click', function (e) { if (e.target === wrap) document.body.removeChild(wrap); });
+  document.getElementById('mvCancel').addEventListener('click', function () { document.body.removeChild(wrap); });
+  document.getElementById('mvOk').addEventListener('click', function () {
+    var np = document.getElementById('mvSel').value;
+    document.body.removeChild(wrap);
+    PIAuth.updateUser(email, '', '', np).then(function () {
+      render(PIAuth.listUsers()); showMsg('ย้ายสายงานแล้ว', 'ok');
+    }).catch(function (e) { showMsg(e.message || String(e), 'err'); });
+  });
+}
 
 el('level').addEventListener('change', refreshUplines);
 
@@ -227,6 +347,7 @@ el('tb').addEventListener('click', function (e) {
   if (!btn || btn.tagName === 'SELECT') return;
   var act = btn.dataset.act, email = btn.dataset.email;
 
+  if (act === 'move') { moveParent(email); return; }
   if (act === 'reset') {
     PIAuth.resetPassword(email).then(function (res) {
       showPw(res.email, res.password); showMsg('รีเซ็ตรหัสผ่านแล้ว', 'ok');
