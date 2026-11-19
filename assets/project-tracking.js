@@ -8,7 +8,7 @@
 (function (global) {
   'use strict';
 
-  var LS = 'pi_projects_v1';
+  var LS = 'pi_projects_v2';
 
   /* ---------- Stages ---------- */
   var STAGES = [
@@ -21,6 +21,7 @@
   function stageOf(code) { return STAGES[code] || STAGES[0]; }
 
   var TASK_STATUS = ['รอดำเนินการ', 'กำลังดำเนินการ', 'เสร็จแล้ว'];
+  var TEAM_LIST = ['BU-DLAG', 'BU-SML'];
 
   var HEALTH = {
     'on-time': { label: 'ตามแผน', cls: 'ok' },
@@ -52,7 +53,7 @@
   /* ---------- Store ---------- */
   var SEED = [
     {
-      id: 'PJ-001', name: 'ระบบ CCTV', customer: 'บริษัท ABC จำกัด', owner: 'วรพล', sale: 'กิตติพงษ์',
+      id: 'PJ-001', team: 'BU-SML', name: 'ระบบ CCTV', customer: 'บริษัท ABC จำกัด', owner: 'วรพล', sale: 'กิตติพงษ์',
       stage: 2, deadline: '2026-11-25', startDate: '2026-10-10', blocker: 'รออุปกรณ์กล้อง 2 ตัว',
       note: 'ติดตั้งกล้อง 24 จุด อาคาร 3 ชั้น ลูกค้าใช้ระบบเดิมอยู่ ต้องย้ายข้อมูลย้อนหลัง 30 วัน',
       tasks: [
@@ -62,7 +63,7 @@
       ]
     },
     {
-      id: 'PJ-002', name: 'ระบบ Network', customer: 'บริษัท XYZ จำกัด', owner: 'ณัฐชา', sale: 'พิมพ์ชนก',
+      id: 'PJ-002', team: 'BU-DLAG', name: 'ระบบ Network', customer: 'บริษัท XYZ จำกัด', owner: 'ณัฐชา', sale: 'พิมพ์ชนก',
       stage: 1, deadline: '2026-12-05', startDate: '2026-11-01', blocker: 'รออนุมัติแบบ',
       note: 'วางโครงข่าย 2 อาคาร ต้องประสานงานผู้รับเหมาก่อสร้างเรื่องท่อเดินสาย',
       tasks: [
@@ -72,7 +73,7 @@
       ]
     },
     {
-      id: 'PJ-003', name: 'ระบบ Access Control', customer: 'บริษัท DEF จำกัด', owner: 'ปกรณ์', sale: 'ธนกร',
+      id: 'PJ-003', team: 'BU-DLAG', name: 'ระบบ Access Control', customer: 'บริษัท DEF จำกัด', owner: 'ปกรณ์', sale: 'ธนกร',
       stage: 3, deadline: '2026-11-21', startDate: '2026-10-05', blocker: 'ไม่มี',
       note: 'ติดตั้งเครื่องสแกนนิ้ว 8 จุด + อบรมผู้ดูแลระบบ 2 ท่าน',
       tasks: [
@@ -81,7 +82,7 @@
       ]
     },
     {
-      id: 'PJ-004', name: 'Cloud Migration', customer: 'Metro Logistics', owner: 'ชลธิชา', sale: 'อรทัย',
+      id: 'PJ-004', team: 'BU-SML', name: 'Cloud Migration', customer: 'Metro Logistics', owner: 'ชลธิชา', sale: 'อรทัย',
       stage: 1, deadline: '2026-11-15', startDate: '2026-10-01', blocker: 'รอข้อมูลจากฝ่ายบัญชี',
       note: 'ย้ายระบบ ERP ขึ้น Cloud ต้องหยุดระบบนอกเวลาทำการเท่านั้น',
       tasks: [
@@ -91,7 +92,7 @@
       ]
     },
     {
-      id: 'PJ-005', name: 'Data Center Expansion', customer: 'Northstar จำกัด', owner: 'วรพล', sale: 'กิตติพงษ์',
+      id: 'PJ-005', team: 'BU-SML', name: 'Data Center Expansion', customer: 'Northstar จำกัด', owner: 'วรพล', sale: 'กิตติพงษ์',
       stage: 4, deadline: '2026-11-10', startDate: '2026-09-15', blocker: 'ไม่มี',
       note: 'ขยาย Rack 6 ตู้ พร้อมระบบดับเพลิง ส่งมอบและเซ็นรับงานเรียบร้อย',
       tasks: [
@@ -100,7 +101,7 @@
       ]
     },
     {
-      id: 'PJ-006', name: 'Wi-Fi 6 Campus', customer: 'มหาวิทยาลัยนวัตกรรม', owner: 'ธนกร', sale: 'ธนกร',
+      id: 'PJ-006', team: 'BU-DLAG', name: 'Wi-Fi 6 Campus', customer: 'มหาวิทยาลัยนวัตกรรม', owner: 'ธนกร', sale: 'ธนกร',
       stage: 0, deadline: '2026-12-20', startDate: '2026-11-18', blocker: 'รอเซ็นสัญญา',
       note: 'รอลูกค้าเซ็นสัญญาและออก PO ก่อนเริ่มติดตั้ง',
       tasks: [
@@ -108,7 +109,7 @@
       ]
     },
     {
-      id: 'PJ-007', name: 'ตู้กดน้ำ 12 จุด', customer: 'ไทยวัฒนา ฟู้ดส์', owner: 'สมชาย', sale: 'กิตติพงษ์',
+      id: 'PJ-007', team: 'BU-SML', name: 'ตู้กดน้ำ 12 จุด', customer: 'ไทยวัฒนา ฟู้ดส์', owner: 'สมชาย', sale: 'กิตติพงษ์',
       stage: 2, deadline: '2026-11-28', startDate: '2026-11-01', blocker: 'รอระบบไฟฟ้าหน้างาน',
       note: 'ต้องเดินสายไฟเพิ่ม 3 จุด ฝ่ายอาคารจะดำเนินการให้เสร็จภายใน 22/11/2569',
       tasks: [
@@ -118,7 +119,7 @@
       ]
     },
     {
-      id: 'PJ-008', name: 'ตู้กดน้ำ + น้ำแข็ง', customer: 'โรงแรม บลูเวฟ', owner: 'อรทัย', sale: 'อรทัย',
+      id: 'PJ-008', team: 'BU-SML', name: 'ตู้กดน้ำ + น้ำแข็ง', customer: 'โรงแรม บลูเวฟ', owner: 'อรทัย', sale: 'อรทัย',
       stage: 3, deadline: '2026-12-02', startDate: '2026-11-05', blocker: 'ไม่มี',
       note: 'ติดตั้ง 4 จุด โซนล็อบบี้และห้องอาหาร ต้องเก็บงานให้เรียบร้อยก่อนเปิดโรงแรม',
       tasks: [
@@ -166,9 +167,19 @@
   }
   var state = { q: '', stage: '', owner: '', health: '' };
 
+  /** ทีมของผู้ใช้ปัจจุบัน (Head Team ถูกล็อกทีม) */
+  function viewerTeam() {
+    try {
+      if (global.SalesReport && global.SalesReport.viewerTeam) return global.SalesReport.viewerTeam() || '';
+    } catch (e) {}
+    return '';
+  }
+
   function filtered() {
     var q = String(state.q || '').trim().toLowerCase();
+    var vt = viewerTeam();
     return PROJECTS.filter(function (p) {
+      if (vt && p.team !== vt) return false;
       if (state.stage !== '' && String(p.stage) !== String(state.stage)) return false;
       if (state.owner && p.owner !== state.owner) return false;
       if (state.health && healthOf(p) !== state.health) return false;
@@ -188,7 +199,8 @@
   }
 
   function renderKpis() {
-    var all = PROJECTS;
+    var vt = viewerTeam();
+    var all = PROJECTS.filter(function (p) { return !vt || p.team === vt; });
     var active = all.filter(function (p) { return p.stage < 4; }).length;
     var risk = all.filter(function (p) { var h = healthOf(p); return h === 'at-risk' || h === 'delayed'; }).length;
     var done = all.filter(function (p) { return p.stage >= 4; }).length;
@@ -232,7 +244,7 @@
     var dueTxt = p.stage >= 4 ? 'ส่งมอบแล้ว' : (days < 0 ? 'เลยกำหนด ' + Math.abs(days) + ' วัน' : (days === 0 ? 'ครบกำหนดวันนี้' : 'อีก ' + days + ' วัน'));
     return '<article class="pt-card" draggable="true" data-pt-project="' + esc(p.id) + '">'
       + '<div class="pt-card-h"><span class="pt-badge pt-' + h + '">' + esc(HEALTH[h].label) + '</span>'
-      + '<span class="pt-id">' + esc(p.id) + '</span></div>'
+      + '<span class="pt-id">' + esc(p.team || '') + (p.team ? ' · ' : '') + esc(p.id) + '</span></div>'
       + '<h4>' + esc(p.name) + '</h4>'
       + '<div class="pt-cust">' + esc(p.customer) + '</div>'
       + '<div class="pt-meta"><span><i class="fa-regular fa-user"></i> ' + esc(p.owner) + '</span>'
@@ -291,7 +303,9 @@
     return '<div class="pt">'
       + '<div class="pt-head"><div><h1>Project Tracking</h1>'
       + '<div class="pt-sub">ติดตามโครงการตั้งแต่รับช่วงงานจนถึงส่งมอบลูกค้า — บันทึกอัตโนมัติในเครื่องนี้</div></div>'
-      + '<button class="pt-btn dark" data-pt-new><i class="fa-solid fa-plus"></i> เพิ่มโครงการ</button></div>'
+      + '<div class="pt-head-acts">'
+      + (viewerTeam() ? '<span class="pt-teamlock"><i class="fa-solid fa-lock"></i> ทีมของคุณ: ' + esc(viewerTeam()) + '</span>' : '')
+      + '<button class="pt-btn dark" data-pt-new><i class="fa-solid fa-plus"></i> เพิ่มโครงการ</button></div></div>'
       + renderKpis()
       + renderFilters()
       + renderBoard(list)
@@ -303,9 +317,13 @@
   function openProjectModal(id) {
     var p = id ? byId(id) : null;
     var isEdit = !!p;
-    var d = p || { name: '', customer: '', owner: '', sale: '', stage: 0, startDate: todayISO(), deadline: '', blocker: '', note: '' };
+    var d = p || { name: '', customer: '', owner: '', sale: '', stage: 0, startDate: todayISO(), deadline: '', blocker: '', note: '', team: viewerTeam() || TEAM_LIST[0] };
     var stageOpts = STAGES.map(function (s) {
       return '<option value="' + s.code + '"' + (Number(d.stage) === s.code ? ' selected' : '') + '>' + esc(s.name) + '</option>';
+    }).join('');
+    var vt = viewerTeam();
+    var teamOpts = TEAM_LIST.map(function (t) {
+      return '<option value="' + esc(t) + '"' + (String(d.team) === t ? ' selected' : '') + '>' + esc(t) + '</option>';
     }).join('');
     var body = '<form id="ptForm"><div class="pt-form">'
       + '<label class="pt-fg full">ชื่อโครงการ *<input name="name" required value="' + esc(d.name) + '" placeholder="เช่น ระบบ CCTV อาคาร A"></label>'
@@ -313,6 +331,7 @@
       + '<label class="pt-fg">ผู้รับผิดชอบโครงการ *<input name="owner" required value="' + esc(d.owner) + '" placeholder="ชื่อผู้ดูแลโครงการ"></label>'
       + '<label class="pt-fg">เซลล์ผู้ส่งงาน<input name="sale" value="' + esc(d.sale) + '" placeholder="ชื่อ Sale"></label>'
       + '<label class="pt-fg">ขั้นตอน<select name="stage">' + stageOpts + '</select></label>'
+      + '<label class="pt-fg">ทีม (BU)<select name="team"' + (vt ? ' disabled' : '') + '>' + teamOpts + '</select></label>'
       + '<label class="pt-fg">Blocker<input name="blocker" value="' + esc(d.blocker) + '" placeholder="ถ้าไม่มีใส่ -"></label>'
       + '<label class="pt-fg">วันเริ่ม<input name="startDate" type="date" value="' + esc(d.startDate) + '"></label>'
       + '<label class="pt-fg">กำหนดส่งมอบ *<input name="deadline" type="date" required value="' + esc(d.deadline) + '"></label>'
@@ -331,6 +350,7 @@
     var v = {};
     ['name', 'customer', 'owner', 'sale', 'blocker', 'startDate', 'deadline', 'note'].forEach(function (k) { v[k] = (f[k].value || '').trim(); });
     v.stage = Number(f.stage.value);
+    v.team = viewerTeam() || (f.team ? f.team.value : '') || TEAM_LIST[0];
     var id = window.__PT_EDIT__;
     if (id) {
       var p = byId(id);
@@ -605,6 +625,10 @@
       + '.pt{padding-bottom:6px}'
       + '.pt-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px;flex-wrap:wrap}'
       + '.pt-head h1{margin:0;color:#0F2B46;font-size:21px;font-weight:600}'
+      + '.pt-head-acts{display:flex;align-items:center;gap:9px;flex-wrap:wrap}'
+      + '.pt-teamlock{display:inline-flex;align-items:center;gap:6px;background:#EEF2FF;border:1px solid #E0E7FF;color:#3730A3;'
+      + 'border-radius:99px;padding:5px 11px;font-size:10.5px;font-weight:500}'
+      + '.pt-teamlock i{font-size:9px}'
       + '.pt-sub{color:#667085;font-size:11.5px;margin-top:4px}'
       + '.pt-btn{border:1px solid #E5EAF0;background:#fff;color:#344054;border-radius:8px;padding:8px 11px;font-size:11px;'
       + 'font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;height:34px}'
