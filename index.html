@@ -36,6 +36,8 @@
       <nav class="nav-list" id="navList">
         <button class="nav-item active" data-page="dashboard"><i class="fa-solid fa-grid-2"></i>Dashboard</button>
         <button class="nav-item" data-page="sales"><i class="fa-solid fa-bullseye"></i>Sale Monitor</button>
+        <button class="nav-item" data-page="partners"><i class="fa-solid fa-handshake"></i>Partner CRM</button>
+        <button class="nav-item" data-page="team"><i class="fa-solid fa-sitemap"></i>ทีม &amp; สิทธิ์</button>
         <button class="nav-item" data-page="projects"><i class="fa-solid fa-diagram-project"></i>Project Tracking</button>
         <button class="nav-item" data-page="service"><i class="fa-solid fa-headset"></i>After-Sale Service</button>
         <button class="nav-item" data-page="intelligence"><i class="fa-solid fa-brain"></i>Customer Intelligence</button>
@@ -195,6 +197,133 @@
         onLogout: function () { PIAuth.logout(); location.replace('login.html'); }
       });
     })();
+  </script>
+  <script>
+    /* ===== JavaScript: Partner CRM (ฝังเป็นเมนูในเว็บหลัก) + ทีม & สิทธิ์ ===== */
+    function renderPartnerCRM() {
+      return '<div style="position:relative;margin:-27px -30px 0;height:calc(100vh - 68px)">'
+        + '<iframe src="partner-crm/index.html?embed=1" title="TSR Partner Management" '
+        + 'style="width:100%;height:100%;border:0;display:block;background:#F4F6FB" loading="lazy"></iframe>'
+        + '</div>';
+    }
+
+    var LADDER = [
+      { code: 'admin', n: 1, label: 'Admin' },
+      { code: 'bu', n: 2, label: 'BU' },
+      { code: 'head', n: 3, label: 'Head Team' },
+      { code: 'sup', n: 4, label: 'Supervisor' },
+      { code: 'sale', n: 5, label: 'เซลล์ (Sale)' },
+      { code: 'agent', n: 6, label: 'ตัวแทน / MCN' }
+    ];
+    function ladderOf(code) {
+      for (var i = 0; i < LADDER.length; i++) if (LADDER[i].code === code) return LADDER[i];
+      return LADDER[LADDER.length - 1];
+    }
+    function teamUsers() { return window.__TEAM__ || []; }
+    function teamChildren(email) {
+      return teamUsers().filter(function (u) { return u.parent === email; });
+    }
+    function teamDescendants(email) {
+      var out = [], queue = [email], guard = 0;
+      while (queue.length && guard++ < 3000) {
+        var cur = queue.shift();
+        teamChildren(cur).forEach(function (u) { out.push(u); queue.push(u.email); });
+      }
+      return out;
+    }
+    function teamTree(u, depth) {
+      var kids = teamChildren(u.email);
+      var l = ladderOf(u.level);
+      var row = '<div style="display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:8px;margin:0 0 4px ' + (depth * 16) + 'px;'
+        + 'background:' + (depth === 0 ? '#EEF2FF' : '#F8FAFC') + ';border:1px solid ' + (depth === 0 ? '#E0E7FF' : '#EFF3F8') + '">'
+        + '<span class="status" style="background:#E0EAFF;color:#1D4ED8">L' + l.n + ' ' + l.label + '</span>'
+        + '<strong style="font-size:11px;color:#0F2B46">' + String(u.name || u.email) + '</strong>'
+        + (kids.length ? '<span class="muted" style="margin-left:auto;font-size:10px">' + kids.length + ' ใต้สังกัด</span>' : '')
+        + '</div>';
+      return row + kids.map(function (k) { return teamTree(k, depth + 1); }).join('');
+    }
+
+    function renderTeam() {
+      var me = window.__ME__ || {};
+      var users = teamUsers();
+      var byLevel = {};
+      LADDER.forEach(function (l) { byLevel[l.code] = 0; });
+      users.forEach(function (u) { byLevel[u.level] = (byLevel[u.level] || 0) + 1; });
+      var root = null;
+      for (var i = 0; i < users.length; i++) if (users[i].email === me.email) { root = users[i]; break; }
+
+      var levelOpts = LADDER.filter(function (l) { return l.n >= (ladderOf(me.level).n + 1); }).map(function (l) {
+        return '<option value="' + l.code + '">L' + l.n + ' · ' + l.label + '</option>';
+      }).join('');
+
+      var rows = users.map(function (u) {
+        var l = ladderOf(u.level);
+        var up = '-';
+        for (var j = 0; j < users.length; j++) if (users[j].email === u.parent) up = users[j].name || users[j].email;
+        if (u.parent && up === '-') up = u.parent;
+        return '<tr><td><div class="deal-name">' + String(u.name || u.email) + '</div><div class="muted" style="font-size:10px">' + String(u.email) + '</div></td>'
+          + '<td><span class="status" style="background:#E0EAFF;color:#1D4ED8">L' + l.n + ' · ' + l.label + '</span></td>'
+          + '<td>' + up + '</td>'
+          + '<td>' + (u.createdAt ? String(u.createdAt).slice(0, 10) : '—') + '</td>'
+          + '<td>' + (u.status === 'disabled' ? '<span class="status at-risk">ปิด</span>' : '<span class="status healthy">ใช้งาน</span>') + '</td></tr>';
+      }).join('');
+
+      return pageHead('ทีม & สิทธิ์ 6 ระดับ', 'ผู้ที่อยู่ระดับบนจะเห็นลูกข่ายทั้งหมดใต้สายงานของตัวเอง',
+          '<button class="btn btn-primary" data-action="add-team">' + '<i class="fa-solid fa-user-plus"></i> ลงทะเบียน ID</button>')
+        + '<div class="grid kpi-grid" style="margin-bottom:15px">'
+        + '<article class="kpi"><div class="kpi-top">ลูกข่ายในสายงาน<span class="kpi-icon" style="background:#EEF2FF;color:#1D4ED8"><i class="fa-solid fa-users"></i></span></div><div class="kpi-value">' + Math.max(0, users.length - 1) + '</div><div class="kpi-foot">ไม่รวมตัวเอง · L' + ladderOf(me.level).n + '</div></article>'
+        + '<article class="kpi"><div class="kpi-top">Supervisor<span class="kpi-icon" style="background:#CCFBF1;color:#0E9384"><i class="fa-solid fa-user-tie"></i></span></div><div class="kpi-value">' + (byLevel.sup || 0) + '</div><div class="kpi-foot">ทีมในสาย</div></article>'
+        + '<article class="kpi"><div class="kpi-top">เซลล์ (Sale)<span class="kpi-icon" style="background:#FEF3C7;color:#B45309"><i class="fa-solid fa-user-group"></i></span></div><div class="kpi-value">' + (byLevel.sale || 0) + '</div><div class="kpi-foot">ผู้ขาย</div></article>'
+        + '<article class="kpi"><div class="kpi-top">ตัวแทน / MCN<span class="kpi-icon" style="background:#F3E8FF;color:#6941C6"><i class="fa-solid fa-id-card"></i></span></div><div class="kpi-value">' + (byLevel.agent || 0) + '</div><div class="kpi-foot">ปลายสาย</div></article>'
+        + '</div>'
+        + '<div class="grid cols-2">'
+        + panel('แผนผังเครือข่าย',
+            root ? teamTree(root, 0) : '<div class="empty"><i class="fa-solid fa-user-slash"></i>ไม่พบข้อมูลของคุณในระบบ</div>',
+            'เริ่มจาก ' + String(me.name || me.email || '-'))
+        + panel('รายชื่อในสายงาน (' + users.length + ')',
+            users.length
+              ? '<div class="table-wrap" style="max-height:520px"><table><thead><tr><th>ชื่อ / อีเมล</th><th>ระดับ</th><th>ผู้ดูแลสาย</th><th>สร้างเมื่อ</th><th>สถานะ</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+              : '<div class="empty"><i class="fa-solid fa-users"></i>ยังไม่มีผู้ใช้ใต้สายงาน</div>',
+            'L1 Admin เห็นทั้งเครือข่าย · ระดับอื่นเห็นเฉพาะลูกข่าย')
+        + '</div>'
+        + '<div id="teamForm" style="display:none;margin-top:15px">'
+        + panel('ลงทะเบียน ID ใหม่ (ต้องมีสิทธิ์ระดับบนกว่า)',
+            '<div class="form-grid">'
+            + '<div class="form-group"><label>อีเมล</label><input id="tuEmail" type="email" placeholder="name@company.com"></div>'
+            + '<div class="form-group"><label>ชื่อ</label><input id="tuName" placeholder="ชื่อ-นามสกุล"></div>'
+            + '<div class="form-group"><label>ระดับสิทธิ์</label><select id="tuLevel">' + (levelOpts || '<option value="">ไม่มีสิทธิ์สร้าง</option>') + '</select></div>'
+            + '<div class="form-group"><label>ผู้ดูแลต้นสาย</label><select id="tuParent"></select></div>'
+            + '</div>'
+            + '<div style="margin-top:12px"><button class="btn btn-primary" data-action="save-team"><i class="fa-solid fa-check"></i> บันทึก + สร้างรหัสผ่าน</button></div>'
+            + '<div id="tuMsg" style="margin-top:10px;font-size:11px;color:#667085"></div>', '');
+        + '</div>';
+    }
+
+    function fillTeamUplines() {
+      var lv = document.getElementById('tuLevel');
+      var box = document.getElementById('tuParent');
+      if (!lv || !box) return;
+      var n = ladderOf(lv.value).n;
+      var opts = teamUsers().filter(function (u) { return ladderOf(u.level).n < n; }).map(function (u) {
+        return '<option value="' + u.email + '">' + String(u.name || u.email) + ' · L' + ladderOf(u.level).n + '</option>';
+      });
+      box.innerHTML = opts.join('') || '<option value="">— ไม่มีผู้ใช้ระดับบน —</option>';
+    }
+
+    function loadTeam() {
+      if (!window.PIAuth || !PIAuth.refresh) return;
+      PIAuth.refresh().then(function (list) {
+        window.__TEAM__ = list || [];
+        if (currentPage === 'team') render();
+      }).catch(function () {
+        window.__TEAM__ = [];
+      });
+    }
+
+    document.addEventListener('change', function (e) {
+      if (e.target.id === 'tuLevel') fillTeamUplines();
+    });
+
   </script>
   <script>
     const deals=[
@@ -361,7 +490,7 @@
     })();
 
 
-    const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",projects:"Project Tracking",service:"After-Sale Service",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
+    const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",partners:"Partner CRM",team:"ทีม & สิทธิ์",projects:"Project Tracking",service:"After-Sale Service",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
     const stageNames=["Planning","Sales Handover","Installation","Testing & Acceptance","Completed"];
     const stageLabels=["Prospect","Qualified","Proposal","Negotiation","Won","Lost"];
     let currentPage="dashboard",charts=[],sortDesc=true,toastTimer;
@@ -381,7 +510,7 @@
     function btn(label,action,icon="",primary=false,extra=""){return `<button class="btn ${primary?"btn-primary":""}" data-action="${action}" ${extra}>${icon?`<i class="${icon}"></i>`:""}${label}</button>`}
     function destroyCharts(){charts.forEach(c=>c.destroy());charts=[]}
     function makeChart(id,config){const canvas=document.getElementById(id);if(canvas&&window.Chart)charts.push(new Chart(canvas,config))}
-    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:renderDashboard,sales:renderSales,projects:renderProjects,service:renderService,intelligence:renderIntelligence,reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard")drawDashboardCharts();if(currentPage==="intelligence")drawHealthChart();if(currentPage==="reports")drawReportCharts()}
+    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:renderDashboard,sales:renderSales,partners:renderPartnerCRM,team:renderTeam,projects:renderProjects,service:renderService,intelligence:renderIntelligence,reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard")drawDashboardCharts();if(currentPage==="intelligence")drawHealthChart();if(currentPage==="reports")drawReportCharts();if(currentPage==="team")loadTeam()}
 
     /* ===== JavaScript: Dashboard page ===== */
     function renderDashboard(){const today=new Date().toLocaleDateString("th-TH",{weekday:"long",day:"numeric",month:"long",year:"numeric"});const rows=[...deals].sort((a,b)=>riskScore(b)-riskScore(a)).slice(0,5).map(d=>`<tr class="clickable" data-deal="${d.id}"><td><span class="deal-name">${d.name}</span><br><span class="muted">${d.customer}</span></td><td>${money(d.value)}</td><td>${d.owner}</td><td><span class="risk-pill ${riskClass(riskScore(d))}">${riskScore(d)} / 100</span></td><td>${thaiDate(d.close)}</td></tr>`).join("");return `${pageHead("สวัสดี, Head of Sales",today,btn("ดู Pipeline","go-sales","fa-solid fa-arrow-right",true))}<div class="grid kpi-grid">${kpi("Sales Pipeline","฿12,450,000","fa-solid fa-filter","#2563EB","+12.5%")}${kpi("Forecast เดือนนี้","฿4,850,000","fa-solid fa-chart-column","#16A34A","+8.2%")}${kpi("Deals at Risk","8 Deals","fa-solid fa-triangle-exclamation","#F59E0B","+2 Deals","down")}${kpi("Overdue Actions","14 Tasks","fa-solid fa-clock","#DC2626","-6 Tasks")}</div><div class="grid cols-2" style="margin-bottom:15px">${panel("Pipeline แยกตาม Stage",`<div class="chart-wrap"><canvas id="pipelineChart"></canvas></div>`,"มูลค่าดีลตามสถานะปัจจุบัน")}${panel("Sales Forecast รายเดือน",`<div class="chart-wrap"><canvas id="forecastChart"></canvas></div>`,"Actual และ Forecast")}</div><div class="grid cols-2">${panel("Deals ที่ต้องติดตามด่วน",`<div class="table-wrap"><table><thead><tr><th>Deal / Customer</th><th>มูลค่า</th><th>Owner</th><th>Risk Score</th><th>Close</th></tr></thead><tbody>${rows}</tbody></table></div>`,"เรียงตาม Risk Score สูงสุด")}<div class="grid" style="gap:15px">${panel("Today's Priority Actions",`<div class="action-list"><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>ติดตาม Proposal: Cloud Migration Phase 2</strong><small>พิมพ์ชนก · <span class="due">วันนี้ 11:00</span></small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>ยืนยันงบประมาณระบบ Smart Factory</strong><small>กิตติพงษ์ · วันนี้ 14:30</small></div></div><div class="action-item"><span class="action-check"></span><div class="action-copy"><strong>โทรติดตาม Network Infrastructure</strong><small>อรทัย · <span class="due">เกินกำหนด 2 วัน</span></small></div></div></div>`)}${panel("Alerts",`<div class="alert-list"><div class="alert"><i class="fa-solid fa-clock"></i><span>3 Deals ไม่มีการติดต่อเกิน 7 วัน</span></div><div class="alert red"><i class="fa-solid fa-file-circle-exclamation"></i><span>2 Deals มีโอกาสปิดในเดือนนี้ แต่ยังไม่มี Proposal</span></div><div class="alert blue"><i class="fa-solid fa-headset"></i><span>4 Service Tickets ใกล้เกิน SLA</span></div></div>`)}</div></div>`}
@@ -571,6 +700,22 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
       if(e.target.closest("#sortRisk")){sortDesc=!sortDesc;applyDealFilters();return}
       const action=e.target.closest("[data-action]")?.dataset.action;if(!action)return;
       if(action==="go-sales"){currentPage="sales";render()}
+      else if(action==="add-team"){var f=document.getElementById("teamForm");if(f){f.style.display="block";fillTeamUplines();f.scrollIntoView({behavior:"smooth",block:"center"})}}
+      else if(action==="save-team"){
+        var em=(document.getElementById("tuEmail")||{}).value||"";
+        var nm=(document.getElementById("tuName")||{}).value||"";
+        var lv=(document.getElementById("tuLevel")||{}).value||"";
+        var pr=(document.getElementById("tuParent")||{}).value||"";
+        var msg=document.getElementById("tuMsg");
+        if(!em||em.indexOf("@")<0){toast("กรอกอีเมลให้ถูกต้อง");return}
+        if(!pr){toast("เลือกผู้ดูแลต้นสาย");return}
+        if(msg)msg.textContent="กำลังบันทึก...";
+        PIAuth.addUser(em.trim(),nm.trim(),lv,pr).then(function(r){
+          if(msg)msg.innerHTML="สร้าง ID แล้ว — รหัสผ่าน: <code style='background:#F1F5F9;padding:2px 6px;border-radius:4px'>"+r.password+"</code>";
+          toast("ลงทะเบียน ID เรียบร้อย");
+          loadTeam();
+        }).catch(function(e){if(msg)msg.textContent=e.message;toast("ไม่สำเร็จ: "+e.message)});
+      }
       else if(action==="add-deal")showDealForm()
       else if(action==="refresh"){const button=e.target.closest("[data-action]");button.classList.add("loading");button.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>กำลัง Refresh...';setTimeout(()=>{button.classList.remove("loading");render();toast("Refresh Data สำเร็จ")},1000)}
       else if(action==="export-deals")exportDeals()
