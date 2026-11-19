@@ -23,9 +23,18 @@ label{display:block;font-size:10px;color:#475467;margin-bottom:5px}
 input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12px;background:#fff}
 .btn{border:1px solid var(--line);background:#fff;color:#344054;border-radius:8px;padding:8px 11px;font:inherit;font-size:11px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
 .btn:hover{border-color:#b7c5d6}.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn-danger{background:#fff1f2;border-color:#ffe4e6;color:var(--red)}
-.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:760px}
-th{font-size:10px;color:#667085;font-weight:500;background:#f8fafc;text-align:left;padding:9px}
-td{padding:9px;border-bottom:1px solid #eef1f5;font-size:12px}
+.tablewrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:900px;table-layout:fixed}
+th{font-size:10px;color:#667085;font-weight:500;background:#f8fafc;text-align:left;padding:10px 12px;white-space:nowrap;vertical-align:middle}
+td{padding:10px 12px;border-bottom:1px solid #eef1f5;font-size:12px;vertical-align:middle}
+tbody tr:hover{background:#fafcff}
+/* ความกว้างคอลัมน์ให้ตรงกัน */
+.c-email{width:24%}.c-name{width:17%}.c-level{width:15%}.c-parent{width:17%}.c-down{width:8%}.c-status{width:9%}.c-last{width:11%}.c-act{width:auto}
+td.c-email>span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.c-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.c-level select{width:100%;padding:5px 6px;font-size:11px}
+td.c-down{text-align:center}
+td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap}
 .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px}
 .l-admin{background:#eff6ff;color:#1d4ed8}.l-editor{background:#ecfdf3;color:#15803d}.l-viewer{background:#f2f4f7;color:#475467}.l-core{background:#0F2B46;color:#fff}
 .on{color:var(--green)}.off{color:var(--red)}.acts{display:flex;gap:6px;flex-wrap:wrap}
@@ -53,11 +62,11 @@ td{padding:9px;border-bottom:1px solid #eef1f5;font-size:12px}
 </div>
 
 <div class="wrap">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px">
     <h1 style="margin:0">จัดการผู้ใช้งาน</h1>
     <a class="btn" href="index.html" style="text-decoration:none"><i class="fa-solid fa-arrow-left"></i> กลับ Dashboard</a>
   </div>
-  <div class="subtitle">เพิ่มอีเมล กำหนดสิทธิ์ ระบบจะสร้างรหัสผ่านให้ทันที (แสดงครั้งเดียว)</div>
+  <div class="subtitle" style="margin:6px 0 16px">เพิ่มอีเมล กำหนดสิทธิ์ ระบบจะสร้างรหัสผ่านให้ทันที (แสดงครั้งเดียว)</div>
 
   <div class="msg" id="msg"></div>
   <div class="pwbox" id="pwbox"></div>
@@ -89,7 +98,7 @@ td{padding:9px;border-bottom:1px solid #eef1f5;font-size:12px}
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>อีเมล</th><th>ชื่อ</th><th>ระดับสิทธิ์</th><th>ผู้ดูแลสาย</th><th>ลูกข่าย</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead>
+        <thead><tr><th class="c-email">อีเมล</th><th class="c-name">ชื่อ</th><th class="c-level">ระดับสิทธิ์</th><th class="c-parent">ผู้ดูแลสาย</th><th class="c-down" style="text-align:center">ลูกข่าย</th><th class="c-status">สถานะ</th><th class="c-last">เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
         <tbody id="tb"><tr><td colspan="8" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
       </table>
     </div>
@@ -230,9 +239,14 @@ function render(users) {
         '<button class="btn btn-danger" data-act="del" data-email="' + esc(u.email) + '"><i class="fa-solid fa-trash"></i> ลบ</button>') +
       '</div>';
     return '<tr data-search="' + esc(((u.name || '') + ' ' + u.email).toLowerCase()) + '" data-level="' + esc(u.level) + '" data-parent="' + esc(u.parent || '') + '">'
-      + '<td>' + esc(u.email) + '</td><td>' + esc(u.name || '—') + '</td><td>' + levelCell + '</td>'
-      + '<td>' + esc(parentName) + '</td><td>' + downCell + '</td>'
-      + '<td>' + statusCell + '</td><td>' + fmt(u.lastLogin) + '</td><td>' + acts + '</td></tr>';
+      + '<td class="c-email" title="' + esc(u.email) + '"><span>' + esc(u.email) + '</span></td>'
+      + '<td class="c-name" title="' + esc(u.name || '') + '">' + esc(u.name || '—') + '</td>'
+      + '<td class="c-level">' + levelCell + '</td>'
+      + '<td class="c-parent">' + esc(parentName) + '</td>'
+      + '<td class="c-down">' + downCell + '</td>'
+      + '<td class="c-status">' + statusCell + '</td>'
+      + '<td class="c-last">' + fmt(u.lastLogin) + '</td>'
+      + '<td class="c-act">' + acts + '</td></tr>';
   }).join('');
   el('tb').innerHTML = rows || '<tr><td colspan="8" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
   refreshUplines();
