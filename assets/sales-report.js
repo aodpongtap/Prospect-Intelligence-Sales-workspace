@@ -87,13 +87,43 @@
   }
   function lvLvlAdmin(l) { return l === 'admin'; }
 
+  /** หาทีมจากสายงาน (เดินขึ้นไปหาหัวหน้าที่Mapไว้) — Head/Sup ที่ไม่อยู่ในลิสต์ตรง ๆ */
+  function teamViaUpline(email) {
+    var users = global.__TEAM__ || [];
+    if (!users.length && global.PIAuth && global.PIAuth.refresh && !global.__SCOPE_FETCHING__) {
+      global.__SCOPE_FETCHING__ = true;
+      try {
+        global.PIAuth.refresh().then(function (list) {
+          global.__TEAM__ = list || [];
+          global.__SCOPE_FETCHING__ = false;
+          __listeners.forEach(function (f) { try { f(); } catch (e) {} });
+        }).catch(function () { global.__SCOPE_FETCHING__ = false; });
+      } catch (e) { global.__SCOPE_FETCHING__ = false; }
+    }
+    var byEmail = {};
+    for (var i = 0; i < users.length; i++) byEmail[String(users[i].email || '').toLowerCase()] = users[i];
+    var cur = String(email || '').toLowerCase(), guard = 0;
+    while (cur && guard++ < 25) {
+      if (TEAM_HEADS[cur]) return TEAM_HEADS[cur];
+      var u = byEmail[cur];
+      if (!u || !u.parent) return '';
+      cur = String(u.parent).toLowerCase();
+    }
+    return '';
+  }
+
   /** ขอบเขตข้อมูลของผู้ใช้ปัจจุบัน: all | team | sale | none */
   function scopeOf() {
     var me = global.__ME__ || {};
     var lvl = String(me.level || '').toLowerCase();
     if (lvl === 'admin') return { type: 'all' };
-    var team = TEAM_HEADS[String(me.email || '').toLowerCase()];
+    var mail = String(me.email || '').toLowerCase();
+    var team = TEAM_HEADS[mail];
     if (team) return { type: 'team', team: team };
+    if (lvl === 'bu' || lvl === 'head' || lvl === 'sup') {
+      team = teamViaUpline(mail);
+      if (team) return { type: 'team', team: team };
+    }
     var nm = String(me.name || '').trim();
     if (nm) {
       for (var i = 0; i < SALES.length; i++) {
