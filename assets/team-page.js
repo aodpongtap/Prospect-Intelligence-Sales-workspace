@@ -231,6 +231,7 @@
         '<div class="tp-pwbox"><div class="tp-s2">' + esc(r.email) + '</div><code>' + esc(r.password) + '</code></div>',
         [{ label: 'คัดลอกรหัสผ่าน', icon: 'fa-regular fa-copy', action: 'tp-copy' }, { label: 'ปิด', primary: true }]);
       window.__TP_PW__ = r.password;
+      if (global.PILog) global.PILog.add('user.add', r.email, (name || '') + ' · ระดับ ' + String(level).toUpperCase() + ' · ผู้ดูแล ' + parent);
       load(true);
     }).catch(function (e) {
       global.toast('ไม่สำเร็จ: ' + (e.message || e));

@@ -122,7 +122,8 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
   </section>
 </div>
 
-<script src="assets/auth-sheets.js?v=3"></script>
+<script src="assets/auth-sheets.js?v=4"></script>
+<script src="assets/report-log.js?v=1"></script>
 <script>
 var me = PIAuth.session();
 if (!me) { location.replace('login.html'); }
@@ -390,6 +391,7 @@ el('tb').addEventListener('click', function (e) {
   if (act === 'del') {
     if (!confirm('ลบผู้ใช้ ' + email + ' ?')) return;
     PIAuth.removeUser(email).then(function () {
+      if (window.PILog) { try { window.PILog.add('user.del', email, 'ลบผู้ใช้ออกจากระบบ'); } catch (e) {} }
       render(PIAuth.listUsers()); showMsg('ลบผู้ใช้แล้ว', 'ok');
     }).catch(function (err) { showMsg(err.message || String(err), 'err'); });
   }

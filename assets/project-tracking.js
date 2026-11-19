@@ -401,6 +401,10 @@
     save();
     global.closeModal();
     global.render();
+    if (global.PILog) {
+      if (id) global.PILog.add('project.edit', (p ? p.name : id), 'บันทึกการแก้ไขขั้นตอน: ' + (STAGES[v.stage] ? STAGES[v.stage].name : v.stage));
+      else global.PILog.add('project.add', v.name, v.customer + ' · ทีม ' + v.team);
+    }
   }
 
   function deleteProject() {
@@ -410,6 +414,7 @@
     if (!global.confirm('ลบโครงการ ' + p.name + ' ?')) return;
     PROJECTS = PROJECTS.filter(function (x) { return x.id !== id; });
     save();
+    if (global.PILog) global.PILog.add('project.del', p.name, p.customer + ' · ' + p.id);
     global.closeModal();
     global.render();
     global.toast('ลบโครงการแล้ว');
@@ -505,6 +510,7 @@
     }
     save();
     global.toast(ctx.task ? 'บันทึกงานแล้ว' : 'เพิ่มงานแล้ว');
+    if (global.PILog) global.PILog.add(ctx.task ? 'task.edit' : 'task.add', val.name, p.name + ' · ' + val.status);
     openDetail(p.id);
     global.render();
   }
@@ -515,6 +521,7 @@
       if (t.id === taskId) {
         var i = TASK_STATUS.indexOf(t.status);
         t.status = TASK_STATUS[(i + 1) % TASK_STATUS.length];
+        if (global.PILog) global.PILog.add('task.toggle', t.name, p.name + ' → ' + t.status);
       }
     });
     save();
@@ -524,8 +531,10 @@
 
   function deleteTask(projectId, taskId) {
     var p = byId(projectId); if (!p) return;
+    var rm = (p.tasks || []).filter(function (t) { return t.id === taskId; })[0];
     p.tasks = (p.tasks || []).filter(function (t) { return t.id !== taskId; });
     save();
+    if (global.PILog && rm) global.PILog.add('task.del', rm.name, p.name);
     openDetail(projectId);
     global.render();
   }
@@ -775,6 +784,7 @@
     render: render,
     open: openDetail,
     list: function () { return PROJECTS; },
+    visible: visibleProjects,
     reset: function () { PROJECTS = JSON.parse(JSON.stringify(SEED)); save(); global.render(); }
   };
 })(window);

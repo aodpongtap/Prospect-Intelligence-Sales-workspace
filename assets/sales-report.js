@@ -187,8 +187,13 @@
   }
   function setTarget(code, year, monthIdx, value) {
     var arr = targetsOfTeam(code, year);
+    var before = num(arr[monthIdx]);
     arr[monthIdx] = num(value);
     saveTargets();
+    if (before !== num(value) && global.PILog) {
+      global.PILog.add('target.save', teamByCode(code).name + ' · ' + TH_MONTHS[monthIdx] + ' ' + (year + 543),
+        'เป้า ' + money(before) + ' → ' + money(value));
+    }
   }
   /** เป้าหมายของทีม: month = 0 หมายถึงรวมทั้งปี */
   function targetOf(code, year, month) {
@@ -333,6 +338,7 @@
     if (isNaN(d.status)) d.status = 1;
     DEALS.push(d);
     saveDeals();
+    if (global.PILog) global.PILog.add('deal.add', d.no + ' · ' + d.customer, d.job + ' · ' + money(d.amount) + ' · ' + st(d.status).label);
     return d;
   }
   function removeDeal(no) {
@@ -442,6 +448,8 @@
   /* ============================ 4) VIEW ============================ */
   var state = { year: 2026, month: 11, team: '', sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1, perfTeam: '' };
   var ui = { targets: false };
+  var __editNo = '';    // เลขที่ SO ของดีลที่กำลังแก้ไข
+  var __openNo = '';    // เลขที่ SO ของดีลที่เปิดดูอยู่
   var charts = [];
 
   function cardKpi(label, value, sub, barPct, color, icon) {
@@ -1071,20 +1079,56 @@
     var f = document.getElementById('srDealForm');
     if (!f || !f.reportValidity()) return;
     try {
-      addDeal({
+      var payload = {
         job: f.job.value, customer: f.customer.value,
         saleId: f.saleId.value, status: Number(f.status.value),
         amount: Number(f.amount.value || 0), prob: Number(f.prob.value || 0),
         product: f.product.value, payment: f.payment.value,
         year: Number(f.year.value), month: Number(f.month.value),
         note: f.note.value
-      });
+      };
+      if (__editNo) {
+        var d = null;
+        for (var i = 0; i < DEALS.length; i++) if (DEALS[i].no === __editNo) { d = DEALS[i]; break; }
+        if (!d) throw new Error('ไม่พบดีลที่ต้องการแก้ไข');
+        for (var k in payload) if (Object.prototype.hasOwnProperty.call(payload, k)) d[k] = payload[k];
+        saveDeals();
+        if (global.PILog) global.PILog.add('deal.edit', d.no + ' · ' + d.customer, d.job + ' · ' + money(d.amount) + ' · ' + st(d.status).label);
+        __editNo = '';
+        if (typeof global.closeModal === 'function') global.closeModal();
+        if (typeof global.render === 'function') global.render();
+        if (typeof global.toast === 'function') global.toast('บันทึกการแก้ไขแล้ว');
+        return;
+      }
+      addDeal(payload);
       if (typeof global.closeModal === 'function') global.closeModal();
       if (typeof global.render === 'function') global.render();
       if (typeof global.toast === 'function') global.toast('บันทึกดีลแล้ว — Reports อัปเดตเรียบร้อย');
     } catch (e) {
       if (typeof global.toast === 'function') global.toast('บันทึกไม่สำเร็จ: ' + (e.message || e));
     }
+  }
+
+  /** ลบดีล (มี confirm) */
+  function deleteDeal(no) {
+    if (!no) return;
+    if (!global.confirm('ลบดีล ' + no + ' ?')) return;
+    var rec = null;
+    for (var i = 0; i < DEALS.length; i++) if (DEALS[i].no === no) { rec = DEALS[i]; break; }
+    removeDeal(no);
+    if (global.PILog && rec) global.PILog.add('deal.del', no + ' · ' + rec.customer, rec.job + ' · ' + money(rec.amount));
+    if (typeof global.closeModal === 'function') global.closeModal();
+    if (typeof global.render === 'function') global.render();
+    if (typeof global.toast === 'function') global.toast('ลบดีลแล้ว');
+  }
+
+  /** เปิดฟอร์มแก้ไขดีลจากเลขที่ SO */
+  function editDeal(no) {
+    var d = null;
+    for (var i = 0; i < DEALS.length; i++) if (DEALS[i].no === no) { d = DEALS[i]; break; }
+    if (!d) return;
+    __editNo = no;
+    openDealForm(d);
   }
 
   function render() {
@@ -1282,7 +1326,12 @@
       + '</div>'
       + '<div class="sr-md-note"><b>หมายเหตุ</b><p>' + esc(d.note) + '</p></div>';
     if (typeof global.setModal === 'function') {
-      global.setModal(d.customer, d.job + ' · ' + d.no, body, [{ label: 'ปิด', primary: true }]);
+      global.setModal(d.customer, d.job + ' · ' + d.no, body, [
+        { label: 'ลบดีล', icon: 'fa-solid fa-trash', action: 'sr-del-deal' },
+        { label: 'แก้ไขดีล', icon: 'fa-solid fa-pen', action: 'sr-edit-deal', primary: true },
+        { label: 'ปิด' }
+      ]);
+      __openNo = no;
     }
   }
 
@@ -1335,6 +1384,7 @@
     saveTeams();
     targetsOfTeam(name, state.year);
     saveTargets();
+    if (global.PILog) global.PILog.add('team.add', name, 'เพิ่มทีมใหม่เข้าสู่ระบบ');
     if (typeof global.closeModal === 'function') global.closeModal();
     if (typeof global.render === 'function') global.render();
     if (global.toast) global.toast('เพิ่มทีม ' + name + ' แล้ว');
@@ -1346,6 +1396,7 @@
     if (!global.confirm('ลบทีม ' + code + ' ?')) return;
     TEAMS = TEAMS.filter(function (t) { return t.code !== code; });
     saveTeams();
+    if (global.PILog) global.PILog.add('team.del', code, 'ลบทีมออกจากระบบ');
     if (state.team === code) state.team = '';
     if (typeof global.render === 'function') global.render();
     if (global.toast) global.toast('ลบทีมแล้ว');
@@ -1421,6 +1472,8 @@
     if (saleBtn) { openSaleMonthly(saleBtn.getAttribute('data-sr-sale')); return; }
     var act0 = t.closest('[data-action]');
     if (act0 && act0.getAttribute('data-action') === 'sr-save-deal') { saveDealForm(); return; }
+    if (act0 && act0.getAttribute('data-action') === 'sr-del-deal') { deleteDeal(__openNo); return; }
+    if (act0 && act0.getAttribute('data-action') === 'sr-edit-deal') { editDeal(__openNo); return; }
     if (t.closest('[data-sr-toggletargets]')) {
       ui.targets = !ui.targets;
       if (typeof global.render === 'function') global.render();

@@ -78,6 +78,14 @@
     return call('login', { email: email, password: password }).then(function (r) {
       if (!r || !r.ok) return { ok: false, error: (r && r.error) || 'เข้าสู่ระบบไม่สำเร็จ' };
       setSession({ email: r.email, name: r.name || '', level: r.level, token: r.token });
+      if (window.PILog) {
+        try {
+          var prevMe = window.__ME__;
+          window.__ME__ = { email: r.email, name: r.name || '', level: r.level };
+          window.PILog.add('auth.login', r.email, 'เข้าสู่ระบบสำเร็จ · สิทธิ์ ' + String(r.level || '').toUpperCase());
+          window.__ME__ = prevMe;
+        } catch (e) {}
+      }
       return { ok: true, user: { email: r.email, name: r.name, level: r.level } };
     });
   }
