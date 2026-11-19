@@ -995,8 +995,20 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
         if(!pr){toast("เลือกผู้ดูแลต้นสาย");return}
         if(msg)msg.textContent="กำลังบันทึก...";
         PIAuth.addUser(em.trim(),nm.trim(),lv,pr).then(function(r){
-          if(msg)msg.innerHTML="สร้าง ID แล้ว — รหัสผ่าน: <code style='background:#F1F5F9;padding:2px 6px;border-radius:4px'>"+r.password+"</code>";
-          toast("ลงทะเบียน ID เรียบร้อย");
+          window.__lastPw__={ email:r.email, password:r.password };
+          setModal('สร้าง ID สำเร็จ','กรุณาส่งรหัสผ่านนี้ให้ผู้ใช้ — ระบบจะแสดงเพียงครั้งเดียว',
+            '<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:14px">'
+            + '<div style="font-size:12px;color:#92400E;margin-bottom:6px">' + String(r.email) + '</div>'
+            + '<code style="font-size:17px;font-weight:600;letter-spacing:1px;color:#0F2B46">' + String(r.password) + '</code>'
+            + '</div>',
+            [{label:'คัดลอกรหัสผ่าน',icon:'fa-regular fa-copy',action:'copy-pw'},{label:'ปิด',primary:true}]);
+          var cbtn=document.querySelector('#modalFoot [data-action="copy-pw"]');
+          if(cbtn)cbtn.addEventListener('click',function(){
+            var txt=String((window.__lastPw__||{}).password||'');
+            if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('คัดลอกรหัสผ่านแล้ว')},function(){toast('คัดลอกไม่สำเร็จ')})}
+            else{toast('คัดลอกไม่สำเร็จ')}
+          });
+          if(msg)msg.textContent='';
           loadTeam();
         }).catch(function(e){if(msg)msg.textContent=e.message;toast("ไม่สำเร็จ: "+e.message)});
       }
