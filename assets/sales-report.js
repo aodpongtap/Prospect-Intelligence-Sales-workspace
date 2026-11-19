@@ -124,10 +124,17 @@
       team = teamViaUpline(mail);
       if (team) return { type: 'team', team: team };
     }
-    var nm = String(me.name || '').trim();
+    /* 1) ผูกด้วยรหัสเซลส์โดยตรง (ถ้า admin ตั้งค่าไว้ในอนาคต) */
+    var sid = String(me.saleId || me.sale || '').trim();
+    if (sid) {
+      for (var j = 0; j < SALES.length; j++) if (SALES[j].id === sid) return { type: 'sale', saleId: SALES[j].id };
+    }
+    /* 2) ผูกด้วยชื่อ (ตัดช่องว่าง/ตัวอักษรพิเศษออกก่อนเทียบ) */
+    var norm = function (v) { return String(v || '').replace(/[\s\u200B\u00A0]+/g, '').trim(); };
+    var nm = norm(me.name);
     if (nm) {
       for (var i = 0; i < SALES.length; i++) {
-        if (String(SALES[i].name).trim() === nm) return { type: 'sale', saleId: SALES[i].id };
+        if (norm(SALES[i].name) === nm) return { type: 'sale', saleId: SALES[i].id };
       }
     }
     return { type: 'none' };
@@ -487,7 +494,7 @@
     var cards = [
       cardKpi('เป้าหมายทีม',
         money(k.target),
-        'Head Count <b>' + k.headCount + '</b> คน · Prod./Head <b>' + money(k.perHead) + '</b>'
+        'จำนวนคน <b>' + k.headCount + '</b> คน · เฉลี่ย/คน <b>' + money(k.perHead) + '</b>'
           + '<br><span class="sr-link" data-sr-toggletargets><i class="fa-solid fa-pen-to-square"></i> ใส่ Target รายเดือน</span>',
         undefined, '#0F2B46', 'fa-solid fa-bullseye'),
       cardKpi('Actual ปิดงานแล้ว',
@@ -563,7 +570,7 @@
       var band = '<tr class="sr-band"><td colspan="10">'
         + '<span class="sr-band-name"><i class="fa-solid fa-users"></i> ' + esc(b.team.name) + '</span>'
         + '<span class="sr-band-sub">' + b.rows.length + ' คน · เป้า ' + money(b.target) + '</span>'
-        + '<span class="sr-band-pill">Ach 4. <b>' + pct(ach4) + '</b></span>'
+        + '<span class="sr-band-pill">ปิดงานแล้ว <b>' + pct(ach4) + '</b></span>'
         + '<span class="sr-band-pill alt">Forecast <b>' + pct(fc) + '</b></span>'
         + '</td></tr>';
 
@@ -701,10 +708,10 @@
     var y = state.year;
     var lockedTeam = viewerTeam();
     var listTeams = lockedTeam ? TEAMS.filter(function (t) { return t.code === lockedTeam; }) : TEAMS;
-    var EN_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var TH_SHORT = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
     var monthTh = TH_MONTHS.map(function (mth, i) {
       return '<th class="sr-num' + (state.month === i + 1 ? ' sr-hl' : '') + '" title="' + mth + '">'
-        + EN_MONTHS[i] + '</th>';
+        + TH_SHORT[i] + '</th>';
     }).join('');
 
     var rows = listTeams.map(function (t) {
@@ -766,13 +773,24 @@
     var s = k.sum;
     var today = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-    var teamRows = TEAMS.filter(function (t) { return !state.team || t.code === state.team; }).map(function (t) {
+    var scD = scopeOf();
+    var teamRows = TEAMS.filter(function (t) {
+      if (state.team && t.code !== state.team) return false;
+      if (scD.type === 'team') return t.code === scD.team;
+      if (scD.type === 'sale') return sale(scD.saleId).team === t.code;
+      if (scD.type === 'none') return false;
+      return true;
+    }).map(function (t) {
       var list = k.list.filter(function (d) { return sale(d.saleId).team === t.code; });
       var ts = summarize(list);
       var tg = targetOf(t.code, state.year, state.month);
       var pAch = tg ? ts.s4 / tg * 100 : 0;
       var pFc = tg ? ts.forecast / tg * 100 : 0;
-      var cnt = SALES.filter(function (r) { return r.team === t.code; }).length;
+      var cnt = SALES.filter(function (r) {
+        if (r.team !== t.code) return false;
+        if (scD.type === 'sale') return r.id === scD.saleId;
+        return true;
+      }).length;
       return '<div class="sr-trow">'
         + '<div class="sr-trow-h"><b>' + esc(t.name) + '</b><span>' + cnt + ' คน</span></div>'
         + '<div class="sr-trow-n">' + money(ts.s4) + ' <span>/ ' + money(tg) + '</span><em>' + pct(pAch) + '</em></div>'
@@ -797,11 +815,11 @@
 
     var cards = [
       cardKpi('เป้าหมายทีม (Target)', money(k.target),
-        'Head Count <b>' + k.headCount + '</b> คน · Prod./Head <b>' + money(k.perHead) + '</b>',
+        'จำนวนคน <b>' + k.headCount + '</b> คน · เฉลี่ย/คน <b>' + money(k.perHead) + '</b>',
         undefined, '#0F2B46', 'fa-solid fa-bullseye'),
-      cardKpi('%Ach 4. (Actual ปิดงานแล้ว 100%)', pct(k.ach4),
+      cardKpi('ผลงานเทียบเป้า (ปิดงานแล้ว)', pct(k.ach4),
         money(s.s4) + ' / ' + money(k.target), k.ach4, '#2563EB', 'fa-solid fa-circle-check'),
-      cardKpi('%Ach 4.+3. (รวมรอส่งของ 90%)', pct(k.ach43),
+      cardKpi('ผลงานเทียบเป้า (รวมรอส่งของ 90%)', pct(k.ach43),
         money(s.s4 + s.s3 * 0.9) + ' / ' + money(k.target), k.ach43, '#0EA5E9', 'fa-solid fa-truck-fast'),
       cardKpi('ประมาณการยอดปิดเดือน (Weighted Forecast)', money(s.forecast),
         'ยอดการันตี <b>' + money(s.secured) + '</b> + Pipeline ถ่วงน้ำหนัก <b>' + money(s.weighted1) + '</b>',
@@ -991,7 +1009,7 @@
     var totAch = tot.target ? tot.s4 / tot.target * 100 : 0;
     var body = '<div class="sr-mtable"><table class="sr-table"><thead><tr>'
       + '<th>เดือน</th><th class="sr-num">Actual</th><th class="sr-num">รอส่งของ</th><th class="sr-num">รอ PO</th>'
-      + '<th class="sr-num">Pipeline</th><th class="sr-num">รวม</th><th class="sr-num">เป้า/เดือน</th><th class="sr-num">%Ach 4.</th>'
+      + '<th class="sr-num">Pipeline</th><th class="sr-num">รวม</th><th class="sr-num">เป้า/เดือน</th><th class="sr-num">% ปิดงาน</th>'
       + '</tr></thead><tbody>' + rows + '</tbody>'
       + '<tfoot><tr class="sr-total-row"><td><b>รวมทั้งปี</b></td>'
       + '<td class="sr-num"><b>' + money(tot.s4) + '</b></td>'
@@ -1032,7 +1050,7 @@
       + '  <label class="sr-df full">ลูกค้า *<input name="customer" required placeholder="ชื่อบริษัท / ร้านค้า"></label>'
       + '  <label class="sr-df">พนักงานขาย *<select name="saleId">' + saleOpts + '</select></label>'
       + '  <label class="sr-df">สถานะงาน *<select name="status">' + statusOpts + '</select></label>'
-      + '  <label class="sr-df">มูลค่างาน (บาท) *<input name="amount" type="number" min="0" step="1000" required placeholder="0"></label>'
+      + '  <label class="sr-df">มูลค่างาน (บาท) *<input name="amount" type="number" min="0" step="1" required placeholder="0"></label>'
       + '  <label class="sr-df">โอกาสปิด (%)<input name="prob" type="number" min="0" max="100" value="40"></label>'
       + '  <label class="sr-df">สินค้า<select name="product">' + prodOpts + '</select></label>'
       + '  <label class="sr-df">รูปแบบการซื้อ<select name="payment">' + payOpts + '</select></label>'

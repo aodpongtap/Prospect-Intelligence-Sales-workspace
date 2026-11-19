@@ -64,6 +64,8 @@
     ERR = '';
     global.PIAuth.refresh().then(function (list) {
       USERS = list || []; LOADED = true; LOADING = false;
+      global.__TEAM__ = USERS;                 // แชร์ให้โมดูลอื่น (scope/สิทธิ์) ใช้ต่อโดยไม่ต้องยิง API ซ้ำ
+      global.__TEAM_READY__ = true;
       if (global.render) global.render();
     }).catch(function (e) {
       USERS = []; LOADED = true; LOADING = false; ERR = (e && e.message) || 'โหลดรายชื่อไม่สำเร็จ';
@@ -260,11 +262,16 @@
   function treeModal() {
     var root = null;
     for (var i = 0; i < USERS.length; i++) if (String(USERS[i].email).toLowerCase() === String(me().email || '').toLowerCase()) root = USERS[i];
+    var inTree = 0;
+    (function count(n) { inTree++; childrenOf(n.email).forEach(count); })(root || { email: '' });
+    var orphan = Math.max(0, USERS.length - inTree);
     var legend = LADDER.map(function (l) {
       return '<span><i class="tp-dot tp-l' + l.n + '"></i>L' + l.n + ' ' + l.label + '</span>';
     }).join('');
     var body = '<div class="tp-treewrap">'
       + '<div class="tp-legend">' + legend + '</div>'
+      + (orphan ? '<div class="tp-empty" style="text-align:left;color:#B45309;background:#FFFBEB;border:1px solid #FDE68A;border-radius:9px;padding:8px 11px;margin-bottom:10px">'
+        + '<i class="fa-solid fa-circle-info"></i> มี ' + orphan + ' บัญชีที่ไม่ได้อยู่ในสายงานนี้ (ยังไม่กำหนดผู้ดูแลต้นสาย)</div>' : '')
       + (root ? '<ul class="tp-tree">' + treeNode(root, 0) + '</ul>'
               : '<div class="tp-empty">ไม่พบข้อมูลของคุณในระบบ</div>')
       + '</div>';

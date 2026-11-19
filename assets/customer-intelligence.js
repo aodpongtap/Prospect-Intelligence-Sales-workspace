@@ -57,8 +57,9 @@
   function buildCustomers() {
     var d = src();
     if (!d) return [];
+    var deals = (global.SalesReport && global.SalesReport.scopedDeals) ? global.SalesReport.scopedDeals() : d.deals;
     var map = {}, list = [];
-    d.deals.forEach(function (dl) {
+    deals.forEach(function (dl) {
       var s = saleOf(d.sales, dl.saleId);
       if (d.viewerTeam && s.team !== d.viewerTeam) return;
       var k = dl.customer;
@@ -129,9 +130,17 @@
   function render() {
     injectCss();
     var all = buildCustomers();
+    var sc = null;
+    try { sc = (global.SalesReport && global.SalesReport.scope) ? global.SalesReport.scope() : null; } catch (e) {}
+    var notice = (sc && sc.type === 'none')
+      ? '<div class="ci-panel" style="display:flex;gap:10px;align-items:flex-start;background:#FFF7ED;border:1px solid #FFEDD5;border-radius:12px;padding:12px 14px;margin-bottom:12px">'
+        + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
+        + '<div><b style="color:#9A3412;font-size:12px">บัญชีนี้ยังไม่ถูกผูกกับข้อมูลเซลส์</b>'
+        + '<div style="color:#B45309;font-size:11px">กรุณาแจ้ง Admin ให้ผูกชื่อของคุณกับรายชื่อเซลส์หรือทีม BU เพื่อให้เห็นข้อมูลลูกค้าที่เกี่ยวข้อง</div></div></div>'
+      : '';
     if (!all.length) {
       return '<div class="ci"><div class="ci-head"><div><h1>Customer Intelligence</h1>'
-        + '<div class="ci-sub">ยังไม่มีข้อมูลลูกค้า — เพิ่มดีลในหน้า Reports ก่อน</div></div></div></div>';
+        + '<div class="ci-sub">ยังไม่มีข้อมูลลูกค้า — เพิ่มดีลในหน้า Reports ก่อน</div></div></div>' + notice + '</div>';
     }
     var list = sortList(filtered(all));
 
@@ -148,6 +157,7 @@
 
     var head = '<div class="ci-head"><div><h1>Customer Intelligence</h1>'
       + '<div class="ci-sub">ดูว่าลูกค้าแต่ละรายอยู่สถานะไหน และควรทำอะไรต่อ — ใช้ข้อมูลดีลชุดเดียวกับหน้า Reports</div></div></div>';
+    head = notice + head;
 
     var kpis = '<div class="ci-kpis">'
       + kpiCard('ลูกค้าทั้งหมด', all.length + ' ราย', 'ซื้อซ้ำ ' + repeat + ' · ปิดงานแล้ว ' + active + ' · กำลังเจรจา ' + pipe, '#0F2B46', 'fa-solid fa-users', (repeat + active) / all.length * 100)

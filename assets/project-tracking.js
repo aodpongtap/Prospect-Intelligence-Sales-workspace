@@ -175,11 +175,32 @@
     return '';
   }
 
+  /** ขอบเขตข้อมูลของผู้ใช้ (all / team / sale / none) — ใช้ตัวเดียวกับ Reports */
+  function scopeNow() {
+    try {
+      if (global.SalesReport && global.SalesReport.scope) return global.SalesReport.scope() || { type: 'none' };
+    } catch (e) {}
+    var vt = viewerTeam();
+    return vt ? { type: 'team', team: vt } : { type: 'all' };
+  }
+
+  /** โครงการที่ผู้ใช้มีสิทธิ์เห็น */
+  function visibleProjects() {
+    var sc = scopeNow();
+    if (sc.type === 'all') return PROJECTS.slice();
+    if (sc.type === 'team') return PROJECTS.filter(function (p) { return p.team === sc.team; });
+    if (sc.type === 'sale') {
+      var me = global.__ME__ || {};
+      var norm = function (v) { return String(v || '').replace(/[\s\u200B\u00A0]+/g, '').trim(); };
+      var myName = norm(me.name);
+      return PROJECTS.filter(function (p) { return norm(p.sale) === myName; });
+    }
+    return [];
+  }
+
   function filtered() {
     var q = String(state.q || '').trim().toLowerCase();
-    var vt = viewerTeam();
-    return PROJECTS.filter(function (p) {
-      if (vt && p.team !== vt) return false;
+    return visibleProjects().filter(function (p) {
       if (state.stage !== '' && String(p.stage) !== String(state.stage)) return false;
       if (state.owner && p.owner !== state.owner) return false;
       if (state.health && healthOf(p) !== state.health) return false;
@@ -199,8 +220,7 @@
   }
 
   function renderKpis() {
-    var vt = viewerTeam();
-    var all = PROJECTS.filter(function (p) { return !vt || p.team === vt; });
+    var all = visibleProjects();
     var active = all.filter(function (p) { return p.stage < 4; }).length;
     var risk = all.filter(function (p) { var h = healthOf(p); return h === 'at-risk' || h === 'delayed'; }).length;
     var done = all.filter(function (p) { return p.stage >= 4; }).length;
@@ -300,12 +320,23 @@
   function render() {
     injectCss();
     var list = filtered();
+    var sc = scopeNow();
+    var lockTxt = sc.type === 'team'
+      ? '<span class="pt-teamlock"><i class="fa-solid fa-lock"></i> ทีมของคุณ: ' + esc(sc.team) + '</span>'
+      : (sc.type === 'sale' ? '<span class="pt-teamlock"><i class="fa-solid fa-lock"></i> เฉพาะโครงการของคุณ</span>' : '');
+    var notice = sc.type === 'none'
+      ? '<div class="pt-panel" style="display:flex;gap:10px;align-items:flex-start;background:#FFF7ED;border-color:#FFEDD5">'
+        + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
+        + '<div><b style="color:#9A3412;font-size:12px">บัญชีนี้ยังไม่ถูกผูกกับข้อมูลโครงการ</b>'
+        + '<div class="pt-s2" style="color:#B45309">กรุณาแจ้ง Admin ให้ผูกชื่อของคุณกับทีม BU หรือรายชื่อเซลล์ เพื่อให้เห็นโครงการที่เกี่ยวข้อง</div></div></div>'
+      : '';
     return '<div class="pt">'
       + '<div class="pt-head"><div><h1>Project Tracking</h1>'
       + '<div class="pt-sub">ติดตามโครงการตั้งแต่รับช่วงงานจนถึงส่งมอบลูกค้า — บันทึกอัตโนมัติในเครื่องนี้</div></div>'
       + '<div class="pt-head-acts">'
-      + (viewerTeam() ? '<span class="pt-teamlock"><i class="fa-solid fa-lock"></i> ทีมของคุณ: ' + esc(viewerTeam()) + '</span>' : '')
+      + lockTxt
       + '<button class="pt-btn dark" data-pt-new><i class="fa-solid fa-plus"></i> เพิ่มโครงการ</button></div></div>'
+      + notice
       + renderKpis()
       + renderFilters()
       + renderBoard(list)
@@ -406,7 +437,7 @@
       var done = p.stage > i, cur = p.stage === i;
       return '<div class="pt-step ' + (done ? 'done' : '') + ' ' + (cur ? 'cur' : '') + '">'
         + '<div class="pt-step-dot"><i class="fa-solid ' + (done ? 'fa-check' : 'fa-circle') + '"></i></div>'
-        + '<div>' + esc(s.short) + '</div></div>';
+        + '<div>' + esc(s.name) + '</div></div>';
     }).join('');
 
     var body = '<div class="pt-detail">'

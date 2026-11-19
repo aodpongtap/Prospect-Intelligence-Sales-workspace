@@ -95,12 +95,21 @@
     })();
   </script>
   <script src="assets/auth-sheets.js?v=3"></script>
-  <script src="assets/sales-report.js?v=16"></script>
-  <script src="assets/project-tracking.js?v=3"></script>
-  <script src="assets/customer-intelligence.js?v=2"></script>
-  <script src="assets/team-page.js?v=1"></script>
+  <script src="assets/sales-report.js?v=17"></script>
+  <script src="assets/project-tracking.js?v=4"></script>
+  <script src="assets/customer-intelligence.js?v=3"></script>
+  <script src="assets/team-page.js?v=2"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
+    window.__allowedPages__ = function () {
+      var lv = String(((window.__ME__ || {}).level) || '').toLowerCase();
+      var MAP = {
+        sup: ['dashboard', 'team', 'sales', 'projects', 'intelligence', 'reports'],
+        sale: ['dashboard', 'sales'],
+        agent: ['dashboard', 'sales']
+      };
+      return MAP[lv] || null;   // admin / bu / head / editor = เข้าได้ทุกหน้า
+    };
     window.__applyMe__ = function (rawMe, opts) {
       opts = opts || {};
       rawMe = rawMe || {};
@@ -135,12 +144,7 @@
       //  - Supervisor (L4): เห็นเฉพาะ "แดชบอร์ดรวมของลูกน้อง"
       //  - Sale / Agent: เห็นเฉพาะงานขายของตัวเอง
       var lvCode = String(me.level).toLowerCase();
-      var NAV_ALLOW = {
-        sup: ['dashboard', 'team'],
-        sale: ['dashboard', 'sales'],
-        agent: ['dashboard', 'sales']
-      };
-      var allow = NAV_ALLOW[lvCode];
+      var allow = (window.__allowedPages__ ? window.__allowedPages__() : null);
       if (allow) {
         var navList = document.getElementById('navList');
         if (navList) {
@@ -800,10 +804,27 @@
 
     /* ===== การนำทางแบบเว็บทั่วไป: URL เปลี่ยน + ปุ่ม Back ของเบราว์เซอร์ใช้ได้ ===== */
     function pageUrl(p){return p&&p!=="dashboard"?"index.html?page="+encodeURIComponent(p):"index.html"}
+    function canAccessPage(p){
+      try{
+        var a=(window.__allowedPages__?window.__allowedPages__():null);
+        return !a || a.indexOf(p)>=0;
+      }catch(e){return true}
+    }
+    function guardPage(p,notify){
+      if(!p||!pageTitles[p]){
+        if(notify&&p)toast("ไม่พบหน้าที่ระบุ — กลับสู่ Dashboard");
+        return "dashboard";
+      }
+      if(!canAccessPage(p)){
+        if(notify)toast("บัญชีนี้ไม่มีสิทธิ์เข้าถึงหน้านี้");
+        return "dashboard";
+      }
+      return p;
+    }
     function canGoBack(){try{return !!(history.state&&history.state.prev)}catch(e){return false}}
     function prevTitle(){try{var p=(history.state||{}).prev;return p&&pageTitles[p]?pageTitles[p]:""}catch(e){return ""}}
     function goTo(page,push){
-      if(!page||!pageTitles[page])page="dashboard";
+      page=guardPage(page,true);
       var from=currentPage;currentPage=page;
       try{
         if(push)history.pushState({page:page,prev:from},"",pageUrl(page));
@@ -814,7 +835,7 @@
     }
     window.addEventListener("popstate",function(ev){
       var p=(ev.state&&ev.state.page)||new URLSearchParams(location.search).get("page")||"dashboard";
-      if(!pageTitles[p])p="dashboard";
+      p=guardPage(p,true);
       currentPage=p;
       document.title=pageTitles[p]+" · Prospect Intelligence Sales workspace";
       render();
@@ -997,7 +1018,7 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
     /* ===== JavaScript: Event handlers and actions ===== */
     document.getElementById("navList").addEventListener("click",e=>{const item=e.target.closest(".nav-item");if(!item)return;var pg=item.dataset.page;if(!pg||pg===currentPage)return;goTo(pg,true)});
     // เปิดหน้าที่ระบุจาก URL เช่น index.html?page=team (deep link + refresh ได้)
-    (function(){try{var p=new URLSearchParams(location.search).get("page");currentPage=(p&&pageTitles[p])?p:"dashboard";history.replaceState({page:currentPage,prev:""},"",pageUrl(currentPage));document.title=pageTitles[currentPage]+" · Prospect Intelligence Sales workspace";render()}catch(err){}})();
+    (function(){try{var p=new URLSearchParams(location.search).get("page");currentPage=guardPage((p&&pageTitles[p])?p:"dashboard",false);history.replaceState({page:currentPage,prev:""},"",pageUrl(currentPage));document.title=pageTitles[currentPage]+" · Prospect Intelligence Sales workspace";render()}catch(err){}})();
     document.getElementById("mobileMenu").addEventListener("click",()=>document.getElementById("sidebar").classList.toggle("open"));
     document.getElementById("notificationBtn").addEventListener("click",function(e){e.stopPropagation();toggleNotif()});
 
@@ -1007,12 +1028,13 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
       const out=[];
       const money=n=>"ยท"+Number(n||0).toLocaleString("th-TH");
       const sr=(window.SalesReport&&SalesReport.data)?SalesReport.data():null;
+      const scopedDeals=(window.SalesReport&&SalesReport.scopedDeals)?SalesReport.scopedDeals():(sr?sr.deals:[]);
       if(sr){
-        const risky=sr.deals.filter(d=>d.status===1&&Number(d.prob)<=40);
+        const risky=scopedDeals.filter(d=>d.status===1&&Number(d.prob)<=40);
         if(risky.length)out.push({id:"n-risk",t:"ดีล Pipeline ที่ต้องติดตาม",d:risky.length+" ดีล โอกาสปิด ≤ 40%",time:"จาก Reports"});
-        const po=sr.deals.filter(d=>d.status===2);
+        const po=scopedDeals.filter(d=>d.status===2);
         if(po.length)out.push({id:"n-po",t:"รอยืนยัน PO",d:po.length+" ดีล · รวม "+money(po.reduce((a,d)=>a+Number(d.amount||0),0)),time:"จาก Reports"});
-        const cancel=sr.deals.filter(d=>d.status===5);
+        const cancel=scopedDeals.filter(d=>d.status===5);
         if(cancel.length)out.push({id:"n-cancel",t:"ดีลยกเลิก",d:cancel.length+" ดีล · รวม "+money(cancel.reduce((a,d)=>a+Number(d.amount||0),0)),time:"จาก Reports"});
       }
       const pr=(window.ProjectTracking&&ProjectTracking.list)?ProjectTracking.list():[];

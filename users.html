@@ -218,7 +218,7 @@ function render(users) {
       '</div>';
     return '<tr data-search="' + esc(((u.name || '') + ' ' + u.email).toLowerCase()) + '" data-level="' + esc(u.level) + '" data-parent="' + esc(u.parent || '') + '">'
       + '<td class="c-email" title="' + esc(u.email) + '"><span>' + esc(u.email) + '</span></td>'
-      + '<td class="c-name" title="' + esc(u.name || '') + '">' + esc(u.name || '—') + '</td>'
+      + '<td class="c-name" title="' + esc(u.name || u.email) + '">' + (esc(u.name || '') || '<span class="muted">ยังไม่ระบุชื่อ</span>') + '</td>'
       + '<td class="c-level">' + levelCell + '</td>'
       + '<td class="c-parent" title="' + esc(parentEmail ? parentName + ' · ' + parentEmail : '-') + '">' + parentCell + '</td>'
       + '<td class="c-down">' + downCell + '</td>'
