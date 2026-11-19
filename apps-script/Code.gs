@@ -24,12 +24,14 @@ function levelN_(level) {
   return i < 0 ? LEVELS.length : i + 1;
 }
 var ADMIN_EMAILS = [
-  'aodpongtaptsr@gmail.com',
-  'bch.sarocha@gmail.com',
+  'aodpongtaptsr@gmail.com'
+];
+// บัญชีที่เป็น "Head Sale" (L3 · Head Team) — ไม่ใช่ Admin หลัก
+var HEAD_SALES_EMAILS = [
   'sittharphon.1994@gmail.com',
   'chanphaphat.k@gmail.com'
 ];
-var SEED_PASSWORD = 'Tsr@2026';          // รหัสเริ่มต้นของ 4 admin (แนะนำให้รีเซ็ตทันที)
+var SEED_PASSWORD = 'Tsr@2026';          // รหัสเริ่มต้นของ admin (แนะนำให้รีเซ็ตทันที)
 var SESSION_PROP = 'SESSIONS';
 var SESSION_TTL_MS = 12 * 3600 * 1000;
 
@@ -211,6 +213,14 @@ function ensureSeed_() {
       var salt = newSalt_();
       sh.appendRow([e, '', 'admin', 'active', hash_(SEED_PASSWORD, salt), salt, new Date().toISOString(), '', '']);
     }
+  });
+  // Head Sale (L3) — ปรับระดับอัตโนมัติถ้ายังเป็น admin อยู่
+  HEAD_SALES_EMAILS.forEach(function (em) {
+    var e = String(em).toLowerCase();
+    var row = findRow_(e);
+    if (!row) return;
+    var lv = String(sh.getRange(row, 3).getValue() || '').toLowerCase();
+    if (lv !== 'head') sh.getRange(row, 3).setValue('head');
   });
 }
 
@@ -550,5 +560,6 @@ function resetUserSheet() {
 function seedAdminAccounts() {
   ensureSeed_();
   Logger.log('Seeded admins: ' + ADMIN_EMAILS.join(', ') + ' (password: ' + SEED_PASSWORD + ')');
+  Logger.log('Head Sale (L3): ' + HEAD_SALES_EMAILS.join(', '));
   return ADMIN_EMAILS;
 }

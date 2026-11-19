@@ -149,8 +149,9 @@
 
   global.PIAuth = {
     coreAdmins: [
-      'aodpongtaptsr@gmail.com',
-      'bch.sarocha@gmail.com',
+      'aodpongtaptsr@gmail.com'
+    ],
+    headSales: [
       'sittharphon.1994@gmail.com',
       'chanphaphat.k@gmail.com'
     ],
