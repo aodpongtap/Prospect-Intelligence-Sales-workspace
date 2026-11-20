@@ -1113,45 +1113,58 @@
     }
   }
 
-  /* ---------- ฟอร์มเพิ่มดีล (เก็บครบทุกฟิลด์ที่ Reports ต้องใช้) ---------- */
+  /* ---------- ฟอร์มเพิ่ม/แก้ไขดีล (เก็บครบทุกฟิลด์ที่ Reports ต้องใช้) ---------- */
   function openAddDeal() {
+    __editNo = '';
+    openDealForm(null);
+  }
+
+  /** เปิดฟอร์มดีล — null = เพิ่มใหม่, deal object = แก้ไข */
+  function openDealForm(d0) {
     var tm = state.team || viewerTeam() || '';
     var list = SALES.filter(function (s) { return !tm || s.team === tm; });
     if (!list.length) list = SALES;
+    if (d0 && !list.some(function (s) { return s.id === d0.saleId; })) list = SALES;
+    var cur = d0 || {};
     var saleOpts = list.map(function (s) {
-      return '<option value="' + esc(s.id) + '">' + esc(teamByCode(s.team).name) + ' · ' + esc(s.name) + '</option>';
+      return '<option value="' + esc(s.id) + '"' + (cur.saleId === s.id ? ' selected' : '') + '>' + esc(teamByCode(s.team).name) + ' · ' + esc(s.name) + '</option>';
     }).join('');
+    var curStatus = cur.status === undefined ? 1 : Number(cur.status);
     var statusOpts = STATUS.map(function (st) {
-      return '<option value="' + st.code + '"' + (st.code === 1 ? ' selected' : '') + '>' + st.code + ' · ' + esc(st.label) + '</option>';
+      return '<option value="' + st.code + '"' + (st.code === curStatus ? ' selected' : '') + '>' + st.code + ' · ' + esc(st.label) + '</option>';
     }).join('');
-    var prodOpts = PRODUCTS.map(function (p) { return '<option value="' + p.code + '">' + esc(p.name) + '</option>'; }).join('');
-    var payOpts = PAYMENTS.map(function (p) { return '<option value="' + p.code + '">' + esc(p.name) + '</option>'; }).join('');
-    var yearOpts = YEARS.map(function (y) { return '<option value="' + y + '"' + (y === state.year ? ' selected' : '') + '>' + (y + 543) + '</option>'; }).join('');
+    var prodOpts = PRODUCTS.map(function (p) { return '<option value="' + p.code + '"' + (cur.product === p.code ? ' selected' : '') + '>' + esc(p.name) + '</option>'; }).join('');
+    var payOpts = PAYMENTS.map(function (p) { return '<option value="' + p.code + '"' + (cur.payment === p.code ? ' selected' : '') + '>' + esc(p.name) + '</option>'; }).join('');
+    var curYear = Number(cur.year || state.year);
+    var yearOpts = YEARS.map(function (y) { return '<option value="' + y + '"' + (y === curYear ? ' selected' : '') + '>' + (y + 543) + '</option>'; }).join('');
+    var curMonth = Number(cur.month || state.month || new Date().getMonth() + 1);
     var monthOpts = TH_MONTHS.map(function (m, i) {
-      return '<option value="' + (i + 1) + '"' + ((i + 1) === (state.month || new Date().getMonth() + 1) ? ' selected' : '') + '>' + m + '</option>';
+      return '<option value="' + (i + 1) + '"' + ((i + 1) === curMonth ? ' selected' : '') + '>' + m + '</option>';
     }).join('');
 
     var body = '<form id="srDealForm">'
       + '<div class="sr-dform">'
-      + '  <label class="sr-df full">ชื่องาน / ดีล *<input name="job" required placeholder="เช่น ร้านสะดวกซัก 6 เครื่อง"></label>'
-      + '  <label class="sr-df full">ลูกค้า *<input name="customer" required placeholder="ชื่อบริษัท / ร้านค้า"></label>'
+      + '  <label class="sr-df full">ชื่องาน / ดีล *<input name="job" required placeholder="เช่น ร้านสะดวกซัก 6 เครื่อง" value="' + esc(cur.job || '') + '"></label>'
+      + '  <label class="sr-df full">ลูกค้า *<input name="customer" required placeholder="ชื่อบริษัท / ร้านค้า" value="' + esc(cur.customer || '') + '"></label>'
       + '  <label class="sr-df">พนักงานขาย *<select name="saleId">' + saleOpts + '</select></label>'
       + '  <label class="sr-df">สถานะงาน *<select name="status">' + statusOpts + '</select></label>'
-      + '  <label class="sr-df">มูลค่างาน (บาท) *<input name="amount" type="number" min="0" step="1" required placeholder="0"></label>'
-      + '  <label class="sr-df">โอกาสปิด (%)<input name="prob" type="number" min="0" max="100" value="40"></label>'
+      + '  <label class="sr-df">มูลค่างาน (บาท) *<input name="amount" type="number" min="0" step="1" required placeholder="0" value="' + (cur.amount !== undefined ? Number(cur.amount) : '') + '"></label>'
+      + '  <label class="sr-df">โอกาสปิด (%)<input name="prob" type="number" min="0" max="100" value="' + (cur.prob !== undefined ? Number(cur.prob) : 40) + '"></label>'
       + '  <label class="sr-df">สินค้า<select name="product">' + prodOpts + '</select></label>'
       + '  <label class="sr-df">รูปแบบการซื้อ<select name="payment">' + payOpts + '</select></label>'
       + '  <label class="sr-df">ปีที่คาดว่าจะปิด<select name="year">' + yearOpts + '</select></label>'
       + '  <label class="sr-df">เดือนที่คาดว่าจะปิด<select name="month">' + monthOpts + '</select></label>'
-      + '  <label class="sr-df full">หมายเหตุ<input name="note" placeholder="รายละเอียด/เงื่อนไข (แสดงใน Reports)"></label>'
+      + '  <label class="sr-df full">หมายเหตุ<input name="note" placeholder="รายละเอียด/เงื่อนไข (แสดงใน Reports)" value="' + esc(cur.note || '') + '"></label>'
       + '</div>'
       + '<div class="sr-s2" style="margin-top:10px">ข้อมูลนี้จะถูกใช้ใน Reports · Dashboard · Customer Intelligence ทันที</div>'
       + '</form>';
 
-    global.setModal('เพิ่มดีลใหม่', 'กรอกข้อมูลให้ครบเพื่อให้รายงานคำนวณถูกต้อง', body, [
-      { label: 'ยกเลิก' },
-      { label: 'บันทึกดีล', icon: 'fa-solid fa-check', action: 'sr-save-deal', primary: true }
-    ], true);
+    global.setModal(d0 ? 'แก้ไขดีล' : 'เพิ่มดีลใหม่',
+      d0 ? (cur.customer + ' · ' + cur.no) : 'กรอกข้อมูลให้ครบเพื่อให้รายงานคำนวณถูกต้อง',
+      body, [
+        { label: 'ยกเลิก' },
+        { label: d0 ? 'บันทึกการแก้ไข' : 'บันทึกดีล', icon: 'fa-solid fa-check', action: 'sr-save-deal', primary: true }
+      ], true);
   }
 
   function saveDealForm() {

@@ -96,7 +96,7 @@
   </script>
   <script src="assets/auth-sheets.js?v=4"></script>
   <script src="assets/report-log.js?v=4"></script>
-  <script src="assets/sales-report.js?v=21"></script>
+  <script src="assets/sales-report.js?v=22"></script>
   <script src="assets/project-tracking.js?v=5"></script>
   <script src="assets/customer-intelligence.js?v=3"></script>
   <script src="assets/team-page.js?v=3"></script>
@@ -610,10 +610,10 @@
         list.forEach(function (d) {
           deals.push({
             id: d.id, name: d.name, customer: d.customer,
-            owner: d.ownerName || d.ownerEmail, team: '-',
+            owner: d.ownerName || d.ownerEmail, team: d.team || '-',
             value: Number(d.value || 0), stage: d.stage || 'Prospect',
             probability: Number(d.probability || 0), close: d.close || '',
-            lastActivity: (d.updatedAt || d.createdAt || '').slice(0, 10),
+            lastActivity: d.lastActivity || (d.updatedAt || d.createdAt || '').slice(0, 10),
             nextAction: d.nextAction || '', status: d.status || 'Healthy', activity: []
           });
         });
