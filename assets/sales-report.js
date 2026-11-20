@@ -78,12 +78,17 @@
     'chanphaphat.k@gmail.com': 'BU-DLAG',
     'sittharphon.1994@gmail.com': 'BU-SML'
   };
-  /** ทีมที่ผู้ใช้ปัจจุบันถูกล็อกสิทธิ์ (Head Team) — คืน '' ถ้าเป็น Admin/BU */
+  /** ทีมที่ผู้ใช้ปัจจุบันถูกล็อกสิทธิ์ (Head Team / Supervisor ที่กำหนดทีมไว้) — คืน '' ถ้าเป็น Admin/BU */
   function viewerTeam() {
     var me = global.__ME__ || {};
     var lvl = String(me.level || '').toLowerCase();
     if (lvLvlAdmin(lvl)) return '';
-    return TEAM_HEADS[String(me.email || '').toLowerCase()] || '';
+    var t = TEAM_HEADS[String(me.email || '').toLowerCase()] || '';
+    if (t) return t;
+    /* ทีม (BU) ที่กำหนดไว้ที่บัญชีผู้ใช้ — ใช้กับ Head / Supervisor */
+    var accTeam = String(me.team || '').toUpperCase();
+    if (accTeam && (lvl === 'bu' || lvl === 'head' || lvl === 'sup')) return accTeam;
+    return '';
   }
   function lvLvlAdmin(l) { return l === 'admin'; }
 

@@ -99,9 +99,9 @@
       document.head.appendChild(s);
     })();
   </script>
-  <script src="assets/auth-sheets.js?v=7"></script>
-  <script src="assets/report-log.js?v=10"></script>
-  <script src="assets/sales-report.js?v=34"></script>
+  <script src="assets/auth-sheets.js?v=8"></script>
+  <script src="assets/report-log.js?v=11"></script>
+  <script src="assets/sales-report.js?v=35"></script>
   <script src="assets/project-tracking.js?v=6"></script>
   <script src="assets/customer-intelligence.js?v=4"></script>
   <script src="assets/team-page.js?v=6"></script>
@@ -124,6 +124,8 @@
         name: String(rawMe.name || '').trim(),
         level: String(rawMe.level || 'viewer').toLowerCase(),
         saleId: String(rawMe.saleId || '').toUpperCase(),
+        team: String(rawMe.team || '').toUpperCase(),
+        team: String(rawMe.team || '').toUpperCase(),
         isAdmin: rawMe.isAdmin === true || String(rawMe.level || '').toLowerCase() === 'admin'
       };
 

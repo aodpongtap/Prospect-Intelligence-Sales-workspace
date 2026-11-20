@@ -64,9 +64,9 @@ function apiResponse_(p) {
     else if (action === 'login') out = login(p.email, p.password);
     else if (action === 'me') out = getMe(p.token);
     else if (action === 'users') out = getUsers(p.token);
-    else if (action === 'add') out = addUser(p.token, p.email, p.name, p.level, p.parent, p.saleId);
+    else if (action === 'add') out = addUser(p.token, p.email, p.name, p.level, p.parent, p.saleId, p.team);
     else if (action === 'reset') out = resetPassword(p.token, p.email);
-    else if (action === 'update') out = updateUser(p.token, p.email, p.level, p.status, p.parent, p.saleId, p.name);
+    else if (action === 'update') out = updateUser(p.token, p.email, p.level, p.status, p.parent, p.saleId, p.name, p.team);
     else if (action === 'remove') out = deleteUser(p.token, p.email);
     else if (action === 'deals') out = getDeals(p.token);
     else if (action === 'addDeal') out = addDeal(p.token, p.name, p.customer, p.value, p.stage, p.probability, p.close, p.nextAction, p.status);
@@ -142,8 +142,8 @@ function getSheet_() {
   var sh = ss.getSheetByName(SHEET_TAB);
   if (!sh) sh = ss.insertSheet(SHEET_TAB);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(['email', 'name', 'level', 'status', 'passHash', 'salt', 'createdAt', 'lastLogin', 'parent', 'saleId']);
-    sh.getRange('A1:J1').setFontWeight('bold');
+    sh.appendRow(['email', 'name', 'level', 'status', 'passHash', 'salt', 'createdAt', 'lastLogin', 'parent', 'saleId', 'team']);
+    sh.getRange('A1:K1').setFontWeight('bold');
     sh.setFrozenRows(1);
   } else if (String(sh.getRange('I1').getValue() || '') === '') {
     // อพยพข้อมูลเดิม: เพิ่มคอลัมน์ parent (ผู้ดูแลต้นสาย)
@@ -155,6 +155,11 @@ function getSheet_() {
     sh.getRange('J1').setValue('saleId');
     sh.getRange('A1:J1').setFontWeight('bold');
   }
+  if (String(sh.getRange('K1').getValue() || '') === '') {
+    // อพยพข้อมูลเดิม: เพิ่มคอลัมน์ team (ทีม/BU ที่สังกัด)
+    sh.getRange('K1').setValue('team');
+    sh.getRange('A1:K1').setFontWeight('bold');
+  }
   return sh;
 }
 
@@ -162,7 +167,7 @@ function readRows_() {
   var sh = getSheet_();
   var last = sh.getLastRow();
   if (last < 2) return [];
-  return sh.getRange(2, 1, last - 1, 10).getValues()
+  return sh.getRange(2, 1, last - 1, 11).getValues()
     .filter(function (r) { return String(r[0]).trim() !== ''; })
     .map(function (r) {
       return {
@@ -176,6 +181,7 @@ function readRows_() {
         lastLogin: r[7] ? String(r[7]) : '',
         parent: String(r[8] || '').trim().toLowerCase(),
         saleId: String(r[9] || '').trim().toUpperCase(),
+        team: String(r[10] || '').trim().toUpperCase(),
         row: null
       };
     });
@@ -218,7 +224,7 @@ function ensureSeed_() {
     var e = String(em).toLowerCase();
     if (existing.indexOf(e) < 0) {
       var salt = newSalt_();
-      sh.appendRow([e, '', 'admin', 'active', hash_(SEED_PASSWORD, salt), salt, new Date().toISOString(), '', '', '']);
+      sh.appendRow([e, '', 'admin', 'active', hash_(SEED_PASSWORD, salt), salt, new Date().toISOString(), '', '', '', '']);
     }
   });
   // Head Sale (L3) — ปรับระดับอัตโนมัติถ้ายังเป็น admin อยู่
@@ -385,15 +391,16 @@ function login(email, password) {
   sh.getRange(row, 8).setValue(new Date().toISOString());
   var token = Utilities.getUuid().replace(/-/g, '');
   var saleId = String(sh.getRange(row, 10).getValue() || '').trim().toUpperCase();
-  var data = { email: e, name: String(v[1] || ''), level: String(v[2] || 'viewer').toLowerCase(), saleId: saleId, exp: Date.now() + SESSION_TTL_MS };
+  var team = String(sh.getRange(row, 11).getValue() || '').trim().toUpperCase();
+  var data = { email: e, name: String(v[1] || ''), level: String(v[2] || 'viewer').toLowerCase(), saleId: saleId, team: team, exp: Date.now() + SESSION_TTL_MS };
   saveSession_(token, data);
-  return { ok: true, token: token, email: e, name: data.name, level: data.level, saleId: saleId };
+  return { ok: true, token: token, email: e, name: data.name, level: data.level, saleId: saleId, team: team };
 }
 
 function getMe(token) {
   var s = session_(token);
   if (!s) return { ok: false };
-  return { ok: true, email: s.email, name: s.name, level: s.level, saleId: s.saleId || '', isAdmin: isAdminLevel_(s.level) };
+  return { ok: true, email: s.email, name: s.name, level: s.level, saleId: s.saleId || '', team: s.team || '', isAdmin: isAdminLevel_(s.level) };
 }
 
 function logout(token) {
@@ -412,6 +419,7 @@ function publicUser_(r) {
     email: r.email, name: r.name, level: r.level, status: r.status,
     createdAt: r.createdAt, lastLogin: r.lastLogin, parent: r.parent || '',
     saleId: r.saleId || '',
+    team: r.team || '',
     levelLabel: LEVEL_LABELS[r.level] || r.level
   };
 }
@@ -449,7 +457,7 @@ function getUsers(token) {
   };
 }
 
-function addUser(token, email, name, level, parent, saleId) {
+function addUser(token, email, name, level, parent, saleId, team) {
   var s = session_(token);
   if (!s) throw new Error('กรุณาเข้าสู่ระบบใหม่');
   if (levelN_(s.level) > 4) throw new Error('เฉพาะ Admin / BU / Head Team / Supervisor เท่านั้นที่สร้าง ID ได้');
@@ -482,7 +490,9 @@ function addUser(token, email, name, level, parent, saleId) {
   var salt = newSalt_();
   var sid = String(saleId || '').trim().toUpperCase();
   if (sid && !/^S\d{2}$/.test(sid)) throw new Error('รหัสเซลส์ต้องอยู่ในรูป S01–S99');
-  getSheet_().appendRow([e, String(name || ''), lv, 'active', hash_(pw, salt), salt, new Date().toISOString(), '', p, sid]);
+  var tm = String(team || '').trim().toUpperCase();
+  if (tm.length > 30) throw new Error('ชื่อทีมยาวเกิน 30 ตัวอักษร');
+  getSheet_().appendRow([e, String(name || ''), lv, 'active', hash_(pw, salt), salt, new Date().toISOString(), '', p, sid, tm]);
 
   return { ok: true, email: e, password: pw, users: visibleUsers_(session_(token)).map(publicUser_) };
 }
@@ -513,7 +523,7 @@ function canManageTarget_(s, targetEmail) {
   return descendantsOf_(myEmail).some(function (r) { return r.email === targetEmail; });
 }
 
-function updateUser(token, email, level, status, parent, saleId, name) {
+function updateUser(token, email, level, status, parent, saleId, name, team) {
   var s = session_(token);
   if (!s || levelN_(s.level) > 4) throw new Error('เฉพาะ Admin / BU / Head Team / Supervisor เท่านั้น');
 
@@ -559,6 +569,11 @@ function updateUser(token, email, level, status, parent, saleId, name) {
     if (!nm) throw new Error('ชื่อต้องไม่ว่าง');
     if (nm.length > 60) throw new Error('ชื่อยาวเกิน 60 ตัวอักษร');
     sh.getRange(row, 2).setValue(nm);
+  }
+  if (team !== undefined && team !== null) {
+    var tm2 = String(team).trim().toUpperCase();
+    if (tm2.length > 30) throw new Error('ชื่อทีมยาวเกิน 30 ตัวอักษร');
+    sh.getRange(row, 11).setValue(tm2);
   }
   return { ok: true, users: visibleUsers_(s).map(publicUser_) };
 }

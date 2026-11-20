@@ -98,9 +98,10 @@
     });
   }
 
-  function addUser(email, name, level, parent, saleId) {
+  function addUser(email, name, level, parent, saleId, team) {
     var params = { token: token(), email: email, name: name, level: level, parent: parent || '' };
     if (saleId !== undefined && saleId !== null) params.saleId = String(saleId).trim().toUpperCase();
+    if (team !== undefined && team !== null) params.team = String(team).trim().toUpperCase();
     return call('add', params).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'เพิ่มผู้ใช้ไม่สำเร็จ');
       cache = r.users || cache;
@@ -115,10 +116,11 @@
     });
   }
 
-  function updateUser(email, level, status, parent, saleId, name) {
+  function updateUser(email, level, status, parent, saleId, name, team) {
     var params = { token: token(), email: email, level: level, status: status, parent: parent || '' };
     if (saleId !== undefined && saleId !== null) params.saleId = String(saleId).trim().toUpperCase();
     if (name !== undefined && name !== null) params.name = String(name).trim();
+    if (team !== undefined && team !== null) params.team = String(team).trim().toUpperCase();
     return call('update', params).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'อัปเดตไม่สำเร็จ');
       cache = r.users || cache;

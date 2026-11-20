@@ -18,7 +18,7 @@
 h1{font-size:20px;font-weight:600;color:var(--navy);margin:0}.subtitle{color:var(--muted);margin:4px 0 16px;font-size:12px}
 .panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(15,43,70,.07);padding:16px;margin-bottom:16px}
 .panel h3{margin:0 0 12px;font-size:14px;font-weight:500}
-.fg{display:grid;grid-template-columns:1.6fr 1.2fr 1fr auto;gap:9px;align-items:end}
+.fg{display:grid;grid-template-columns:1.3fr 1fr .9fr .85fr 1.05fr auto;gap:9px;align-items:end}
 label{display:block;font-size:10px;color:#475467;margin-bottom:5px}
 input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12px;background:#fff}
 .btn{border:1px solid var(--line);background:#fff;color:#344054;border-radius:8px;padding:8px 11px;font:inherit;font-size:11px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
@@ -29,7 +29,7 @@ th{font-size:10px;color:#667085;font-weight:500;background:#f8fafc;text-align:le
 td{padding:10px 12px;border-bottom:1px solid #eef1f5;font-size:12px;vertical-align:middle}
 tbody tr:hover{background:#fafcff}
 /* ความกว้างคอลัมน์ให้ตรงกัน (เปอร์เซ็นต์รวม + คอลัมน์ปุ่ม) */
-.c-email{width:18%}.c-name{width:13%}.c-level{width:12%}.c-parent{width:17%}.c-down{width:7%}.c-status{width:9%}.c-last{width:10%}.c-act{width:186px}
+.c-email{width:16%}.c-name{width:12%}.c-level{width:11%}.c-team{width:12%}.c-parent{width:15%}.c-down{width:6%}.c-status{width:9%}.c-last{width:9%}.c-act{width:186px}
 td.c-email>span{display:block;overflow-wrap:anywhere;line-height:1.4}
 td.c-name .name-wrap{display:flex;align-items:center;gap:5px;min-width:0}
 td.c-name .name-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -39,6 +39,7 @@ td.c-name .btn-pen:hover{background:#eff6ff;border-radius:5px}
 @media(max-width:760px){td.c-name .btn-pen{opacity:1}}
 td.c-parent{overflow-wrap:anywhere;line-height:1.4}
 td.c-level select{width:100%;padding:5px 6px;font-size:11px}
+td.c-team select{width:100%;padding:5px 6px;font-size:11px}
 th.c-down,td.c-down,th.c-status,td.c-status{text-align:center}
 td.c-down .pill{justify-content:center;min-width:52px;padding:2px 7px}
 td.c-status .on,td.c-status .off{display:inline-flex;align-items:center;gap:4px;justify-content:center;min-width:56px;font-size:11px}
@@ -94,6 +95,7 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
         <option value="agent">L6 · ตัวแทน / MCN</option>
       </select></div>
       <div><label for="parent">ผู้ดูแลต้นสาย (Upline) *</label><select id="parent"><option value="">— เลือก —</option></select></div>
+      <div><label for="team">ทีม (BU)</label><select id="team"><option value="">— ไม่ระบุ —</option></select></div>
       <div><button class="btn btn-primary" id="addBtn"><i class="fa-solid fa-user-plus"></i> เพิ่ม + สร้างรหัส</button></div>
     </div>
   </section>
@@ -108,8 +110,8 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th class="c-email">อีเมล</th><th class="c-name">ชื่อ</th><th class="c-level">ระดับสิทธิ์</th><th class="c-parent">ผู้ดูแลสาย</th><th class="c-down">ลูกข่าย</th><th class="c-status">สถานะ</th><th class="c-last">เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
-        <tbody id="tb"><tr><td colspan="8" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
+        <thead><tr><th class="c-email">อีเมล</th><th class="c-name">ชื่อ</th><th class="c-level">ระดับสิทธิ์</th><th class="c-team">ทีม (BU)</th><th class="c-parent">ผู้ดูแลสาย</th><th class="c-down">ลูกข่าย</th><th class="c-status">สถานะ</th><th class="c-last">เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
+        <tbody id="tb"><tr><td colspan="9" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -127,8 +129,8 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
   </section>
 </div>
 
-<script src="assets/auth-sheets.js?v=7"></script>
-<script src="assets/report-log.js?v=10"></script>
+<script src="assets/auth-sheets.js?v=8"></script>
+<script src="assets/report-log.js?v=11"></script>
 <script>
 var me = PIAuth.session();
 if (!me) { location.replace('login.html'); }
@@ -177,6 +179,30 @@ function lvlLabel(code) {
 function lvlN(code) {
   for (var i = 0; i < LVLS.length; i++) if (LVLS[i][0] === code) return i + 1;
   return LVLS.length;
+}
+
+/* รายชื่อทีม (BU): อ่านจาก Reports ที่เก็บในเครื่องนี้ + ทีมที่เคยกำหนดให้ผู้ใช้ */
+function teamOptions() {
+  var out = [];
+  function add(v) { v = String(v || '').trim().toUpperCase(); if (v && out.indexOf(v) < 0) out.push(v); }
+  try {
+    var a = JSON.parse(localStorage.getItem('pi_sr_teams_v1') || 'null');
+    if (Object.prototype.toString.call(a) === '[object Array]') a.forEach(function (t) { add(t && t.code); });
+  } catch (e) {}
+  (window.__USERS__ || []).forEach(function (u) { add(u.team); });
+  if (!out.length) { add('BU-DLAG'); add('BU-SML'); }
+  return out.sort();
+}
+
+function teamCell(u) {
+  var cur = String(u.team || '').toUpperCase();
+  var opts = teamOptions();
+  var html = '<select data-act="team" data-email="' + esc(u.email) + '" title="ทีม (BU) ที่สังกัด">'
+    + '<option value="">— ไม่ระบุ —</option>'
+    + opts.map(function (t) { return '<option value="' + esc(t) + '"' + (cur === t ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('')
+    + (cur && opts.indexOf(cur) < 0 ? '<option value="' + esc(cur) + '" selected>' + esc(cur) + '</option>' : '')
+    + '</select>';
+  return html;
 }
 
 function render(users) {
@@ -229,13 +255,14 @@ function render(users) {
       + '  <button class="btn-pen" data-act="rename" data-email="' + esc(u.email) + '" title="แก้ไขชื่อ-นามสกุล"><i class="fa-solid fa-pen"></i></button>'
       + '</div></td>'
       + '<td class="c-level">' + levelCell + '</td>'
+      + '<td class="c-team">' + (core ? '<span class="pill l-core">ทั้งหมด</span>' : teamCell(u)) + '</td>'
       + '<td class="c-parent" title="' + esc(parentEmail ? parentName + ' · ' + parentEmail : '-') + '">' + parentCell + '</td>'
       + '<td class="c-down">' + downCell + '</td>'
       + '<td class="c-status">' + statusCell + '</td>'
       + '<td class="c-last">' + fmt(u.lastLogin) + '</td>'
       + '<td class="c-act">' + acts + '</td></tr>';
   }).join('');
-  el('tb').innerHTML = rows || '<tr><td colspan="8" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
+  el('tb').innerHTML = rows || '<tr><td colspan="9" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
   refreshUplines();
   buildFilterOptions();
   applyFilters();
@@ -309,7 +336,18 @@ function refreshUplines() {
 }
 
 function load() {
+  fillTeamOptions();
   PIAuth.seed().then(function () { render(PIAuth.listUsers()); });
+}
+
+/** ตัวเลือกทีม (BU) ในฟอร์มสร้างผู้ใช้ */
+function fillTeamOptions() {
+  var sel = el('team');
+  if (!sel) return;
+  var cur = sel.value || '';
+  sel.innerHTML = '<option value="">— ไม่ระบุ —</option>' + teamOptions().map(function (t) {
+    return '<option value="' + esc(t) + '"' + (cur === t ? ' selected' : '') + '>' + esc(t) + '</option>';
+  }).join('');
 }
 
 el('addBtn').addEventListener('click', function () {
@@ -327,8 +365,9 @@ el('addBtn').addEventListener('click', function () {
   if (!pFound) return showMsg('ไม่พบผู้ดูแลต้นสายในระบบ', 'err');
   if (pn >= newN) return showMsg('ผู้ดูแลต้นสายต้องอยู่ระดับสูงกว่าระดับที่เลือก', 'err');
 
-  PIAuth.addUser(email, el('name').value.trim(), el('level').value, el('parent').value).then(function (res) {
+  PIAuth.addUser(email, el('name').value.trim(), el('level').value, el('parent').value, undefined, el('team') ? el('team').value : '').then(function (res) {
     el('email').value = ''; el('name').value = '';
+    if (el('team')) el('team').value = '';
     render(PIAuth.listUsers());
     showPw(res.email, res.password);
     showMsg('เพิ่มผู้ใช้และสร้างรหัสผ่านแล้ว', 'ok');
@@ -409,6 +448,16 @@ function moveParent(email) {
 el('level').addEventListener('change', refreshUplines);
 
 el('tb').addEventListener('change', function (e) {
+  var teamSel = e.target.closest('[data-act="team"]');
+  if (teamSel) {
+    var mail = teamSel.dataset.email;
+    PIAuth.updateUser(mail, '', '', '', undefined, undefined, teamSel.value).then(function () {
+      if (window.PILog) { try { window.PILog.add('user.edit', mail, teamSel.value ? 'กำหนดทีม ' + teamSel.value : 'ยกเลิกการกำหนดทีม'); } catch (err) {} }
+      render(PIAuth.listUsers());
+      showMsg(teamSel.value ? 'กำหนดทีม ' + teamSel.value + ' ให้ ' + mail + ' แล้ว' : 'ยกเลิกทีมของ ' + mail, 'ok');
+    }).catch(function (err) { showMsg(err.message || String(err), 'err'); load(); });
+    return;
+  }
   var sel = e.target.closest('[data-act="level"]');
   if (!sel) return;
   PIAuth.updateUser(sel.dataset.email, sel.value, '').then(function () {
