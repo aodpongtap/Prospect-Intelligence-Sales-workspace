@@ -181,16 +181,17 @@ function lvlN(code) {
   return LVLS.length;
 }
 
-/* รายชื่อทีม (BU): อ่านจาก Reports ที่เก็บในเครื่องนี้ + ทีมที่เคยกำหนดให้ผู้ใช้ */
+/* รายชื่อทีม (BU) — รวม 3 แหล่ง: ทีมพื้นฐาน + ทีมที่สร้างใน Reports + ทีมที่เคยกำหนดให้ผู้ใช้ */
+var BASE_TEAMS = ['BU-DLAG', 'BU-SML'];
 function teamOptions() {
   var out = [];
   function add(v) { v = String(v || '').trim().toUpperCase(); if (v && out.indexOf(v) < 0) out.push(v); }
+  BASE_TEAMS.forEach(add);
   try {
     var a = JSON.parse(localStorage.getItem('pi_sr_teams_v1') || 'null');
     if (Object.prototype.toString.call(a) === '[object Array]') a.forEach(function (t) { add(t && t.code); });
   } catch (e) {}
   (window.__USERS__ || []).forEach(function (u) { add(u.team); });
-  if (!out.length) { add('BU-DLAG'); add('BU-SML'); }
   return out.sort();
 }
 
@@ -263,6 +264,7 @@ function render(users) {
       + '<td class="c-act">' + acts + '</td></tr>';
   }).join('');
   el('tb').innerHTML = rows || '<tr><td colspan="9" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
+  fillTeamOptions();
   refreshUplines();
   buildFilterOptions();
   applyFilters();
