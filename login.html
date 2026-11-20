@@ -130,12 +130,13 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(37,99,235,.13);
 .divider{display:flex;align-items:center;gap:9px;color:#98A2B3;font-size:10px;margin:18px 0 12px}
 .divider::before,.divider::after{content:"";height:1px;background:var(--line);flex:1}
 
-.help{display:flex;align-items:flex-start;gap:10px;background:#F8FAFC;border:1px solid #EEF2F7;border-radius:11px;padding:10px 12px}
-.help i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:#EFF6FF;color:var(--blue);font-size:11px;flex:0 0 26px;margin-top:1px}
-.help b{display:block;font-size:11px;color:var(--navy);font-weight:500}
-.help span{font-size:10px;color:var(--muted)}
-.help-copy{min-width:0;flex:1 1 auto;display:flex;flex-direction:column;gap:1px}
-.help-forgot{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--blue);margin-top:3px;align-self:flex-start}
+.help{display:flex;flex-direction:column;gap:7px;background:#F8FAFC;border:1px solid #EEF2F7;border-radius:11px;padding:11px 13px}
+.help-head{display:flex;align-items:center;gap:8px}
+.help-head i{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;background:#EFF6FF;color:var(--blue);font-size:10.5px;flex:0 0 24px}
+.help-head b{font-size:11px;color:var(--navy);font-weight:500}
+.help-row{display:flex;align-items:center;justify-content:space-between;gap:8px 10px;flex-wrap:wrap;padding-left:32px}
+.help-mail{font-size:10.5px;color:#475467}
+.help-forgot{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--blue)}
 .help-forgot i{font-size:9px}
 .help-forgot:hover{text-decoration:underline}
 .help-forgot:hover{text-decoration:underline}
@@ -231,10 +232,9 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(37,99,235,.13);
 
     <div class="divider">ต้องการความช่วยเหลือ?</div>
     <div class="help">
-      <i class="fa-solid fa-headset"></i>
-      <div class="help-copy">
-        <b>ติดต่อผู้ดูแลระบบ</b>
-        <span id="helpMail">Pongtap.p@tsrplc.com</span>
+      <div class="help-head"><i class="fa-solid fa-headset"></i><b>ติดต่อผู้ดูแลระบบ</b></div>
+      <div class="help-row">
+        <span class="help-mail" id="helpMail">Pongtap.p@tsrplc.com</span>
         <a class="help-forgot" href="mailto:Pongtap.p@tsrplc.com?subject=ขอรีเซ็ตรหัสผ่าน%20Prospect%20Intelligence">
           <i class="fa-solid fa-key"></i> ลืมรหัสผ่าน? ส่งคำขอรีเซ็ต
         </a>
