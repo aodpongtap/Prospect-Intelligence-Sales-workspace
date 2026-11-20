@@ -1877,7 +1877,11 @@
       + '.sr-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}'
       + '.sr-card-val{font-size:16px}.sr-chartbox{height:250px}'
       + '.sr-md-grid{grid-template-columns:1fr 1fr}.sr-head h1{font-size:18px}}'
-      + '@media(max-width:480px){.sr-filters{grid-template-columns:1fr}.sr-card{padding:11px}'
+      + '@media(max-width:480px){.sr-filters{grid-template-columns:1fr 1fr;gap:7px;padding:9px}'
+      + '.sr-fl label{font-size:9.5px}.sr-filters select,.sr-filters input{font-size:11px;padding:7px 8px}'
+      + '.sr-fbtn{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:7px}'
+      + '.sr-btn{font-size:10.5px;padding:8px 9px;justify-content:center}'
+      + '.sr-card{padding:11px}'
       + '.sr-card-val{font-size:15px}.sr-card-top{font-size:9px;min-height:26px}'
       + '.sr-md-grid{grid-template-columns:1fr}}';
     var el = document.createElement('style');
