@@ -31,7 +31,12 @@ tbody tr:hover{background:#fafcff}
 /* ความกว้างคอลัมน์ให้ตรงกัน (เปอร์เซ็นต์รวม + คอลัมน์ปุ่ม) */
 .c-email{width:18%}.c-name{width:13%}.c-level{width:12%}.c-parent{width:17%}.c-down{width:7%}.c-status{width:9%}.c-last{width:10%}.c-act{width:186px}
 td.c-email>span{display:block;overflow-wrap:anywhere;line-height:1.4}
-td.c-name{overflow-wrap:anywhere;line-height:1.4}
+td.c-name .name-wrap{display:flex;align-items:center;gap:5px;min-width:0}
+td.c-name .name-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.c-name .btn-pen{border:0;background:transparent;color:var(--blue);cursor:pointer;font-size:10px;padding:2px 3px;opacity:0;flex:0 0 auto}
+tbody tr:hover td.c-name .btn-pen{opacity:1}
+td.c-name .btn-pen:hover{background:#eff6ff;border-radius:5px}
+@media(max-width:760px){td.c-name .btn-pen{opacity:1}}
 td.c-parent{overflow-wrap:anywhere;line-height:1.4}
 td.c-level select{width:100%;padding:5px 6px;font-size:11px}
 th.c-down,td.c-down,th.c-status,td.c-status{text-align:center}
@@ -241,9 +246,10 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
     });
   }
 
-  function updateUser(email, level, status, parent, saleId) {
+  function updateUser(email, level, status, parent, saleId, name) {
     var params = { token: token(), email: email, level: level, status: status, parent: parent || '' };
     if (saleId !== undefined && saleId !== null) params.saleId = String(saleId).trim().toUpperCase();
+    if (name !== undefined && name !== null) params.name = String(name).trim();
     return call('update', params).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'อัปเดตไม่สำเร็จ');
       cache = r.users || cache;
@@ -254,6 +260,14 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
           setSession(me);
         }
         try { if (window.__ME__) window.__ME__.saleId = params.saleId; } catch (e) {}
+      }
+      if (params.name !== undefined) {
+        var me2 = getSession();
+        if (me2 && String(me2.email || '').toLowerCase() === String(email || '').toLowerCase()) {
+          me2.name = params.name;
+          setSession(me2);
+        }
+        try { if (window.__ME__) window.__ME__.name = params.name; } catch (e) {}
       }
       return { ok: true };
     });
@@ -321,7 +335,7 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
 })(window);
 
 </script>
-<script src="assets/report-log.js?v=9"></script>
+<script src="assets/report-log.js?v=10"></script>
 <script>
 var me = PIAuth.session();
 if (!me) { location.replace('login.html'); }
@@ -417,7 +431,10 @@ function render(users) {
       '</div>';
     return '<tr data-search="' + esc(((u.name || '') + ' ' + u.email).toLowerCase()) + '" data-level="' + esc(u.level) + '" data-parent="' + esc(u.parent || '') + '">'
       + '<td class="c-email" title="' + esc(u.email) + '"><span>' + esc(u.email) + '</span></td>'
-      + '<td class="c-name" title="' + esc(u.name || u.email) + '">' + (esc(u.name || '') || '<span class="muted">ยังไม่ระบุชื่อ</span>') + '</td>'
+      + '<td class="c-name" title="' + esc(u.name || u.email) + '"><div class="name-wrap">'
+      + '  <span class="name-txt">' + (esc(u.name || '') || '<span class="muted">ยังไม่ระบุชื่อ</span>') + '</span>'
+      + '  <button class="btn-pen" data-act="rename" data-email="' + esc(u.email) + '" title="แก้ไขชื่อ-นามสกุล"><i class="fa-solid fa-pen"></i></button>'
+      + '</div></td>'
       + '<td class="c-level">' + levelCell + '</td>'
       + '<td class="c-parent" title="' + esc(parentEmail ? parentName + ' · ' + parentEmail : '-') + '">' + parentCell + '</td>'
       + '<td class="c-down">' + downCell + '</td>'
@@ -525,6 +542,42 @@ el('addBtn').addEventListener('click', function () {
   }).catch(function (e) { showMsg(e.message || String(e), 'err'); });
 });
 
+/** แก้ไขชื่อ-นามสกุลของผู้ใช้ */
+function renameUser(email) {
+  var u = null;
+  (window.__USERS__ || []).forEach(function (x) { if (x.email === email) u = x; });
+  if (!u) return;
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);display:grid;place-items:center;z-index:99;padding:16px';
+  wrap.innerHTML = '<div style="background:#fff;border-radius:14px;padding:20px;width:min(440px,100%);font-family:Prompt,sans-serif">'
+    + '<h3 style="margin:0 0 4px;color:#0F2B46;font-size:15px">แก้ไขชื่อผู้ใช้</h3>'
+    + '<div style="color:#667085;font-size:11.5px;margin-bottom:12px">' + esc(email) + ' · ' + lvlLabel(u.level) + '</div>'
+    + '<label style="font-size:11px;color:#475467">ชื่อ-นามสกุล</label>'
+    + '<input id="rnName" maxlength="60" placeholder="เช่น สมชาย ใจดี" value="' + esc(u.name || '') + '" style="width:100%;margin:5px 0 6px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px;font-family:inherit;font-size:12px">'
+    + '<div style="font-size:10.5px;color:#98A2B3;margin:0 0 14px">ใช้แสดงใน Reports / Dashboard และใช้จับคู่กับรายชื่อเซลส์</div>'
+    + '<div style="display:flex;justify-content:flex-end;gap:8px">'
+    + '<button class="btn" id="rnCancel">ยกเลิก</button>'
+    + '<button class="btn btn-primary" id="rnOk"><i class="fa-solid fa-check"></i> บันทึก</button></div></div>';
+  document.body.appendChild(wrap);
+  var inp = document.getElementById('rnName');
+  setTimeout(function () { inp.focus(); inp.select(); }, 60);
+  function close() { if (wrap.parentNode) document.body.removeChild(wrap); }
+  wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
+  document.getElementById('rnCancel').addEventListener('click', close);
+  document.getElementById('rnOk').addEventListener('click', function () {
+    var nm = inp.value.trim();
+    if (!nm) { showMsg('กรอกชื่อก่อน', 'err'); inp.focus(); return; }
+    var old = u.name || '';
+    PIAuth.updateUser(email, '', '', '', undefined, nm).then(function () {
+      if (window.PILog) { try { window.PILog.add('user.edit', email, 'เปลี่ยนชื่อ: ' + (old || '—') + ' → ' + nm); } catch (e) {} }
+      close();
+      render(PIAuth.listUsers());
+      showMsg('บันทึกชื่อแล้ว', 'ok');
+    }).catch(function (e) { showMsg(e.message || String(e), 'err'); });
+  });
+  inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('rnOk').click(); } });
+}
+
 /** ย้ายสายงาน: เลือกผู้ดูแลใหม่ได้เฉพาะที่อยู่สูงกว่า และไม่ใช่ตัวเอง/ลูกข่ายตัวเอง (กัน loop) */
 function moveParent(email) {
   var target = null;
@@ -576,6 +629,7 @@ el('tb').addEventListener('click', function (e) {
   var act = btn.dataset.act, email = btn.dataset.email;
 
   if (act === 'move') { moveParent(email); return; }
+  if (act === 'rename') { renameUser(email); return; }
   if (act === 'reset') {
     PIAuth.resetPassword(email).then(function (res) {
       showPw(res.email, res.password); showMsg('รีเซ็ตรหัสผ่านแล้ว', 'ok');

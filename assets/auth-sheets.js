@@ -115,9 +115,10 @@
     });
   }
 
-  function updateUser(email, level, status, parent, saleId) {
+  function updateUser(email, level, status, parent, saleId, name) {
     var params = { token: token(), email: email, level: level, status: status, parent: parent || '' };
     if (saleId !== undefined && saleId !== null) params.saleId = String(saleId).trim().toUpperCase();
+    if (name !== undefined && name !== null) params.name = String(name).trim();
     return call('update', params).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'อัปเดตไม่สำเร็จ');
       cache = r.users || cache;
@@ -128,6 +129,14 @@
           setSession(me);
         }
         try { if (window.__ME__) window.__ME__.saleId = params.saleId; } catch (e) {}
+      }
+      if (params.name !== undefined) {
+        var me2 = getSession();
+        if (me2 && String(me2.email || '').toLowerCase() === String(email || '').toLowerCase()) {
+          me2.name = params.name;
+          setSession(me2);
+        }
+        try { if (window.__ME__) window.__ME__.name = params.name; } catch (e) {}
       }
       return { ok: true };
     });

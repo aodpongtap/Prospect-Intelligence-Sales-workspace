@@ -66,7 +66,7 @@ function apiResponse_(p) {
     else if (action === 'users') out = getUsers(p.token);
     else if (action === 'add') out = addUser(p.token, p.email, p.name, p.level, p.parent, p.saleId);
     else if (action === 'reset') out = resetPassword(p.token, p.email);
-    else if (action === 'update') out = updateUser(p.token, p.email, p.level, p.status, p.parent, p.saleId);
+    else if (action === 'update') out = updateUser(p.token, p.email, p.level, p.status, p.parent, p.saleId, p.name);
     else if (action === 'remove') out = deleteUser(p.token, p.email);
     else if (action === 'deals') out = getDeals(p.token);
     else if (action === 'addDeal') out = addDeal(p.token, p.name, p.customer, p.value, p.stage, p.probability, p.close, p.nextAction, p.status);
@@ -513,7 +513,7 @@ function canManageTarget_(s, targetEmail) {
   return descendantsOf_(myEmail).some(function (r) { return r.email === targetEmail; });
 }
 
-function updateUser(token, email, level, status, parent, saleId) {
+function updateUser(token, email, level, status, parent, saleId, name) {
   var s = session_(token);
   if (!s || levelN_(s.level) > 4) throw new Error('เฉพาะ Admin / BU / Head Team / Supervisor เท่านั้น');
 
@@ -553,6 +553,12 @@ function updateUser(token, email, level, status, parent, saleId) {
     var sid = String(saleId).trim().toUpperCase();
     if (sid && !/^S\d{2}$/.test(sid)) throw new Error('รหัสเซลส์ต้องอยู่ในรูป S01–S99');
     sh.getRange(row, 10).setValue(sid);
+  }
+  if (name !== undefined && name !== null) {
+    var nm = String(name).trim();
+    if (!nm) throw new Error('ชื่อต้องไม่ว่าง');
+    if (nm.length > 60) throw new Error('ชื่อยาวเกิน 60 ตัวอักษร');
+    sh.getRange(row, 2).setValue(nm);
   }
   return { ok: true, users: visibleUsers_(s).map(publicUser_) };
 }
