@@ -77,16 +77,16 @@
   function login(email, password) {
     return call('login', { email: email, password: password }).then(function (r) {
       if (!r || !r.ok) return { ok: false, error: (r && r.error) || 'เข้าสู่ระบบไม่สำเร็จ' };
-      setSession({ email: r.email, name: r.name || '', level: r.level, token: r.token });
+      setSession({ email: r.email, name: r.name || '', level: r.level, token: r.token, saleId: r.saleId || '' });
       if (window.PILog) {
         try {
           var prevMe = window.__ME__;
-          window.__ME__ = { email: r.email, name: r.name || '', level: r.level };
+          window.__ME__ = { email: r.email, name: r.name || '', level: r.level, saleId: r.saleId || '' };
           window.PILog.add('auth.login', r.email, 'เข้าสู่ระบบสำเร็จ · สิทธิ์ ' + String(r.level || '').toUpperCase());
           window.__ME__ = prevMe;
         } catch (e) {}
       }
-      return { ok: true, user: { email: r.email, name: r.name, level: r.level } };
+      return { ok: true, user: { email: r.email, name: r.name, level: r.level, saleId: r.saleId || '' } };
     });
   }
 
@@ -113,10 +113,20 @@
     });
   }
 
-  function updateUser(email, level, status, parent) {
-    return call('update', { token: token(), email: email, level: level, status: status, parent: parent || '' }).then(function (r) {
+  function updateUser(email, level, status, parent, saleId) {
+    var params = { token: token(), email: email, level: level, status: status, parent: parent || '' };
+    if (saleId !== undefined && saleId !== null) params.saleId = String(saleId).trim().toUpperCase();
+    return call('update', params).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'อัปเดตไม่สำเร็จ');
       cache = r.users || cache;
+      if (params.saleId !== undefined) {
+        var me = getSession();
+        if (me && String(me.email || '').toLowerCase() === String(email || '').toLowerCase()) {
+          me.saleId = params.saleId;
+          setSession(me);
+        }
+        try { if (window.__ME__) window.__ME__.saleId = params.saleId; } catch (e) {}
+      }
       return { ok: true };
     });
   }

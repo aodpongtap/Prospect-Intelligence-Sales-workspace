@@ -24,7 +24,7 @@
     'task.edit':   { label: 'แก้ไขงานย่อย',   color: '#2563EB', icon: 'fa-solid fa-pen' },
     'task.del':    { label: 'ลบงานย่อย',       color: '#DC2626', icon: 'fa-solid fa-trash' },
     'user.add':    { label: 'ลงทะเบียนผู้ใช้', color: '#16A34A', icon: 'fa-solid fa-user-plus' },
-    'user.map':    { label: 'ผูกบัญชีกับเซลส์', color: '#7C3AED', icon: 'fa-solid fa-link' },
+    'user.sale':   { label: 'กำหนดเซลส์ให้บัญชี', color: '#7C3AED', icon: 'fa-solid fa-link' },
     'user.del':    { label: 'ลบผู้ใช้',         color: '#DC2626', icon: 'fa-solid fa-user-minus' },
     'auth.login':  { label: 'เข้าสู่ระบบ',     color: '#64748B', icon: 'fa-solid fa-right-to-bracket' },
     'export':      { label: 'ส่งออกข้อมูล',    color: '#0F2B46', icon: 'fa-solid fa-file-excel' }

@@ -136,18 +136,6 @@
     } catch (e) { global.__SCOPE_FETCHING__ = false; }
   }
 
-  /** ตารางผูกบัญชีผู้ใช้กับเซลส์ (เก็บในเครื่องนี้) */
-  var LS_SALE_MAP = 'pi_sale_map_v1';
-  function saleMap() {
-    try {
-      var o = JSON.parse(localStorage.getItem(LS_SALE_MAP) || 'null');
-      return (o && typeof o === 'object') ? o : {};
-    } catch (e) { return {}; }
-  }
-  function saveSaleMap(o) {
-    try { localStorage.setItem(LS_SALE_MAP, JSON.stringify(o)); } catch (e) {}
-  }
-
   /** ขอบเขตข้อมูลของผู้ใช้ปัจจุบัน: all | team | sale | none */
   function scopeOf() {
     var me = global.__ME__ || {};
@@ -169,10 +157,6 @@
       for (var j = 0; j < SALES.length; j++) if (SALES[j].id === sid) return { type: 'sale', saleId: SALES[j].id };
     }
     /* 1.5) ตารางผูกบัญชี → เซลส์ ที่ Admin ตั้งไว้ในหน้า Reports */
-    var mapped = saleMap()[mail];
-    if (mapped) {
-      for (var k = 0; k < SALES.length; k++) if (SALES[k].id === mapped) return { type: 'sale', saleId: SALES[k].id };
-    }
     /* 2) ผูกด้วยชื่อ (ตัดช่องว่าง/ตัวอักษรพิเศษออกก่อนเทียบ) */
     var norm = function (v) { return String(v || '').replace(/[\s\u200B\u00A0]+/g, '').trim(); };
     var nm = norm(me.name);
@@ -915,11 +899,6 @@
       + '</section>';
   }
 
-  /** (ย้ายไปหน้า ทีม & สิทธิ์ แล้ว) */
-
-  /** ผูกบัญชีผู้ใช้ ↔ เซลส์ — ย้ายไปอยู่หน้า “ทีม & สิทธิ์” (เมนูจัดการสิทธิ์) */
-  function renderSaleMap() { return ''; }
-
   /* ---------- Dashboard (เวอร์ชันย่อของ Reports — ใช้สูตร/ข้อมูลชุดเดียวกัน) ---------- */
   function renderDashboard() {
     injectCss();
@@ -1626,19 +1605,7 @@
       return;
     }
     var sel = e.target.closest && e.target.closest('[data-sr-filter]');
-    if (!sel) {
-      var mp = e.target.closest && e.target.closest('[data-sr-map]');
-      if (mp) {
-        var mail = mp.getAttribute('data-sr-map');
-        var m = saleMap();
-        if (mp.value) m[mail] = mp.value; else delete m[mail];
-        saveSaleMap(m);
-        if (global.PILog) global.PILog.add('user.map', mail, mp.value ? 'ผูกกับเซลส์ ' + mp.value : 'ยกเลิกการผูก');
-        if (typeof global.toast === 'function') global.toast(mp.value ? 'ผูก ' + mail + ' → ' + mp.value + ' แล้ว' : 'ยกเลิกการผูก ' + mail);
-        if (typeof global.render === 'function') global.render();
-      }
-      return;
-    }
+    if (!sel) return;
     var key = sel.getAttribute('data-sr-filter');
     state[key] = (key === 'year' || key === 'month') ? Number(sel.value || 0) : sel.value;
     if (typeof global.render === 'function') global.render();
@@ -1768,29 +1735,6 @@
       + '.sr-fc-chip small{display:block;font-size:9px;color:#98A2B3}'
       + '.sr-fc-chip b{font-size:10.5px;color:#0F2B46;font-variant-numeric:tabular-nums}'
       + '.sr-fc-chip-empty{background:#FCFDFE;border-style:dashed;border-left-color:#E2E8F0!important;opacity:.75}'
-      + '.sr-map{margin-top:14px;border-top:1px dashed #E9EEF5;padding-top:12px}'
-      + '.sr-map-h{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;color:#0F2B46;margin-bottom:9px;flex-wrap:wrap}'
-      + '.sr-map-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F4F7FB;flex-wrap:wrap}'
-      + '.sr-map-who{min-width:200px;flex:1}'
-      + '.sr-map-who b{display:block;font-size:11px;color:#0F2B46}'
-      + '.sr-map-who span{font-size:9.5px;color:#98A2B3}'
-      + '.sr-map-sel{border:1px solid #DCE3EB;border-radius:8px;padding:6px 8px;font:inherit;font-size:10.5px;color:#0F2B46;background:#fff;min-width:190px}'
-      + '.sr-map-auto{font-size:9.5px;color:#98A2B3;min-width:96px}'
-      + '.sr-map-auto.ok{color:#16A34A}'
-      + '.sr-map-auto.warn{color:#B54708}'
-      + '@media(max-width:560px){.sr-map-sel{width:100%;min-width:0}}'
-      /* ผูกบัญชี ↔ เซลส์ */
-      + '.sr-map{margin-top:14px;border-top:1px dashed #E9EEF5;padding-top:12px}'
-      + '.sr-map-h{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;color:#0F2B46;margin-bottom:9px;flex-wrap:wrap}'
-      + '.sr-map-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F4F7FB;flex-wrap:wrap}'
-      + '.sr-map-who{min-width:200px;flex:1}'
-      + '.sr-map-who b{display:block;font-size:11px;color:#0F2B46}'
-      + '.sr-map-who span{font-size:9.5px;color:#98A2B3}'
-      + '.sr-map-sel{border:1px solid #DCE3EB;border-radius:8px;padding:6px 8px;font:inherit;font-size:10.5px;color:#0F2B46;background:#fff;min-width:190px}'
-      + '.sr-map-auto{font-size:9.5px;color:#98A2B3;min-width:96px}'
-      + '.sr-map-auto.ok{color:#16A34A}'
-      + '.sr-map-auto.warn{color:#B54708}'
-      + '@media(max-width:560px){.sr-map-sel{width:100%;min-width:0}}'
       + '.sr-fc-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:9px;padding-top:8px;border-top:1px dashed #EEF2F7;font-size:9.5px;color:#667085}'
       + '.sr-fc-fc{color:#2563EB;font-weight:500}'
       + '.sr-fc-other{color:#98A2B3;text-align:right}'

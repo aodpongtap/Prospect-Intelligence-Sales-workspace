@@ -29,11 +29,12 @@ th{font-size:10px;color:#667085;font-weight:500;background:#f8fafc;text-align:le
 td{padding:10px 12px;border-bottom:1px solid #eef1f5;font-size:12px;vertical-align:middle}
 tbody tr:hover{background:#fafcff}
 /* ความกว้างคอลัมน์ให้ตรงกัน (เปอร์เซ็นต์รวม + คอลัมน์ปุ่ม) */
-.c-email{width:18%}.c-name{width:13%}.c-level{width:12%}.c-parent{width:17%}.c-down{width:7%}.c-status{width:9%}.c-last{width:10%}.c-act{width:186px}
+.c-email{width:16%}.c-name{width:12%}.c-level{width:11%}.c-sale{width:12%}.c-parent{width:15%}.c-down{width:6%}.c-status{width:9%}.c-last{width:9%}.c-act{width:186px}
 td.c-email>span{display:block;overflow-wrap:anywhere;line-height:1.4}
 td.c-name{overflow-wrap:anywhere;line-height:1.4}
 td.c-parent{overflow-wrap:anywhere;line-height:1.4}
 td.c-level select{width:100%;padding:5px 6px;font-size:11px}
+td.c-sale select{width:100%;padding:5px 6px;font-size:11px}
 th.c-down,td.c-down,th.c-status,td.c-status{text-align:center}
 td.c-down .pill{justify-content:center;min-width:52px;padding:2px 7px}
 td.c-status .on,td.c-status .off{display:inline-flex;align-items:center;gap:4px;justify-content:center;min-width:56px;font-size:11px}
@@ -103,8 +104,8 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th class="c-email">อีเมล</th><th class="c-name">ชื่อ</th><th class="c-level">ระดับสิทธิ์</th><th class="c-parent">ผู้ดูแลสาย</th><th class="c-down">ลูกข่าย</th><th class="c-status">สถานะ</th><th class="c-last">เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
-        <tbody id="tb"><tr><td colspan="8" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
+        <thead><tr><th class="c-email">อีเมล</th><th class="c-name">ชื่อ</th><th class="c-level">ระดับสิทธิ์</th><th class="c-sale">เซลส์</th><th class="c-parent">ผู้ดูแลสาย</th><th class="c-down">ลูกข่าย</th><th class="c-status">สถานะ</th><th class="c-last">เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
+        <tbody id="tb"><tr><td colspan="9" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -203,16 +204,16 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
   function login(email, password) {
     return call('login', { email: email, password: password }).then(function (r) {
       if (!r || !r.ok) return { ok: false, error: (r && r.error) || 'เข้าสู่ระบบไม่สำเร็จ' };
-      setSession({ email: r.email, name: r.name || '', level: r.level, token: r.token });
+      setSession({ email: r.email, name: r.name || '', level: r.level, token: r.token, saleId: r.saleId || '' });
       if (window.PILog) {
         try {
           var prevMe = window.__ME__;
-          window.__ME__ = { email: r.email, name: r.name || '', level: r.level };
+          window.__ME__ = { email: r.email, name: r.name || '', level: r.level, saleId: r.saleId || '' };
           window.PILog.add('auth.login', r.email, 'เข้าสู่ระบบสำเร็จ · สิทธิ์ ' + String(r.level || '').toUpperCase());
           window.__ME__ = prevMe;
         } catch (e) {}
       }
-      return { ok: true, user: { email: r.email, name: r.name, level: r.level } };
+      return { ok: true, user: { email: r.email, name: r.name, level: r.level, saleId: r.saleId || '' } };
     });
   }
 
@@ -239,10 +240,20 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
     });
   }
 
-  function updateUser(email, level, status, parent) {
-    return call('update', { token: token(), email: email, level: level, status: status, parent: parent || '' }).then(function (r) {
+  function updateUser(email, level, status, parent, saleId) {
+    var params = { token: token(), email: email, level: level, status: status, parent: parent || '' };
+    if (saleId !== undefined && saleId !== null) params.saleId = String(saleId).trim().toUpperCase();
+    return call('update', params).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'อัปเดตไม่สำเร็จ');
       cache = r.users || cache;
+      if (params.saleId !== undefined) {
+        var me = getSession();
+        if (me && String(me.email || '').toLowerCase() === String(email || '').toLowerCase()) {
+          me.saleId = params.saleId;
+          setSession(me);
+        }
+        try { if (window.__ME__) window.__ME__.saleId = params.saleId; } catch (e) {}
+      }
       return { ok: true };
     });
   }
@@ -309,7 +320,7 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
 })(window);
 
 </script>
-<script src="assets/report-log.js?v=5"></script>
+<script src="assets/report-log.js?v=6"></script>
 <script>
 var me = PIAuth.session();
 if (!me) { location.replace('login.html'); }
@@ -360,6 +371,15 @@ function lvlN(code) {
   return LVLS.length;
 }
 
+/* รายชื่อเซลส์ในระบบ (S01–S05) — ใช้ผูกบัญชีผู้ใช้กับเจ้าของดีล */
+var SALES = [
+  { id: 'S01', name: 'ณัฐพงษ์ ศรีสุข' },
+  { id: 'S02', name: 'พิมพ์ชนก วัฒนกุล' },
+  { id: 'S03', name: 'ธนกร ใจดี' },
+  { id: 'S04', name: 'อรทัย บุญมาก' },
+  { id: 'S05', name: 'กิตติพงษ์ แก้วประเสริฐ' }
+];
+
 function render(users) {
   window.__USERS__ = users || [];
   el('count').textContent = users.length;
@@ -394,6 +414,15 @@ function render(users) {
     var statusCell = u.status === 'disabled'
       ? '<span class="off"><i class="fa-solid fa-circle-xmark"></i> ปิด</span>'
       : '<span class="on"><i class="fa-solid fa-circle-check"></i> ใช้งาน</span>';
+    var curSale = String(u.saleId || '').toUpperCase();
+    var saleCell = '<select data-act="sale" data-email="' + esc(u.email) + '" title="เซลส์ที่บัญชีนี้เห็นข้อมูล">'
+      + '<option value="">— ไม่ผูก —</option>'
+      + SALES.map(function (s) {
+        return '<option value="' + s.id + '"' + (curSale === s.id ? ' selected' : '') + '>' + s.id + ' · ' + esc(s.name) + '</option>';
+      }).join('')
+      + (curSale && !SALES.some(function (s) { return s.id === curSale; })
+        ? '<option value="' + esc(curSale) + '" selected>' + esc(curSale) + '</option>' : '')
+      + '</select>';
     var acts = '<div class="acts">' +
       '<a class="btn" href="index.html?page=team&focus=' + encodeURIComponent(u.email) + '" target="_blank" title="ดูสายงาน"><i class="fa-solid fa-sitemap"></i></a>' +
       (core ? '' : '<button class="btn" data-act="move" data-email="' + esc(u.email) + '" title="ย้ายสายงาน (เปลี่ยนผู้ดูแล)"><i class="fa-solid fa-arrows-turn-to-dots"></i></button>') +
@@ -407,13 +436,14 @@ function render(users) {
       + '<td class="c-email" title="' + esc(u.email) + '"><span>' + esc(u.email) + '</span></td>'
       + '<td class="c-name" title="' + esc(u.name || u.email) + '">' + (esc(u.name || '') || '<span class="muted">ยังไม่ระบุชื่อ</span>') + '</td>'
       + '<td class="c-level">' + levelCell + '</td>'
+      + '<td class="c-sale">' + (core ? '<span class="pill l-core">ทั้งหมด</span>' : saleCell) + '</td>'
       + '<td class="c-parent" title="' + esc(parentEmail ? parentName + ' · ' + parentEmail : '-') + '">' + parentCell + '</td>'
       + '<td class="c-down">' + downCell + '</td>'
       + '<td class="c-status">' + statusCell + '</td>'
       + '<td class="c-last">' + fmt(u.lastLogin) + '</td>'
       + '<td class="c-act">' + acts + '</td></tr>';
   }).join('');
-  el('tb').innerHTML = rows || '<tr><td colspan="8" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
+  el('tb').innerHTML = rows || '<tr><td colspan="9" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
   refreshUplines();
   buildFilterOptions();
   applyFilters();
@@ -551,6 +581,16 @@ function moveParent(email) {
 el('level').addEventListener('change', refreshUplines);
 
 el('tb').addEventListener('change', function (e) {
+  var saleSel = e.target.closest('[data-act="sale"]');
+  if (saleSel) {
+    var mail = saleSel.dataset.email;
+    PIAuth.updateUser(mail, '', '', '', saleSel.value).then(function () {
+      if (window.PILog) { try { window.PILog.add('user.sale', mail, saleSel.value ? 'ผูกเซลส์ ' + saleSel.value : 'ยกเลิกการผูกเซลส์'); } catch (err) {} }
+      render(PIAuth.listUsers());
+      showMsg(saleSel.value ? 'ผูก ' + mail + ' → ' + saleSel.value + ' แล้ว' : 'ยกเลิกการผูกเซลส์ของ ' + mail, 'ok');
+    }).catch(function (err) { showMsg(err.message || String(err), 'err'); load(); });
+    return;
+  }
   var sel = e.target.closest('[data-act="level"]');
   if (!sel) return;
   PIAuth.updateUser(sel.dataset.email, sel.value, '').then(function () {

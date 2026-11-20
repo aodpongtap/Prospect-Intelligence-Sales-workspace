@@ -173,44 +173,7 @@
               : '<div class="tp-empty"><i class="fa-solid fa-users-slash"></i>ไม่พบผู้ใช้ตามเงื่อนไข</div>'))
       + '</section>';
 
-    return '<div class="tp">' + head + stats + table + saleMapPanel() + '</div>';
-  }
-
-  /* ---------------- ผูกบัญชี ↔ เซลส์ (Admin) ---------------- */
-  var LS_SALE_MAP = 'pi_sale_map_v1';
-  function saleMap() {
-    try { var o = JSON.parse(localStorage.getItem(LS_SALE_MAP) || 'null'); return (o && typeof o === 'object') ? o : {}; } catch (e) { return {}; }
-  }
-  function saveSaleMap(o) { try { localStorage.setItem(LS_SALE_MAP, JSON.stringify(o)); } catch (e) {} }
-  function saleList() {
-    try { var d = global.SalesReport && global.SalesReport.data ? global.SalesReport.data() : null; return (d && d.sales) || []; } catch (e) { return []; }
-  }
-  function saleMapPanel() {
-    if (String(me().level).toLowerCase() !== 'admin') return '';
-    var sales = saleList();
-    if (!sales.length || !USERS.length) return '';
-    var map = saleMap();
-    var norm = function (v) { return String(v || '').replace(/[\s\u200B\u00A0]+/g, ''); };
-    var rows = USERS.map(function (u) {
-      var mail = String(u.email || '').toLowerCase();
-      var cur = map[mail] || '';
-      var autoHit = '';
-      for (var i = 0; i < sales.length; i++) if (norm(sales[i].name) === norm(u.name)) autoHit = sales[i].id;
-      var opts = '<option value="">— ไม่ผูก (ใช้ชื่อในระบบ) —</option>' + sales.map(function (s) {
-        return '<option value="' + esc(s.id) + '"' + (cur === s.id ? ' selected' : '') + '>' + esc(s.id) + ' · ' + esc(s.name) + ' (' + esc(s.team) + ')</option>';
-      }).join('');
-      var badge = cur ? '<span class="tp-map-badge ok"><i class="fa-solid fa-link"></i> ผูกแล้ว</span>'
-        : (autoHit ? '<span class="tp-map-badge auto">อัตโนมัติ: ' + esc(autoHit) + '</span>' : '<span class="tp-map-badge warn">ยังไม่ผูก</span>');
-      return '<div class="tp-map-row">'
-        + '<div class="tp-map-who"><b>' + esc(u.name || u.email) + '</b><span>' + esc(u.email) + ' · L' + ladder(u.level).n + '</span></div>'
-        + '<select class="tp-map-sel" data-tp-map="' + esc(mail) + '">' + opts + '</select>'
-        + badge + '</div>';
-    }).join('');
-    return '<section class="tp-panel tp-map">'
-      + '<div class="tp-ph"><div><h3>ผูกบัญชีผู้ใช้กับเซลส์ (S01–S05)</h3>'
-      + '<div class="tp-s2">ใช้เมื่อชื่อบัญชีไม่ตรงกับรายชื่อเซลส์ — บัญชีที่ผูกจะเห็นเฉพาะดีลของเซลส์คนนั้น</div></div>'
-      + '<span class="tp-tag">Admin</span></div>'
-      + rows + '</section>';
+    return '<div class="tp">' + head + stats + table + '</div>';
   }
 
   /** Skeleton ระหว่างรอข้อมูลจากเซิร์ฟเวอร์ (แทนข้อความ “กำลังโหลด…” เฉย ๆ) */
@@ -345,17 +308,6 @@
   });
 
   document.addEventListener('change', function (e) {
-    var mp = e.target.closest && e.target.closest('[data-tp-map]');
-    if (mp) {
-      var mail = mp.getAttribute('data-tp-map');
-      var m = saleMap();
-      if (mp.value) m[mail] = mp.value; else delete m[mail];
-      saveSaleMap(m);
-      if (global.PILog) global.PILog.add('user.map', mail, mp.value ? 'ผูกกับเซลส์ ' + mp.value : 'ยกเลิกการผูก');
-      if (typeof global.toast === 'function') global.toast(mp.value ? 'ผูก ' + mail + ' → ' + mp.value + ' แล้ว' : 'ยกเลิกการผูก ' + mail);
-      if (typeof global.render === 'function') global.render();
-      return;
-    }
     var sel = e.target.closest && e.target.closest('[data-tp-filter]');
     if (sel) {
       state[sel.getAttribute('data-tp-filter')] = sel.value;
@@ -437,17 +389,7 @@
       + '.tp-badge.on{background:#DCFCE7;color:#15803D}.tp-badge.off{background:#FEE2E2;color:#B91C1C}'
       + '.tp-dim{color:#C2CBD8}'
       + '.tp-empty{text-align:center;color:#98A2B3;padding:26px;font-size:11.5px}'
-      + '.tp-map{margin-top:14px}'
       + '.tp-tag{background:#EEF2FF;color:#3730A3;border-radius:99px;padding:3px 9px;font-size:9.5px;font-weight:600}'
-      + '.tp-map-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F4F7FB;flex-wrap:wrap}'
-      + '.tp-map-row:last-child{border-bottom:0}'
-      + '.tp-map-who{min-width:190px;flex:1;min-width:0}'
-      + '.tp-map-who b{display:block;font-size:11px;color:#0F2B46;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
-      + '.tp-map-who span{font-size:9.5px;color:#98A2B3}'
-      + '.tp-map-sel{border:1px solid #DCE3EB;border-radius:8px;padding:6px 8px;font:inherit;font-size:10.5px;color:#0F2B46;background:#fff;min-width:200px}'
-      + '.tp-map-badge{font-size:9.5px;min-width:92px}'
-      + '.tp-map-badge.ok{color:#16A34A}.tp-map-badge.auto{color:#667085}.tp-map-badge.warn{color:#B54708}'
-      + '@media(max-width:560px){.tp-map-sel{width:100%;min-width:0}.tp-map-badge{min-width:0}}'
       + '.tp-sk-wrap{padding:4px 2px 8px}'
       + '.tp-sk-hint{font-size:10.5px;color:#98A2B3;display:flex;align-items:center;gap:6px;margin-bottom:10px}'
       + '.tp-sk-row{display:flex;align-items:center;gap:11px;padding:10px 6px;border-bottom:1px solid #F4F7FB}'

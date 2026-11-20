@@ -95,12 +95,12 @@
       document.head.appendChild(s);
     })();
   </script>
-  <script src="assets/auth-sheets.js?v=4"></script>
-  <script src="assets/report-log.js?v=5"></script>
-  <script src="assets/sales-report.js?v=27"></script>
+  <script src="assets/auth-sheets.js?v=5"></script>
+  <script src="assets/report-log.js?v=6"></script>
+  <script src="assets/sales-report.js?v=28"></script>
   <script src="assets/project-tracking.js?v=6"></script>
   <script src="assets/customer-intelligence.js?v=4"></script>
-  <script src="assets/team-page.js?v=5"></script>
+  <script src="assets/team-page.js?v=6"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
     window.__allowedPages__ = function () {
@@ -119,6 +119,7 @@
         email: rawMe.email,
         name: String(rawMe.name || '').trim(),
         level: String(rawMe.level || 'viewer').toLowerCase(),
+        saleId: String(rawMe.saleId || '').toUpperCase(),
         isAdmin: rawMe.isAdmin === true || String(rawMe.level || '').toLowerCase() === 'admin'
       };
 
