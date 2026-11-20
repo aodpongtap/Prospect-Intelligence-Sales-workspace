@@ -291,6 +291,9 @@
   var __SEED_DEALS__ = [];   // ไม่มีชุดตัวอย่างแล้ว (Reset = ล้างทั้งหมด)
   (function restoreDeals() {
     try {
+      localStorage.removeItem('pi_sr_deals_v1');   /* ล้างชุดดีลตัวอย่างเดิมทิ้ง */
+    } catch (e) {}
+    try {
       var a = JSON.parse(localStorage.getItem(LS_DEALS) || 'null');
       if (Object.prototype.toString.call(a) === '[object Array]' && a.length) {
         DEALS.length = 0;
