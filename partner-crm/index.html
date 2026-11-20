@@ -168,8 +168,8 @@
       <div class="chips">
         <span class="chip" id="chipMonth"></span>
         <span class="chip"><i class="fa-solid fa-database"></i> <b id="chipRows">-</b></span>
-        <button class="btn soft" id="exportBtn"><i class="fa-solid fa-file-export"></i> Export</button>
-        <button class="btn" id="importBtn"><i class="fa-solid fa-file-import"></i> Import</button>
+        <button class="btn soft" id="exportBtn"><i class="fa-solid fa-file-export"></i> ส่งออก</button>
+        <button class="btn" id="importBtn"><i class="fa-solid fa-file-import"></i> นำเข้า</button>
       </div>
     </header>
     <div class="content" id="view"></div>
@@ -471,15 +471,15 @@
 
     return ''
       + '<div class="grid k4" style="margin-bottom:14px">'
-      + kpi('Sales Volume (In-Vat)', shortM(cur.inVat), 'fa-solid fa-arrow-trend-up', '#4F46E5',
+      + kpi('ยอดขายคู่ค้า (รวม VAT)', shortM(cur.inVat), 'fa-solid fa-arrow-trend-up', '#4F46E5',
             (growth >= 0 ? '<span class="up">▲ ' + pct(growth) + '</span>' : '<span class="down">▼ ' + pct(Math.abs(growth)) + '</span>') + ' เทียบเดือนก่อน')
-      + kpi('Active Partner', active + ' / ' + DB.partners.length, 'fa-solid fa-user-check', '#0E9384', 'มียอดซื้อเดือนนี้')
-      + kpi('Sell-out (หน่วย)', sellOut.toLocaleString('th-TH'), 'fa-solid fa-cart-shopping', '#B54708', 'สะสมจากคู่ค้า')
-      + kpi('GP Contribution', shortM(cur.gp), 'fa-solid fa-coins', '#12805C', 'อัตรากำไร ' + pct(gpRate) + ' ของยอดขาย')
+      + kpi('คู่ค้าที่มียอดซื้อ', active + ' / ' + DB.partners.length, 'fa-solid fa-user-check', '#0E9384', 'มียอดซื้อเดือนนี้')
+      + kpi('ยอดขายออก (หน่วย)', sellOut.toLocaleString('th-TH'), 'fa-solid fa-cart-shopping', '#B54708', 'สะสมจากคู่ค้า')
+      + kpi('กำไรขั้นต้น (GP)', shortM(cur.gp), 'fa-solid fa-coins', '#12805C', 'อัตรากำไร ' + pct(gpRate) + ' ของยอดขาย')
       + '</div>'
 
       + '<div class="grid k3" style="margin-bottom:14px">'
-      + '<div class="card"><div class="head"><div><h3>ยอดซื้อรายเดือน (6 เดือน)</h3><div class="hint">In-Vat · เทียบเป้า ' + shortM(DB.settings.target.value) + '</div></div></div>'
+      + '<div class="card"><div class="head"><div><h3>ยอดซื้อรายเดือน (6 เดือน)</h3><div class="hint">รวม VAT · เทียบเป้า ' + shortM(DB.settings.target.value) + '</div></div></div>'
       + sparkBars(mk) + '</div>'
       + '<div class="card"><div class="head"><div><h3>การกระจายตัว Tier</h3><div class="hint">คำนวณจากยอดเดือนปัจจุบัน</div></div></div>'
       + DB.settings.tiers.map(function (t) {
@@ -494,13 +494,13 @@
       + '<div style="display:grid;gap:12px">'
       + statRow('Repeat Purchase', pct(repeatRate), repeat + ' จาก ' + DB.partners.length + ' คู่ค้าซื้อซ้ำ')
       + statRow('Partner Growth', (growth >= 0 ? '+' : '') + pct(growth), 'เทียบเดือนก่อน')
-      + statRow('GP Contribution', shortM(cur.gp), 'จากยอดขายสุทธิ ' + shortM(cur.net))
+      + statRow('กำไรขั้นต้น (GP)', shortM(cur.gp), 'จากยอดขายสุทธิ ' + shortM(cur.net))
       + statRow('Volume Rebate ที่ต้องคืน', shortM(rebateTotal()), 'คู่ค้าที่ทำได้ ≥120% ของเป้า')
       + '</div></div>'
       + '</div>'
 
       + '<div class="grid k2">'
-      + '<div class="card"><div class="head"><div><h3>Top 5 คู่ค้าเดือนนี้</h3><div class="hint">เรียงตามยอดซื้อ In-Vat</div></div></div>'
+      + '<div class="card"><div class="head"><div><h3>Top 5 คู่ค้าเดือนนี้</h3><div class="hint">เรียงตามยอดซื้อรวม VAT</div></div></div>'
       + (topPar.length ? '<div class="tbl-wrap"><table><thead><tr><th>คู่ค้า</th><th>Tier</th><th>ยอดซื้อ</th><th>มูลค่า</th></tr></thead><tbody>'
           + topPar.map(function (x) {
             var tier = evalTier(x.p.id).tier;
@@ -567,10 +567,10 @@
 
     return '<div class="card">'
       + '<div class="head"><div><h3>คู่ค้าทั้งหมด (' + rows.length + ')</h3>'
-      + '<div class="hint">Tier คำนวณอัตโนมัติจากยอดเดือนปัจจุบัน (In-Vat) · ' + DB.settings.tiers.map(function (t) { return t.code + ' ≥' + shortM(t.minValue); }).join(' · ') + '</div></div>'
+      + '<div class="hint">Tier คำนวณอัตโนมัติจากยอดเดือนปัจจุบัน (รวม VAT) · ' + DB.settings.tiers.map(function (t) { return t.code + ' ≥' + shortM(t.minValue); }).join(' · ') + '</div></div>'
       + '<div class="tools"><input class="inp" id="pSearch" placeholder="ค้นหาคู่ค้า / ผู้ดูแล"><button class="btn pri" data-add="partner"><i class="fa-solid fa-plus"></i> เพิ่มคู่ค้า</button></div></div>'
       + '<div class="tbl-wrap"><table id="pTbl"><thead><tr>'
-      + '<th>คู่ค้า</th><th>Tier (auto)</th><th>ยอดเดือนนี้</th><th>เป้า</th><th>Sell-out</th><th>Retention</th><th>ทางไป Tier ถัดไป</th><th></th>'
+      + '<th>คู่ค้า</th><th>Tier (auto)</th><th>ยอดเดือนนี้</th><th>เป้า</th><th>ยอดขายออก</th><th>Retention</th><th>ทางไป Tier ถัดไป</th><th></th>'
       + '</tr></thead><tbody>'
       + rows.map(function (r) {
           var goalPct = Math.min(100, Math.round(r.ev.stats.inVat / num(DB.settings.target.value) * 100));
@@ -1008,7 +1008,7 @@
       + '<div class="two"><div class="fld"><label>ผู้ดูแล (AE)</label><input name="owner" value="' + esc(p.owner) + '"></div>'
       + '<div class="fld"><label>เบอร์ติดต่อ</label><input name="phone" value="' + esc(p.phone) + '"></div></div>'
       + '<div class="two"><div class="fld"><label>วันที่เริ่มเป็นคู่ค้า</label><input name="joined" type="date" value="' + esc(p.joined) + '"></div>'
-      + '<div class="fld"><label>Sell-out สะสม (หน่วย)</label><input name="sellOut" type="number" min="0" value="' + num(p.sellOut) + '"></div></div>'
+      + '<div class="fld"><label>ยอดขายออกสะสม (หน่วย)</label><input name="sellOut" type="number" min="0" value="' + num(p.sellOut) + '"></div></div>'
       + '<div class="fld"><label>บันทึก</label><textarea name="note" rows="2">' + esc(p.note) + '</textarea></div>'
       + '</form></div>'
       + '<div class="mf"><button class="btn" data-close>ยกเลิก</button><button class="btn pri" id="pSave"><i class="fa-solid fa-check"></i> บันทึก</button></div>'

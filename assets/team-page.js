@@ -163,8 +163,9 @@
       + '<div class="tp-ph"><div><h3>ผู้ใช้ในสายงาน (' + list.length + (list.length !== USERS.length ? '/' + USERS.length : '') + ')</h3>'
       + '<div class="tp-s2">คลิก “แผนผังเครือข่าย” ด้านบนเพื่อดูโครงสร้างทั้งสายงาน</div></div></div>'
       + toolbar
-      + (ERR ? '<div class="tp-err"><i class="fa-solid fa-triangle-exclamation"></i> ' + esc(ERR) + '</div>' : '')
-      + (LOADING ? '<div class="tp-empty">กำลังโหลดข้อมูล…</div>' :
+      + (ERR ? '<div class="tp-err"><i class="fa-solid fa-triangle-exclamation"></i> ' + esc(ERR)
+            + ' <button class="tp-btn" data-tp-action="retry" style="margin-left:8px"><i class="fa-solid fa-rotate-right"></i> ลองอีกครั้ง</button></div>' : '')
+      + (LOADING ? skeletonRows() :
             (list.length
               ? '<div class="tp-tablewrap"><table class="tp-table"><thead><tr>'
                 + '<th>ชื่อ / อีเมล</th><th>ระดับ</th><th>ทีม (BU)</th><th>ผู้ดูแลสาย</th><th>สถานะ</th><th>สร้างเมื่อ</th>'
@@ -173,6 +174,21 @@
       + '</section>';
 
     return '<div class="tp">' + head + stats + table + '</div>';
+  }
+
+  /** Skeleton ระหว่างรอข้อมูลจากเซิร์ฟเวอร์ (แทนข้อความ “กำลังโหลด…” เฉย ๆ) */
+  function skeletonRows() {
+    var one = '<div class="tp-sk-row">'
+      + '<span class="tp-sk tp-sk-av"></span>'
+      + '<div style="flex:1"><span class="tp-sk tp-sk-line" style="width:52%"></span>'
+      + '<span class="tp-sk tp-sk-line" style="width:34%;margin-top:6px"></span></div>'
+      + '<span class="tp-sk tp-sk-pill"></span><span class="tp-sk tp-sk-pill"></span>'
+      + '</div>';
+    var list = '';
+    for (var i = 0; i < 5; i++) list += one;
+    return '<div class="tp-sk-wrap">'
+      + '<div class="tp-sk-hint"><i class="fa-solid fa-cloud-arrow-down"></i> กำลังโหลดรายชื่อผู้ใช้จาก Google Sheets…</div>'
+      + list + '</div>';
   }
 
   /* ---------------- Register modal ---------------- */
@@ -305,6 +321,7 @@
     var t = e.target;
     if (!t || !t.closest) return;
     if (t.closest('[data-tp-new]')) { registerModal(); return; }
+    if (t.closest('[data-tp-action="retry"]')) { LOADED = false; load(true); return; }
     if (t.closest('[data-tp-tree]')) { if (!LOADED) { load(true); } treeModal(); return; }
     if (t.closest('[data-tp-reset]')) { state = { q: '', level: '', team: '' }; global.render(); return; }
     var act = t.closest('[data-action]');
@@ -372,6 +389,16 @@
       + '.tp-badge.on{background:#DCFCE7;color:#15803D}.tp-badge.off{background:#FEE2E2;color:#B91C1C}'
       + '.tp-dim{color:#C2CBD8}'
       + '.tp-empty{text-align:center;color:#98A2B3;padding:26px;font-size:11.5px}'
+      + '.tp-sk-wrap{padding:4px 2px 8px}'
+      + '.tp-sk-hint{font-size:10.5px;color:#98A2B3;display:flex;align-items:center;gap:6px;margin-bottom:10px}'
+      + '.tp-sk-row{display:flex;align-items:center;gap:11px;padding:10px 6px;border-bottom:1px solid #F4F7FB}'
+      + '.tp-sk{display:block;background:linear-gradient(90deg,#EEF2F7 25%,#F7FAFD 37%,#EEF2F7 63%);'
+      + 'background-size:400% 100%;animation:tp-sk 1.3s ease infinite;border-radius:6px}'
+      + '.tp-sk-av{width:30px;height:30px;border-radius:50%;flex:0 0 30px}'
+      + '.tp-sk-line{height:9px}'
+      + '.tp-sk-pill{width:58px;height:18px;border-radius:99px}'
+      + '@keyframes tp-sk{0%{background-position:100% 50%}100%{background-position:0 50%}}'
+      + '@media(prefers-reduced-motion:reduce){.tp-sk{animation:none}}'
       + '.tp-err{background:#FFF7ED;border:1px solid #FFEDD5;color:#9A3412;border-radius:9px;padding:10px 12px;font-size:11px;margin-bottom:10px}'
       + '.tp-hint{background:#EFF6FF;border:1px solid #DBEAFE;color:#1E40AF;border-radius:9px;padding:10px 12px;font-size:10.5px;line-height:1.6;margin-bottom:12px}'
       + '.tp-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}'

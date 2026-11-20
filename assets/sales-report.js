@@ -641,9 +641,10 @@
     /* ---------- มุมมองที่ 2: การ์ดรายเซลส์ (อ่านง่าย) ---------- */
     function fcColor(g) { return g >= 100 ? '#16A34A' : g >= 70 ? '#2563EB' : g >= 40 ? '#F59E0B' : '#DC2626'; }
     function fcChip(label, val, color) {
-      return '<div class="sr-fc-chip" style="border-left-color:' + color + '">'
+      var v = num(val);
+      return '<div class="sr-fc-chip' + (v ? '' : ' sr-fc-chip-empty') + '" style="border-left-color:' + (v ? color : '#E2E8F0') + '">'
         + '<small>' + esc(label) + '</small>'
-        + '<b>' + (num(val) ? money(val) : '<span class="sr-dim">—</span>') + '</b></div>';
+        + '<b>' + (v ? money(v) : '<span class="sr-dim">—</span>') + '</b></div>';
     }
     function personCard(x, perHead) {
       var g = perHead ? (x.s.s4 / perHead * 100) : 0;
@@ -892,7 +893,7 @@
     var followRows = follow.map(function (d) {
       var stx = st(d.status);
       return '<tr class="sr-row" data-sr-deal="' + esc(d.no) + '">'
-        + '<td><span class="sr-badge ' + stx.cls + '">' + d.status + ' · ' + esc(stx.short) + '</span></td>'
+        + '<td><span class="sr-badge ' + stx.cls + '">' + esc(stx.short) + '</span></td>'
         + '<td><div class="sr-nm">' + esc(d.customer) + '</div><div class="sr-s2">' + esc(d.job) + '</div></td>'
         + '<td><div>' + esc(sale(d.saleId).name) + '</div><div class="sr-s2">' + esc(teamByCode(sale(d.saleId).team).name) + '</div></td>'
         + '<td class="sr-num sr-strong">' + money(d.amount) + '</td>'
@@ -1688,6 +1689,7 @@
       + '.sr-fc-chip{background:#F8FAFC;border:1px solid #EEF2F7;border-left:3px solid #CBD5E1;border-radius:8px;padding:5px 8px}'
       + '.sr-fc-chip small{display:block;font-size:9px;color:#98A2B3}'
       + '.sr-fc-chip b{font-size:10.5px;color:#0F2B46;font-variant-numeric:tabular-nums}'
+      + '.sr-fc-chip-empty{background:#FCFDFE;border-style:dashed;border-left-color:#E2E8F0!important;opacity:.75}'
       + '.sr-fc-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:9px;padding-top:8px;border-top:1px dashed #EEF2F7;font-size:9.5px;color:#667085}'
       + '.sr-fc-fc{color:#2563EB;font-weight:500}'
       + '.sr-fc-other{color:#98A2B3;text-align:right}'
