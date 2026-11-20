@@ -62,10 +62,14 @@
         <button class="nav-item active" data-page="dashboard"><i class="fa-solid fa-gauge-high"></i>Dashboard</button>
         <button class="nav-item" data-page="sales"><i class="fa-solid fa-bullseye"></i>Sale Monitor</button>
         <button class="nav-item" data-page="partners"><i class="fa-solid fa-handshake"></i>Partnership Business</button>
-        <button class="nav-item" data-page="team"><i class="fa-solid fa-sitemap"></i>ทีม &amp; สิทธิ์</button>
         <button class="nav-item" data-page="projects"><i class="fa-solid fa-diagram-project"></i>Project Tracking</button>
         <button class="nav-item" data-page="intelligence"><i class="fa-solid fa-brain"></i>Customer Intelligence</button>
         <button class="nav-item" data-page="reports"><i class="fa-solid fa-chart-pie"></i>Reports</button>
+      </nav>
+      <div class="nav-label" id="navLabelUsers">ผู้ใช้ &amp; สิทธิ์</div>
+      <nav class="nav-list" id="navUsers">
+        <a class="nav-item" id="navUserMgmt" href="users.html" style="display:none;text-decoration:none"><i class="fa-solid fa-user-gear"></i>User Management</a>
+        <button class="nav-item" data-page="team"><i class="fa-solid fa-sitemap"></i>ทีม &amp; สิทธิ์</button>
       </nav>
       <div class="sidebar-bottom"><small id="lastSync"><i class="fa-solid fa-circle-check"></i> ข้อมูลอัปเดตล่าสุด: —</small></div>
     </aside>
@@ -329,15 +333,11 @@
       var rl = document.getElementById('meRole'); if (rl) rl.textContent = 'สิทธิ์: ' + String(me.level).toUpperCase();
 
       if (me.isAdmin) {
-        var nav = document.getElementById('navList');
-        if (nav) {
-          var a = document.createElement('a');
-          a.className = 'nav-item';
-          a.href = opts.usersUrl || 'users.html';
-          a.target = opts.usersTarget || '_self';
-          a.style.textDecoration = 'none';
-          a.innerHTML = '<i class="fa-solid fa-user-gear"></i>User Management';
-          nav.appendChild(a);
+        var um = document.getElementById('navUserMgmt');
+        if (um) {
+          um.href = opts.usersUrl || 'users.html';
+          um.target = opts.usersTarget || '_self';
+          um.style.display = 'flex';
         }
       }
 
@@ -347,12 +347,16 @@
       var lvCode = String(me.level).toLowerCase();
       var allow = (window.__allowedPages__ ? window.__allowedPages__() : null);
       if (allow) {
-        var navList = document.getElementById('navList');
-        if (navList) {
-          Array.prototype.slice.call(navList.querySelectorAll('[data-page]')).forEach(function (el) {
-            if (allow.indexOf(el.getAttribute('data-page')) < 0) el.remove();
-          });
-        }
+        Array.prototype.slice.call(document.querySelectorAll('.nav-list [data-page]')).forEach(function (el) {
+          if (allow.indexOf(el.getAttribute('data-page')) < 0) el.remove();
+        });
+      }
+      // ซ่อนกลุ่ม "ผู้ใช้ & สิทธิ์" ถ้าไม่เหลือเมนูให้เห็น
+      var grp = document.getElementById('navUsers');
+      if (grp && !grp.querySelector('.nav-item')) {
+        grp.style.display = 'none';
+        var lbl = document.getElementById('navLabelUsers');
+        if (lbl) lbl.style.display = 'none';
       }
 
       // Sale / Agent: ซ่อน panel ที่ไม่เกี่ยวกับงานขาย + KPI จากดีลของตัวเอง
@@ -1227,7 +1231,7 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
     function updatePrompt3(){const sel=document.getElementById("pf3Deal"),ta=document.getElementById("promptText3");if(!sel||!ta)return;const d=deals.find(x=>String(x.id)===sel.value)||deals[0];ta.value=prompt3Text(d)}
 
     /* ===== JavaScript: Event handlers and actions ===== */
-    document.getElementById("navList").addEventListener("click",e=>{const item=e.target.closest(".nav-item");if(!item)return;var pg=item.dataset.page;if(!pg||pg===currentPage)return;goTo(pg,true)});
+    document.getElementById("sidebar").addEventListener("click",e=>{const item=e.target.closest(".nav-item[data-page]");if(!item)return;var pg=item.dataset.page;if(!pg||pg===currentPage)return;goTo(pg,true)});
     // เปิดหน้าที่ระบุจาก URL เช่น index.html?page=team (deep link + refresh ได้)
     (function(){try{var p=new URLSearchParams(location.search).get("page");currentPage=guardPage((p&&pageTitles[p])?p:"dashboard",!!p);history.replaceState({page:currentPage,prev:""},"",pageUrl(currentPage));document.title=pageTitles[currentPage]+" · Prospect Intelligence Sales workspace";render()}catch(err){}})();
     document.getElementById("mobileMenu").addEventListener("click",()=>document.getElementById("sidebar").classList.toggle("open"));
