@@ -648,9 +648,11 @@
             + '  <div style="min-width:0"><div class="sr-nm">' + esc(x.sale.name) + '</div>'
             + '  <div class="sr-s2">' + esc(x.sale.team) + ' · เป้า/คน ' + money(perHead) + '</div></div></div></td>'
             + '<td class="sr-num sr-act">'
-            + '  <b style="color:' + (x.s.s4 ? col : '#C2CBD8') + '">' + (x.s.s4 ? money(x.s.s4) : '—') + '</b>'
-            + '  <div class="sr-mini"><span style="width:' + Math.max(0, Math.min(100, g)) + '%;background:' + col + '"></span></div>'
-            + '  <small style="color:' + col + '">' + pct(g) + '</small>'
+            + (x.s.s4
+              ? '  <b style="color:' + col + '">' + money(x.s.s4) + '</b>'
+                + '  <div class="sr-mini"><span style="width:' + Math.max(0, Math.min(100, g)) + '%;background:' + col + '"></span></div>'
+                + '  <small style="color:' + col + '">' + pct(g) + '</small>'
+              : '  <span class="sr-dim">—</span>')
             + '</td>'
             + '<td class="sr-num">' + (x.s.s3 ? money(x.s.s3) : '<span class="sr-dim">—</span>') + '</td>'
             + '<td class="sr-num">' + (x.s.s2 ? money(x.s.s2) : '<span class="sr-dim">—</span>') + '</td>'
