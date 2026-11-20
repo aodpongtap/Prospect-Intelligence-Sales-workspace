@@ -87,19 +87,26 @@
   }
   function lvLvlAdmin(l) { return l === 'admin'; }
 
+  /** cache ทีมที่เคยตรวจสอบแล้ว (ให้โหลดเร็วในครั้งถัดไป) */
+  var LS_SCOPE_CACHE = 'pi_scope_cache_v1';
+  function scopeCache() {
+    try { return JSON.parse(localStorage.getItem(LS_SCOPE_CACHE) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function setScopeCache(email, team) {
+    if (!email) return;
+    try {
+      var o = scopeCache();
+      if (team) o[email] = team; else delete o[email];
+      localStorage.setItem(LS_SCOPE_CACHE, JSON.stringify(o));
+    } catch (e) {}
+  }
+
   /** หาทีมจากสายงาน (เดินขึ้นไปหาหัวหน้าที่Mapไว้) — Head/Sup ที่ไม่อยู่ในลิสต์ตรง ๆ */
   function teamViaUpline(email) {
+    var cached = scopeCache()[email];
+    if (cached) { ensureTeamUsers_(email); return cached; }
     var users = global.__TEAM__ || [];
-    if (!users.length && global.PIAuth && global.PIAuth.refresh && !global.__SCOPE_FETCHING__) {
-      global.__SCOPE_FETCHING__ = true;
-      try {
-        global.PIAuth.refresh().then(function (list) {
-          global.__TEAM__ = list || [];
-          global.__SCOPE_FETCHING__ = false;
-          __listeners.forEach(function (f) { try { f(); } catch (e) {} });
-        }).catch(function () { global.__SCOPE_FETCHING__ = false; });
-      } catch (e) { global.__SCOPE_FETCHING__ = false; }
-    }
+    if (!users.length) ensureTeamUsers_(email);
     var byEmail = {};
     for (var i = 0; i < users.length; i++) byEmail[String(users[i].email || '').toLowerCase()] = users[i];
     var cur = String(email || '').toLowerCase(), guard = 0;
@@ -110,6 +117,23 @@
       cur = String(u.parent).toLowerCase();
     }
     return '';
+  }
+
+  /** ดึงรายชื่อผู้ใช้ครั้งเดียวต่อการโหลดหน้า เพื่อเดินสายงานได้ */
+  function ensureTeamUsers_(email) {
+    var users = global.__TEAM__ || [];
+    if (users.length) return;
+    if (!global.PIAuth || !global.PIAuth.refresh || global.__SCOPE_FETCHING__) return;
+    global.__SCOPE_FETCHING__ = true;
+    try {
+      global.PIAuth.refresh().then(function (list) {
+        global.__TEAM__ = list || [];
+        global.__SCOPE_FETCHING__ = false;
+        var t = teamViaUpline(email);
+        setScopeCache(email, t);
+        __listeners.forEach(function (f) { try { f(); } catch (e) {} });
+      }).catch(function () { global.__SCOPE_FETCHING__ = false; });
+    } catch (e) { global.__SCOPE_FETCHING__ = false; }
   }
 
   /** ตารางผูกบัญชีผู้ใช้กับเซลส์ (เก็บในเครื่องนี้) */
@@ -135,6 +159,9 @@
     if (lvl === 'bu' || lvl === 'head' || lvl === 'sup') {
       team = teamViaUpline(mail);
       if (team) return { type: 'team', team: team };
+      /* ยังโหลดรายชื่อไม่เสร็จ → อย่าตีความว่า “ไม่มีสิทธิ์” ทันที */
+      if (!(global.__TEAM__ || []).length) return { type: 'pending' };
+      setScopeCache(mail, '');
     }
     /* 1) ผูกด้วยรหัสเซลส์โดยตรง (ถ้า admin ตั้งค่าไว้) */
     var sid = String(me.saleId || me.sale || '').trim();
@@ -162,6 +189,23 @@
     if (sc.type === 'team') return sale(d.saleId).team === sc.team;
     if (sc.type === 'sale') return d.saleId === sc.saleId;
     return false;
+  }
+  /** ข้อความแจ้งเตือนตามสถานะสิทธิ์ (none / pending) */
+  function scopeNotice() {
+    var sc = scopeOf();
+    if (sc.type === 'pending') {
+      return '<div class="sr-panel" style="display:flex;gap:10px;align-items:center;background:#F8FAFC;border-color:#E9EEF5">'
+        + '<i class="fa-solid fa-circle-notch fa-spin" style="color:#2563EB"></i>'
+        + '<div><b style="color:#0F2B46;font-size:12px">กำลังตรวจสอบสิทธิ์การเข้าถึงข้อมูล…</b>'
+        + '<div class="sr-s2">ระบบกำลังโหลดรายชื่อในสายงานของคุณ กรุณารอสักครู่</div></div></div>';
+    }
+    if (sc.type === 'none') {
+      return '<div class="sr-panel" style="display:flex;gap:10px;align-items:flex-start;background:#FFF7ED;border-color:#FFEDD5">'
+        + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
+        + '<div><b style="color:#9A3412;font-size:12px">บัญชีนี้ยังไม่ถูกผูกกับข้อมูลเซลส์</b>'
+        + '<div class="sr-s2" style="color:#B45309">ระบบแสดงข้อมูลตามชื่อผู้ใช้ — กรุณาแจ้ง Admin ให้ผูกชื่อของคุณกับรายชื่อเซลส์ หรือกำหนดทีม BU เพื่อให้เห็นยอดขายของตัวเอง</div></div></div>';
+    }
+    return '';
   }
 
   var SALES = [
@@ -917,6 +961,10 @@
   /* ---------- Dashboard (เวอร์ชันย่อของ Reports — ใช้สูตร/ข้อมูลชุดเดียวกัน) ---------- */
   function renderDashboard() {
     injectCss();
+    if (scopeOf().type === 'pending') {
+      return '<div class="sr"><div class="sr-head"><div><h1>ภาพรวมยอดขาย &amp; Forecast</h1>'
+        + '<div class="sr-sub">กำลังโหลดข้อมูลตามสิทธิ์ของคุณ…</div></div></div>' + scopeNotice() + '</div>';
+    }
     var k = kpis();
     var s = k.sum;
     var today = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -991,12 +1039,7 @@
       + '    <div class="sr-sub">' + esc(today) + ' · ใช้สูตรและข้อมูลชุดเดียวกับหน้า Reports</div></div>'
       + '  <button class="sr-btn dark" data-sr-goto="reports"><i class="fa-solid fa-chart-pie"></i> เปิด Reports ฉบับเต็ม</button>'
       + '</div>'
-      + (scopeOf().type === 'none'
-        ? '<div class="sr-panel" style="display:flex;gap:10px;background:#FFF7ED;border-color:#FFEDD5;margin-bottom:14px">'
-          + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
-          + '<div><b style="color:#9A3412;font-size:12px">บัญชีนี้ยังไม่ถูกผูกกับข้อมูลเซลส์</b>'
-          + '<div class="sr-s2" style="color:#B45309">กรุณาแจ้ง Admin ให้ผูกชื่อของคุณกับรายชื่อเซลส์หรือทีม BU</div></div></div>'
-        : '')
+      + scopeNotice().replace('margin-bottom', 'margin-bottom')
       + '<div class="sr-filters sr-f3">'
       + '  <div class="sr-fl"><label>ปี</label><select data-sr-filter="year">' + yearOpts + '</select></div>'
       + '  <div class="sr-fl"><label>เดือนที่คาดว่าจะปิด</label><select data-sr-filter="month">' + monthOpts + '</select></div>'
@@ -1317,12 +1360,13 @@
     }
 
     var k = kpis();
-    var notice = scopeOf().type === 'none'
-      ? '<div class="sr-panel" style="display:flex;gap:10px;align-items:flex-start;background:#FFF7ED;border-color:#FFEDD5">'
-        + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
-        + '<div><b style="color:#9A3412;font-size:12px">บัญชีนี้ยังไม่ถูกผูกกับข้อมูลเซลส์</b>'
-        + '<div class="sr-s2" style="color:#B45309">ระบบแสดงข้อมูลตามชื่อผู้ใช้ — กรุณาแจ้ง Admin ให้ผูกชื่อของคุณกับรายชื่อเซลส์ หรือกำหนดทีม BU เพื่อให้เห็นยอดขายของตัวเอง</div></div></div>'
-      : '';
+    var notice = scopeNotice();
+    if (scopeOf().type === 'pending') {
+      return '<div class="sr"><div class="sr-head"><div><h1>Reports &amp; Log</h1>'
+        + '<div class="sr-sub">กำลังโหลดข้อมูลตามสิทธิ์ของคุณ…</div></div></div>'
+        + renderTabs() + notice + '</div>';
+    }
+    var k = kpis();
     return '<div class="sr">'
       + '<div class="sr-head">'
       + '  <div><h1>Reports &amp; Log</h1>'

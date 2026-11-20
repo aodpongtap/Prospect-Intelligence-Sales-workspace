@@ -321,6 +321,13 @@
     injectCss();
     var list = filtered();
     var sc = scopeNow();
+    if (sc.type === 'pending') {
+      return '<div class="pt"><div class="pt-head"><div><h1>Project Tracking</h1>'
+        + '<div class="pt-sub">กำลังโหลดข้อมูลตามสิทธิ์ของคุณ…</div></div></div>'
+        + '<section class="pt-panel" style="padding:26px;text-align:center;color:#667085;font-size:12px">'
+        + '<i class="fa-solid fa-circle-notch fa-spin" style="color:#2563EB;margin-right:7px"></i>'
+        + 'กำลังตรวจสอบสิทธิ์และโหลดโครงการที่เกี่ยวข้อง…</section></div>';
+    }
     var lockTxt = sc.type === 'team'
       ? '<span class="pt-teamlock"><i class="fa-solid fa-lock"></i> ทีมของคุณ: ' + esc(sc.team) + '</span>'
       : (sc.type === 'sale' ? '<span class="pt-teamlock"><i class="fa-solid fa-lock"></i> เฉพาะโครงการของคุณ</span>' : '');

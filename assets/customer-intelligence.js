@@ -132,6 +132,13 @@
     var all = buildCustomers();
     var sc = null;
     try { sc = (global.SalesReport && global.SalesReport.scope) ? global.SalesReport.scope() : null; } catch (e) {}
+    if (sc && sc.type === 'pending') {
+      return '<div class="ci"><div class="ci-head"><div><h1>Customer Intelligence</h1>'
+        + '<div class="ci-sub">กำลังโหลดข้อมูลตามสิทธิ์ของคุณ…</div></div></div>'
+        + '<div style="display:flex;gap:10px;align-items:center;background:#F8FAFC;border:1px solid #E9EEF5;border-radius:12px;padding:22px;color:#667085;font-size:12px">'
+        + '<i class="fa-solid fa-circle-notch fa-spin" style="color:#2563EB"></i>'
+        + 'กำลังตรวจสอบสิทธิ์และโหลดข้อมูลลูกค้าที่เกี่ยวข้อง…</div></div>';
+    }
     var notice = (sc && sc.type === 'none')
       ? '<div class="ci-panel" style="display:flex;gap:10px;align-items:flex-start;background:#FFF7ED;border:1px solid #FFEDD5;border-radius:12px;padding:12px 14px;margin-bottom:12px">'
         + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
