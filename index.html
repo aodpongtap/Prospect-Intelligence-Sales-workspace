@@ -153,9 +153,10 @@
           if (allow.indexOf(el.getAttribute('data-page')) < 0) el.remove();
         });
       }
-      // ซ่อนกลุ่ม "ผู้ใช้ & สิทธิ์" ถ้าไม่เหลือเมนูให้เห็น
+      // ซ่อนกลุ่ม "ผู้ใช้ & สิทธิ์" ถ้าไม่เหลือเมนูให้เห็น (นับเฉพาะที่แสดงอยู่)
       var grp = document.getElementById('navUsers');
-      if (grp && !grp.querySelector('.nav-item')) {
+      var hasMenu = !!(grp && grp.querySelector('.nav-item[data-page]')) || me.isAdmin;
+      if (grp && !hasMenu) {
         grp.style.display = 'none';
         var lbl = document.getElementById('navLabelUsers');
         if (lbl) lbl.style.display = 'none';
