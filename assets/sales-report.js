@@ -912,51 +912,13 @@
           + '  <tfoot><tr><td class="sr-td-team"><b>รวมทุกทีม</b></td>' + monthTot + '<td class="sr-num sr-strong">' + money(grand) + '</td><td></td></tr></tfoot>'
           + '  </table></div>'
         : '')
-      + renderSaleMap()
       + '</section>';
   }
 
-  /** ผูกบัญชีผู้ใช้ ↔ เซลส์ (Admin) — ใช้แทนการจับคู่ด้วยชื่อ */
-  function renderSaleMap() {
-    var me = global.__ME__ || {};
-    if (String(me.level).toLowerCase() !== 'admin') return '';
-    var users = global.__TEAM__ || [];
-    if (!users.length) {
-      if (global.PIAuth && global.PIAuth.refresh && !global.__MAP_LOADING__ && !global.__MAP_TRY__) {
-        global.__MAP_LOADING__ = true; global.__MAP_TRY__ = true;
-        global.PIAuth.refresh().then(function (list) {
-          global.__TEAM__ = list || []; global.__MAP_LOADING__ = false;
-          if (typeof global.render === 'function') global.render();
-        }).catch(function () { global.__MAP_LOADING__ = false; });
-      }
-      return '<div class="sr-map"><div class="sr-map-h"><i class="fa-solid fa-link"></i> ผูกบัญชีผู้ใช้กับเซลส์</div>'
-        + '<div class="sr-s2">กำลังโหลดรายชื่อผู้ใช้…</div></div>';
-    }
-    var map = saleMap();
-    var rows = users.map(function (u) {
-      var mail = String(u.email || '').toLowerCase();
-      var cur = map[mail] || '';
-      var opts = '<option value="">— ไม่ผูก (ใช้ชื่อ) —</option>' + SALES.map(function (s) {
-        return '<option value="' + esc(s.id) + '"' + (cur === s.id ? ' selected' : '') + '>' + esc(s.id) + ' · ' + esc(s.name) + ' (' + esc(s.team) + ')</option>';
-      }).join('');
-      var auto = '';
-      if (!cur) {
-        var nm = String(u.name || '').replace(/[\s\u200B\u00A0]+/g, '');
-        var hit = null;
-        for (var i = 0; i < SALES.length; i++) if (String(SALES[i].name).replace(/[\s\u200B\u00A0]+/g, '') === nm) hit = SALES[i];
-        auto = hit ? '<span class="sr-map-auto">อัตโนมัติ: ' + esc(hit.id) + '</span>' : '<span class="sr-map-auto warn">ยังไม่ผูก</span>';
-      } else auto = '<span class="sr-map-auto ok"><i class="fa-solid fa-link"></i> ผูกแล้ว</span>';
-      return '<div class="sr-map-row">'
-        + '  <div class="sr-map-who"><b>' + esc(u.name || u.email) + '</b><span>' + esc(u.email) + ' · L' + (String(u.level || '').toUpperCase()) + '</span></div>'
-        + '  <select class="sr-map-sel" data-sr-map="' + esc(mail) + '">' + opts + '</select>'
-        + auto
-        + '</div>';
-    }).join('');
-    return '<div class="sr-map">'
-      + '  <div class="sr-map-h"><i class="fa-solid fa-link"></i> ผูกบัญชีผู้ใช้กับเซลส์'
-      + '    <span class="sr-s2" style="margin-left:auto;font-weight:400">ใช้เมื่อชื่อในระบบไม่ตรงกับรายชื่อเซลส์ (S01–S05)</span></div>'
-      + rows + '</div>';
-  }
+  /** (ย้ายไปหน้า ทีม & สิทธิ์ แล้ว) */
+
+  /** ผูกบัญชีผู้ใช้ ↔ เซลส์ — ย้ายไปอยู่หน้า “ทีม & สิทธิ์” (เมนูจัดการสิทธิ์) */
+  function renderSaleMap() { return ''; }
 
   /* ---------- Dashboard (เวอร์ชันย่อของ Reports — ใช้สูตร/ข้อมูลชุดเดียวกัน) ---------- */
   function renderDashboard() {

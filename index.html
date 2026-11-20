@@ -59,7 +59,7 @@
       <div class="brand"><div class="brand-mark"><i class="fa-solid fa-chart-line"></i></div><div><strong>Prospect Intelligence</strong><small>Sales workspace</small></div></div>
       <div class="nav-label">เมนูหลัก</div>
       <nav class="nav-list" id="navList">
-        <button class="nav-item active" data-page="dashboard"><i class="fa-solid fa-grid-2"></i>Dashboard</button>
+        <button class="nav-item active" data-page="dashboard"><i class="fa-solid fa-gauge-high"></i>Dashboard</button>
         <button class="nav-item" data-page="sales"><i class="fa-solid fa-bullseye"></i>Sale Monitor</button>
         <button class="nav-item" data-page="partners"><i class="fa-solid fa-handshake"></i>Partnership Business</button>
         <button class="nav-item" data-page="team"><i class="fa-solid fa-sitemap"></i>ทีม &amp; สิทธิ์</button>
@@ -97,10 +97,10 @@
   </script>
   <script src="assets/auth-sheets.js?v=4"></script>
   <script src="assets/report-log.js?v=5"></script>
-  <script src="assets/sales-report.js?v=26"></script>
+  <script src="assets/sales-report.js?v=27"></script>
   <script src="assets/project-tracking.js?v=6"></script>
   <script src="assets/customer-intelligence.js?v=4"></script>
-  <script src="assets/team-page.js?v=4"></script>
+  <script src="assets/team-page.js?v=5"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
     window.__allowedPages__ = function () {
@@ -137,7 +137,7 @@
           a.href = opts.usersUrl || 'users.html';
           a.target = opts.usersTarget || '_self';
           a.style.textDecoration = 'none';
-          a.innerHTML = '<i class="fa-solid fa-users-gear"></i>User Management';
+          a.innerHTML = '<i class="fa-solid fa-user-gear"></i>User Management';
           nav.appendChild(a);
         }
       }
@@ -637,7 +637,7 @@
           bar.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Admin — เห็นดีลทั้งหมด <strong>' + list.length + '</strong> รายการ (ข้อมูลชุดเดียวกับ Reports)';
         } else if (isBoss) {
           bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#eef2ff;border:1px solid #e0e7ff;color:#3730a3';
-          bar.innerHTML = '<i class="fa-solid fa-users-viewfinder"></i> แดชบอร์ดรวมของสายงาน — เห็นดีลของทีมทั้งหมดใต้สังกัดคุณ <strong>' + list.length + '</strong> รายการ (<strong>' + (me.name || me.email) + '</strong>)';
+          bar.innerHTML = '<i class="fa-solid fa-users"></i> แดชบอร์ดรวมของสายงาน — เห็นดีลของทีมทั้งหมดใต้สังกัดคุณ <strong>' + list.length + '</strong> รายการ (<strong>' + (me.name || me.email) + '</strong>)';
         } else {
           bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#eff6ff;border:1px solid #dbeafe;color:#1e40af';
           bar.innerHTML = '<i class="fa-solid fa-user-lock"></i> เห็นเฉพาะดีลของคุณ: <strong>' + (me.name || me.email) + '</strong> · <strong>' + list.length + '</strong> รายการ';
