@@ -16,6 +16,8 @@
     'target.save': { label: 'แก้ไขเป้าหมาย',  color: '#7C3AED', icon: 'fa-solid fa-bullseye' },
     'team.add':    { label: 'เพิ่มทีม',        color: '#0E9384', icon: 'fa-solid fa-people-group' },
     'team.del':    { label: 'ลบทีม',           color: '#DC2626', icon: 'fa-solid fa-user-minus' },
+    'sale.add':    { label: 'เพิ่มรายชื่อเซลส์', color: '#7C3AED', icon: 'fa-solid fa-user-plus' },
+    'sale.del':    { label: 'ลบรายชื่อเซลส์',  color: '#DC2626', icon: 'fa-solid fa-user-minus' },
     'project.add': { label: 'เพิ่มโครงการ',    color: '#16A34A', icon: 'fa-solid fa-diagram-project' },
     'project.edit':{ label: 'แก้ไขโครงการ',   color: '#2563EB', icon: 'fa-solid fa-pen-to-square' },
     'project.del': { label: 'ลบโครงการ',       color: '#DC2626', icon: 'fa-solid fa-trash' },

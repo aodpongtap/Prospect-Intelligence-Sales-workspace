@@ -192,13 +192,47 @@
     return '';
   }
 
-  var SALES = [
-    { id: 'S01', name: 'ณัฐพงษ์ ศรีสุข',      team: 'BU-DLAG' },
-    { id: 'S02', name: 'พิมพ์ชนก วัฒนกุล',    team: 'BU-DLAG' },
-    { id: 'S03', name: 'ธนกร ใจดี',           team: 'BU-DLAG' },
-    { id: 'S04', name: 'อรทัย บุญมาก',        team: 'BU-SML' },
-    { id: 'S05', name: 'กิตติพงษ์ แก้วประเสริฐ', team: 'BU-SML' }
-  ];
+  /* ---------- รายชื่อเซลส์ (Sale) — เพิ่ม/ลบเองได้ เก็บในเครื่องนี้ ---------- */
+  var LS_SALES = 'pi_sr_sales_v1';
+  var SALES = loadSales();
+  function loadSales() {
+    try {
+      var a = JSON.parse(localStorage.getItem(LS_SALES) || 'null');
+      if (Object.prototype.toString.call(a) === '[object Array]') return a;
+    } catch (e) {}
+    return [];                             /* เริ่มต้นว่าง — ผู้ใช้เพิ่มรายชื่อเอง */
+  }
+  function saveSales() {
+    try { localStorage.setItem(LS_SALES, JSON.stringify(SALES)); } catch (e) {}
+    __listeners.forEach(function (f) { try { f(); } catch (e) {} });
+  }
+  function nextSaleId() {
+    var max = 0;
+    SALES.forEach(function (s) { var n = parseInt(String(s.id || '').replace(/\D/g, ''), 10) || 0; if (n > max) max = n; });
+    return 'S' + String(max + 1).padStart(2, '0');
+  }
+  function normSaleName(v) { return String(v || '').replace(/[\s\u200B\u00A0]+/g, '').toLowerCase(); }
+  /** เพิ่มรายชื่อเซลส์ (รหัส S01, S02, … สร้างให้อัตโนมัติ) */
+  function addSale(name, team) {
+    var nm = String(name || '').trim();
+    var tm = String(team || '').trim().toUpperCase();
+    if (!nm) throw new Error('กรอกชื่อเซลส์ก่อน');
+    if (!tm) throw new Error('เลือกทีม (BU)');
+    if (SALES.some(function (s) { return normSaleName(s.name) === normSaleName(nm); })) throw new Error('มีชื่อเซลส์นี้อยู่แล้ว');
+    var s = { id: nextSaleId(), name: nm, team: tm };
+    SALES.push(s);
+    saveSales();
+    if (global.PILog) global.PILog.add('sale.add', s.id + ' · ' + nm, 'ทีม ' + teamByCode(tm).name);
+    return s;
+  }
+  /** ลบรายชื่อเซลส์ (ลบไม่ได้ถ้ายังมีดีลค้างอยู่) */
+  function removeSale(id) {
+    var used = DEALS.filter(function (d) { return d.saleId === id; }).length;
+    if (used) throw new Error('ลบไม่ได้: ยังมีดีลของเซลส์คนนี้ ' + used + ' ใบ');
+    SALES = SALES.filter(function (s) { return s.id !== id; });
+    saveSales();
+    if (global.PILog) global.PILog.add('sale.del', id, 'ลบรายชื่อเซลส์ออกจากระบบ');
+  }
   function sale(id) {
     for (var i = 0; i < SALES.length; i++) if (SALES[i].id === id) return SALES[i];
     return { id: id, name: id, team: '-' };
@@ -249,102 +283,12 @@
 
   /* ============================ 2) MOCK DATA ============================ */
   /* prob = โอกาสปิด (%) ใช้เฉพาะสถานะ 1 (Pipeline) ตามที่กำหนด 3 ระดับ 50/40/30 */
-  var DEALS = [
-    /* --- 4) Actual ปิดงานแล้ว --- */
-    { no: 'SO-2026-0412', customer: 'บริษัท สยามคลีน เซอร์วิส จำกัด', job: 'ร้านสะดวกซัก 8 เครื่อง (เซ็นทรัลพระราม 9)',
-      so: 'INV-2026-0412', quoteDate: '2026-09-12', year: 2026, month: 11, saleId: 'S01', product: 'P1',
-      amount: 620000, payment: 'inst', status: 4, prob: 100,
-      note: 'ปิดงานแล้ว มัดจำ 30% รับชำระแล้วเมื่อ 05/11/2569 ส่วนที่เหลือแบ่ง 24 งวด เริ่ม ธ.ค. 2569 ลูกค้าแจ้งว่าจะขยายสาขาที่ 2 ภายใน Q2/2570' },
-    { no: 'SO-2026-0427', customer: 'หจก. บ้านสะอาด นครปฐม', job: 'ร้านสะดวกซัก 5 เครื่อง',
-      so: 'INV-2026-0427', quoteDate: '2026-09-20', year: 2026, month: 11, saleId: 'S02', product: 'P1',
-      amount: 385000, payment: 'term', status: 4, prob: 100,
-      note: 'เซ็นสัญญา 45 วัน เครดิตเทอม วางบิล 10/11/2569 ครบกำหนด 25/12/2569 ผู้ติดต่อคุณสมหมาย โทร. 081-xxx-xxxx' },
-    { no: 'SO-2026-0433', customer: 'โรงงานไทยฟู้ดส์', job: 'ตู้กดน้ำ 12 จุด (โรงงาน 3 อาคาร)',
-      so: 'INV-2026-0433', quoteDate: '2026-10-01', year: 2026, month: 11, saleId: 'S03', product: 'P2',
-      amount: 210000, payment: 'cash', status: 4, prob: 100,
-      note: 'ชำระสดเต็มจำนวน รับเงิน 08/11/2569 ต้องเข้าติดตั้งช่วงเสาร์-อาทิตย์เท่านั้น เพราะเป็นไลน์ผลิต 24 ชม.' },
-    { no: 'SO-2026-0441', customer: 'บริษัท ทรีสตาร์ พร็อพเพอร์ตี้', job: 'ตู้กดน้ำ + น้ำแข็ง 6 จุด (คอนโด 3 โครงการ)',
-      so: 'INV-2026-0441', quoteDate: '2026-10-06', year: 2026, month: 11, saleId: 'S01', product: 'P3',
-      amount: 295000, payment: 'inst', status: 4, prob: 100,
-      note: 'ปิดงาน 12/11/2569 ผ่อน 12 งวด ดอกเบี้ย 0% ผ่านบัตรเครดิตองค์กร รอทีมติดตั้งประสานงานนิติบุคคลแต่ละโครงการ' },
-
-    /* --- 3) รอส่งของ --- */
-    { no: 'SO-2026-0448', customer: 'ดีดี คอนโดมิเนียม', job: 'ร้านสะดวกซัก 4 เครื่อง',
-      so: 'QT-2026-0448', quoteDate: '2026-10-10', year: 2026, month: 11, saleId: 'S02', product: 'P1',
-      amount: 340000, payment: 'inst', status: 3, prob: 90,
-      note: 'เซ็นสัญญาแล้ว รอส่งของจากคลัง เหลือเครื่องอบ 2 เครื่อง คาดว่าถึงไทย 22/11/2569 นัดติดตั้ง 25–27/11/2569' },
-    { no: 'SO-2026-0451', customer: 'บริษัท กรีนมาร์ท จำกัด', job: 'ตู้กดน้ำ 20 จุด (สาขาทั่วกรุงเทพฯ)',
-      so: 'QT-2026-0451', quoteDate: '2026-10-14', year: 2026, month: 11, saleId: 'S03', product: 'P2',
-      amount: 410000, payment: 'term', status: 3, prob: 90,
-      note: 'PO เรียบร้อย ส่งของรอบ 2/2569 ลูกค้าขอเครดิต 45 วัน ต้องแจ้งฝ่ายบัญชีล่วงหน้า 3 วันก่อนวางบิล' },
-    { no: 'SO-2026-0455', customer: 'เอสพีเอส โฮเทล', job: 'ตู้กดน้ำ + น้ำแข็ง 4 จุด',
-      so: 'QT-2026-0455', quoteDate: '2026-10-18', year: 2026, month: 11, saleId: 'S04', product: 'P3',
-      amount: 168000, payment: 'cash', status: 3, prob: 90,
-      note: 'ลูกค้าชำระสด รอส่งของเข้าที่พักรีสอร์ทหัวหิน ต้องรอปิดปรับปรุงล็อบบี้ให้เสร็จก่อน 30/11/2569' },
-
-    /* --- 2) รอยืนยัน PO --- */
-    { no: 'SO-2026-0462', customer: 'เมกะซัก ซิตี้', job: 'ร้านสะดวกซัก 10 เครื่อง (สาขารังสิต)',
-      so: 'QT-2026-0462', quoteDate: '2026-10-20', year: 2026, month: 11, saleId: 'S01', product: 'P1',
-      amount: 720000, payment: 'inst', status: 2, prob: 80,
-      note: 'ผู้บริหารอนุมัติราคาแล้ว รอฝ่ายจัดซื้อออก PO ภายใน 24/11/2569 ติดเงื่อนไขขอของแถมชุดทำความสะอาด 12 ชุด' },
-    { no: 'SO-2026-0466', customer: 'ไทยวัฒนา ฟู้ดส์', job: 'ตู้กดน้ำ 15 จุด',
-      so: 'QT-2026-0466', quoteDate: '2026-10-22', year: 2026, month: 11, saleId: 'S05', product: 'P2',
-      amount: 265000, payment: 'term', status: 2, prob: 80,
-      note: 'รอ PO จากส่วนกลาง เอกสารผ่านฝ่ายกฎหมายแล้ว คาดออก PO ต้นสัปดาห์หน้า ขอให้ติดตามทุก 2 วัน' },
-
-    /* --- 1) Pipeline (ถ่วงน้ำหนัก 50/40/30) --- */
-    { no: 'SO-2026-0471', customer: 'แฟมิลี่มาร์ท สุขุมวิท', job: 'ตู้กดน้ำ + น้ำแข็ง 8 จุด',
-      so: 'QT-2026-0471', quoteDate: '2026-10-24', year: 2026, month: 11, saleId: 'S02', product: 'P3',
-      amount: 320000, payment: 'inst', status: 1, prob: 50,
-      note: 'เสนอราคาแล้ว ผู้ตัดสินใจคือเจ้าของร้าน ติดเรื่องพื้นที่ติดตั้งชั้น 1 ไม่พอ ต้องรอปรับผังใหม่' },
-    { no: 'SO-2026-0474', customer: 'บริษัท อีสเทิร์น แลนด์', job: 'ร้านสะดวกซัก 6 เครื่อง',
-      so: 'QT-2026-0474', quoteDate: '2026-10-26', year: 2026, month: 11, saleId: 'S04', product: 'P1',
-      amount: 455000, payment: 'term', status: 1, prob: 40,
-      note: 'อยู่ระหว่างเปรียบเทียบผู้ขาย 2 ราย จุดแข็งของเราคือบริการหลังการขาย 24 ชม. ต้องส่งแผน PM ให้ลูกค้าดู' },
-    { no: 'SO-2026-0478', customer: 'ซิตี้ คลีน ลอนดรี้', job: 'ร้านสะดวกซัก 3 เครื่อง',
-      so: 'QT-2026-0478', quoteDate: '2026-10-28', year: 2026, month: 11, saleId: 'S05', product: 'P1',
-      amount: 210000, payment: 'cash', status: 1, prob: 30,
-      note: 'เพิ่งเข้ามาครั้งแรกจากงานแสดงสินค้า ยังไม่ยืนยันงบประมาณ ต้องนัดสำรวจหน้างานก่อน' },
-    { no: 'SO-2026-0481', customer: 'โรงแรม บลูเวฟ', job: 'ตู้กดน้ำ 10 จุด',
-      so: 'QT-2026-0481', quoteDate: '2026-10-30', year: 2026, month: 11, saleId: 'S03', product: 'P2',
-      amount: 180000, payment: 'inst', status: 1, prob: 40,
-      note: 'ผู้จัดการโรงแรมสนใจ แต่รออนุมัติจากส่วนกลางที่เชียงใหม่ คาดรู้ผลกลางเดือน ธ.ค. 2569' },
-
-    /* --- 0) กำลังคุย Detail --- */
-    { no: 'SO-2026-0486', customer: 'อาคารสำนักงาน อาร์เอสทาวเวอร์', job: 'ตู้กดน้ำ + น้ำแข็ง 5 จุด',
-      so: '—', quoteDate: '2026-11-03', year: 2026, month: 11, saleId: 'S02', product: 'P3',
-      amount: 240000, payment: 'inst', status: 0, prob: 0,
-      note: 'อยู่ระหว่างเก็บ Requirement จำนวนผู้ใช้อาคาร ~1,200 คน ต้องประเมินปริมาณน้ำต่อวันก่อนเสนอราคาอีกครั้ง' },
-    { no: 'SO-2026-0490', customer: 'มหาวิทยาลัยนวัตกรรม', job: 'ตู้กดน้ำ 25 จุด',
-      so: '—', quoteDate: '2026-11-05', year: 2026, month: 11, saleId: 'S05', product: 'P2',
-      amount: 380000, payment: 'term', status: 0, prob: 0,
-      note: 'ต้องเข้าผ่านระบบจัดซื้อจัดจ้างของมหาวิทยาลัย ใช้เวลาอย่างน้อย 2 เดือน เตรียมเอกสาร TOR ภายในเดือนนี้' },
-
-    /* --- 5) ยกเลิก --- */
-    { no: 'SO-2026-0438', customer: 'บริษัท เดลต้า เทรดดิ้ง', job: 'ร้านสะดวกซัก 6 เครื่อง',
-      so: 'QT-2026-0438', quoteDate: '2026-09-28', year: 2026, month: 11, saleId: 'S04', product: 'P1',
-      amount: 410000, payment: 'inst', status: 5, prob: 0,
-      note: 'ยกเลิกเมื่อ 20/10/2569 — ลูกค้าเปลี่ยนไปใช้เครื่องของคู่แข่งที่ให้ราคาต่ำกว่า 8% เหตุผลหลักคือเงื่อนไขการรับประกัน 1 ปี (คู่แข่งให้ 3 ปี)' },
-
-    /* --- Pipeline เดือนอื่น (ใช้นับคอลัมน์ "งานอื่นๆ ทั้งปี") --- */
-    { no: 'SO-2026-0495', customer: 'ลานซัก ผ่อนคลาย', job: 'ร้านสะดวกซัก 4 เครื่อง',
-      so: 'QT-2026-0495', quoteDate: '2026-11-02', year: 2026, month: 12, saleId: 'S01', product: 'P1',
-      amount: 290000, payment: 'inst', status: 1, prob: 40,
-      note: 'คาดปิดภายใน ธ.ค. 2569 ลูกค้ารอเปิดสาขาใหม่ช่วงปีใหม่' },
-    { no: 'SO-2026-0498', customer: 'เมืองทอง ฟู้ดคอร์ท', job: 'ตู้กดน้ำ 12 จุด',
-      so: 'QT-2026-0498', quoteDate: '2026-11-04', year: 2026, month: 12, saleId: 'S03', product: 'P2',
-      amount: 195000, payment: 'cash', status: 1, prob: 30,
-      note: 'รอฤดูกาลเปิดศูนย์อาหารใหม่ เดือน ธ.ค. 2569' },
-    { no: 'SO-2027-0007', customer: 'บริษัท นอร์ธเทิร์น รีเทล', job: 'ตู้กดน้ำ + น้ำแข็ง 9 จุด',
-      so: 'QT-2027-0007', quoteDate: '2026-11-08', year: 2027, month: 1, saleId: 'S02', product: 'P3',
-      amount: 320000, payment: 'term', status: 1, prob: 50,
-      note: 'โครงการขยายสาขาภาคเหนือ เริ่มก่อสร้าง ม.ค. 2570 คาดเซ็นสัญญา ก.พ. 2570' }
-  ];
+  var DEALS = [];   /* ยังไม่มีดีล — ผู้ใช้เพิ่มเองผ่านปุ่ม “+ เพิ่มดีล” */
 
   /* ---------- เก็บดีลลงเครื่อง (ให้ทุกหน้าใช้ชุดข้อมูลเดียวกัน) ---------- */
-  var LS_DEALS = 'pi_sr_deals_v1';
+  var LS_DEALS = 'pi_sr_deals_v2';   /* v2 = ล้างดีลตัวอย่างเดิมในเครื่องผู้ใช้ */
   var __listeners = [];
-  var __SEED_DEALS__ = JSON.parse(JSON.stringify(DEALS));   // เก็บชุดตั้งต้นไว้สำหรับ Reset
+  var __SEED_DEALS__ = [];   // ไม่มีชุดตัวอย่างแล้ว (Reset = ล้างทั้งหมด)
   (function restoreDeals() {
     try {
       var a = JSON.parse(localStorage.getItem(LS_DEALS) || 'null');
@@ -902,6 +846,35 @@
           + '  <tfoot><tr><td class="sr-td-team"><b>รวมทุกทีม</b></td>' + monthTot + '<td class="sr-num sr-strong">' + money(grand) + '</td><td></td></tr></tfoot>'
           + '  </table></div>'
         : '')
+      + '</section>'
+      + salesPanel();
+  }
+
+  /* ---------- รายชื่อเซลส์ (Sale) ---------- */
+  function salesPanel() {
+    var sc = scopeOf();
+    if (sc.type === 'sale' || sc.type === 'none') return '';
+    var lockedTeam = viewerTeam();
+    var list = lockedTeam ? SALES.filter(function (s) { return s.team === lockedTeam; }) : SALES;
+    var rows = list.map(function (s) {
+      var cnt = DEALS.filter(function (d) { return d.saleId === s.id; }).length;
+      return '<tr>'
+        + '<td><span class="sr-sid">' + esc(s.id) + '</span></td>'
+        + '<td><div class="sr-sale"><span class="sr-av">' + esc(String(s.name).trim().charAt(0) || '?') + '</span>'
+        + '  <div style="min-width:0"><div class="sr-nm">' + esc(s.name) + '</div><div class="sr-s2">' + cnt + ' ดีล</div></div></div></td>'
+        + '<td>' + esc(teamByCode(s.team).name) + '</td>'
+        + '<td class="sr-num"><button class="sr-xbtn" data-sr-delsale="' + esc(s.id) + '" title="ลบรายชื่อนี้"><i class="fa-solid fa-trash"></i></button></td>'
+        + '</tr>';
+    }).join('');
+    return '<section class="sr-panel">'
+      + '  <div class="sr-ph"><div><h3>รายชื่อเซลส์ (Sale)</h3>'
+      + '    <div class="sr-s2">ใช้เลือกในฟอร์มดีลและคำนวณ “เป้า/คน” · รหัส S01, S02, … ระบบสร้างให้อัตโนมัติ</div></div>'
+      + '    <div class="sr-tools"><button class="sr-btn dark" data-sr-addsale><i class="fa-solid fa-user-plus"></i> เพิ่มเซลส์</button></div></div>'
+      + (list.length
+        ? '<div class="sr-tablewrap"><table class="sr-table sr-saletable"><thead><tr>'
+          + '<th style="width:70px">รหัส</th><th>ชื่อเซลส์</th><th style="width:130px">ทีม (BU)</th><th style="width:56px"></th>'
+          + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+        : '<div class="sr-empty-note"><i class="fa-solid fa-user-plus" style="margin-right:6px"></i> ยังไม่มีรายชื่อเซลส์ — กด “เพิ่มเซลส์” เพื่อเริ่มต้น</div>')
       + '</section>';
   }
 
@@ -1247,6 +1220,10 @@
 
   /** เปิดฟอร์มดีล — null = เพิ่มใหม่, deal object = แก้ไข */
   function openDealForm(d0) {
+    if (!SALES.length) {
+      if (global.toast) global.toast('ยังไม่มีรายชื่อเซลส์ — เพิ่มที่หัวข้อ “รายชื่อเซลส์ (Sale)” ก่อน');
+      return;
+    }
     var tm = state.team || viewerTeam() || '';
     var list = SALES.filter(function (s) { return !tm || s.team === tm; });
     if (!list.length) list = SALES;
@@ -1616,6 +1593,43 @@
   }
 
   /* ---------- จัดการทีม / เป้าหมาย ---------- */
+  /* ---------- จัดการรายชื่อเซลส์ ---------- */
+  function addSaleModal() {
+    if (typeof global.setModal !== 'function') return;
+    var lockedTeam = viewerTeam();
+    var teamOpts = (lockedTeam ? TEAMS.filter(function (t) { return t.code === lockedTeam; }) : TEAMS)
+      .map(function (t) { return '<option value="' + esc(t.code) + '">' + esc(t.name) + '</option>'; }).join('');
+    global.setModal('เพิ่มเซลส์',
+      'กรอกชื่อ-นามสกุลจริง และเลือกทีมที่สังกัด',
+      '<label style="font-size:11px;color:#475467">ชื่อเซลส์ *</label>'
+      + '<input id="srNewSale" placeholder="เช่น สมชาย ใจดี" style="width:100%;margin:6px 0 12px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px;font-family:inherit;font-size:12px">'
+      + '<label style="font-size:11px;color:#475467">ทีม (BU) *</label>'
+      + '<select id="srNewSaleTeam" style="width:100%;margin-top:6px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px;font-family:inherit;font-size:12px">' + teamOpts + '</select>'
+      + '<div style="font-size:10.5px;color:#98A2B3;margin-top:8px">ชื่อนี้ต้องตรงกับชื่อบัญชีผู้ใช้ (ระดับ เซลล์) เพื่อให้ Dashboard แสดงเฉพาะดีลของตัวเอง</div>',
+      [{ label: 'ยกเลิก' }, { label: 'เพิ่มเซลส์', action: 'sr-add-sale', primary: true }]);
+  }
+
+  function doAddSale() {
+    var inp = document.getElementById('srNewSale');
+    var sel = document.getElementById('srNewSaleTeam');
+    try {
+      var s = addSale(inp ? inp.value : '', sel ? sel.value : '');
+      if (typeof global.closeModal === 'function') global.closeModal();
+      if (typeof global.render === 'function') global.render();
+      if (global.toast) global.toast('เพิ่ม ' + s.name + ' (' + s.id + ') แล้ว');
+    } catch (err) { if (global.toast) global.toast(err.message || String(err)); }
+  }
+
+  function deleteSale(id) {
+    var s = sale(id);
+    if (!global.confirm('ลบรายชื่อเซลส์ ' + (s.name || id) + ' (' + id + ') ?')) return;
+    try {
+      removeSale(id);
+      if (typeof global.render === 'function') global.render();
+      if (global.toast) global.toast('ลบ ' + id + ' แล้ว');
+    } catch (err) { if (global.toast) global.toast(err.message || String(err)); }
+  }
+
   function addTeamModal() {
     if (typeof global.setModal !== 'function') return;
     global.setModal('เพิ่มทีม (BU)', 'ตั้งชื่อทีมให้ตรงกับโครงสร้างองค์กร เช่น BU-CENTRAL',
@@ -1625,8 +1639,7 @@
       [{ label: 'ยกเลิก' }, { label: 'เพิ่มทีม', action: 'sr-add-team', primary: true }]);
   }
 
-  function doAddTeam() {
-    var inp = document.getElementById('srNewTeam');
+  function doAddTeam() {    var inp = document.getElementById('srNewTeam');
     var name = inp ? String(inp.value || '').trim().toUpperCase() : '';
     if (!name) { if (global.toast) global.toast('กรอกชื่อทีมก่อน'); return; }
     var dup = TEAMS.some(function (t) { return t.code === name || String(t.name).toUpperCase() === name; });
@@ -1718,6 +1731,9 @@
     }
 
     if (t.closest('[data-sr-addteam]')) { addTeamModal(); return; }
+    if (t.closest('[data-sr-addsale]')) { addSaleModal(); return; }
+    var dsl = t.closest('[data-sr-delsale]');
+    if (dsl) { deleteSale(dsl.getAttribute('data-sr-delsale')); return; }
     var vw = t.closest('[data-sr-view]');
     if (vw) {
       state.view = vw.getAttribute('data-sr-view') === 'log' ? 'log' : 'report';
@@ -1752,6 +1768,7 @@
     if (delBtn) { deleteTeam(delBtn.getAttribute('data-sr-delteam')); return; }
     var actBtn = t.closest('[data-action]');
     if (actBtn && actBtn.getAttribute('data-action') === 'sr-add-team') { doAddTeam(); return; }
+    if (actBtn && actBtn.getAttribute('data-action') === 'sr-add-sale') { doAddSale(); return; }
 
     var go = t.closest('[data-sr-goto]');
     if (go) {
@@ -1979,12 +1996,13 @@
       + '.sr-pay{margin-bottom:15px}'
       + '.sr-payleg{display:flex;gap:11px;flex-wrap:wrap;font-size:9.5px;color:#667085;align-items:center}'
       + '.sr-payleg i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle}'
-      + '.sr-paytable td{padding:9px 10px}'
-      + '.sr-paytable tfoot td{background:#F8FAFC;border-top:1px solid #E9EEF5;color:#0F2B46;font-weight:600}'
+      + '.sr-paytable td{padding:9px 10px}'      + '.sr-paytable tfoot td{background:#F8FAFC;border-top:1px solid #E9EEF5;color:#0F2B46;font-weight:600}'
       + '.sr-pay-tm b{color:#0F2B46;font-size:11px;font-weight:600}'
       + '.sr-pay-tm span{display:block;font-size:9.5px;color:#98A2B3;margin-top:1px}'
       + '.sr-paybar{display:flex;height:7px;border-radius:99px;overflow:hidden;background:#EEF2F7;min-width:88px}'
       + '.sr-paybar span{display:block;height:100%}'
+      + '.sr-sid{display:inline-block;background:#EEF2FF;color:#3730A3;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600}'
+      + '.sr-saletable td{padding:9px 10px}'
       + '.sr-paypcts{display:flex;gap:7px;margin-top:4px;font-size:9px;font-variant-numeric:tabular-nums;white-space:nowrap}'
       + '.sr-empty-note{padding:16px;text-align:center;color:#98A2B3;font-size:11px}'
       + '.sr-empty{text-align:center!important;color:#98A2B3;padding:22px!important}'
@@ -2053,6 +2071,9 @@
     viewerTeam: viewerTeam,
     teamHeads: TEAM_HEADS,
     teams: function () { return TEAMS; },
+    salesList: function () { return SALES; },
+    addSale: addSale,
+    removeSale: removeSale,
     data: function () {
       return { deals: DEALS, teams: TEAMS, sales: SALES, viewerTeam: viewerTeam() };
     },
