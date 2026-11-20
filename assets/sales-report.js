@@ -446,7 +446,7 @@
   }
 
   /* ============================ 4) VIEW ============================ */
-  var state = { year: 2026, month: 11, team: '', sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1, perfTeam: '', view: 'report' };
+  var state = { year: 2026, month: 11, team: '', sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1, perfTeam: '', view: 'report', summaryView: 'cards' };
   var ui = { targets: false };
   var __editNo = '';    // เลขที่ SO ของดีลที่กำลังแก้ไข
   var __openNo = '';    // เลขที่ SO ของดีลที่เปิดดูอยู่
@@ -571,72 +571,150 @@
 
     var head = m ? (TH_MONTHS[m - 1] + ' ' + (y + 543)) : ('ทั้งปี ' + (y + 543));
 
-    var body = blocks.map(function (b) {
+    var totAch = tot.target ? (tot.m.s4 / tot.target * 100) : 0;
+    var totFcVal = blocks.reduce(function (a, b) { return a + num(b.sum.forecast); }, 0);
+
+    /* ---------- มุมมองที่ 1: ตารางละเอียด ---------- */
+    function tableView() {
+      var body = blocks.map(function (b) {
+        var perHead = b.rows.length ? b.target / b.rows.length : 0;
+        var ach4 = b.target ? (b.sum.s4 / b.target * 100) : 0;
+        var fc = b.target ? (b.sum.forecast / b.target * 100) : 0;
+        var band = '<tr class="sr-band"><td colspan="10">'
+          + '<span class="sr-band-name"><i class="fa-solid fa-users"></i> ' + esc(b.team.name) + '</span>'
+          + '<span class="sr-band-sub">' + b.rows.length + ' คน · เป้า ' + money(b.target) + '</span>'
+          + '<span class="sr-band-pill">ปิดงานแล้ว <b>' + pct(ach4) + '</b></span>'
+          + '<span class="sr-band-pill alt">Forecast <b>' + pct(fc) + '</b></span>'
+          + '</td></tr>';
+
+        var saleRows = b.rows.map(function (x) {
+          var nm = String(x.sale.name || '');
+          var av = nm.trim().charAt(0) || '?';
+          var g = perHead ? (x.s.s4 / perHead * 100) : 0;
+          return '<tr>'
+            + '<td class="sr-sticky"><div class="sr-sale"><span class="sr-av">' + esc(av) + '</span>'
+            + '  <div style="min-width:0"><div class="sr-nm">' + esc(x.sale.name) + '</div>'
+            + '  <div class="sr-s2">' + esc(x.sale.team) + '</div></div></div></td>'
+            + '<td class="sr-num sr-goal" title="เป้า/คน ' + money(perHead) + ' · Actual ' + money(x.s.s4) + '">'
+            + '  <div class="sr-goal-num">' + pct(g) + '</div>'
+            + '  <div class="sr-mini"><span style="width:' + Math.max(0, Math.min(100, g)) + '%"></span></div></td>'
+            + '<td class="sr-num">' + (x.s.s4 ? money(x.s.s4) : '<span class="sr-dim">—</span>') + '</td>'
+            + '<td class="sr-num" title="ถ่วงน้ำหนัก 90% = ' + money(x.s.s3 * 0.9) + '">' + (x.s.s3 ? money(x.s.s3) : '<span class="sr-dim">—</span>') + '</td>'
+            + '<td class="sr-num" title="ถ่วงน้ำหนัก 80% = ' + money(x.s.s2 * 0.8) + '">' + (x.s.s2 ? money(x.s.s2) : '<span class="sr-dim">—</span>') + '</td>'
+            + '<td class="sr-num" title="ถ่วงตามโอกาสปิด = ' + money(x.s.weighted1) + '">' + (x.s.s1 ? money(x.s.s1) : '<span class="sr-dim">—</span>') + '</td>'
+            + '<td class="sr-num sr-total-col">' + money(x.s.totalSale) + '</td>'
+            + '<td class="sr-num sr-sep sr-muted">' + (x.other.s1 ? money(x.other.s1) : '<span class="sr-dim">—</span>') + '</td>'
+            + '<td class="sr-num sr-muted">' + (x.other.s0 ? money(x.other.s0) : '<span class="sr-dim">—</span>') + '</td>'
+            + '<td class="sr-num ' + (x.other.s5 ? 'sr-neg' : 'sr-muted') + '">' + (x.other.s5 ? ('-' + money(x.other.s5)) : '<span class="sr-dim">—</span>') + '</td>'
+            + '</tr>';
+        }).join('');
+        return band + saleRows;
+      }).join('');
+
+      return '<div class="sr-tablewrap"><table class="sr-table sr-summary"><thead><tr>'
+        + '    <th rowspan="2" class="sr-sticky sr-td-sale">Sale</th>'
+        + '    <th rowspan="2" class="sr-num">เป้า/คน</th>'
+        + '    <th colspan="5" class="sr-grp">เดือนที่เลือก — ' + esc(head) + '</th>'
+        + '    <th colspan="3" class="sr-grp sr-grp-alt">ทั้งปี ' + (y + 543) + ' (เดือนอื่น)</th>'
+        + '  </tr><tr>'
+        + '    <th class="sr-num">Actual</th><th class="sr-num">รอส่งของ</th>'
+        + '    <th class="sr-num">รอ PO</th><th class="sr-num">Pipeline</th>'
+        + '    <th class="sr-num sr-total-col">รวมเดือนนี้</th>'
+        + '    <th class="sr-num sr-grp-alt sr-sep">Pipeline อื่น</th><th class="sr-num">กำลังคุย</th><th class="sr-num">ยกเลิก</th>'
+        + '  </tr></thead><tbody>'
+        + ((body.length ? body : '')) 
+        + (body ? '' : '<tr><td colspan="10" class="sr-empty">ไม่พบข้อมูลตามตัวกรอง</td></tr>')
+        + '</tbody><tfoot><tr class="sr-total-row">'
+        + '  <td class="sr-sticky"><b>รวมทั้งหมด</b></td>'
+        + '  <td class="sr-num"><b>' + pct(totAch) + '</b></td>'
+        + '  <td class="sr-num"><b>' + money(tot.m.s4) + '</b></td>'
+        + '  <td class="sr-num"><b>' + money(tot.m.s3) + '</b></td>'
+        + '  <td class="sr-num"><b>' + money(tot.m.s2) + '</b></td>'
+        + '  <td class="sr-num"><b>' + money(tot.m.s1) + '</b></td>'
+        + '  <td class="sr-num sr-total-col"><b>' + money(tot.m.totalSale) + '</b></td>'
+        + '  <td class="sr-num sr-sep"><b>' + money(tot.o.s1) + '</b></td>'
+        + '  <td class="sr-num"><b>' + money(tot.o.s0) + '</b></td>'
+        + '  <td class="sr-num sr-neg"><b>' + (tot.o.s5 ? '-' + money(tot.o.s5) : money(0)) + '</b></td>'
+        + '</tr></tfoot></table></div>';
+    }
+
+    /* ---------- มุมมองที่ 2: การ์ดรายเซลส์ (อ่านง่าย) ---------- */
+    function fcColor(g) { return g >= 100 ? '#16A34A' : g >= 70 ? '#2563EB' : g >= 40 ? '#F59E0B' : '#DC2626'; }
+    function fcChip(label, val, color) {
+      return '<div class="sr-fc-chip" style="border-left-color:' + color + '">'
+        + '<small>' + esc(label) + '</small>'
+        + '<b>' + (num(val) ? money(val) : '<span class="sr-dim">—</span>') + '</b></div>';
+    }
+    function personCard(x, perHead) {
+      var g = perHead ? (x.s.s4 / perHead * 100) : 0;
+      var col = fcColor(g);
+      var av = String(x.sale.name || '').trim().charAt(0) || '?';
+      var otherYear = num(x.other.s1) + num(x.other.s0);
+      return '<article class="sr-fc-card">'
+        + '  <div class="sr-fc-top">'
+        + '    <span class="sr-fc-av">' + esc(av) + '</span>'
+        + '    <div class="sr-fc-id">'
+        + '      <div class="sr-fc-name">' + esc(x.sale.name) + '</div>'
+        + '      <div class="sr-fc-meta">' + esc(x.sale.team) + ' · เป้า/คน ' + money(perHead) + '</div>'
+        + '    </div>'
+        + '    <div class="sr-fc-ach" style="color:' + col + '">' + pct(g) + '</div>'
+        + '  </div>'
+        + '  <div class="sr-fc-bar" title="Actual ' + money(x.s.s4) + ' จากเป้า ' + money(perHead) + '"><span style="width:' + Math.max(0, Math.min(100, g)) + '%;background:' + col + '"></span></div>'
+        + '  <div class="sr-fc-actual"><b>' + money(x.s.s4) + '</b><span>ปิดงานแล้ว (Actual)</span></div>'
+        + '  <div class="sr-fc-chips">'
+        + fcChip('รอส่งของ', x.s.s3, '#0EA5E9')
+        + fcChip('รอ PO', x.s.s2, '#F59E0B')
+        + fcChip('Pipeline', x.s.s1, '#7C3AED')
+        + fcChip('รวมเดือนนี้', x.s.totalSale, '#0F2B46')
+        + '  </div>'
+        + '  <div class="sr-fc-foot">'
+        + '    <span class="sr-fc-fc"><i class="fa-solid fa-chart-line"></i> Forecast ' + money(x.s.forecast) + '</span>'
+        + '    <span class="sr-fc-other" title="ดีลเดือนอื่นในปี ' + (y + 543) + '">' + (otherYear ? 'ปีนี้ +' + money(otherYear) : '—') + (num(x.other.s5) ? ' · ยกเลิก ' + money(x.other.s5) : '') + '</span>'
+        + '  </div>'
+        + '</article>';
+    }
+    function teamHead(b) {
       var perHead = b.rows.length ? b.target / b.rows.length : 0;
       var ach4 = b.target ? (b.sum.s4 / b.target * 100) : 0;
       var fc = b.target ? (b.sum.forecast / b.target * 100) : 0;
-      var band = '<tr class="sr-band"><td colspan="10">'
-        + '<span class="sr-band-name"><i class="fa-solid fa-users"></i> ' + esc(b.team.name) + '</span>'
-        + '<span class="sr-band-sub">' + b.rows.length + ' คน · เป้า ' + money(b.target) + '</span>'
-        + '<span class="sr-band-pill">ปิดงานแล้ว <b>' + pct(ach4) + '</b></span>'
-        + '<span class="sr-band-pill alt">Forecast <b>' + pct(fc) + '</b></span>'
-        + '</td></tr>';
+      var col = fcColor(ach4);
+      return '<div class="sr-fc-team">'
+        + '  <span class="sr-fc-team-name"><i class="fa-solid fa-users"></i> ' + esc(b.team.name) + '</span>'
+        + '  <span class="sr-fc-team-sub">' + b.rows.length + ' คน · เป้า ' + money(b.target) + '</span>'
+        + '  <div class="sr-fc-team-bar"><span style="width:' + Math.max(0, Math.min(100, ach4)) + '%;background:' + col + '"></span></div>'
+        + '  <span class="sr-fc-team-val">' + money(b.sum.s4) + ' / ' + money(b.target) + ' · <b style="color:' + col + '">' + pct(ach4) + '</b></span>'
+        + '  <span class="sr-band-pill alt">Forecast <b>' + pct(fc) + '</b></span>'
+        + '</div>'
+        + '<div class="sr-fc-grid">' + b.rows.map(function (x) { return personCard(x, perHead); }).join('') + '</div>';
+    }
+    function cardsView() {
+      if (!blocks.length) return '<div class="sr-empty" style="padding:26px">ไม่พบข้อมูลตามตัวกรอง</div>';
+      return '<div class="sr-fc-list">'
+        + blocks.map(teamHead).join('')
+        + '<div class="sr-fc-total">'
+        + '  <div><small>รวมทุกทีม (Actual)</small><b>' + money(tot.m.s4) + ' / ' + money(tot.target) + '</b></div>'
+        + '  <div><small>% ปิดงานรวม</small><b style="color:' + fcColor(totAch) + '">' + pct(totAch) + '</b></div>'
+        + '  <div><small>Forecast รวม</small><b>' + money(totFcVal) + '</b></div>'
+        + '  <div><small>รวมเดือนนี้</small><b>' + money(tot.m.totalSale) + '</b></div>'
+        + '</div>'
+        + '</div>';
+    }
 
-      var saleRows = b.rows.map(function (x) {
-        var nm = String(x.sale.name || '');
-        var av = nm.trim().charAt(0) || '?';
-        var g = perHead ? (x.s.s4 / perHead * 100) : 0;
-        return '<tr>'
-          + '<td class="sr-sticky"><div class="sr-sale"><span class="sr-av">' + esc(av) + '</span>'
-          + '  <div style="min-width:0"><div class="sr-nm">' + esc(x.sale.name) + '</div>'
-          + '  <div class="sr-s2">' + esc(x.sale.team) + '</div></div></div></td>'
-          + '<td class="sr-num sr-goal" title="เป้า/คน ' + money(perHead) + ' · Actual ' + money(x.s.s4) + '">'
-          + '  <div class="sr-goal-num">' + pct(g) + '</div>'
-          + '  <div class="sr-mini"><span style="width:' + Math.max(0, Math.min(100, g)) + '%"></span></div></td>'
-          + '<td class="sr-num">' + (x.s.s4 ? money(x.s.s4) : '<span class="sr-dim">—</span>') + '</td>'
-          + '<td class="sr-num" title="ถ่วงน้ำหนัก 90% = ' + money(x.s.s3 * 0.9) + '">' + (x.s.s3 ? money(x.s.s3) : '<span class="sr-dim">—</span>') + '</td>'
-          + '<td class="sr-num" title="ถ่วงน้ำหนัก 80% = ' + money(x.s.s2 * 0.8) + '">' + (x.s.s2 ? money(x.s.s2) : '<span class="sr-dim">—</span>') + '</td>'
-          + '<td class="sr-num" title="ถ่วงตามโอกาสปิด = ' + money(x.s.weighted1) + '">' + (x.s.s1 ? money(x.s.s1) : '<span class="sr-dim">—</span>') + '</td>'
-          + '<td class="sr-num sr-total-col">' + money(x.s.totalSale) + '</td>'
-          + '<td class="sr-num sr-sep sr-muted">' + (x.other.s1 ? money(x.other.s1) : '<span class="sr-dim">—</span>') + '</td>'
-          + '<td class="sr-num sr-muted">' + (x.other.s0 ? money(x.other.s0) : '<span class="sr-dim">—</span>') + '</td>'
-          + '<td class="sr-num ' + (x.other.s5 ? 'sr-neg' : 'sr-muted') + '">' + (x.other.s5 ? ('-' + money(x.other.s5)) : '<span class="sr-dim">—</span>') + '</td>'
-          + '</tr>';
-      }).join('');
-      return band + saleRows;
-    }).join('');
-
-    var totAch = tot.target ? (tot.m.s4 / tot.target * 100) : 0;
-
+    var isTable = state.summaryView === 'table';
     return ''
       + '<section class="sr-panel">'
       + '  <div class="sr-ph"><div><h3>สรุปยอดขายรายเซลส์ (Forecast Summary)</h3>'
-      + '    <div class="sr-s2">แท่ง % = Actual เทียบเป้าต่อคน · ตัวเลขจาง ๆ ทางขวาคืองานเดือนอื่นของทั้งปี</div></div>'
-      + '    <span class="sr-tag">' + esc(head) + '</span></div>'
-      + '  <div class="sr-tablewrap"><table class="sr-table sr-summary"><thead><tr>'
-      + '    <th rowspan="2" class="sr-sticky sr-td-sale">Sale</th>'
-      + '    <th rowspan="2" class="sr-num">เป้า/คน</th>'
-      + '    <th colspan="5" class="sr-grp">เดือนที่เลือก — ' + esc(head) + '</th>'
-      + '    <th colspan="3" class="sr-grp sr-grp-alt">ทั้งปี ' + (y + 543) + ' (เดือนอื่น)</th>'
-      + '  </tr><tr>'
-      + '    <th class="sr-num">Actual</th><th class="sr-num">รอส่งของ</th>'
-      + '    <th class="sr-num">รอ PO</th><th class="sr-num">Pipeline</th>'
-      + '    <th class="sr-num sr-total-col">รวมเดือนนี้</th>'
-      + '    <th class="sr-num sr-grp-alt sr-sep">Pipeline อื่น</th><th class="sr-num">กำลังคุย</th><th class="sr-num">ยกเลิก</th>'
-      + '  </tr></thead><tbody>'
-      + (body || '<tr><td colspan="10" class="sr-empty">ไม่พบข้อมูลตามตัวกรอง</td></tr>')
-      + '</tbody><tfoot><tr class="sr-total-row">'
-      + '  <td class="sr-sticky"><b>รวมทั้งหมด</b></td>'
-      + '  <td class="sr-num"><b>' + pct(totAch) + '</b></td>'
-      + '  <td class="sr-num"><b>' + money(tot.m.s4) + '</b></td>'
-      + '  <td class="sr-num"><b>' + money(tot.m.s3) + '</b></td>'
-      + '  <td class="sr-num"><b>' + money(tot.m.s2) + '</b></td>'
-      + '  <td class="sr-num"><b>' + money(tot.m.s1) + '</b></td>'
-      + '  <td class="sr-num sr-total-col"><b>' + money(tot.m.totalSale) + '</b></td>'
-      + '  <td class="sr-num sr-sep"><b>' + money(tot.o.s1) + '</b></td>'
-      + '  <td class="sr-num"><b>' + money(tot.o.s0) + '</b></td>'
-      + '  <td class="sr-num sr-neg"><b>' + (tot.o.s5 ? '-' + money(tot.o.s5) : money(0)) + '</b></td>'
-      + '</tr></tfoot></table></div>'
+      + '    <div class="sr-s2">' + (isTable
+            ? 'แท่ง % = Actual เทียบเป้าต่อคน · ตัวเลขจาง ๆ ทางขวาคืองานเดือนอื่นของทั้งปี'
+            : 'การ์ดละ 1 เซลส์ — % เทียบเป้าต่อคน · แยกสถานะงาน และ Forecast ของเดือนที่เลือก') + '</div></div>'
+      + '    <div class="sr-ph-tools">'
+      + '      <span class="sr-tag">' + esc(head) + '</span>'
+      + '      <div class="sr-seg">'
+      + '        <button class="sr-segbtn' + (isTable ? '' : ' on') + '" data-sr-sumview="cards" title="มุมมองการ์ด"><i class="fa-solid fa-table-cells-large"></i> การ์ด</button>'
+      + '        <button class="sr-segbtn' + (isTable ? ' on' : '') + '" data-sr-sumview="table" title="ตารางตัวเลขละเอียด"><i class="fa-solid fa-table"></i> ตาราง</button>'
+      + '      </div>'
+      + '    </div></div>'
+      + (isTable ? tableView() : cardsView())
       + '</section>';
   }
 
@@ -1506,6 +1584,12 @@
       if (typeof global.render === 'function') global.render();
       return;
     }
+    var sv = t.closest('[data-sr-sumview]');
+    if (sv) {
+      state.summaryView = sv.getAttribute('data-sr-sumview') === 'table' ? 'table' : 'cards';
+      if (typeof global.render === 'function') global.render();
+      return;
+    }
     var ptBtn = t.closest('[data-sr-perfteam]');
     if (ptBtn) { state.perfTeam = ptBtn.getAttribute('data-sr-perfteam'); if (typeof global.render === 'function') global.render(); return; }
     var saleBtn = t.closest('[data-sr-sale]');
@@ -1557,6 +1641,51 @@
       + '.sr-tabbtn.on{background:#fff;color:#0F2B46;box-shadow:0 2px 6px rgba(15,43,70,.10)}'
       + '.sr-tabbtn i{font-size:11px}'
       + '@media(max-width:640px){.sr-tabsbar{display:flex;width:100%}.sr-tabbtn{flex:1;justify-content:center;padding:8px 8px;font-size:10.5px}}'
+      /* สรุปยอดขายรายเซลส์ — การ์ด */
+      + '.sr-ph-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}'
+      + '.sr-seg{display:inline-flex;background:#F1F5F9;border:1px solid #E5EAF0;border-radius:9px;padding:3px}'
+      + '.sr-segbtn{border:0;background:transparent;color:#667085;font:inherit;font-size:10.5px;font-weight:500;'
+      + 'padding:5px 10px;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:.15s}'
+      + '.sr-segbtn:hover{color:#0F2B46}'
+      + '.sr-segbtn.on{background:#fff;color:#0F2B46;box-shadow:0 1px 4px rgba(15,43,70,.12)}'
+      + '.sr-fc-list{display:flex;flex-direction:column;gap:14px}'
+      + '.sr-fc-team{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#F8FAFC;border:1px solid #EEF2F7;'
+      + 'border-radius:11px;padding:9px 12px}'
+      + '.sr-fc-team-name{font-size:12px;font-weight:600;color:#0F2B46;display:inline-flex;align-items:center;gap:6px}'
+      + '.sr-fc-team-sub{font-size:10px;color:#667085}'
+      + '.sr-fc-team-bar{flex:1 1 120px;min-width:90px;height:6px;background:#E7EDF5;border-radius:99px;overflow:hidden}'
+      + '.sr-fc-team-bar span{display:block;height:100%;border-radius:99px;transition:width .3s}'
+      + '.sr-fc-team-val{font-size:10.5px;color:#475467;font-variant-numeric:tabular-nums}'
+      + '.sr-fc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(252px,1fr));gap:11px;margin-top:10px}'
+      + '.sr-fc-card{border:1px solid #E9EEF5;border-radius:13px;padding:13px;background:#fff;transition:box-shadow .16s,border-color .16s}'
+      + '.sr-fc-card:hover{border-color:#C7D7EE;box-shadow:0 10px 22px rgba(15,43,70,.08)}'
+      + '.sr-fc-top{display:flex;align-items:center;gap:9px}'
+      + '.sr-fc-av{width:32px;height:32px;border-radius:50%;flex:0 0 32px;display:grid;place-items:center;'
+      + 'background:#EFF6FF;color:#1D4ED8;font-weight:600;font-size:12px}'
+      + '.sr-fc-id{min-width:0;flex:1}'
+      + '.sr-fc-name{font-size:11.5px;font-weight:600;color:#0F2B46;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+      + '.sr-fc-meta{font-size:9.5px;color:#98A2B3}'
+      + '.sr-fc-ach{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}'
+      + '.sr-fc-bar{height:6px;background:#EEF2F7;border-radius:99px;overflow:hidden;margin:9px 0 8px}'
+      + '.sr-fc-bar span{display:block;height:100%;border-radius:99px;transition:width .3s}'
+      + '.sr-fc-actual{display:flex;align-items:baseline;gap:6px}'
+      + '.sr-fc-actual b{font-size:15px;color:#0F2B46;font-variant-numeric:tabular-nums}'
+      + '.sr-fc-actual span{font-size:9.5px;color:#98A2B3}'
+      + '.sr-fc-chips{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:9px}'
+      + '.sr-fc-chip{background:#F8FAFC;border:1px solid #EEF2F7;border-left:3px solid #CBD5E1;border-radius:8px;padding:5px 8px}'
+      + '.sr-fc-chip small{display:block;font-size:9px;color:#98A2B3}'
+      + '.sr-fc-chip b{font-size:10.5px;color:#0F2B46;font-variant-numeric:tabular-nums}'
+      + '.sr-fc-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:9px;padding-top:8px;border-top:1px dashed #EEF2F7;font-size:9.5px;color:#667085}'
+      + '.sr-fc-fc{color:#2563EB;font-weight:500}'
+      + '.sr-fc-other{color:#98A2B3;text-align:right}'
+      + '.sr-fc-total{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:#0F2B46;border-radius:12px;padding:12px 14px;color:#fff}'
+      + '.sr-fc-total small{display:block;font-size:9.5px;color:#9CB0C5;margin-bottom:3px}'
+      + '.sr-fc-total b{font-size:14px;font-variant-numeric:tabular-nums}'
+      + '@media(max-width:900px){.sr-fc-grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}'
+      + '.sr-fc-total{grid-template-columns:repeat(2,1fr)}}'
+      + '@media(max-width:560px){.sr-fc-grid{grid-template-columns:1fr}'
+      + '.sr-ph-tools{width:100%;justify-content:space-between}'
+      + '.sr-fc-team-bar{flex-basis:100%}}'
       /* sticky filter bar */
       + '.sr-filters{position:sticky;top:0;z-index:25;display:grid;grid-template-columns:repeat(6,minmax(0,1fr)) auto;gap:10px;'
       + 'background:#fff;border:1px solid #E5EAF0;border-radius:12px;padding:12px 14px;box-shadow:0 6px 18px rgba(15,43,70,.07);margin-bottom:15px}'
