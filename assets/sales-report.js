@@ -956,6 +956,14 @@
       return o;
     }
     var payAll = { cash: 0, inst: 0, term: 0, total: 0, count: 0 };
+    /* เปอร์เซ็นต์สัดส่วนของแต่ละรูปแบบ (แสดงใต้แถบสี) */
+    function payPcts(o) {
+      return '<div class="sr-paypcts">' + PAY_KEYS.map(function (c) {
+        var v = o.total ? (o[c.code] / o.total * 100) : 0;
+        return '<span style="color:' + (v > 0 ? payment(c.code).color : '#C2CBD8') + '">'
+          + (o.total ? pct(v) : '—') + '</span>';
+      }).join('') + '</div>';
+    }
     var payRows = dashTeams.map(function (t) {
       var o = payAgg(k.list.filter(function (d) { return sale(d.saleId).team === t.code; }));
       payAll.cash += o.cash; payAll.inst += o.inst; payAll.term += o.term;
@@ -971,7 +979,7 @@
           var w = o.total ? (o[c.code] / o.total * 100) : 0;
           return w > 0 ? '<span style="width:' + w.toFixed(2) + '%;background:' + payment(c.code).color + '"></span>' : '';
         }).join('')
-        + '</div></td>'
+        + '</div>' + payPcts(o) + '</td>'
         + '</tr>';
     }).join('');
 
@@ -985,7 +993,7 @@
         var w = payAll.total ? (payAll[c.code] / payAll.total * 100) : 0;
         return w > 0 ? '<span style="width:' + w.toFixed(2) + '%;background:' + payment(c.code).color + '"></span>' : '';
       }).join('')
-      + '</div></td></tr>';
+      + '</div>' + payPcts(payAll) + '</td></tr>';
 
     var payPanel = '<section class="sr-panel sr-pay">'
       + '<div class="sr-ph"><div><h3>ยอดขายแยกตามรูปแบบการชำระเงิน (รายทีม)</h3>'
@@ -997,7 +1005,7 @@
         ? '<div class="sr-tablewrap"><table class="sr-table sr-paytable"><thead><tr>'
           + '<th>ทีม (BU)</th>'
           + PAY_KEYS.map(function (c) { return '<th class="sr-num">' + esc(c.label) + '</th>'; }).join('')
-          + '<th class="sr-num">รวมปิดงาน</th><th>สัดส่วน</th>'
+          + '<th class="sr-num">รวมปิดงาน</th><th>สัดส่วน (%)</th>'
           + '</tr></thead><tbody>' + payRows + '</tbody><tfoot>' + payFoot + '</tfoot></table></div>'
         : '<div class="sr-empty-note"><i class="fa-regular fa-circle-question"></i> ยังไม่มีงานที่ปิดแล้วในเดือน/ทีมนี้</div>')
       + '</section>';
@@ -1961,6 +1969,7 @@
       + '.sr-pay-tm span{display:block;font-size:9.5px;color:#98A2B3;margin-top:1px}'
       + '.sr-paybar{display:flex;height:7px;border-radius:99px;overflow:hidden;background:#EEF2F7;min-width:88px}'
       + '.sr-paybar span{display:block;height:100%}'
+      + '.sr-paypcts{display:flex;gap:7px;margin-top:4px;font-size:9px;font-variant-numeric:tabular-nums;white-space:nowrap}'
       + '.sr-empty-note{padding:16px;text-align:center;color:#98A2B3;font-size:11px}'
       + '.sr-empty{text-align:center!important;color:#98A2B3;padding:22px!important}'
       /* badges */
