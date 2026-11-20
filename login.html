@@ -134,6 +134,10 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(37,99,235,.13);
 .help i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:#EFF6FF;color:var(--blue);font-size:11px;flex:0 0 26px}
 .help b{display:block;font-size:11px;color:var(--navy);font-weight:500}
 .help span{font-size:10px;color:var(--muted)}
+.help-copy{min-width:0;display:flex;flex-direction:column;gap:1px}
+.help-forgot{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--blue);margin-top:3px;align-self:flex-start}
+.help-forgot i{font-size:9px}
+.help-forgot:hover{text-decoration:underline}
 .copy{margin-left:auto;border:1px solid var(--line-2);background:#fff;border-radius:8px;color:#475467;
   font:inherit;font-size:10px;padding:5px 9px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:.15s}
 .copy:hover{border-color:#C6D3E2;color:var(--navy)}
@@ -211,7 +215,6 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(37,99,235,.13);
     <div class="fg">
       <div class="flabel">
         <label for="p">รหัสผ่าน</label>
-        <a href="mailto:Pongtap.p@tsrplc.com?subject=ขอรีเซ็ตรหัสผ่าน%20Prospect%20Intelligence">ลืมรหัสผ่าน?</a>
       </div>
       <div class="inp">
         <i class="fa-solid fa-lock lead"></i>
@@ -231,9 +234,12 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(37,99,235,.13);
     <div class="divider">ต้องการความช่วยเหลือ?</div>
     <div class="help">
       <i class="fa-solid fa-headset"></i>
-      <div>
+      <div class="help-copy">
         <b>ติดต่อผู้ดูแลระบบ</b>
         <span id="helpMail">Pongtap.p@tsrplc.com</span>
+        <a class="help-forgot" href="mailto:Pongtap.p@tsrplc.com?subject=ขอรีเซ็ตรหัสผ่าน%20Prospect%20Intelligence">
+          <i class="fa-solid fa-key"></i> ลืมรหัสผ่าน? ขอรีเซ็ตจากผู้ดูแลระบบ
+        </a>
       </div>
       <button class="copy" id="copy" type="button"><i class="fa-regular fa-copy"></i> คัดลอก</button>
     </div>
