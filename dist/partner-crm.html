@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSR Partner Management · ระบบบริหารจัดการคู่ค้า</title>
+<meta name="description" content="ระบบ CRM ส่วนกลางสำหรับบริหารจัดการคู่ค้า: Tiering, Commission, Pipeline Onboarding, Privileges และ KPI ผู้บริหาร">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F6FB;--card:#fff;--ink:#101828;--muted:#667085;--line:#E6EAF2;
+    --navy:#111C33;--primary:#4F46E5;--primary2:#7C3AED;--teal:#0E9384;--green:#12805C;
+    --amber:#B54708;--red:#B42318;--r:14px;--sh:0 6px 22px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Prompt",sans-serif;font-size:13.5px}
+  button,input,select,textarea{font:inherit}
+  button{cursor:pointer}
+
+  .shell{display:flex;min-height:100vh}
+  .rail{width:238px;flex:0 0 238px;background:linear-gradient(180deg,#111C33,#1B2749 60%,#1E2A55);color:#C6D0E4;padding:20px 12px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .brand{display:flex;align-items:center;gap:11px;padding:0 8px 20px;color:#fff}
+  .brand .mark{width:38px;height:38px;border-radius:11px;background:linear-gradient(140deg,var(--primary),var(--teal));display:grid;place-items:center;font-size:15px}
+  .brand strong{display:block;font-size:12.5px;line-height:1.3}
+  .brand small{color:#8FA0BE;font-size:9.5px}
+  .rail-label{padding:6px 10px;color:#7B8AA8;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase}
+  .nav{display:grid;gap:3px}
+  .nav button{border:0;background:transparent;color:#C6D0E4;display:flex;align-items:center;gap:11px;text-align:left;padding:10px 12px;border-radius:9px;font-size:12.5px;transition:.15s}
+  .nav button i{width:16px;text-align:center;font-size:13px;opacity:.9}
+  .nav button:hover{background:rgba(255,255,255,.08);color:#fff}
+  .nav button.on{background:rgba(255,255,255,.14);color:#fff;box-shadow:inset 3px 0 #7C3AED}
+  .rail-foot{margin-top:auto;padding:12px 10px 0;border-top:1px solid rgba(255,255,255,.12);font-size:9.5px;color:#8FA0BE;line-height:1.7}
+
+  .main{flex:1;min-width:0}
+  .top{position:sticky;top:0;z-index:10;height:64px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 24px;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .top h1{margin:0;font-size:15px;font-weight:600;color:var(--navy)}
+  .top .sub{font-size:10.5px;color:var(--muted)}
+  .chips{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 11px;font-size:11px;color:#344054;display:inline-flex;gap:6px;align-items:center}
+  .chip b{color:var(--navy)}
+  .content{padding:20px 24px 44px;max-width:1560px;margin:0 auto}
+
+  .grid{display:grid;gap:14px}
+  .k4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .k3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .k2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:16px}
+  .kpi .lab{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:11px}
+  .kpi .lab i{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:12px}
+  .kpi .val{font-size:23px;font-weight:600;color:var(--navy);margin:8px 0 2px;letter-spacing:-.3px}
+  .kpi .foot{font-size:10.5px;color:var(--muted)}
+  .up{color:var(--green);font-weight:500}
+  .down{color:var(--red);font-weight:500}
+  h3{margin:0;font-size:13px;color:var(--navy);font-weight:600}
+  .hint{color:var(--muted);font-size:10.5px;margin-top:2px}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .btn{border:1px solid var(--line);background:#fff;color:#344054;border-radius:9px;padding:8px 12px;font-size:11.5px;display:inline-flex;gap:7px;align-items:center;transition:.15s}
+  .btn:hover{border-color:#C9D4E4;box-shadow:0 3px 10px rgba(16,24,40,.07)}
+  .btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}
+  .btn.pri:hover{background:#4338CA}
+  .btn.soft{background:#EEF2FF;border-color:#E0E7FF;color:#4338CA}
+  .btn.dgr{background:#FEF3F2;border-color:#FEE4E2;color:var(--red)}
+  .btn.sm{padding:5px 9px;font-size:10.5px}
+
+  .tbl-wrap{overflow:auto}
+  table{width:100%;border-collapse:collapse}
+  th{background:#F8FAFC;color:#667085;font-size:10px;font-weight:500;text-align:left;padding:9px 10px;white-space:nowrap;position:sticky;top:0}
+  td{padding:10px;border-bottom:1px solid #EFF3F8;font-size:11.5px;color:#334155;vertical-align:middle}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:#FAFBFF}
+  .nm{color:var(--navy);font-weight:500}
+  .s2{color:var(--muted);font-size:10.5px}
+  .pill{display:inline-flex;gap:5px;align-items:center;border-radius:999px;padding:3px 9px;font-size:10px;font-weight:500;white-space:nowrap}
+  .pill.g{background:#DCFAE6;color:#0F7B4F}
+  .pill.y{background:#FEF0C7;color:#B54708}
+  .pill.r{background:#FEE4E2;color:#B42318}
+  .pill.b{background:#E0EAFF;color:#3538CD}
+  .pill.v{background:#F4EBFF;color:#6941C6}
+  .pill.n{background:#EEF2F6;color:#475467}
+  .bar{height:6px;background:#EEF2F7;border-radius:6px;overflow:hidden;min-width:60px}
+  .bar>span{display:block;height:100%;background:linear-gradient(90deg,#818CF8,#4F46E5);border-radius:6px}
+  .empty{padding:34px 12px;text-align:center;color:var(--muted);font-size:12px}
+  .empty i{display:block;font-size:20px;margin-bottom:8px;color:#B6C2D4}
+  .tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .inp,.sel{padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;outline:none;font-size:11.5px;color:#344054}
+  .inp:focus,.sel:focus{border-color:#A5B4FC;box-shadow:0 0 0 3px rgba(79,70,229,.12)}
+
+  .kanban{display:grid;grid-template-columns:repeat(6,minmax(210px,1fr));gap:12px;overflow-x:auto;padding-bottom:8px}
+  .col{background:#EFF3FA;border-radius:12px;padding:10px;min-height:320px}
+  .col.drag{outline:2px dashed #818CF8;background:#EEF2FF}
+  .col-h{display:flex;justify-content:space-between;align-items:center;margin:2px 2px 9px;font-size:11.5px;color:var(--navy);font-weight:600}
+  .cnt{background:#fff;border-radius:7px;padding:1px 7px;font-size:9.5px;color:var(--muted)}
+  .kcard{background:#fff;border:1px solid #E5EAF0;border-radius:10px;padding:10px;margin-bottom:8px;cursor:grab;box-shadow:0 2px 6px rgba(16,24,40,.04)}
+  .kcard:active{cursor:grabbing}
+  .kcard h4{margin:0 0 3px;font-size:11.5px;color:var(--navy)}
+  .kcard .meta{display:flex;justify-content:space-between;font-size:9.5px;color:var(--muted);margin-top:8px}
+
+  .backdrop{position:fixed;inset:0;background:rgba(16,24,40,.5);display:none;place-items:center;padding:16px;z-index:60;backdrop-filter:blur(2px)}
+  .backdrop.open{display:grid}
+  .modal{background:#fff;border-radius:16px;width:min(620px,100%);max-height:90vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+  .modal .mh{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .modal .mh h3{font-size:15px}
+  .modal .mh p{margin:3px 0 0;font-size:10.5px;color:var(--muted)}
+  .modal .mb{padding:18px 20px}
+  .modal .mf{padding:13px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+  .x{border:0;background:transparent;color:var(--muted);font-size:17px;line-height:1}
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:11px;color:#475467;margin-bottom:5px}
+  .fld input,.fld select,.fld textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;outline:none;font-size:12px}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:#A5B4FC;box-shadow:0 0 0 3px rgba(79,70,229,.12)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,18px);background:var(--navy);color:#fff;border-radius:11px;padding:11px 16px;font-size:12px;opacity:0;pointer-events:none;transition:.25s;z-index:80}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .note{background:#F9FAFB;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:11px;color:#475467;line-height:1.75}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:var(--muted);margin-top:8px}
+
+  @media(max-width:1250px){.k4{grid-template-columns:repeat(2,1fr)}.k3{grid-template-columns:1fr}}
+  /* โหมดฝังในเว็บหลัก (?embed=1) */
+  html.embed .rail{display:none!important}
+  html.embed .main{margin-left:0}
+  html.embed .content{padding-top:14px}
+  @media(max-width:860px){
+    .shell{display:block}
+    .rail{width:auto;height:auto;position:static;flex-direction:row;overflow:auto;padding:8px;gap:6px}
+    .brand,.rail-label,.rail-foot{display:none}
+    .nav{display:flex;gap:6px}
+    .nav button{white-space:nowrap;padding:9px 12px}
+    .content{padding:16px 14px 34px}
+    .k2,.two{grid-template-columns:1fr}
+    .top{padding:0 14px;height:58px}
+    .kanban{grid-template-columns:repeat(6,220px)}
+  }
+</style>
+</head>
+<body>
+<script>
+  // ฝังเป็นเมนูในเว็บหลัก (Prospect Intelligence Sales workspace)
+  if (/[?&]embed=1/.test(location.search)) document.documentElement.className = 'embed';
+</script>
+<div class="shell">
+  <aside class="rail">
+    <div class="brand">
+      <div class="mark"><i class="fa-solid fa-network-wired"></i></div>
+      <div><strong>TSR Partner Management</strong><small>Partner CRM · GP &amp; Tiering</small></div>
+    </div>
+    <div class="rail-label">โมดูล</div>
+    <nav class="nav" id="nav">
+      <button data-view="dash" class="on"><i class="fa-solid fa-chart-pie"></i>Partnership Business</button>
+      <button data-view="partners"><i class="fa-solid fa-handshake"></i>คู่ค้า &amp; Tier</button>
+      <button data-view="orders"><i class="fa-solid fa-receipt"></i>คำสั่งซื้อ &amp; Commission</button>
+      <button data-view="pipeline"><i class="fa-solid fa-diagram-project"></i>Onboarding Pipeline</button>
+      <button data-view="privs"><i class="fa-solid fa-gift"></i>สิทธิประโยชน์</button>
+      <button data-view="network"><i class="fa-solid fa-sitemap"></i>ทีม &amp; สิทธิ์</button>
+      <button data-view="admin"><i class="fa-solid fa-sliders"></i>ตั้งค่าระบบ</button>
+    </nav>
+    <div class="rail-foot" id="railFoot">ข้อมูลตัวอย่าง · บันทึกในเครื่อง</div>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <div>
+        <h1 id="ttl">Partnership Business</h1>
+        <div class="sub" id="sub">ภาพรวมยอดขาย กำไร และสุขภาพคู่ค้า</div>
+      </div>
+      <div class="chips">
+        <span class="chip" id="chipMonth"></span>
+        <span class="chip"><i class="fa-solid fa-database"></i> <b id="chipRows">-</b></span>
+        <button class="btn soft" id="exportBtn"><i class="fa-solid fa-file-export"></i> ส่งออก</button>
+        <button class="btn" id="importBtn"><i class="fa-solid fa-file-import"></i> นำเข้า</button>
+      </div>
+    </header>
+    <div class="content" id="view"></div>
+  </main>
+</div>
+
+<div class="backdrop" id="backdrop"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInp" accept="application/json" style="display:none">
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     SEED DATA — ค่าเริ่มต้นตามโครงสร้าง Partnership (แก้ผ่านหน้า ตั้งค่าระบบ)
+     ============================================================ */
+  var SEED = {
+    settings: {
+      vat: 7,
+      months: 6,
+      tiers: [
+        { code: 'AG',    name: 'AG · General Agent',      minUnits: 2,  minValue: 150000 },
+        { code: 'AGEX',  name: 'AG EX · Exclusive Agent',  minUnits: 4,  minValue: 300000 },
+        { code: 'DL',    name: 'DL · Dealer',              minUnits: 8,  minValue: 600000 },
+        { code: 'KEYDL', name: 'KEY DL · Key Dealer',      minUnits: 16, minValue: 1200000 },
+        { code: 'KEYVIP',name: 'KEY MASTER VIP',           minUnits: 40, minValue: 2000000 },
+        { code: 'VVIP',  name: 'VIP · Strategic Partner',  minUnits: 60, minValue: 3000000 }
+      ],
+      products: [
+        { code: 'VND-W',  name: 'ตู้น้ำหยอดเหรียญ (Vending)', group: 'Vending',  gp: 22, com: 8 },
+        { code: 'VND-C',  name: 'ตู้กาแฟ (Vending)',          group: 'Vending',  gp: 20, com: 7 },
+        { code: 'WSH-T',  name: 'เครื่องซักผ้า LG ฝาบน',       group: 'Laundry',  gp: 18, com: 6 },
+        { code: 'WSH-F',  name: 'เครื่องซักผ้า LG ฝาหน้า',      group: 'Laundry',  gp: 18, com: 6 },
+        { code: 'WSH-S',  name: 'LG Stack (ซัก+อบ)',          group: 'Laundry',  gp: 20, com: 7 },
+        { code: 'FLT',    name: 'เครื่องกรองน้ำ',              group: 'Water',    gp: 25, com: 9 },
+        { code: 'FLT-U',  name: 'เครื่องกรองน้ำใช้',            group: 'Water',    gp: 23, com: 8 },
+        { code: 'ICE',    name: 'IceMaker',                   group: 'Ice',      gp: 21, com: 7 }
+      ],
+      rebate: [
+        { pct: 120, rebate: 0.5 },
+        { pct: 130, rebate: 1.0 }
+      ],
+      target: { units: 2, value: 150000 },
+      currentUser: 'U001',
+      stages: ['Recruit', 'BU / MOU', 'Training', 'Start Selling', 'ติดตั้ง / ส่งมอบ', 'ปิดสัญญา']
+    },
+    users: [
+      { id: 'U001', name: 'ผู้ดูแลระบบ (Admin)', email: 'admin@tsr.co.th', level: 'admin', parentId: '', createdAt: '2025-01-05', status: 'active' },
+      { id: 'U002', name: 'BU Vending', email: 'bu.vending@tsr.co.th', level: 'bu', parentId: 'U001', createdAt: '2025-01-10', status: 'active' },
+      { id: 'U003', name: 'BU Laundry', email: 'bu.laundry@tsr.co.th', level: 'bu', parentId: 'U001', createdAt: '2025-01-10', status: 'active' },
+      { id: 'U004', name: 'Head Team North', email: 'head.north@tsr.co.th', level: 'head', parentId: 'U002', createdAt: '2025-02-01', status: 'active' },
+      { id: 'U005', name: 'Head Team Bangkok', email: 'head.bkk@tsr.co.th', level: 'head', parentId: 'U003', createdAt: '2025-02-01', status: 'active' },
+      { id: 'U006', name: 'Supervisor เชียงราย', email: 'sup.chiangrai@tsr.co.th', level: 'sup', parentId: 'U004', createdAt: '2025-03-01', status: 'active' },
+      { id: 'U007', name: 'Supervisor กรุงเทพ 1', email: 'sup.bkk1@tsr.co.th', level: 'sup', parentId: 'U005', createdAt: '2025-03-01', status: 'active' },
+      { id: 'U008', name: 'กิตติพงษ์ (Sale)', email: 'kittipong@tsr.co.th', level: 'sale', parentId: 'U006', createdAt: '2025-04-12', status: 'active' },
+      { id: 'U009', name: 'พิมพ์ชนก (Sale)', email: 'pimchanok@tsr.co.th', level: 'sale', parentId: 'U006', createdAt: '2025-04-12', status: 'active' },
+      { id: 'U010', name: 'ธนกร (Sale)', email: 'thanakorn@tsr.co.th', level: 'sale', parentId: 'U007', createdAt: '2025-05-02', status: 'active' },
+      { id: 'U011', name: 'ตัวแทน A เชียงราย', email: 'agent.a@mail.com', level: 'agent', parentId: 'U008', createdAt: '2025-06-18', status: 'active' },
+      { id: 'U012', name: 'MCN สายซักผ้า', email: 'mcn.laundry@mail.com', level: 'agent', parentId: 'U009', createdAt: '2025-07-04', status: 'active' },
+      { id: 'U013', name: 'ตัวแทน B กรุงเทพ', email: 'agent.b@mail.com', level: 'agent', parentId: 'U010', createdAt: '2025-08-20', status: 'active' }
+    ],
+    partners: [
+      { id: 'P001', name: 'หจก. กรีนวอเตอร์ เชียงราย', owner: 'กิตติพงษ์', phone: '081-234-5678', joined: '2025-03-12', sellOut: 42, note: 'โซนเหนือ ดูแลตู้กดน้ำ 12 จุด' },
+      { id: 'P002', name: 'บจก. สมาร์ทลอนดรี้ กรุงเทพ', owner: 'พิมพ์ชนก', phone: '089-111-2222', joined: '2024-11-02', sellOut: 68, note: 'เน้นเครื่องซักผ้า Stack' },
+      { id: 'P003', name: 'ร้านกาแฟดีพร้อม (DL)', owner: 'ธนกร', phone: '086-555-1212', joined: '2026-01-20', sellOut: 9, note: 'เริ่มต้นขายตู้กาแฟ' },
+      { id: 'P004', name: 'บจก. ไอซ์แอนด์โคลด์', owner: 'อรทัย', phone: '082-909-0909', joined: '2025-07-08', sellOut: 23, note: 'IceMaker + ตู้กดน้ำ' },
+      { id: 'P005', name: 'หจก. น้ำใสบริการ ขอนแก่น', owner: 'กิตติพงษ์', phone: '084-777-3311', joined: '2026-06-15', sellOut: 4, note: 'อยู่ระหว่างขยายสาขา' }
+    ],
+    orders: [
+      { id: 'SO-2601', partnerId: 'P001', date: '2026-09-12', product: 'VND-W', qty: 4, price: 42000, discount: 3, pay: 'cash', status: 'ชำระแล้ว' },
+      { id: 'SO-2602', partnerId: 'P002', date: '2026-10-05', product: 'WSH-S', qty: 6, price: 55000, discount: 5, pay: 'installment', status: 'ชำระแล้ว' },
+      { id: 'SO-2603', partnerId: 'P003', date: '2026-10-18', product: 'VND-C', qty: 2, price: 39000, discount: 0, pay: 'cash', status: 'ชำระแล้ว' },
+      { id: 'SO-2604', partnerId: 'P004', date: '2026-11-02', product: 'ICE', qty: 3, price: 61000, discount: 2, pay: 'cash', status: 'มัดจำ' },
+      { id: 'SO-2605', partnerId: 'P001', date: '2026-11-08', product: 'FLT', qty: 5, price: 18500, discount: 0, pay: 'cash', status: 'ชำระแล้ว' },
+      { id: 'SO-2606', partnerId: 'P002', date: '2026-11-12', product: 'WSH-T', qty: 8, price: 24500, discount: 4, pay: 'installment', status: 'รอเครดิต' },
+      { id: 'SO-2607', partnerId: 'P005', date: '2026-11-15', product: 'VND-W', qty: 2, price: 42000, discount: 0, pay: 'installment', status: 'มัดจำ' }
+    ],
+    pipeline: [
+      { id: 'L001', name: 'บจก. เคลียร์วอช พระราม 2', stage: 'Recruit', owner: 'พิมพ์ชนก', due: '2026-11-25', note: 'คุยโมเดลรายได้ 60/40' },
+      { id: 'L002', name: 'หจก. บ้านสะอาด นครปฐม', stage: 'BU / MOU', owner: 'ธนกร', due: '2026-11-22', note: 'รอเซ็น MOU + ประสาน HRD' },
+      { id: 'L003', name: 'ร้านสะดวกซัก สุขุมวิท', stage: 'Training', owner: 'อรทัย', due: '2026-12-02', note: 'อบรมสินค้า + ระบบขาย' },
+      { id: 'L004', name: 'บจก. เฟรชคัพ คาเฟ่', stage: 'Start Selling', owner: 'กิตติพงษ์', due: '2026-12-10', note: 'เปิดยอดแรก 2 ตู้' },
+      { id: 'L005', name: 'บจก. นอร์ธเทิร์นลอนดรี้', stage: 'ติดตั้ง / ส่งมอบ', owner: 'พิมพ์ชนก', due: '2026-11-28', note: 'รอพื้นที่น้ำ/ไฟ' },
+      { id: 'L006', name: 'บจก. เมโทรวอเตอร์', stage: 'ปิดสัญญา', owner: 'ธนกร', due: '2026-11-20', note: 'เก็บส่วนที่เหลือ + สัญญา 3 ปี' }
+    ],
+    privs: [
+      { id: 'PV001', partnerId: 'P002', type: 'Lead', detail: 'ส่งรายชื่อลูกค้า 25 ราย (โซน กทม.)', date: '2026-11-01', status: 'ส่งมอบแล้ว' },
+      { id: 'PV002', partnerId: 'P002', type: 'Demo', detail: 'เครื่องซักผ้า Stack 1 เครื่อง', date: '2026-10-20', status: 'ส่งมอบแล้ว' },
+      { id: 'PV003', partnerId: 'P001', type: 'Content', detail: 'สื่อโฆษณา 10 ชิ้น + VDO 1 คลิป', date: '2026-11-05', status: 'กำลังดำเนินการ' },
+      { id: 'PV004', partnerId: 'P004', type: 'Business Plan', detail: 'วางแผนร่วมกับ BU Q1/2027', date: '2026-11-18', status: 'รออนุมัติ' }
+    ]
+  };
+
+  /* ============================================================
+     STORE
+     ============================================================ */
+  var LS = 'tsr_partner_crm_v1';
+  var DB = loadDB();
+  var VIEW = 'dash';
+
+  function loadDB() {
+    try {
+      var raw = localStorage.getItem(LS);
+      if (raw) {
+        var d = JSON.parse(raw);
+        if (d && d.settings && d.partners) return d;
+      }
+    } catch (e) {}
+    return JSON.parse(JSON.stringify(SEED));
+  }
+  function saveDB() {
+    try { localStorage.setItem(LS, JSON.stringify(DB)); } catch (e) { toast('บันทึกไม่สำเร็จ (storage เต็ม)'); }
+  }
+
+  /* ============================================================
+     HELPERS
+     ============================================================ */
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) {
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function num(n) { return Number(n || 0); }
+  function money(n) { return '฿' + Math.round(num(n)).toLocaleString('th-TH'); }
+  function shortM(n) {
+    n = num(n);
+    if (n >= 1000000) return '฿' + (n / 1000000).toFixed(2) + 'M';
+    if (n >= 1000) return '฿' + Math.round(n / 1000) + 'K';
+    return '฿' + n;
+  }
+  function pct(n) { return (Math.round(num(n) * 10) / 10) + '%'; }
+  function monthOf(d) { return String(d || '').slice(0, 7); }
+  function thisMonth() { return new Date().toISOString().slice(0, 7); }
+  function addMonths(mk, delta) {
+    var y = Number(mk.slice(0, 4)), m = Number(mk.slice(5, 7)) - 1 + delta;
+    var d = new Date(Date.UTC(y, m, 1));
+    return d.toISOString().slice(0, 7);
+  }
+  function monthLabel(mk) {
+    var names = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    return names[Number(mk.slice(5, 7)) - 1] + ' ' + String(Number(mk.slice(0, 4)) + 543).slice(-2);
+  }
+  function toast(m) {
+    var t = $('toast'); t.textContent = m; t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 2500);
+  }
+  function product(code) {
+    var list = DB.settings.products;
+    for (var i = 0; i < list.length; i++) if (list[i].code === code) return list[i];
+    return { code: code, name: code, group: '-', gp: 0, com: 0 };
+  }
+  function partner(id) {
+    var l = DB.partners;
+    for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i];
+    return { id: id, name: id, owner: '-', sellOut: 0 };
+  }
+  function tierOf(code) {
+    var t = DB.settings.tiers;
+    for (var i = 0; i < t.length; i++) if (t[i].code === code) return t[i];
+    return t[0];
+  }
+
+  /* ---------- order calculations ---------- */
+  function orderCalc(o) {
+    var p = product(o.product);
+    var grossList = num(o.price) * num(o.qty);
+    var disc = grossList * num(o.discount) / 100;
+    var net = grossList - disc;                       // ไม่รวม VAT
+    var vat = net * num(DB.settings.vat) / 100;
+    var inVat = net + vat;                            // รวม VAT (ใช้คิด Tier)
+    var gp = net * num(p.gp) / 100;
+    var com = net * num(p.com) / 100;
+    return { grossList: grossList, disc: disc, net: net, vat: vat, inVat: inVat, gp: gp, com: com };
+  }
+
+  function monthlyStats(partnerId, mk) {
+    var st = { units: 0, net: 0, inVat: 0, gp: 0, com: 0, orders: 0 };
+    DB.orders.forEach(function (o) {
+      if (partnerId && o.partnerId !== partnerId) return;
+      if (mk && monthOf(o.date) !== mk) return;
+      var c = orderCalc(o);
+      st.units += num(o.qty); st.net += c.net; st.inVat += c.inVat; st.gp += c.gp; st.com += c.com; st.orders++;
+    });
+    return st;
+  }
+
+  /* ---------- tier engine ---------- */
+  function evalTier(partnerId) {
+    var mk = thisMonth();
+    var st = monthlyStats(partnerId, mk);
+    var best = null;
+    DB.settings.tiers.forEach(function (t) {
+      if (st.units >= num(t.minUnits) || st.inVat >= num(t.minValue)) best = t;
+    });
+    if (!best) best = DB.settings.tiers[0];
+    return { tier: best, stats: st, qualified: st.units > 0 || st.inVat > 0 };
+  }
+
+  function retention(partnerId) {
+    var p = partner(partnerId);
+    var joinMk = p.joined ? monthOf(p.joined) : '';
+    var cur = thisMonth();
+    var months = [];
+    var below = 0, run = 0;
+    for (var i = 0; i < num(DB.settings.months); i++) {
+      var mk = addMonths(cur, -i);
+      if (joinMk && mk < joinMk) break;   // ไม่นับเดือนก่อนเริ่มเป็นคู่ค้า
+      var st = monthlyStats(partnerId, mk);
+      var hit = st.inVat >= num(DB.settings.target.value) && st.units >= num(DB.settings.target.units);
+      months.push({ mk: mk, stats: st, hit: hit });
+      if (i > 0 && !hit) below++;
+    }
+    // consecutive months below target (excluding current month)
+    for (var j = 1; j < months.length; j++) { if (months[j].hit) break; run++; }
+    return { months: months.reverse(), below: below, consecutive: run };
+  }
+
+  function volumeRebate(partnerId, mk) {
+    var st = monthlyStats(partnerId, mk);
+    var goalValue = num(DB.settings.target.value) || 1;
+    var achieve = st.inVat / goalValue * 100;
+    var rate = 0;
+    DB.settings.rebate.forEach(function (r) { if (achieve >= num(r.pct)) rate = num(r.rebate); });
+    return { achieve: achieve, rate: rate, amount: st.net * rate / 100 };
+  }
+
+  /* ============================================================
+     VIEWS
+     ============================================================ */
+  var TITLES = {
+    dash: ['Partnership Business', 'ภาพรวมยอดขาย กำไร และสุขภาพคู่ค้า'],
+    partners: ['คู่ค้า & Tier', 'จัดระดับอัตโนมัติ + แจ้งเตือนรักษาระดับ'],
+    orders: ['คำสั่งซื้อ & Commission', 'คำนวณ GP / Commission / Volume Rebate อัตโนมัติ'],
+    pipeline: ['Onboarding Pipeline', 'Recruit → BU/MOU → Training → Start Selling → ติดตั้ง → ปิดสัญญา'],
+    privs: ['สิทธิประโยชน์คู่ค้า', 'Lead · Demo · Content · Business Plan'],
+    network: ['ทีม & สิทธิ์ 6 ระดับ', 'ลงทะเบียน ID พร้อมเลือกผู้ดูแลต้นสาย · เห็นลูกข่ายทั้งเครือข่าย'],
+    admin: ['ตั้งค่าระบบ', 'ปรับ Tier / GP / Commission / เป้าหมาย ได้โดยไม่ต้องแก้โค้ด']
+  };
+
+  function render() {
+    var t = TITLES[VIEW];
+    $('ttl').textContent = t[0]; $('sub').textContent = t[1];
+    Array.prototype.forEach.call(document.querySelectorAll('#nav button'), function (b) {
+      b.classList.toggle('on', b.dataset.view === VIEW);
+    });
+    $('chipMonth').innerHTML = '<i class="fa-regular fa-calendar"></i> เดือน <b>' + monthLabel(thisMonth()) + '</b>';
+    $('chipRows').textContent = DB.partners.length + ' คู่ค้า · ' + DB.orders.length + ' ออเดอร์';
+
+    var html = '';
+    if (VIEW === 'dash') html = viewDash();
+    else if (VIEW === 'partners') html = viewPartners();
+    else if (VIEW === 'orders') html = viewOrders();
+    else if (VIEW === 'pipeline') html = viewPipeline();
+    else if (VIEW === 'privs') html = viewPrivs();
+    else if (VIEW === 'network') html = viewNetwork();
+    else html = viewAdmin();
+    $('view').innerHTML = html;
+    if (VIEW === 'pipeline') bindKanban();
+    if (VIEW === 'partners') bindPartnerSearch();
+  }
+
+  /* ---------------- Dashboard ---------------- */
+  function viewDash() {
+    var mk = thisMonth(), prev = addMonths(mk, -1);
+    var cur = monthlyStats(null, mk), last = monthlyStats(null, prev);
+    var active = DB.partners.filter(function (p) { return monthlyStats(p.id, mk).orders > 0; }).length;
+    var sellOut = DB.partners.reduce(function (s, p) { return s + num(p.sellOut); }, 0);
+    var growth = last.inVat > 0 ? (cur.inVat - last.inVat) / last.inVat * 100 : 0;
+    var gpRate = cur.net > 0 ? cur.gp / cur.net * 100 : 0;
+
+    // Repeat purchase: partners with >=2 distinct months with orders
+    var repeat = 0;
+    DB.partners.forEach(function (p) {
+      var set = {};
+      DB.orders.forEach(function (o) { if (o.partnerId === p.id) set[monthOf(o.date)] = 1; });
+      if (Object.keys(set).length >= 2) repeat++;
+    });
+    var repeatRate = DB.partners.length ? repeat / DB.partners.length * 100 : 0;
+
+    // alerts
+    var alerts = [];
+    DB.partners.forEach(function (p) {
+      var r = retention(p.id);
+      if (r.consecutive >= 6) alerts.push({ p: p, level: 'tier', text: 'ต่ำกว่าเป้า ' + r.consecutive + ' เดือนติด → ควรทบทวน Tier' });
+      else if (r.consecutive >= 2) alerts.push({ p: p, level: 'warn', text: 'ต่ำกว่าเป้า ' + r.consecutive + ' เดือน → วางแผนกระตุ้นยอด' });
+    });
+
+    // tier distribution
+    var dist = {};
+    DB.settings.tiers.forEach(function (t) { dist[t.code] = 0; });
+    DB.partners.forEach(function (p) { dist[evalTier(p.id).tier.code]++; });
+    var maxDist = Math.max.apply(null, Object.keys(dist).map(function (k) { return dist[k]; }).concat([1]));
+
+    var topPar = DB.partners.map(function (p) {
+      return { p: p, st: monthlyStats(p.id, mk) };
+    }).sort(function (a, b) { return b.st.inVat - a.st.inVat; }).slice(0, 5);
+    var maxTop = topPar.length ? topPar[0].st.inVat || 1 : 1;
+
+    return ''
+      + '<div class="grid k4" style="margin-bottom:14px">'
+      + kpi('ยอดขายคู่ค้า (รวม VAT)', shortM(cur.inVat), 'fa-solid fa-arrow-trend-up', '#4F46E5',
+            (growth >= 0 ? '<span class="up">▲ ' + pct(growth) + '</span>' : '<span class="down">▼ ' + pct(Math.abs(growth)) + '</span>') + ' เทียบเดือนก่อน')
+      + kpi('คู่ค้าที่มียอดซื้อ', active + ' / ' + DB.partners.length, 'fa-solid fa-user-check', '#0E9384', 'มียอดซื้อเดือนนี้')
+      + kpi('ยอดขายออก (หน่วย)', sellOut.toLocaleString('th-TH'), 'fa-solid fa-cart-shopping', '#B54708', 'สะสมจากคู่ค้า')
+      + kpi('กำไรขั้นต้น (GP)', shortM(cur.gp), 'fa-solid fa-coins', '#12805C', 'อัตรากำไร ' + pct(gpRate) + ' ของยอดขาย')
+      + '</div>'
+
+      + '<div class="grid k3" style="margin-bottom:14px">'
+      + '<div class="card"><div class="head"><div><h3>ยอดซื้อรายเดือน (6 เดือน)</h3><div class="hint">รวม VAT · เทียบเป้า ' + shortM(DB.settings.target.value) + '</div></div></div>'
+      + sparkBars(mk) + '</div>'
+      + '<div class="card"><div class="head"><div><h3>การกระจายตัว Tier</h3><div class="hint">คำนวณจากยอดเดือนปัจจุบัน</div></div></div>'
+      + DB.settings.tiers.map(function (t) {
+          var v = dist[t.code] || 0;
+          return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">'
+            + '<div style="width:110px;font-size:11px;color:#344054">' + esc(t.code) + '</div>'
+            + '<div class="bar" style="flex:1"><span style="width:' + Math.round(v / maxDist * 100) + '%"></span></div>'
+            + '<div style="width:24px;text-align:right;font-size:11px;color:#667085">' + v + '</div></div>';
+        }).join('')
+      + '</div>'
+      + '<div class="card"><div class="head"><div><h3>ตัวชี้วัดคุณภาพ</h3><div class="hint">Repeat Purchase · Growth · GP</div></div></div>'
+      + '<div style="display:grid;gap:12px">'
+      + statRow('Repeat Purchase', pct(repeatRate), repeat + ' จาก ' + DB.partners.length + ' คู่ค้าซื้อซ้ำ')
+      + statRow('Partner Growth', (growth >= 0 ? '+' : '') + pct(growth), 'เทียบเดือนก่อน')
+      + statRow('กำไรขั้นต้น (GP)', shortM(cur.gp), 'จากยอดขายสุทธิ ' + shortM(cur.net))
+      + statRow('Volume Rebate ที่ต้องคืน', shortM(rebateTotal()), 'คู่ค้าที่ทำได้ ≥120% ของเป้า')
+      + '</div></div>'
+      + '</div>'
+
+      + '<div class="grid k2">'
+      + '<div class="card"><div class="head"><div><h3>Top 5 คู่ค้าเดือนนี้</h3><div class="hint">เรียงตามยอดซื้อรวม VAT</div></div></div>'
+      + (topPar.length ? '<div class="tbl-wrap"><table><thead><tr><th>คู่ค้า</th><th>Tier</th><th>ยอดซื้อ</th><th>มูลค่า</th></tr></thead><tbody>'
+          + topPar.map(function (x) {
+            var tier = evalTier(x.p.id).tier;
+            return '<tr><td><div class="nm">' + esc(x.p.name) + '</div><div class="s2">' + esc(x.p.owner) + '</div></td>'
+              + '<td><span class="pill v">' + esc(tier.code) + '</span></td>'
+              + '<td>' + x.st.units + ' หน่วย</td>'
+              + '<td>' + money(x.st.inVat) + '<div class="bar" style="margin-top:5px"><span style="width:' + Math.round((x.st.inVat || 0) / maxTop * 100) + '%"></span></div></td></tr>';
+          }).join('') + '</tbody></table></div>' : '<div class="empty"><i class="fa-solid fa-inbox"></i>ยังไม่มียอดเดือนนี้</div>')
+      + '</div>'
+      + '<div class="card"><div class="head"><div><h3>แจ้งเตือนรักษาระดับ (Retention)</h3><div class="hint">ต่ำกว่าเป้า 2 เดือน = เฝ้าระวัง · 6 เดือนติด = ทบทวน Tier</div></div></div>'
+      + (alerts.length ? '<div style="display:grid;gap:8px">' + alerts.map(function (a) {
+          return '<div style="display:flex;gap:10px;align-items:flex-start;border:1px solid ' + (a.level === 'tier' ? '#FEE4E2' : '#FEF0C7') + ';background:' + (a.level === 'tier' ? '#FEF3F2' : '#FFFCF5') + ';border-radius:10px;padding:10px 12px">'
+            + '<i class="fa-solid fa-triangle-exclamation" style="color:' + (a.level === 'tier' ? '#B42318' : '#B54708') + ';margin-top:2px"></i>'
+            + '<div><div class="nm" style="font-size:11.5px">' + esc(a.p.name) + '</div>'
+            + '<div class="s2">' + esc(a.text) + '</div></div></div>';
+        }).join('') + '</div>' : '<div class="empty"><i class="fa-solid fa-circle-check"></i>ไม่มีคู่ค้าที่ต้องแจ้งเตือน</div>')
+      + '</div></div>';
+  }
+
+  function kpi(label, val, icon, color, foot) {
+    return '<article class="card kpi"><div class="lab">' + label + '<i class="' + icon + '" style="background:' + color + '14;color:' + color + '"></i></div>'
+      + '<div class="val">' + val + '</div><div class="foot">' + foot + '</div></article>';
+  }
+  function statRow(label, val, foot) {
+    return '<div><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:11.5px;color:#344054">' + label + '</span>'
+      + '<strong style="color:#111C33;font-size:14px">' + val + '</strong></div>'
+      + '<div class="s2">' + foot + '</div></div>';
+  }
+  function sparkBars(mk) {
+    var arr = [];
+    for (var i = 5; i >= 0; i--) {
+      var k = addMonths(mk, -i);
+      arr.push({ mk: k, v: monthlyStats(null, k).inVat });
+    }
+    var max = Math.max.apply(null, arr.map(function (x) { return x.v; }).concat([1]));
+    return '<div style="display:flex;align-items:flex-end;gap:8px;height:130px">'
+      + arr.map(function (x) {
+        var h = Math.max(4, Math.round(x.v / max * 100));
+        return '<div style="flex:1;text-align:center">'
+          + '<div style="height:' + h + 'px;background:linear-gradient(180deg,#818CF8,#4F46E5);border-radius:6px 6px 3px 3px" title="' + money(x.v) + '"></div>'
+          + '<div style="font-size:9px;color:#667085;margin-top:5px">' + monthLabel(x.mk) + '</div></div>';
+      }).join('') + '</div>';
+  }
+  function rebateTotal() {
+    var mk = thisMonth(), sum = 0;
+    DB.partners.forEach(function (p) { sum += volumeRebate(p.id, mk).amount; });
+    return sum;
+  }
+
+  /* ---------------- Partners ---------------- */
+  function viewPartners() {
+    var rows = DB.partners.map(function (p) {
+      var ev = evalTier(p.id);
+      var ret = retention(p.id);
+      var alert = ret.consecutive >= 6
+        ? '<span class="pill r"><i class="fa-solid fa-triangle-exclamation"></i> ทบทวน Tier (' + ret.consecutive + ' ด.)</span>'
+        : ret.consecutive >= 2
+          ? '<span class="pill y"><i class="fa-solid fa-bell"></i> เฝ้าระวัง (' + ret.consecutive + ' ด.)</span>'
+          : '<span class="pill g"><i class="fa-solid fa-circle-check"></i> ปกติ</span>';
+      var nextTier = DB.settings.tiers.filter(function (t) { return num(t.minValue) > num(ev.tier.minValue); })[0];
+      var gap = nextTier ? Math.max(0, num(nextTier.minValue) - ev.stats.inVat) : 0;
+      return { p: p, ev: ev, ret: ret, alert: alert, nextTier: nextTier, gap: gap };
+    }).sort(function (a, b) { return b.ev.stats.inVat - a.ev.stats.inVat; });
+
+    return '<div class="card">'
+      + '<div class="head"><div><h3>คู่ค้าทั้งหมด (' + rows.length + ')</h3>'
+      + '<div class="hint">Tier คำนวณอัตโนมัติจากยอดเดือนปัจจุบัน (รวม VAT) · ' + DB.settings.tiers.map(function (t) { return t.code + ' ≥' + shortM(t.minValue); }).join(' · ') + '</div></div>'
+      + '<div class="tools"><input class="inp" id="pSearch" placeholder="ค้นหาคู่ค้า / ผู้ดูแล"><button class="btn pri" data-add="partner"><i class="fa-solid fa-plus"></i> เพิ่มคู่ค้า</button></div></div>'
+      + '<div class="tbl-wrap"><table id="pTbl"><thead><tr>'
+      + '<th>คู่ค้า</th><th>Tier (auto)</th><th>ยอดเดือนนี้</th><th>เป้า</th><th>ยอดขายออก</th><th>Retention</th><th>ทางไป Tier ถัดไป</th><th></th>'
+      + '</tr></thead><tbody>'
+      + rows.map(function (r) {
+          var goalPct = Math.min(100, Math.round(r.ev.stats.inVat / num(DB.settings.target.value) * 100));
+          return '<tr data-search="' + esc((r.p.name + ' ' + r.p.owner).toLowerCase()) + '">'
+            + '<td><div class="nm">' + esc(r.p.name) + '</div><div class="s2">' + esc(r.p.owner) + ' · ' + esc(r.p.phone || '-') + '</div></td>'
+            + '<td><span class="pill v">' + esc(r.ev.tier.code) + '</span><div class="s2">' + esc(r.ev.tier.name) + '</div></td>'
+            + '<td>' + money(r.ev.stats.inVat) + '<div class="s2">' + r.ev.stats.units + ' หน่วย</div></td>'
+            + '<td><div class="bar"><span style="width:' + goalPct + '%"></span></div><div class="s2">' + goalPct + '%</div></td>'
+            + '<td>' + num(r.p.sellOut).toLocaleString('th-TH') + ' หน่วย</td>'
+            + '<td>' + r.alert + '</td>'
+            + '<td>' + (r.nextTier
+                ? '<div class="s2">' + esc(r.nextTier.code) + ' อีก ' + money(r.gap) + '</div>'
+                : '<span class="pill g">สูงสุด</span>') + '</td>'
+            + '<td style="white-space:nowrap"><button class="btn sm" data-edit="' + esc(r.p.id) + '"><i class="fa-solid fa-pen"></i></button> '
+            + '<button class="btn sm dgr" data-del="' + esc(r.p.id) + '"><i class="fa-solid fa-trash"></i></button></td>'
+            + '</tr>';
+        }).join('')
+      + '</tbody></table></div>'
+      + '<div class="legend"><span><i class="fa-solid fa-circle" style="color:#12805C"></i> ปกติ</span><span><i class="fa-solid fa-circle" style="color:#B54708"></i> ต่ำกว่าเป้า 2–5 เดือน (เฝ้าระวัง)</span><span><i class="fa-solid fa-circle" style="color:#B42318"></i> ต่ำกว่าเป้า 6 เดือนขึ้นไป (ทบทวน Tier)</span></div>'
+      + '</div>';
+  }
+  function bindPartnerSearch() {
+    var inp = $('pSearch');
+    if (!inp) return;
+    inp.addEventListener('input', function () {
+      var q = inp.value.toLowerCase();
+      Array.prototype.forEach.call(document.querySelectorAll('#pTbl tbody tr'), function (tr) {
+        tr.style.display = (tr.dataset.search || '').indexOf(q) >= 0 ? '' : 'none';
+      });
+    });
+  }
+
+  /* ---------------- Orders ---------------- */
+  function viewOrders() {
+    var mk = thisMonth();
+    var rows = DB.orders.slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); }).map(function (o) {
+      var c = orderCalc(o), p = product(o.product), pa = partner(o.partnerId);
+      return '<tr>'
+        + '<td><div class="nm">' + esc(o.id) + '</div><div class="s2">' + esc(o.date) + '</div></td>'
+        + '<td>' + esc(pa.name) + '</td>'
+        + '<td><div>' + esc(p.name) + '</div><div class="s2">' + esc(p.group) + ' · ' + o.qty + ' หน่วย</div></td>'
+        + '<td>' + money(c.net) + '<div class="s2">VAT ' + money(c.vat) + ' → ' + money(c.inVat) + '</div></td>'
+        + '<td>' + (o.pay === 'cash' ? '<span class="pill g">เงินสด</span>' : '<span class="pill b">เงินผ่อน</span>') + '<div class="s2">' + esc(o.status) + '</div></td>'
+        + '<td>' + money(c.gp) + '<div class="s2">GP ' + pct(p.gp) + '</div></td>'
+        + '<td>' + money(c.com) + '<div class="s2">COM ' + pct(p.com) + '</div></td>'
+        + '<td style="white-space:nowrap"><button class="btn sm dgr" data-delorder="' + esc(o.id) + '"><i class="fa-solid fa-trash"></i></button></td>'
+        + '</tr>';
+    }).join('');
+
+    var cur = monthlyStats(null, mk);
+    var rebates = DB.partners.map(function (p) { return { p: p, r: volumeRebate(p.id, mk) }; })
+      .filter(function (x) { return x.r.rate > 0; });
+
+    return '<div class="grid k4" style="margin-bottom:14px">'
+      + kpi('ยอดขายสุทธิ (ไม่รวม VAT)', shortM(cur.net), 'fa-solid fa-money-bill-wave', '#4F46E5', 'เดือน ' + monthLabel(mk))
+      + kpi('ยอดรวม VAT', shortM(cur.inVat), 'fa-solid fa-file-invoice', '#0E9384', cur.orders + ' ออเดอร์')
+      + kpi('GP รวม', shortM(cur.gp), 'fa-solid fa-chart-line', '#12805C', 'Margin ' + pct(cur.net ? cur.gp / cur.net * 100 : 0))
+      + kpi('Commission รวม', shortM(cur.com), 'fa-solid fa-hand-holding-dollar', '#B54708', 'จ่ายให้คู่ค้า')
+      + '</div>'
+
+      + '<div class="card" style="margin-bottom:14px"><div class="head">'
+      + '<div><h3>Volume Accelerator (Rebate)</h3><div class="hint">ทำได้ ≥120% ของเป้า → คืน 0.5% · ≥130% → คืน 1% ของยอดซื้อจริงหลังหักส่วนลด (ไม่รวม VAT)</div></div></div>'
+      + (rebates.length ? '<div class="tbl-wrap"><table><thead><tr><th>คู่ค้า</th><th>ยอดสุทธิ</th><th>เทียบเป้า ' + shortM(DB.settings.target.value) + '</th><th>อัตรา Rebate</th><th>ยอดคืน</th></tr></thead><tbody>'
+          + rebates.map(function (x) {
+            return '<tr><td class="nm">' + esc(x.p.name) + '</td><td>' + money(monthlyStats(x.p.id, mk).net) + '</td>'
+              + '<td><span class="pill g">' + pct(x.r.achieve) + '</span></td>'
+              + '<td><span class="pill y">' + x.r.rate + '%</span></td><td>' + money(x.r.amount) + '</td></tr>';
+          }).join('') + '</tbody></table></div>'
+          : '<div class="empty"><i class="fa-solid fa-gauge-high"></i>ยังไม่มีคู่ค้าที่ถึง 120% ของเป้าเดือนนี้</div>')
+      + '</div>'
+
+      + '<div class="card"><div class="head"><div><h3>รายการคำสั่งซื้อ (' + DB.orders.length + ')</h3><div class="hint">Commission/GP คำนวณจากอัตราต่อกลุ่มสินค้าในหน้าตั้งค่า</div></div>'
+      + '<button class="btn pri" data-add="order"><i class="fa-solid fa-plus"></i> บันทึกการขาย</button></div>'
+      + (DB.orders.length ? '<div class="tbl-wrap"><table><thead><tr>'
+          + '<th>เลขที่ / วันที่</th><th>คู่ค้า</th><th>สินค้า</th><th>ยอดสุทธิ / VAT</th><th>ชำระ</th><th>GP</th><th>Commission</th><th></th>'
+          + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+          : '<div class="empty"><i class="fa-solid fa-receipt"></i>ยังไม่มีคำสั่งซื้อ</div>')
+      + '</div>';
+  }
+
+  /* ---------------- Pipeline ---------------- */
+  function viewPipeline() {
+    var stages = DB.settings.stages;
+    return '<div class="card"><div class="head"><div><h3>Onboarding &amp; Order Pipeline</h3>'
+      + '<div class="hint">ลากการ์ดเพื่อเปลี่ยนสถานะ · Recruit → BU/MOU → Training → Start Selling → ติดตั้ง/ส่งมอบ → ปิดสัญญา</div></div>'
+      + '<button class="btn pri" data-add="lead"><i class="fa-solid fa-plus"></i> เพิ่มคู่ค้าใหม่</button></div>'
+      + '<div class="kanban">'
+      + stages.map(function (s) {
+        var items = DB.pipeline.filter(function (x) { return x.stage === s; });
+        return '<div class="col" data-stage="' + esc(s) + '">'
+          + '<div class="col-h"><span>' + esc(s) + '</span><span class="cnt">' + items.length + '</span></div>'
+          + items.map(function (x) {
+            return '<div class="kcard" draggable="true" data-id="' + esc(x.id) + '">'
+              + '<h4>' + esc(x.name) + '</h4>'
+              + '<div class="s2">' + esc(x.note || '-') + '</div>'
+              + '<div class="meta"><span><i class="fa-regular fa-user"></i> ' + esc(x.owner) + '</span><span><i class="fa-regular fa-clock"></i> ' + esc(x.due || '-') + '</span></div>'
+              + '<div style="margin-top:7px;display:flex;gap:6px">'
+              + '<button class="btn sm" data-editlead="' + esc(x.id) + '"><i class="fa-solid fa-pen"></i></button>'
+              + '<button class="btn sm dgr" data-dellead="' + esc(x.id) + '"><i class="fa-solid fa-trash"></i></button>'
+              + '</div></div>';
+          }).join('')
+          + '</div>';
+      }).join('')
+      + '</div></div>';
+  }
+
+  function bindKanban() {
+    var dragId = null;
+    Array.prototype.forEach.call(document.querySelectorAll('.kcard'), function (card) {
+      card.addEventListener('dragstart', function (e) {
+        dragId = card.dataset.id;
+        e.dataTransfer.setData('text/plain', dragId);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.col'), function (col) {
+      col.addEventListener('dragover', function (e) { e.preventDefault(); col.classList.add('drag'); });
+      col.addEventListener('dragleave', function () { col.classList.remove('drag'); });
+      col.addEventListener('drop', function (e) {
+        e.preventDefault(); col.classList.remove('drag');
+        var id = e.dataTransfer.getData('text/plain') || dragId;
+        var item = DB.pipeline.filter(function (x) { return x.id === id; })[0];
+        if (item) {
+          item.stage = col.dataset.stage;
+          saveDB(); render();
+          toast('ย้ายไปสถานะ "' + item.stage + '" แล้ว');
+        }
+      });
+    });
+  }
+
+  /* ---------------- Privileges ---------------- */
+  function viewPrivs() {
+    var types = ['Lead', 'Demo', 'Content', 'Business Plan'];
+    var stat = {};
+    types.forEach(function (t) { stat[t] = DB.privs.filter(function (x) { return x.type === t; }).length; });
+    return '<div class="grid k4" style="margin-bottom:14px">'
+      + types.map(function (t, i) {
+        var colors = ['#4F46E5', '#0E9384', '#B54708', '#6941C6'];
+        return kpi(t, String(stat[t]), 'fa-solid fa-gift', colors[i], 'รายการสนับสนุน');
+      }).join('')
+      + '</div>'
+      + '<div class="card"><div class="head"><div><h3>รายการสิทธิประโยชน์ (' + DB.privs.length + ')</h3>'
+      + '<div class="hint">Lead จากบริษัท · Demo เครื่องตัวอย่าง · สื่อโฆษณา · Business Plan ร่วมกับ BU</div></div>'
+      + '<button class="btn pri" data-add="priv"><i class="fa-solid fa-plus"></i> เพิ่มสิทธิประโยชน์</button></div>'
+      + (DB.privs.length ? '<div class="tbl-wrap"><table><thead><tr><th>คู่ค้า</th><th>ประเภท</th><th>รายละเอียด</th><th>วันที่</th><th>สถานะ</th><th></th></tr></thead><tbody>'
+          + DB.privs.map(function (x) {
+            return '<tr><td class="nm">' + esc(partner(x.partnerId).name) + '</td>'
+              + '<td><span class="pill v">' + esc(x.type) + '</span></td>'
+              + '<td>' + esc(x.detail) + '</td><td>' + esc(x.date) + '</td>'
+              + '<td><span class="pill ' + (x.status === 'ส่งมอบแล้ว' ? 'g' : x.status === 'รออนุมัติ' ? 'y' : 'b') + '">' + esc(x.status) + '</span></td>'
+              + '<td><button class="btn sm dgr" data-delpriv="' + esc(x.id) + '"><i class="fa-solid fa-trash"></i></button></td></tr>';
+          }).join('') + '</tbody></table></div>'
+          : '<div class="empty"><i class="fa-solid fa-gift"></i>ยังไม่มีรายการ</div>')
+      + '</div>';
+  }
+
+  /* ---------------- ทีม & สิทธิ์ (6 ระดับ / เครือข่ายลูกข่าย) ---------------- */
+  var LEVELS = {
+    admin: { n: 1, name: 'Admin (ผู้ดูแลระบบ)', short: 'Admin', cls: 'r' },
+    bu:    { n: 2, name: 'BU (Business Unit)', short: 'BU', cls: 'v' },
+    head:  { n: 3, name: 'Head Team', short: 'Head', cls: 'b' },
+    sup:   { n: 4, name: 'Supervisor', short: 'Sup', cls: 'b' },
+    sale:  { n: 5, name: 'เซลล์ (Sale)', short: 'Sale', cls: 'g' },
+    agent: { n: 6, name: 'ตัวแทน / MCN', short: 'Agent', cls: 'n' }
+  };
+  var LEVEL_ORDER = ['admin', 'bu', 'head', 'sup', 'sale', 'agent'];
+
+  function lv(code) { return LEVELS[code] || LEVELS.agent; }
+  function userById(id) {
+    var l = DB.users;
+    for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i];
+    return null;
+  }
+  function currentUser() {
+    var u = userById(DB.settings.currentUser);
+    if (u) return u;
+    return DB.users[0] || { id: '', name: '-', level: 'agent', parentId: '' };
+  }
+  function childrenOf(id) {
+    return DB.users.filter(function (u) { return u.parentId === id; });
+  }
+  function descendantsOf(id) {
+    var out = [], queue = [id], guard = 0;
+    while (queue.length && guard++ < 5000) {
+      var cur = queue.shift();
+      childrenOf(cur).forEach(function (u) { out.push(u); queue.push(u.id); });
+    }
+    return out;
+  }
+  function scopeUsers() {
+    var me = currentUser();
+    if (!me || !me.id) return [];
+    if (lv(me.level).n === 1) return DB.users.filter(function (u) { return u.id !== me.id; });
+    return descendantsOf(me.id);
+  }
+  function canSee(targetId) {
+    var me = currentUser();
+    if (!me) return false;
+    if (lv(me.level).n === 1) return true;
+    return descendantsOf(me.id).some(function (u) { return u.id === targetId; });
+  }
+  function pathOf(u) {
+    var me = currentUser();
+    var minN = lv(me.level).n;
+    var names = [], cur = u, guard = 0;
+    while (cur && guard++ < 20) {
+      var p = userById(cur.parentId);
+      if (!p) break;
+      if (lv(p.level).n >= minN && p.id !== me.id) names.unshift(p.name);  // ไม่แสดงสายงานเหนือตัวเอง
+      cur = p;
+    }
+    return names;
+  }
+
+  function viewNetwork() {
+    var me = currentUser();
+    var scope = scopeUsers();
+    var byLevel = {};
+    LEVEL_ORDER.forEach(function (k) { byLevel[k] = 0; });
+    scope.forEach(function (u) { byLevel[u.level] = (byLevel[u.level] || 0) + 1; });
+
+    var switcher = '<select class="sel" id="meSwitch" title="สลับผู้ใช้เพื่อทดสอบการมองเห็น">'
+      + DB.users.map(function (u) {
+        return '<option value="' + esc(u.id) + '"' + (u.id === me.id ? ' selected' : '') + '>' + esc(u.name) + ' · ' + lv(u.level).short + '</option>';
+      }).join('') + '</select>';
+
+    var rows = scope.slice().sort(function (a, b) { return lv(a.level).n - lv(b.level).n || String(a.name).localeCompare(String(b.name)); }).map(function (u) {
+      var path = pathOf(u);
+      return '<tr>'
+        + '<td><div class="nm">' + esc(u.name) + '</div><div class="s2">' + esc(u.email || '-') + '</div></td>'
+        + '<td><span class="pill ' + lv(u.level).cls + '">L' + lv(u.level).n + ' · ' + lv(u.level).short + '</span></td>'
+        + '<td>' + esc((userById(u.parentId) || {}).name || '-') + '</td>'
+        + '<td><span class="s2">' + esc(path.join(' › ') || '-') + '</span></td>'
+        + '<td>' + esc(u.createdAt || '-') + '</td>'
+        + '<td><span class="pill ' + (u.status === 'active' ? 'g' : 'n') + '">' + esc(u.status === 'active' ? 'ใช้งาน' : 'ปิด') + '</span></td>'
+        + '<td style="white-space:nowrap"><button class="btn sm" data-editu="' + esc(u.id) + '"><i class="fa-solid fa-pen"></i></button> '
+        + '<button class="btn sm dgr" data-delu="' + esc(u.id) + '"><i class="fa-solid fa-trash"></i></button></td>'
+        + '</tr>';
+    }).join('');
+
+    var total = scope.length;
+    return '<div class="card" style="margin-bottom:14px">'
+      + '<div class="head"><div><h3>โครงข่ายสิทธิ์ 6 ระดับ</h3>'
+      + '<div class="hint">ผู้ที่อยู่ระดับบนจะเห็นลูกข่ายทั้งหมดใต้สายงานของตัวเอง (ทั้งเซลล์และตัวแทน/MCN ใต้เซลล์)</div></div>'
+      + '<div class="tools"><span class="s2">มุมมองปัจจุบัน:</span>' + switcher
+      + '<button class="btn pri" data-add="user"><i class="fa-solid fa-user-plus"></i> ลงทะเบียน ID</button></div></div>'
+      + '<div class="grid k4" style="margin:0">'
+      + kpi('ลูกข่ายในสายงาน', String(total), 'fa-solid fa-users', '#4F46E5', 'ไม่รวมตัวเอง (' + lv(me.level).short + ')')
+      + kpi('Supervisor', String(byLevel.sup || 0), 'fa-solid fa-user-tie', '#0E9384', 'ทีมที่ดูแล')
+      + kpi('เซลล์ (Sale)', String(byLevel.sale || 0), 'fa-solid fa-user-group', '#B54708', 'ผู้ขายในสาย')
+      + kpi('ตัวแทน / MCN', String(byLevel.agent || 0), 'fa-solid fa-id-card', '#6941C6', 'ปลายสาย')
+      + '</div>'
+      + '<div class="note" style="margin-top:12px"><b>ลำดับชั้น:</b> L1 Admin › L2 BU › L3 Head Team › L4 Supervisor › L5 เซลล์ › L6 ตัวแทน/MCN — การสร้าง ID ต้องเลือกระดับและเลือกผู้ดูแลต้นสาย (ต้องเป็นระดับที่สูงกว่าเท่านั้น)</div>'
+      + '</div>'
+
+      + '<div class="grid k2">'
+      + '<div class="card"><div class="head"><div><h3>แผนผังเครือข่าย</h3><div class="hint">เริ่มจาก ' + esc(me.name) + ' ลงไปยังปลายสาย</div></div></div>'
+      + treeNode(me, 0) + '</div>'
+
+      + '<div class="card"><div class="head"><div><h3>รายชื่อในสายงาน (' + scope.length + ')</h3>'
+      + '<div class="hint">' + (lv(me.level).n === 1 ? 'Admin เห็นทุกคนในระบบ' : 'เห็นเฉพาะผู้ที่อยู่ใต้สายงานของตัวเอง') + '</div></div>'
+      + '<input class="inp" id="uSearch" placeholder="ค้นหาชื่อ/อีเมล" style="min-width:160px"></div>'
+      + (scope.length ? '<div class="tbl-wrap" style="max-height:520px"><table id="uTbl"><thead><tr>'
+          + '<th>ชื่อ / อีเมล</th><th>ระดับ</th><th>ผู้ดูแล (Upline)</th><th>สายงาน</th><th>สร้างเมื่อ</th><th>สถานะ</th><th></th>'
+          + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+          : '<div class="empty"><i class="fa-solid fa-user-slash"></i>ยังไม่มีผู้ใช้ใต้สายงาน</div>')
+      + '</div></div>';
+  }
+
+  function treeNode(u, depth) {
+    var kids = childrenOf(u.id);
+    var l = lv(u.level);
+    var row = '<div style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:9px;margin:0 0 4px ' + (depth * 16) + 'px;'
+      + 'background:' + (depth === 0 ? '#EEF2FF' : '#F8FAFC') + ';border:1px solid ' + (depth === 0 ? '#E0E7FF' : '#EFF3F8') + '">'
+      + '<span class="pill ' + l.cls + '">L' + l.n + ' ' + l.short + '</span>'
+      + '<strong style="font-size:11.5px;color:#111C33">' + esc(u.name) + '</strong>'
+      + (kids.length ? '<span class="s2" style="margin-left:auto">' + kids.length + ' ใต้สังกัด</span>' : '')
+      + '</div>';
+    return row + kids.map(function (k) { return treeNode(k, depth + 1); }).join('');
+  }
+
+  function uplinesFor(levelCode) {
+    var n = lv(levelCode).n;
+    var me = currentUser();
+    var pool = DB.users.filter(function (u) {
+      var un = lv(u.level).n;
+      if (un >= n) return false;
+      if (lv(me.level).n === 1) return true;
+      return u.id === me.id || descendantsOf(me.id).some(function (x) { return x.id === u.id; });
+    });
+    return pool.sort(function (a, b) { return lv(a.level).n - lv(b.level).n; });
+  }
+
+  function userModal(id) {
+    var u = id ? userById(id) : null;
+    var isEdit = !!u;
+    var preset = u || { name: '', email: '', level: 'sale', parentId: '', status: 'active' };
+
+    var levelOpts = LEVEL_ORDER.map(function (code) {
+      var l = LEVELS[code];
+      var sel = preset.level === code ? ' selected' : '';
+      return '<option value="' + code + '"' + sel + '>L' + l.n + ' · ' + l.name + '</option>';
+    }).join('');
+
+    function uplineOpts(levelCode, parentId) {
+      var list = uplinesFor(levelCode);
+      if (!list.length) return '<option value="">— ยังไม่มีผู้ใช้ระดับบนให้เลือก —</option>';
+      return '<option value="">— เลือกผู้ดูแลต้นสาย —</option>' + list.map(function (x) {
+        return '<option value="' + esc(x.id) + '"' + (parentId === x.id ? ' selected' : '') + '>' + esc(x.name) + ' · ' + lv(x.level).short + '</option>';
+      }).join('');
+    }
+
+    openModal(
+      '<div class="mh"><div><h3>' + (isEdit ? 'แก้ไข ID / สิทธิ์' : 'ลงทะเบียน ID ใหม่') + '</h3>'
+      + '<p>เลือกระดับสิทธิ์ และเลือกผู้ดูแลต้นสาย (ต้องเป็นระดับที่สูงกว่าเท่านั้น)</p></div><button class="x" data-close>&times;</button></div>'
+      + '<div class="mb"><form id="uf">'
+      + '<div class="fld"><label>ชื่อ-นามสกุล / ชื่อทีม *</label><input name="name" required value="' + esc(preset.name) + '"></div>'
+      + '<div class="fld"><label>อีเมล (ใช้เป็น ID เข้าระบบ)</label><input name="email" type="email" value="' + esc(preset.email) + '"></div>'
+      + '<div class="two"><div class="fld"><label>ระดับสิทธิ์ *</label><select name="level" id="uLevel">' + levelOpts + '</select></div>'
+      + '<div class="fld"><label>ผู้ดูแลต้นสาย *</label><select name="parentId" id="uParent">' + uplineOpts(preset.level, preset.parentId) + '</select></div></div>'
+      + '<div class="two"><div class="fld"><label>สถานะ</label><select name="status">'
+      + '<option value="active"' + (preset.status === 'active' ? ' selected' : '') + '>ใช้งาน</option>'
+      + '<option value="inactive"' + (preset.status !== 'active' ? ' selected' : '') + '>ปิดการใช้งาน</option></select></div>'
+      + '<div class="fld"><label>วันที่สร้าง</label><input name="createdAt" type="date" value="' + esc(preset.createdAt || new Date().toISOString().slice(0, 10)) + '"></div></div>'
+      + '<div class="note" id="uHint">—</div>'
+      + '</form></div>'
+      + '<div class="mf"><button class="btn" data-close>ยกเลิก</button><button class="btn pri" id="uSave"><i class="fa-solid fa-check"></i> บันทึก</button></div>'
+    );
+
+    var f = $('uf');
+    function refreshHint() {
+      var l = lv(f.level.value);
+      var allowed = uplinesFor(f.level.value).map(function (x) { return lv(x.level).short; })
+        .filter(function (v, i, a) { return a.indexOf(v) === i; });
+      $('uHint').innerHTML = '<b>L' + l.n + ' ' + l.name + '</b> — ผู้ดูแลต้นสายที่เลือกได้: '
+        + (allowed.length ? allowed.join(', ') : 'ไม่มี (ต้องสร้างระดับบนก่อน)')
+        + '<br>สิทธิ์การมองเห็น: ' + (l.n === 1 ? 'เห็นทุกคนในระบบ' : 'เห็นเฉพาะลูกข่ายใต้สายงานของตัวเอง');
+    }
+    f.level.addEventListener('change', function () {
+      $('uParent').innerHTML = uplineOpts(f.level.value, '');
+      refreshHint();
+    });
+    refreshHint();
+
+    $('uSave').addEventListener('click', function () {
+      if (!f.reportValidity()) return;
+      var parentId = f.parentId.value;
+      if (f.level.value !== 'admin' && !parentId) { toast('กรุณาเลือกผู้ดูแลต้นสาย'); return; }
+      var obj = {
+        id: isEdit ? u.id : ('U' + String(Date.now()).slice(-5)),
+        name: f.name.value.trim(),
+        email: f.email.value.trim(),
+        level: f.level.value,
+        parentId: f.level.value === 'admin' ? '' : parentId,
+        createdAt: f.createdAt.value,
+        status: f.status.value
+      };
+      if (isEdit) {
+        DB.users = DB.users.map(function (x) { return x.id === u.id ? obj : x; });
+      } else DB.users.push(obj);
+      saveDB(); closeModal(); render();
+      toast(isEdit ? 'อัปเดตสิทธิ์แล้ว' : 'ลงทะเบียน ID เรียบร้อย');
+    });
+  }
+
+  /* ---------------- Admin ---------------- */
+  function viewAdmin() {
+    var s = DB.settings;
+    return '<div class="grid k2">'
+      + '<div class="card"><div class="head"><div><h3>Tier &amp; เกณฑ์ขั้นต่ำ</h3><div class="hint">ใช้คำนวณ Tier อัตโนมัติจากยอดเดือนปัจจุบัน</div></div>'
+      + '<button class="btn pri" id="saveTiers"><i class="fa-solid fa-floppy-disk"></i> บันทึก</button></div>'
+      + '<div class="tbl-wrap"><table><thead><tr><th>รหัส</th><th>ชื่อ</th><th>ขั้นต่ำ (หน่วย)</th><th>ขั้นต่ำ (บาท)</th></tr></thead><tbody>'
+      + s.tiers.map(function (t, i) {
+          return '<tr><td><input class="inp" style="width:80px" value="' + esc(t.code) + '" data-t="' + i + '-code"></td>'
+            + '<td><input class="inp" style="width:100%" value="' + esc(t.name) + '" data-t="' + i + '-name"></td>'
+            + '<td><input class="inp" type="number" style="width:90px" value="' + t.minUnits + '" data-t="' + i + '-minUnits"></td>'
+            + '<td><input class="inp" type="number" style="width:120px" value="' + t.minValue + '" data-t="' + i + '-minValue"></td></tr>';
+        }).join('')
+      + '</tbody></table></div></div>'
+
+      + '<div class="card"><div class="head"><div><h3>สินค้า · GP · Commission</h3><div class="hint">ปรับอัตราได้ทันที มีผลกับการคำนวณออเดอร์ใหม่</div></div>'
+      + '<button class="btn pri" id="saveProducts"><i class="fa-solid fa-floppy-disk"></i> บันทึก</button></div>'
+      + '<div class="tbl-wrap"><table><thead><tr><th>สินค้า</th><th>กลุ่ม</th><th>GP %</th><th>COM %</th></tr></thead><tbody>'
+      + s.products.map(function (p, i) {
+          return '<tr><td><input class="inp" style="width:100%" value="' + esc(p.name) + '" data-p="' + i + '-name"></td>'
+            + '<td><input class="inp" style="width:100px" value="' + esc(p.group) + '" data-p="' + i + '-group"></td>'
+            + '<td><input class="inp" type="number" step="0.1" style="width:80px" value="' + p.gp + '" data-p="' + i + '-gp"></td>'
+            + '<td><input class="inp" type="number" step="0.1" style="width:80px" value="' + p.com + '" data-p="' + i + '-com"></td></tr>';
+        }).join('')
+      + '</tbody></table></div></div>'
+
+      + '<div class="card"><div class="head"><div><h3>เป้าหมาย &amp; Volume Rebate</h3><div class="hint">ใช้ทั้งการแจ้งเตือน Retention และคำนวณ Rebate</div></div>'
+      + '<button class="btn pri" id="saveRules"><i class="fa-solid fa-floppy-disk"></i> บันทึก</button></div>'
+      + '<div class="two">'
+      + '<div class="fld"><label>เป้ายอดซื้อ/เดือน (บาท, ไม่รวม VAT)</label><input class="inp" id="tgValue" type="number" value="' + s.target.value + '"></div>'
+      + '<div class="fld"><label>เป้าจำนวนเครื่อง/เดือน</label><input class="inp" id="tgUnits" type="number" value="' + s.target.units + '"></div>'
+      + '</div>'
+      + '<div class="two">'
+      + '<div class="fld"><label>Rebate ขั้นที่ 1 (% ของเป้า)</label><input class="inp" id="rb1p" type="number" value="' + s.rebate[0].pct + '"></div>'
+      + '<div class="fld"><label>อัตราคืน (%)</label><input class="inp" id="rb1v" type="number" step="0.1" value="' + s.rebate[0].rebate + '"></div>'
+      + '</div>'
+      + '<div class="two">'
+      + '<div class="fld"><label>Rebate ขั้นที่ 2 (% ของเป้า)</label><input class="inp" id="rb2p" type="number" value="' + s.rebate[1].pct + '"></div>'
+      + '<div class="fld"><label>อัตราคืน (%)</label><input class="inp" id="rb2v" type="number" step="0.1" value="' + s.rebate[1].rebate + '"></div>'
+      + '</div>'
+      + '<div class="fld"><label>VAT (%)</label><input class="inp" id="vatInp" type="number" value="' + s.vat + '"></div>'
+      + '</div>'
+
+      + '<div class="card"><div class="head"><div><h3>ข้อมูลระบบ</h3><div class="hint">นำเข้า/ส่งออก หรือรีเซ็ตกลับค่าตัวอย่าง</div></div></div>'
+      + '<div class="note">'
+      + 'ข้อมูลถูกเก็บใน <b>localStorage</b> ของเบราว์เซอร์นี้ (' + DB.partners.length + ' คู่ค้า · ' + DB.orders.length + ' ออเดอร์ · ' + DB.pipeline.length + ' ลีด · ' + DB.privs.length + ' สิทธิประโยชน์)<br>'
+      + 'สำหรับใช้งานหลายเครื่องพร้อมกัน แนะนำต่อยอดเป็น Google Sheets/API (โครงสร้างฟิลด์พร้อมแล้ว)'
+      + '</div>'
+      + '<div class="tools" style="margin-top:12px">'
+      + '<button class="btn" id="exp2"><i class="fa-solid fa-file-export"></i> ส่งออก JSON</button>'
+      + '<button class="btn" id="imp2"><i class="fa-solid fa-file-import"></i> นำเข้า JSON</button>'
+      + '<button class="btn dgr" id="reset2"><i class="fa-solid fa-rotate-left"></i> รีเซ็ตข้อมูลตัวอย่าง</button>'
+      + '</div></div>'
+      + '</div>';
+  }
+
+  /* ============================================================
+     MODALS
+     ============================================================ */
+  function openModal(html) { $('modal').innerHTML = html; $('backdrop').classList.add('open'); }
+  function closeModal() { $('backdrop').classList.remove('open'); $('modal').innerHTML = ''; }
+
+  function partnerModal(id) {
+    var p = DB.partners.filter(function (x) { return x.id === id; })[0] || { id: '', name: '', owner: '', phone: '', joined: '', sellOut: 0, note: '' };
+    openModal(
+      '<div class="mh"><div><h3>' + (id ? 'แก้ไขคู่ค้า' : 'เพิ่มคู่ค้าใหม่') + '</h3><p>Tier จะถูกคำนวณอัตโนมัติจากยอดขาย</p></div><button class="x" data-close>&times;</button></div>'
+      + '<div class="mb"><form id="pf">'
+      + '<div class="fld"><label>ชื่อคู่ค้า / บริษัท *</label><input name="name" required value="' + esc(p.name) + '"></div>'
+      + '<div class="two"><div class="fld"><label>ผู้ดูแล (AE)</label><input name="owner" value="' + esc(p.owner) + '"></div>'
+      + '<div class="fld"><label>เบอร์ติดต่อ</label><input name="phone" value="' + esc(p.phone) + '"></div></div>'
+      + '<div class="two"><div class="fld"><label>วันที่เริ่มเป็นคู่ค้า</label><input name="joined" type="date" value="' + esc(p.joined) + '"></div>'
+      + '<div class="fld"><label>ยอดขายออกสะสม (หน่วย)</label><input name="sellOut" type="number" min="0" value="' + num(p.sellOut) + '"></div></div>'
+      + '<div class="fld"><label>บันทึก</label><textarea name="note" rows="2">' + esc(p.note) + '</textarea></div>'
+      + '</form></div>'
+      + '<div class="mf"><button class="btn" data-close>ยกเลิก</button><button class="btn pri" id="pSave"><i class="fa-solid fa-check"></i> บันทึก</button></div>'
+    );
+    $('pSave').addEventListener('click', function () {
+      var f = $('pf');
+      if (!f.reportValidity()) return;
+      var obj = {
+        id: id || ('P' + String(Date.now()).slice(-5)),
+        name: f.name.value.trim(), owner: f.owner.value.trim(), phone: f.phone.value.trim(),
+        joined: f.joined.value, sellOut: num(f.sellOut.value), note: f.note.value.trim()
+      };
+      if (id) {
+        DB.partners = DB.partners.map(function (x) { return x.id === id ? obj : x; });
+      } else DB.partners.push(obj);
+      saveDB(); closeModal(); render(); toast('บันทึกคู่ค้าแล้ว');
+    });
+  }
+
+  function orderModal() {
+    if (!DB.partners.length) { toast('กรุณาเพิ่มคู่ค้าก่อน'); return; }
+    openModal(
+      '<div class="mh"><div><h3>บันทึกการขาย</h3><p>ระบบคำนวณ GP / Commission / VAT ให้อัตโนมัติ</p></div><button class="x" data-close>&times;</button></div>'
+      + '<div class="mb"><form id="of">'
+      + '<div class="fld"><label>คู่ค้า *</label><select name="partnerId">' + DB.partners.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>'; }).join('') + '</select></div>'
+      + '<div class="two"><div class="fld"><label>สินค้า *</label><select name="product">' + DB.settings.products.map(function (p) { return '<option value="' + esc(p.code) + '">' + esc(p.name) + '</option>'; }).join('') + '</select></div>'
+      + '<div class="fld"><label>วันที่ขาย</label><input name="date" type="date" value="' + new Date().toISOString().slice(0, 10) + '"></div></div>'
+      + '<div class="two"><div class="fld"><label>จำนวน (หน่วย) *</label><input name="qty" type="number" min="1" value="1" required></div>'
+      + '<div class="fld"><label>ราคาต่อหน่วย (ก่อน VAT)</label><input name="price" type="number" min="0" value="30000"></div></div>'
+      + '<div class="two"><div class="fld"><label>ส่วนลด (%)</label><input name="discount" type="number" min="0" max="100" step="0.5" value="0" id="discInp"></div>'
+      + '<div class="fld"><label>รูปแบบชำระ</label><select name="pay"><option value="cash">เงินสด</option><option value="installment">เงินผ่อน</option></select></div></div>'
+      + '<div class="fld"><label>สถานะ</label><select name="status"><option>มัดจำ</option><option>รอเครดิต</option><option>รอติดตั้ง</option><option>ชำระแล้ว</option></select></div>'
+      + '<div class="note" id="calcBox">—</div>'
+      + '</form></div>'
+      + '<div class="mf"><button class="btn" data-close>ยกเลิก</button><button class="btn pri" id="oSave"><i class="fa-solid fa-check"></i> บันทึก</button></div>'
+    );
+    var f = $('of');
+    function recalc() {
+      var o = { product: f.product.value, qty: num(f.qty.value), price: num(f.price.value), discount: num(f.discount.value) };
+      var c = orderCalc(o), p = product(o.product);
+      $('calcBox').innerHTML = 'ยอดรวม ' + money(c.grossList) + ' − ส่วนลด ' + money(c.disc) + ' = <b>' + money(c.net) + '</b><br>'
+        + 'VAT ' + money(c.vat) + ' → รวม ' + money(c.inVat) + '<br>'
+        + 'GP (' + p.gp + '%) = <b>' + money(c.gp) + '</b> · Commission (' + p.com + '%) = <b>' + money(c.com) + '</b>';
+    }
+    ['product', 'qty', 'price', 'discount'].forEach(function (n) {
+      f[n].addEventListener('input', recalc); f[n].addEventListener('change', recalc);
+    });
+    recalc();
+
+    $('oSave').addEventListener('click', function () {
+      if (!f.reportValidity()) return;
+      DB.orders.push({
+        id: 'SO-' + String(Date.now()).slice(-5),
+        partnerId: f.partnerId.value, date: f.date.value, product: f.product.value,
+        qty: num(f.qty.value), price: num(f.price.value), discount: num(f.discount.value),
+        pay: f.pay.value, status: f.status.value
+      });
+      saveDB(); closeModal(); render(); toast('บันทึกการขายแล้ว');
+    });
+  }
+
+  function leadModal() {
+    openModal(
+      '<div class="mh"><div><h3>เพิ่มลีด / คู่ค้าใหม่</h3><p>เริ่มที่สถานะ Recruit</p></div><button class="x" data-close>&times;</button></div>'
+      + '<div class="mb"><form id="lf">'
+      + '<div class="fld"><label>ชื่อว่าที่คู่ค้า *</label><input name="name" required></div>'
+      + '<div class="two"><div class="fld"><label>ผู้ดูแล</label><input name="owner"></div>'
+      + '<div class="fld"><label>กำหนดติดตาม</label><input name="due" type="date"></div></div>'
+      + '<div class="fld"><label>สถานะ</label><select name="stage">' + DB.settings.stages.map(function (s) { return '<option>' + esc(s) + '</option>'; }).join('') + '</select></div>'
+      + '<div class="fld"><label>โน้ต</label><textarea name="note" rows="2"></textarea></div>'
+      + '</form></div>'
+      + '<div class="mf"><button class="btn" data-close>ยกเลิก</button><button class="btn pri" id="lSave"><i class="fa-solid fa-check"></i> บันทึก</button></div>'
+    );
+    $('lSave').addEventListener('click', function () {
+      var f = $('lf');
+      if (!f.reportValidity()) return;
+      DB.pipeline.push({
+        id: 'L' + String(Date.now()).slice(-5), name: f.name.value.trim(), stage: f.stage.value,
+        owner: f.owner.value.trim() || '-', due: f.due.value, note: f.note.value.trim()
+      });
+      saveDB(); closeModal(); render(); toast('เพิ่มลีดแล้ว');
+    });
+  }
+
+  function leadEditModal(id) {
+    var x = DB.pipeline.filter(function (y) { return y.id === id; })[0];
+    if (!x) return;
+    openModal(
+      '<div class="mh"><div><h3>แก้ไขลีด</h3><p>' + esc(x.name) + '</p></div><button class="x" data-close>&times;</button></div>'
+      + '<div class="mb"><form id="lf2">'
+      + '<div class="fld"><label>ชื่อ</label><input name="name" required value="' + esc(x.name) + '"></div>'
+      + '<div class="two"><div class="fld"><label>ผู้ดูแล</label><input name="owner" value="' + esc(x.owner) + '"></div>'
+      + '<div class="fld"><label>กำหนดติดตาม</label><input name="due" type="date" value="' + esc(x.due) + '"></div></div>'
+      + '<div class="fld"><label>สถานะ</label><select name="stage">' + DB.settings.stages.map(function (s) { return '<option ' + (s === x.stage ? 'selected' : '') + '>' + esc(s) + '</option>'; }).join('') + '</select></div>'
+      + '<div class="fld"><label>โน้ต</label><textarea name="note" rows="2">' + esc(x.note) + '</textarea></div>'
+      + '</form></div>'
+      + '<div class="mf"><button class="btn" data-close>ยกเลิก</button><button class="btn pri" id="lSave2"><i class="fa-solid fa-check"></i> บันทึก</button></div>'
+    );
+    $('lSave2').addEventListener('click', function () {
+      var f = $('lf2');
+      if (!f.reportValidity()) return;
+      x.name = f.name.value.trim(); x.owner = f.owner.value.trim(); x.due = f.due.value;
+      x.stage = f.stage.value; x.note = f.note.value.trim();
+      saveDB(); closeModal(); render(); toast('อัปเดตแล้ว');
+    });
+  }
+
+  function privModal() {
+    if (!DB.partners.length) { toast('กรุณาเพิ่มคู่ค้าก่อน'); return; }
+    openModal(
+      '<div class="mh"><div><h3>เพิ่มสิทธิประโยชน์</h3><p>Lead · Demo · Content · Business Plan</p></div><button class="x" data-close>&times;</button></div>'
+      + '<div class="mb"><form id="vf">'
+      + '<div class="fld"><label>คู่ค้า</label><select name="partnerId">' + DB.partners.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>'; }).join('') + '</select></div>'
+      + '<div class="two"><div class="fld"><label>ประเภท</label><select name="type"><option>Lead</option><option>Demo</option><option>Content</option><option>Business Plan</option></select></div>'
+      + '<div class="fld"><label>วันที่</label><input name="date" type="date" value="' + new Date().toISOString().slice(0, 10) + '"></div></div>'
+      + '<div class="fld"><label>รายละเอียด</label><input name="detail" required placeholder="เช่น ส่งรายชื่อลูกค้า 20 ราย"></div>'
+      + '<div class="fld"><label>สถานะ</label><select name="status"><option>รออนุมัติ</option><option>กำลังดำเนินการ</option><option>ส่งมอบแล้ว</option></select></div>'
+      + '</form></div>'
+      + '<div class="mf"><button class="btn" data-close>ยกเลิก</button><button class="btn pri" id="vSave"><i class="fa-solid fa-check"></i> บันทึก</button></div>'
+    );
+    $('vSave').addEventListener('click', function () {
+      var f = $('vf');
+      if (!f.reportValidity()) return;
+      DB.privs.push({
+        id: 'PV' + String(Date.now()).slice(-5), partnerId: f.partnerId.value, type: f.type.value,
+        detail: f.detail.value.trim(), date: f.date.value, status: f.status.value
+      });
+      saveDB(); closeModal(); render(); toast('บันทึกสิทธิประโยชน์แล้ว');
+    });
+  }
+
+  /* ============================================================
+     EVENTS
+     ============================================================ */
+  document.addEventListener('click', function (e) {
+    var nav = e.target.closest('#nav button');
+    if (nav) { VIEW = nav.dataset.view; render(); return; }
+    if (e.target.closest('[data-close]')) { closeModal(); return; }
+    if (e.target === $('backdrop')) { closeModal(); return; }
+
+    var add = e.target.closest('[data-add]');
+    if (add) {
+      var k = add.dataset.add;
+      if (k === 'partner') partnerModal('');
+      else if (k === 'order') orderModal();
+      else if (k === 'lead') leadModal();
+      else if (k === 'priv') privModal();
+      else if (k === 'user') userModal('');
+      return;
+    }
+    var ed = e.target.closest('[data-edit]');
+    if (ed) { partnerModal(ed.dataset.edit); return; }
+    var edu = e.target.closest('[data-editu]');
+    if (edu) {
+      if (!canSee(edu.dataset.editu)) { toast('ไม่มีสิทธิ์แก้ไขผู้ใช้ที่อยู่นอกสายงาน'); return; }
+      userModal(edu.dataset.editu); return;
+    }
+    var delu = e.target.closest('[data-delu]');
+    if (delu) {
+      var uid = delu.dataset.delu;
+      if (!canSee(uid)) { toast('ไม่มีสิทธิ์ลบผู้ใช้ที่อยู่นอกสายงาน'); return; }
+      if (childrenOf(uid).length) { toast('ลบไม่ได้: ยังมีลูกข่ายใต้สังกัด'); return; }
+      if (confirm('ลบ ID นี้?')) {
+        DB.users = DB.users.filter(function (x) { return x.id !== uid; });
+        saveDB(); render(); toast('ลบ ID แล้ว');
+      }
+      return;
+    }
+    var del = e.target.closest('[data-del]');
+    if (del) {
+      var pid = del.dataset.del;
+      if (confirm('ลบคู่ค้านี้ออก? (ออเดอร์ที่เกี่ยวข้องจะยังอยู่)')) {
+        DB.partners = DB.partners.filter(function (x) { return x.id !== pid; });
+        saveDB(); render(); toast('ลบคู่ค้าแล้ว');
+      }
+      return;
+    }
+    var delo = e.target.closest('[data-delorder]');
+    if (delo) {
+      var oid = delo.dataset.delorder;
+      if (confirm('ลบคำสั่งซื้อ ' + oid + ' ?')) {
+        DB.orders = DB.orders.filter(function (x) { return x.id !== oid; });
+        saveDB(); render(); toast('ลบออเดอร์แล้ว');
+      }
+      return;
+    }
+    var el2 = e.target.closest('[data-editlead]');
+    if (el2) { leadEditModal(el2.dataset.editlead); return; }
+    var dl2 = e.target.closest('[data-dellead]');
+    if (dl2) {
+      var lid = dl2.dataset.dellead;
+      if (confirm('ลบลีดนี้?')) {
+        DB.pipeline = DB.pipeline.filter(function (x) { return x.id !== lid; });
+        saveDB(); render(); toast('ลบลีดแล้ว');
+      }
+      return;
+    }
+    var dp = e.target.closest('[data-delpriv]');
+    if (dp) {
+      var vid = dp.dataset.delpriv;
+      if (confirm('ลบรายการนี้?')) {
+        DB.privs = DB.privs.filter(function (x) { return x.id !== vid; });
+        saveDB(); render(); toast('ลบแล้ว');
+      }
+      return;
+    }
+  });
+
+  // Network: สลับผู้ใช้ + ค้นหา
+  document.addEventListener('change', function (e) {
+    if (e.target.id === 'meSwitch') {
+      DB.settings.currentUser = e.target.value;
+      saveDB(); render();
+      toast('มุมมองเปลี่ยนเป็น: ' + currentUser().name);
+    }
+  });
+  document.addEventListener('input', function (e) {
+    if (e.target.id !== 'uSearch') return;
+    var q = e.target.value.toLowerCase();
+    Array.prototype.forEach.call(document.querySelectorAll('#uTbl tbody tr'), function (tr) {
+      tr.style.display = tr.textContent.toLowerCase().indexOf(q) >= 0 ? '' : 'none';
+    });
+  });
+
+  // Admin: บันทึกการตั้งค่า
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('#saveTiers')) {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-t]'), function (inp) {
+        var parts = inp.dataset.t.split('-'), i = Number(parts[0]), key = parts[1];
+        var t = DB.settings.tiers[i];
+        if (!t) return;
+        t[key] = (key === 'code' || key === 'name') ? inp.value.trim() : num(inp.value);
+      });
+      DB.settings.tiers.sort(function (a, b) { return num(a.minValue) - num(b.minValue); });
+      saveDB(); render(); toast('บันทึกเกณฑ์ Tier แล้ว');
+    }
+    if (e.target.closest('#saveProducts')) {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-p]'), function (inp) {
+        var parts = inp.dataset.p.split('-'), i = Number(parts[0]), key = parts[1];
+        var p = DB.settings.products[i];
+        if (!p) return;
+        p[key] = (key === 'name' || key === 'group') ? inp.value.trim() : num(inp.value);
+      });
+      saveDB(); render(); toast('บันทึกสินค้า/GP/Commission แล้ว');
+    }
+    if (e.target.closest('#saveRules')) {
+      DB.settings.target.value = num($('tgValue').value);
+      DB.settings.target.units = num($('tgUnits').value);
+      DB.settings.rebate[0] = { pct: num($('rb1p').value), rebate: num($('rb1v').value) };
+      DB.settings.rebate[1] = { pct: num($('rb2p').value), rebate: num($('rb2v').value) };
+      DB.settings.vat = num($('vatInp').value);
+      saveDB(); render(); toast('บันทึกเป้าหมาย/Rebate แล้ว');
+    }
+    if (e.target.closest('#reset2')) {
+      if (confirm('รีเซ็ตข้อมูลกลับเป็นตัวอย่างเริ่มต้น?')) {
+        DB = JSON.parse(JSON.stringify(SEED));
+        saveDB(); render(); toast('รีเซ็ตข้อมูลแล้ว');
+      }
+    }
+    if (e.target.closest('#exp2') || e.target.closest('#exportBtn')) exportJSON();
+    if (e.target.closest('#imp2') || e.target.closest('#importBtn')) $('fileInp').click();
+  });
+
+  function exportJSON() {
+    var blob = new Blob([JSON.stringify(DB, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'tsr-partner-crm-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    toast('ส่งออกข้อมูลแล้ว');
+  }
+
+  $('fileInp').addEventListener('change', function () {
+    var f = this.files && this.files[0];
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function () {
+      try {
+        var d = JSON.parse(String(r.result));
+        if (!d.settings || !d.partners) throw new Error('รูปแบบไฟล์ไม่ถูกต้อง');
+        DB = d; saveDB(); render(); toast('นำเข้าข้อมูลสำเร็จ');
+      } catch (ex) { toast('นำเข้าไม่สำเร็จ: ' + ex.message); }
+    };
+    r.readAsText(f);
+    this.value = '';
+  });
+
+  /* ---------------- boot ---------------- */
+  render();
+})();
+</script>
+</body>
+</html>
