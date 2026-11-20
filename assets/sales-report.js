@@ -112,6 +112,18 @@
     return '';
   }
 
+  /** ตารางผูกบัญชีผู้ใช้กับเซลส์ (เก็บในเครื่องนี้) */
+  var LS_SALE_MAP = 'pi_sale_map_v1';
+  function saleMap() {
+    try {
+      var o = JSON.parse(localStorage.getItem(LS_SALE_MAP) || 'null');
+      return (o && typeof o === 'object') ? o : {};
+    } catch (e) { return {}; }
+  }
+  function saveSaleMap(o) {
+    try { localStorage.setItem(LS_SALE_MAP, JSON.stringify(o)); } catch (e) {}
+  }
+
   /** ขอบเขตข้อมูลของผู้ใช้ปัจจุบัน: all | team | sale | none */
   function scopeOf() {
     var me = global.__ME__ || {};
@@ -124,10 +136,15 @@
       team = teamViaUpline(mail);
       if (team) return { type: 'team', team: team };
     }
-    /* 1) ผูกด้วยรหัสเซลส์โดยตรง (ถ้า admin ตั้งค่าไว้ในอนาคต) */
+    /* 1) ผูกด้วยรหัสเซลส์โดยตรง (ถ้า admin ตั้งค่าไว้) */
     var sid = String(me.saleId || me.sale || '').trim();
     if (sid) {
       for (var j = 0; j < SALES.length; j++) if (SALES[j].id === sid) return { type: 'sale', saleId: SALES[j].id };
+    }
+    /* 1.5) ตารางผูกบัญชี → เซลส์ ที่ Admin ตั้งไว้ในหน้า Reports */
+    var mapped = saleMap()[mail];
+    if (mapped) {
+      for (var k = 0; k < SALES.length; k++) if (SALES[k].id === mapped) return { type: 'sale', saleId: SALES[k].id };
     }
     /* 2) ผูกด้วยชื่อ (ตัดช่องว่าง/ตัวอักษรพิเศษออกก่อนเทียบ) */
     var norm = function (v) { return String(v || '').replace(/[\s\u200B\u00A0]+/g, '').trim(); };
@@ -851,7 +868,50 @@
           + '  <tfoot><tr><td class="sr-td-team"><b>รวมทุกทีม</b></td>' + monthTot + '<td class="sr-num sr-strong">' + money(grand) + '</td><td></td></tr></tfoot>'
           + '  </table></div>'
         : '')
+      + renderSaleMap()
       + '</section>';
+  }
+
+  /** ผูกบัญชีผู้ใช้ ↔ เซลส์ (Admin) — ใช้แทนการจับคู่ด้วยชื่อ */
+  function renderSaleMap() {
+    var me = global.__ME__ || {};
+    if (String(me.level).toLowerCase() !== 'admin') return '';
+    var users = global.__TEAM__ || [];
+    if (!users.length) {
+      if (global.PIAuth && global.PIAuth.refresh && !global.__MAP_LOADING__ && !global.__MAP_TRY__) {
+        global.__MAP_LOADING__ = true; global.__MAP_TRY__ = true;
+        global.PIAuth.refresh().then(function (list) {
+          global.__TEAM__ = list || []; global.__MAP_LOADING__ = false;
+          if (typeof global.render === 'function') global.render();
+        }).catch(function () { global.__MAP_LOADING__ = false; });
+      }
+      return '<div class="sr-map"><div class="sr-map-h"><i class="fa-solid fa-link"></i> ผูกบัญชีผู้ใช้กับเซลส์</div>'
+        + '<div class="sr-s2">กำลังโหลดรายชื่อผู้ใช้…</div></div>';
+    }
+    var map = saleMap();
+    var rows = users.map(function (u) {
+      var mail = String(u.email || '').toLowerCase();
+      var cur = map[mail] || '';
+      var opts = '<option value="">— ไม่ผูก (ใช้ชื่อ) —</option>' + SALES.map(function (s) {
+        return '<option value="' + esc(s.id) + '"' + (cur === s.id ? ' selected' : '') + '>' + esc(s.id) + ' · ' + esc(s.name) + ' (' + esc(s.team) + ')</option>';
+      }).join('');
+      var auto = '';
+      if (!cur) {
+        var nm = String(u.name || '').replace(/[\s\u200B\u00A0]+/g, '');
+        var hit = null;
+        for (var i = 0; i < SALES.length; i++) if (String(SALES[i].name).replace(/[\s\u200B\u00A0]+/g, '') === nm) hit = SALES[i];
+        auto = hit ? '<span class="sr-map-auto">อัตโนมัติ: ' + esc(hit.id) + '</span>' : '<span class="sr-map-auto warn">ยังไม่ผูก</span>';
+      } else auto = '<span class="sr-map-auto ok"><i class="fa-solid fa-link"></i> ผูกแล้ว</span>';
+      return '<div class="sr-map-row">'
+        + '  <div class="sr-map-who"><b>' + esc(u.name || u.email) + '</b><span>' + esc(u.email) + ' · L' + (String(u.level || '').toUpperCase()) + '</span></div>'
+        + '  <select class="sr-map-sel" data-sr-map="' + esc(mail) + '">' + opts + '</select>'
+        + auto
+        + '</div>';
+    }).join('');
+    return '<div class="sr-map">'
+      + '  <div class="sr-map-h"><i class="fa-solid fa-link"></i> ผูกบัญชีผู้ใช้กับเซลส์'
+      + '    <span class="sr-s2" style="margin-left:auto;font-weight:400">ใช้เมื่อชื่อในระบบไม่ตรงกับรายชื่อเซลส์ (S01–S05)</span></div>'
+      + rows + '</div>';
   }
 
   /* ---------- Dashboard (เวอร์ชันย่อของ Reports — ใช้สูตร/ข้อมูลชุดเดียวกัน) ---------- */
@@ -1560,7 +1620,19 @@
       return;
     }
     var sel = e.target.closest && e.target.closest('[data-sr-filter]');
-    if (!sel) return;
+    if (!sel) {
+      var mp = e.target.closest && e.target.closest('[data-sr-map]');
+      if (mp) {
+        var mail = mp.getAttribute('data-sr-map');
+        var m = saleMap();
+        if (mp.value) m[mail] = mp.value; else delete m[mail];
+        saveSaleMap(m);
+        if (global.PILog) global.PILog.add('user.map', mail, mp.value ? 'ผูกกับเซลส์ ' + mp.value : 'ยกเลิกการผูก');
+        if (typeof global.toast === 'function') global.toast(mp.value ? 'ผูก ' + mail + ' → ' + mp.value + ' แล้ว' : 'ยกเลิกการผูก ' + mail);
+        if (typeof global.render === 'function') global.render();
+      }
+      return;
+    }
     var key = sel.getAttribute('data-sr-filter');
     state[key] = (key === 'year' || key === 'month') ? Number(sel.value || 0) : sel.value;
     if (typeof global.render === 'function') global.render();
@@ -1690,6 +1762,29 @@
       + '.sr-fc-chip small{display:block;font-size:9px;color:#98A2B3}'
       + '.sr-fc-chip b{font-size:10.5px;color:#0F2B46;font-variant-numeric:tabular-nums}'
       + '.sr-fc-chip-empty{background:#FCFDFE;border-style:dashed;border-left-color:#E2E8F0!important;opacity:.75}'
+      + '.sr-map{margin-top:14px;border-top:1px dashed #E9EEF5;padding-top:12px}'
+      + '.sr-map-h{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;color:#0F2B46;margin-bottom:9px;flex-wrap:wrap}'
+      + '.sr-map-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F4F7FB;flex-wrap:wrap}'
+      + '.sr-map-who{min-width:200px;flex:1}'
+      + '.sr-map-who b{display:block;font-size:11px;color:#0F2B46}'
+      + '.sr-map-who span{font-size:9.5px;color:#98A2B3}'
+      + '.sr-map-sel{border:1px solid #DCE3EB;border-radius:8px;padding:6px 8px;font:inherit;font-size:10.5px;color:#0F2B46;background:#fff;min-width:190px}'
+      + '.sr-map-auto{font-size:9.5px;color:#98A2B3;min-width:96px}'
+      + '.sr-map-auto.ok{color:#16A34A}'
+      + '.sr-map-auto.warn{color:#B54708}'
+      + '@media(max-width:560px){.sr-map-sel{width:100%;min-width:0}}'
+      /* ผูกบัญชี ↔ เซลส์ */
+      + '.sr-map{margin-top:14px;border-top:1px dashed #E9EEF5;padding-top:12px}'
+      + '.sr-map-h{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;color:#0F2B46;margin-bottom:9px;flex-wrap:wrap}'
+      + '.sr-map-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F4F7FB;flex-wrap:wrap}'
+      + '.sr-map-who{min-width:200px;flex:1}'
+      + '.sr-map-who b{display:block;font-size:11px;color:#0F2B46}'
+      + '.sr-map-who span{font-size:9.5px;color:#98A2B3}'
+      + '.sr-map-sel{border:1px solid #DCE3EB;border-radius:8px;padding:6px 8px;font:inherit;font-size:10.5px;color:#0F2B46;background:#fff;min-width:190px}'
+      + '.sr-map-auto{font-size:9.5px;color:#98A2B3;min-width:96px}'
+      + '.sr-map-auto.ok{color:#16A34A}'
+      + '.sr-map-auto.warn{color:#B54708}'
+      + '@media(max-width:560px){.sr-map-sel{width:100%;min-width:0}}'
       + '.sr-fc-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:9px;padding-top:8px;border-top:1px dashed #EEF2F7;font-size:9.5px;color:#667085}'
       + '.sr-fc-fc{color:#2563EB;font-weight:500}'
       + '.sr-fc-other{color:#98A2B3;text-align:right}'
