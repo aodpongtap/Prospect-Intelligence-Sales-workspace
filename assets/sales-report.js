@@ -911,13 +911,14 @@
     var today = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
     var scD = scopeOf();
-    var teamRows = TEAMS.filter(function (t) {
+    var dashTeams = TEAMS.filter(function (t) {
       if (state.team && t.code !== state.team) return false;
       if (scD.type === 'team') return t.code === scD.team;
       if (scD.type === 'sale') return sale(scD.saleId).team === t.code;
       if (scD.type === 'none') return false;
       return true;
-    }).map(function (t) {
+    });
+    var teamRows = dashTeams.map(function (t) {
       var list = k.list.filter(function (d) { return sale(d.saleId).team === t.code; });
       var ts = summarize(list);
       var tg = targetOf(t.code, state.year, state.month);
@@ -935,6 +936,71 @@
         + '<div class="sr-trow-f">Forecast ' + money(ts.forecast) + ' · ' + pct(pFc) + '</div>'
         + '</div>';
     }).join('');
+
+    /* ---- ยอดขายแยกตามรูปแบบการชำระเงิน (เงินสด / ผ่อนชำระ / เครดิต) รายทีม ---- */
+    var PAY_KEYS = [
+      { code: 'cash', label: 'เงินสด', sub: 'สด/บัตรเครดิต' },
+      { code: 'inst', label: 'ผ่อนชำระ', sub: 'Installment' },
+      { code: 'term', label: 'เครดิต', sub: 'Credit Term' }
+    ];
+    function payAgg(list) {
+      var o = { cash: 0, inst: 0, term: 0, total: 0, count: 0 };
+      list.forEach(function (d) {
+        if (d.status !== 4) return;              /* นับเฉพาะงานที่ปิดแล้ว */
+        var c = payment(d.payment).code;
+        if (o[c] === undefined) c = 'cash';
+        o[c] += num(d.amount);
+        o.total += num(d.amount);
+        o.count++;
+      });
+      return o;
+    }
+    var payAll = { cash: 0, inst: 0, term: 0, total: 0, count: 0 };
+    var payRows = dashTeams.map(function (t) {
+      var o = payAgg(k.list.filter(function (d) { return sale(d.saleId).team === t.code; }));
+      payAll.cash += o.cash; payAll.inst += o.inst; payAll.term += o.term;
+      payAll.total += o.total; payAll.count += o.count;
+      return '<tr>'
+        + '<td><div class="sr-pay-tm"><b>' + esc(t.name) + '</b><span>' + o.count + ' ดีล</span></div></td>'
+        + PAY_KEYS.map(function (c) {
+          return '<td class="sr-num">' + (o[c.code] ? money(o[c.code]) : '<span class="sr-dim">—</span>') + '</td>';
+        }).join('')
+        + '<td class="sr-num sr-strong">' + (o.total ? money(o.total) : '<span class="sr-dim">—</span>') + '</td>'
+        + '<td><div class="sr-paybar">'
+        + PAY_KEYS.map(function (c) {
+          var w = o.total ? (o[c.code] / o.total * 100) : 0;
+          return w > 0 ? '<span style="width:' + w.toFixed(2) + '%;background:' + payment(c.code).color + '"></span>' : '';
+        }).join('')
+        + '</div></td>'
+        + '</tr>';
+    }).join('');
+
+    var payFoot = '<tr><td><b>รวมทั้งสิ้น</b></td>'
+      + PAY_KEYS.map(function (c) {
+        return '<td class="sr-num">' + (payAll[c.code] ? money(payAll[c.code]) : '<span class="sr-dim">—</span>') + '</td>';
+      }).join('')
+      + '<td class="sr-num">' + (payAll.total ? money(payAll.total) : '<span class="sr-dim">—</span>') + '</td>'
+      + '<td><div class="sr-paybar">'
+      + PAY_KEYS.map(function (c) {
+        var w = payAll.total ? (payAll[c.code] / payAll.total * 100) : 0;
+        return w > 0 ? '<span style="width:' + w.toFixed(2) + '%;background:' + payment(c.code).color + '"></span>' : '';
+      }).join('')
+      + '</div></td></tr>';
+
+    var payPanel = '<section class="sr-panel sr-pay">'
+      + '<div class="sr-ph"><div><h3>ยอดขายแยกตามรูปแบบการชำระเงิน (รายทีม)</h3>'
+      + '  <div class="sr-s2">นับเฉพาะงานที่ปิดแล้ว (Actual) · ไม่รวมยกเลิก/รอปิด</div></div>'
+      + '<div class="sr-payleg">' + PAY_KEYS.map(function (c) {
+        return '<span><i style="background:' + payment(c.code).color + '"></i>' + esc(c.label) + '</span>';
+      }).join('') + '</div></div>'
+      + (payAll.count
+        ? '<div class="sr-tablewrap"><table class="sr-table sr-paytable"><thead><tr>'
+          + '<th>ทีม (BU)</th>'
+          + PAY_KEYS.map(function (c) { return '<th class="sr-num">' + esc(c.label) + '</th>'; }).join('')
+          + '<th class="sr-num">รวมปิดงาน</th><th>สัดส่วน</th>'
+          + '</tr></thead><tbody>' + payRows + '</tbody><tfoot>' + payFoot + '</tfoot></table></div>'
+        : '<div class="sr-empty-note"><i class="fa-regular fa-circle-question"></i> ยังไม่มีงานที่ปิดแล้วในเดือน/ทีมนี้</div>')
+      + '</section>';
 
     var follow = k.list.filter(function (d) { return d.status === 0 || d.status === 1; })
       .sort(function (a, b) { return num(b.amount) - num(a.amount); }).slice(0, 8);
@@ -992,6 +1058,7 @@
       + ' · ' + k.list.length + ' ดีล</div>'
       + '<div class="sr-kpis">' + cards.join('') + '</div>'
       + '<div class="sr-dash-teams">' + (teamRows || '<div class="sr-trow">ยังไม่มีทีม</div>') + '</div>'
+      + payPanel
       + '<div class="sr-dash-charts">'
       + '  <section class="sr-panel">'
       + '    <div class="sr-ph"><div><h3>ยอดขายตามทีม แยกตามสถานะ</h3>'
@@ -1884,6 +1951,17 @@
       + '.sr-trow-f{font-size:9.5px;color:#667085;margin-top:8px}'
       + '.sr-dash-charts{display:grid;grid-template-columns:1.5fr 1fr;gap:15px;margin-bottom:15px}'
       + '.sr-dash-charts .sr-panel{margin-bottom:0}'
+      /* แยกตามรูปแบบการชำระเงิน (รายทีม) */
+      + '.sr-pay{margin-bottom:15px}'
+      + '.sr-payleg{display:flex;gap:11px;flex-wrap:wrap;font-size:9.5px;color:#667085;align-items:center}'
+      + '.sr-payleg i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle}'
+      + '.sr-paytable td{padding:9px 10px}'
+      + '.sr-paytable tfoot td{background:#F8FAFC;border-top:1px solid #E9EEF5;color:#0F2B46;font-weight:600}'
+      + '.sr-pay-tm b{color:#0F2B46;font-size:11px;font-weight:600}'
+      + '.sr-pay-tm span{display:block;font-size:9.5px;color:#98A2B3;margin-top:1px}'
+      + '.sr-paybar{display:flex;height:7px;border-radius:99px;overflow:hidden;background:#EEF2F7;min-width:88px}'
+      + '.sr-paybar span{display:block;height:100%}'
+      + '.sr-empty-note{padding:16px;text-align:center;color:#98A2B3;font-size:11px}'
       + '.sr-empty{text-align:center!important;color:#98A2B3;padding:22px!important}'
       /* badges */
       + '.sr-badge{display:inline-flex;align-items:center;gap:4px;border-radius:99px;padding:3px 9px;font-size:9.5px;font-weight:500;white-space:nowrap}'
