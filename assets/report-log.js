@@ -379,8 +379,8 @@
   }
   function userRows(users) {
     var LBL = { admin: 'Admin', bu: 'BU', head: 'Head Team', sup: 'Supervisor', sale: 'เซลล์ (Sale)', agent: 'ตัวแทน / MCN', editor: 'Editor', viewer: 'Viewer' };
-    return [['อีเมล', 'ชื่อ', 'ระดับ', 'ผู้ดูแลต้นสาย', 'สถานะ']].concat(
-      (users || []).map(function (u) { return [u.email, u.name || '', LBL[u.level] || u.level, u.parent || '', u.status || 'ใช้งาน']; })
+    return [['อีเมล', 'ชื่อ', 'ระดับ', 'เซลส์ (S01–S05)', 'ผู้ดูแลต้นสาย', 'สถานะ']].concat(
+      (users || []).map(function (u) { return [u.email, u.name || '', LBL[u.level] || u.level, u.saleId || '', u.parent || '', u.status || 'ใช้งาน']; })
     );
   }
 

@@ -64,7 +64,7 @@ function apiResponse_(p) {
     else if (action === 'login') out = login(p.email, p.password);
     else if (action === 'me') out = getMe(p.token);
     else if (action === 'users') out = getUsers(p.token);
-    else if (action === 'add') out = addUser(p.token, p.email, p.name, p.level, p.parent);
+    else if (action === 'add') out = addUser(p.token, p.email, p.name, p.level, p.parent, p.saleId);
     else if (action === 'reset') out = resetPassword(p.token, p.email);
     else if (action === 'update') out = updateUser(p.token, p.email, p.level, p.status, p.parent, p.saleId);
     else if (action === 'remove') out = deleteUser(p.token, p.email);
@@ -449,7 +449,7 @@ function getUsers(token) {
   };
 }
 
-function addUser(token, email, name, level, parent) {
+function addUser(token, email, name, level, parent, saleId) {
   var s = session_(token);
   if (!s) throw new Error('กรุณาเข้าสู่ระบบใหม่');
   if (levelN_(s.level) > 4) throw new Error('เฉพาะ Admin / BU / Head Team / Supervisor เท่านั้นที่สร้าง ID ได้');
@@ -480,7 +480,9 @@ function addUser(token, email, name, level, parent) {
 
   var pw = randPassword_();
   var salt = newSalt_();
-  getSheet_().appendRow([e, String(name || ''), lv, 'active', hash_(pw, salt), salt, new Date().toISOString(), '', p, '']);
+  var sid = String(saleId || '').trim().toUpperCase();
+  if (sid && !/^S\d{2}$/.test(sid)) throw new Error('รหัสเซลส์ต้องอยู่ในรูป S01–S99');
+  getSheet_().appendRow([e, String(name || ''), lv, 'active', hash_(pw, salt), salt, new Date().toISOString(), '', p, sid]);
 
   return { ok: true, email: e, password: pw, users: visibleUsers_(session_(token)).map(publicUser_) };
 }

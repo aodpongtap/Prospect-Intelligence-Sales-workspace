@@ -98,8 +98,10 @@
     });
   }
 
-  function addUser(email, name, level, parent) {
-    return call('add', { token: token(), email: email, name: name, level: level, parent: parent || '' }).then(function (r) {
+  function addUser(email, name, level, parent, saleId) {
+    var params = { token: token(), email: email, name: name, level: level, parent: parent || '' };
+    if (saleId !== undefined && saleId !== null) params.saleId = String(saleId).trim().toUpperCase();
+    return call('add', params).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'เพิ่มผู้ใช้ไม่สำเร็จ');
       cache = r.users || cache;
       return { email: r.email, password: r.password };

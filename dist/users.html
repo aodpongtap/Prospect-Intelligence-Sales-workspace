@@ -18,7 +18,7 @@
 h1{font-size:20px;font-weight:600;color:var(--navy);margin:0}.subtitle{color:var(--muted);margin:4px 0 16px;font-size:12px}
 .panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(15,43,70,.07);padding:16px;margin-bottom:16px}
 .panel h3{margin:0 0 12px;font-size:14px;font-weight:500}
-.fg{display:grid;grid-template-columns:1.6fr 1.2fr 1fr auto;gap:9px;align-items:end}
+.fg{display:grid;grid-template-columns:1.3fr 1.1fr .95fr 1.05fr .95fr auto;gap:9px;align-items:end}
 label{display:block;font-size:10px;color:#475467;margin-bottom:5px}
 input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12px;background:#fff}
 .btn{border:1px solid var(--line);background:#fff;color:#344054;border-radius:8px;padding:8px 11px;font:inherit;font-size:11px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
@@ -90,6 +90,7 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
         <option value="agent">L6 · ตัวแทน / MCN</option>
       </select></div>
       <div><label for="parent">ผู้ดูแลต้นสาย (Upline) *</label><select id="parent"><option value="">— เลือก —</option></select></div>
+      <div><label for="sale">เซลส์ (ถ้ามี)</label><select id="sale"><option value="">— ไม่ผูก —</option></select></div>
       <div><button class="btn btn-primary" id="addBtn"><i class="fa-solid fa-user-plus"></i> เพิ่ม + สร้างรหัส</button></div>
     </div>
   </section>
@@ -225,8 +226,10 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
     });
   }
 
-  function addUser(email, name, level, parent) {
-    return call('add', { token: token(), email: email, name: name, level: level, parent: parent || '' }).then(function (r) {
+  function addUser(email, name, level, parent, saleId) {
+    var params = { token: token(), email: email, name: name, level: level, parent: parent || '' };
+    if (saleId !== undefined && saleId !== null) params.saleId = String(saleId).trim().toUpperCase();
+    return call('add', params).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'เพิ่มผู้ใช้ไม่สำเร็จ');
       cache = r.users || cache;
       return { email: r.email, password: r.password };
@@ -320,7 +323,7 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
 })(window);
 
 </script>
-<script src="assets/report-log.js?v=6"></script>
+<script src="assets/report-log.js?v=7"></script>
 <script>
 var me = PIAuth.session();
 if (!me) { location.replace('login.html'); }
@@ -517,7 +520,17 @@ function refreshUplines() {
 }
 
 function load() {
+  fillSaleOptions();
   PIAuth.seed().then(function () { render(PIAuth.listUsers()); });
+}
+
+/** ตัวเลือกเซลส์ในฟอร์มสร้างผู้ใช้ */
+function fillSaleOptions() {
+  var sel = el('sale');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— ไม่ผูก —</option>' + SALES.map(function (s) {
+    return '<option value="' + s.id + '">' + s.id + ' · ' + esc(s.name) + '</option>';
+  }).join('');
 }
 
 el('addBtn').addEventListener('click', function () {
@@ -535,8 +548,9 @@ el('addBtn').addEventListener('click', function () {
   if (!pFound) return showMsg('ไม่พบผู้ดูแลต้นสายในระบบ', 'err');
   if (pn >= newN) return showMsg('ผู้ดูแลต้นสายต้องอยู่ระดับสูงกว่าระดับที่เลือก', 'err');
 
-  PIAuth.addUser(email, el('name').value.trim(), el('level').value, el('parent').value).then(function (res) {
+  PIAuth.addUser(email, el('name').value.trim(), el('level').value, el('parent').value, el('sale') ? el('sale').value : '').then(function (res) {
     el('email').value = ''; el('name').value = '';
+    if (el('sale')) el('sale').value = '';
     render(PIAuth.listUsers());
     showPw(res.email, res.password);
     showMsg('เพิ่มผู้ใช้และสร้างรหัสผ่านแล้ว', 'ok');
