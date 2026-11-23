@@ -26,7 +26,7 @@ input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-rad
 .tablewrap{overflow:auto}
 table{width:100%;border-collapse:collapse;min-width:1000px;table-layout:fixed}
 th{font-size:10px;color:#667085;font-weight:500;background:#f8fafc;text-align:left;padding:11px 12px;white-space:nowrap;vertical-align:middle}
-td{padding:11px 12px;border-bottom:1px solid #eef1f5;font-size:12px;vertical-align:middle}
+td{padding:8px 12px;border-bottom:1px solid #eef1f5;font-size:12px;vertical-align:middle}
 tbody tr:hover{background:#fafcff}
 /* 6 คอลัมน์ — กว้างพออ่านได้ ไม่ตัดข้อความ */
 .c-user{width:26%}.c-lvteam{width:17%}.c-link{width:15%}.c-tree{width:21%}.c-state{width:11%}.c-act{width:150px}
@@ -36,8 +36,8 @@ td.c-user{white-space:normal}
 .u-nm{display:flex;align-items:center;gap:4px;min-width:0;font-size:12px;color:#0F2B46;font-weight:500;line-height:1.35}
 .u-nm .name-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .u-em{font-size:10.5px;color:#98a2b3;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.stack{display:grid;gap:5px;min-width:0}
-.stack select{width:100%;padding:5px 7px;font-size:11px}
+.stack{display:grid;gap:4px;min-width:0}
+.stack select{width:100%;padding:4px 7px;font-size:11px}
 .mini{font-size:10px;color:#98a2b3;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tree-up{font-size:11px;color:#344054;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 td.c-name{white-space:normal}
@@ -657,7 +657,18 @@ function refreshUplines() {
 
 function load() {
   fillTeamOptions();
-  PIAuth.seed().then(function () { render(PIAuth.listUsers()); });
+  PIAuth.seed().then(function () {
+    var list = PIAuth.listUsers();
+    /* sync ระดับสิทธิ์ของตัวเองจากข้อมูลจริงบนเซิร์ฟเวอร์ (กัน session ค้างค่าเดิม) */
+    var mine = null;
+    for (var i = 0; i < list.length; i++) if (String(list[i].email).toLowerCase() === String(me.email).toLowerCase()) mine = list[i];
+    if (mine && mine.level && mine.level !== me.level) {
+      me.level = mine.level;
+      if (window.PIAuth && PIAuth.setSession) { try { me.isAdmin = (mine.level === 'admin' || mine.level === 'bu'); PIAuth.setSession(me); } catch (e) {} }
+      if (el('me')) el('me').textContent = me.email + ' · ' + String(me.level).toUpperCase();
+    }
+    render(list);
+  });
 }
 
 /** ตัวเลือกทีม (BU) ในฟอร์มสร้างผู้ใช้ */
