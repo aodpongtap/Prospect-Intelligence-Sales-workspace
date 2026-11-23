@@ -24,28 +24,31 @@ input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-rad
 .btn{border:1px solid var(--line);background:#fff;color:#344054;border-radius:8px;padding:8px 11px;font:inherit;font-size:11px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
 .btn:hover{border-color:#b7c5d6}.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn-danger{background:#fff1f2;border-color:#ffe4e6;color:var(--red)}
 .tablewrap{overflow:auto}
-table{width:100%;border-collapse:collapse;min-width:900px;table-layout:fixed}
-th{font-size:10px;color:#667085;font-weight:500;background:#f8fafc;text-align:left;padding:10px 12px;white-space:nowrap;vertical-align:middle}
-td{padding:10px 12px;border-bottom:1px solid #eef1f5;font-size:12px;vertical-align:middle}
+table{width:100%;border-collapse:collapse;min-width:1000px;table-layout:fixed}
+th{font-size:10px;color:#667085;font-weight:500;background:#f8fafc;text-align:left;padding:11px 12px;white-space:nowrap;vertical-align:middle}
+td{padding:11px 12px;border-bottom:1px solid #eef1f5;font-size:12px;vertical-align:middle}
 tbody tr:hover{background:#fafcff}
-/* ความกว้างคอลัมน์ให้ตรงกัน (เปอร์เซ็นต์รวม + คอลัมน์ปุ่ม) */
-.c-email{width:14%}.c-name{width:10%}.c-level{width:9%}.c-team{width:9%}.c-sale{width:13%}.c-daily{width:10%}.c-parent{width:12%}.c-down{width:5%}.c-status{width:7%}.c-last{width:8%}.c-act{width:186px}
-td.c-email>span{display:block;overflow-wrap:anywhere;line-height:1.4}
-td.c-name .name-wrap{display:flex;align-items:center;gap:5px;min-width:0}
-td.c-name .name-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 6 คอลัมน์ — กว้างพออ่านได้ ไม่ตัดข้อความ */
+.c-user{width:26%}.c-lvteam{width:17%}.c-link{width:15%}.c-tree{width:21%}.c-state{width:11%}.c-act{width:150px}
+td.c-user{white-space:normal}
+.u-cell{display:flex;align-items:center;gap:9px;min-width:0}
+.u-av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:600;flex:0 0 auto}
+.u-nm{display:flex;align-items:center;gap:4px;min-width:0;font-size:12px;color:#0F2B46;font-weight:500;line-height:1.35}
+.u-nm .name-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.u-em{font-size:10.5px;color:#98a2b3;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stack{display:grid;gap:5px;min-width:0}
+.stack select{width:100%;padding:5px 7px;font-size:11px}
+.mini{font-size:10px;color:#98a2b3;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tree-up{font-size:11px;color:#344054;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.c-name{white-space:normal}
 td.c-name .btn-pen{border:0;background:transparent;color:var(--blue);cursor:pointer;font-size:10px;padding:2px 3px;opacity:0;flex:0 0 auto}
-tbody tr:hover td.c-name .btn-pen{opacity:1}
-td.c-name .btn-pen:hover{background:#eff6ff;border-radius:5px}
-@media(max-width:760px){td.c-name .btn-pen{opacity:1}}
-td.c-parent{overflow-wrap:anywhere;line-height:1.4}
-td.c-level select{width:100%;padding:5px 6px;font-size:11px}
-td.c-team select{width:100%;padding:5px 6px;font-size:11px}
-th.c-down,td.c-down,th.c-status,td.c-status{text-align:center}
-td.c-down .pill{justify-content:center;min-width:52px;padding:2px 7px}
-td.c-status .on,td.c-status .off{display:inline-flex;align-items:center;gap:4px;justify-content:center;min-width:56px;font-size:11px}
-td.c-last{white-space:nowrap}
+tbody tr:hover td.c-name .btn-pen,tbody tr:hover .u-nm .btn-pen{opacity:1}
+.btn-pen:hover{background:#eff6ff;border-radius:5px}
+.on,.off{display:inline-flex;align-items:center;gap:4px;font-size:11px}
+@media(max-width:760px){td.c-name .btn-pen,.u-nm .btn-pen{opacity:1}}
 td.c-act{white-space:nowrap}
 td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
+.btn-ic{width:28px;height:28px;padding:0;justify-content:center;border-radius:7px}
 .pill{display:inline-flex;align-items:center;justify-content:center;padding:2px 9px;border-radius:20px;font-size:10px;line-height:1.6;white-space:nowrap}
 .l-admin{background:#eff6ff;color:#1d4ed8}.l-editor{background:#ecfdf3;color:#15803d}.l-viewer{background:#f2f4f7;color:#475467}.l-core{background:#0F2B46;color:#fff}
 .pill-warn{background:#fff7ed;color:#b45309;border:1px solid #fed7aa;cursor:help}
@@ -112,8 +115,8 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th class="c-email">อีเมล</th><th class="c-name">ชื่อ</th><th class="c-level">ระดับสิทธิ์</th><th class="c-team">ทีม (BU)</th><th class="c-sale">AE ที่ผูก</th><th class="c-daily">บันทึกพบลูกค้า</th><th class="c-parent">ผู้ดูแลสาย</th><th class="c-down">ลูกข่าย</th><th class="c-status">สถานะ</th><th class="c-last">เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
-        <tbody id="tb"><tr><td colspan="11" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
+        <thead><tr><th class="c-user">ผู้ใช้</th><th class="c-lvteam">ระดับ / ทีม (BU)</th><th class="c-link">AE ที่ผูก / บันทึก</th><th class="c-tree">สายงาน</th><th class="c-state">สถานะ / เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
+        <tbody id="tb"><tr><td colspan="6" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -296,6 +299,7 @@ function render(users) {
   el('count').textContent = users.length;
   var rows = users.map(function (u) {
     var core = isCore(u.email);
+    var initial = String(String(u.name || '').trim() || String(u.email || '?')).slice(0, 1);
     var levelCell = core
       ? '<span class="pill l-core">L1 · Admin (หลัก)</span>'
       : '<select data-act="level" data-email="' + esc(u.email) + '" style="padding:4px 6px;font-size:11px">' +
@@ -326,31 +330,28 @@ function render(users) {
       ? '<span class="off"><i class="fa-solid fa-circle-xmark"></i> ปิด</span>'
       : '<span class="on"><i class="fa-solid fa-circle-check"></i> ใช้งาน</span>';
     var acts = '<div class="acts">' +
-      '<a class="btn" href="index.html?page=team&focus=' + encodeURIComponent(u.email) + '" target="_blank" title="ดูสายงาน"><i class="fa-solid fa-sitemap"></i></a>' +
-      (core ? '' : '<button class="btn" data-act="move" data-email="' + esc(u.email) + '" title="ย้ายสายงาน (เปลี่ยนผู้ดูแล)"><i class="fa-solid fa-arrows-turn-to-dots"></i></button>') +
-      '<button class="btn" data-act="reset" data-email="' + esc(u.email) + '" title="รีเซ็ตรหัสผ่าน"><i class="fa-solid fa-rotate"></i></button>' +
+      '<a class="btn btn-ic" href="index.html?page=team&focus=' + encodeURIComponent(u.email) + '" target="_blank" title="ดูสายงาน"><i class="fa-solid fa-sitemap"></i></a>' +
+      (core ? '' : '<button class="btn btn-ic" data-act="move" data-email="' + esc(u.email) + '" title="ย้ายสายงาน (เปลี่ยนผู้ดูแล)"><i class="fa-solid fa-arrows-turn-to-dots"></i></button>') +
+      '<button class="btn btn-ic" data-act="reset" data-email="' + esc(u.email) + '" title="รีเซ็ตรหัสผ่าน"><i class="fa-solid fa-rotate"></i></button>' +
       (core ? '' :
-        '<button class="btn" data-act="toggle" data-email="' + esc(u.email) + '" data-status="' + (u.status === 'disabled' ? 'active' : 'disabled') + '" title="' + (u.status === 'disabled' ? 'เปิดใช้งาน' : 'ปิดการใช้งาน') + '">' +
+        '<button class="btn btn-ic" data-act="toggle" data-email="' + esc(u.email) + '" data-status="' + (u.status === 'disabled' ? 'active' : 'disabled') + '" title="' + (u.status === 'disabled' ? 'เปิดใช้งาน' : 'ปิดการใช้งาน') + '">' +
         (u.status === 'disabled' ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>') + '</button>' +
-        '<button class="btn btn-danger" data-act="del" data-email="' + esc(u.email) + '" title="ลบผู้ใช้"><i class="fa-solid fa-trash"></i></button>') +
+        '<button class="btn btn-ic btn-danger" data-act="del" data-email="' + esc(u.email) + '" title="ลบผู้ใช้"><i class="fa-solid fa-trash"></i></button>') +
       '</div>';
     return '<tr data-search="' + esc(((u.name || '') + ' ' + u.email).toLowerCase()) + '" data-level="' + esc(u.level) + '" data-parent="' + esc(u.parent || '') + '">'
-      + '<td class="c-email" title="' + esc(u.email) + '"><span>' + esc(u.email) + '</span></td>'
-      + '<td class="c-name" title="' + esc(u.name || u.email) + '"><div class="name-wrap">'
-      + '  <span class="name-txt">' + (esc(u.name || '') || '<span class="muted">ยังไม่ระบุชื่อ</span>') + '</span>'
-      + '  <button class="btn-pen" data-act="rename" data-email="' + esc(u.email) + '" title="แก้ไขชื่อ-นามสกุล"><i class="fa-solid fa-pen"></i></button>'
-      + '</div></td>'
-      + '<td class="c-level">' + levelCell + '</td>'
-      + '<td class="c-team">' + (core ? '<span class="pill l-core">ทั้งหมด</span>' : teamCell(u)) + '</td>'
-      + '<td class="c-sale">' + saleLinkCell(u) + '</td>'
-      + '<td class="c-daily">' + dailyCell(u) + '</td>'
-      + '<td class="c-parent" title="' + esc(parentEmail ? parentName + ' · ' + parentEmail : '-') + '">' + parentCell + '</td>'
-      + '<td class="c-down">' + downCell + '</td>'
-      + '<td class="c-status">' + statusCell + '</td>'
-      + '<td class="c-last">' + fmt(u.lastLogin) + '</td>'
+      + '<td class="c-user"><div class="u-cell"><span class="u-av">' + esc(initial) + '</span><div style="min-width:0">'
+      + '  <div class="u-nm"><span class="name-txt" title="' + esc(u.name || u.email) + '">' + (esc(u.name || '') || '<span class="muted">ยังไม่ระบุชื่อ</span>') + '</span>'
+      + '  <button class="btn-pen" data-act="rename" data-email="' + esc(u.email) + '" title="แก้ไขชื่อ-นามสกุล"><i class="fa-solid fa-pen"></i></button></div>'
+      + '  <div class="u-em" title="' + esc(u.email) + '">' + esc(u.email) + '</div></div></div></td>'
+      + '<td class="c-lvteam"><div class="stack">' + levelCell + (core ? '<span class="pill l-core">ทุกทีม</span>' : teamCell(u)) + '</div></td>'
+      + '<td class="c-link"><div class="stack">' + saleLinkCell(u) + dailyCell(u) + '</div></td>'
+      + '<td class="c-tree"><div class="tree-up" title="' + esc(parentEmail ? parentName + ' · ' + parentEmail : 'ไม่มีผู้ดูแลสาย') + '">'
+      + (parentEmail ? '<span class="mini">ผู้ดูแล:</span> ' + esc(parentName) : '<span class="mini">— ไม่มีผู้ดูแลสาย</span>') + '</div>'
+      + (downCell ? '<div class="mini" style="margin-top:2px">' + downCell + '</div>' : '') + '</td>'
+      + '<td class="c-state">' + statusCell + '<div class="mini" style="margin-top:3px">' + (u.lastLogin ? fmt(u.lastLogin) : 'ยังไม่เคยเข้าใช้') + '</div></td>'
       + '<td class="c-act">' + acts + '</td></tr>';
   }).join('');
-  el('tb').innerHTML = rows || '<tr><td colspan="11" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
+  el('tb').innerHTML = rows || '<tr><td colspan="6" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
   fillTeamOptions();
   refreshUplines();
   buildFilterOptions();
