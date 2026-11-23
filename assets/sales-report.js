@@ -894,6 +894,8 @@
   function renderTargets() {
     var y = state.year;
     var lockedTeam = viewerTeam();
+    /* ระดับเซลล์/ตัวแทน: ไม่แสดงตารางแก้ไขเป้าหมาย (เห็นเป้าของตัวเองที่ Dashboard) */
+    if (scopeOf().type === 'sale') return '';
     var listTeams = lockedTeam ? TEAMS.filter(function (t) { return t.code === lockedTeam; }) : TEAMS;
     var TH_SHORT = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
     var monthTh = TH_MONTHS.map(function (mth, i) {

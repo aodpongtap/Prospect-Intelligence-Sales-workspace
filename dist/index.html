@@ -325,7 +325,7 @@
 
 </script>
   <script src="assets/report-log.js?v=12"></script>
-  <script src="assets/sales-report.js?v=42"></script>
+  <script src="assets/sales-report.js?v=43"></script>
   <script src="assets/daily-report.js?v=4"></script>
   <script src="assets/project-tracking.js?v=7"></script>
   <script src="assets/customer-intelligence.js?v=4"></script>
@@ -336,8 +336,8 @@
       var lv = String(((window.__ME__ || {}).level) || '').toLowerCase();
       var MAP = {
         sup: ['dashboard', 'daily', 'team', 'sales', 'projects', 'intelligence', 'reports'],
-        sale: ['dashboard', 'sales', 'daily'],
-        agent: ['dashboard', 'sales', 'daily']
+        sale: ['dashboard', 'sales', 'daily', 'reports'],
+        agent: ['dashboard', 'sales', 'daily', 'reports']
       };
       return MAP[lv] || null;   // admin / bu / head / editor = เข้าได้ทุกหน้า
     };
