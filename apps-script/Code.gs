@@ -225,7 +225,13 @@ function ensureSeed_() {
     if (existing.indexOf(e) < 0) {
       var salt = newSalt_();
       sh.appendRow([e, '', 'admin', 'active', hash_(SEED_PASSWORD, salt), salt, new Date().toISOString(), '', '', '', '']);
+      return;
     }
+    /* L1 Admin: ต้องเป็นระดับ admin และไม่มีผู้ดูแลต้นสาย */
+    var row = findRow_(e);
+    if (!row) return;
+    if (String(sh.getRange(row, 3).getValue() || '').toLowerCase() !== 'admin') sh.getRange(row, 3).setValue('admin');
+    if (String(sh.getRange(row, 9).getValue() || '') !== '') sh.getRange(row, 9).setValue('');
   });
   // Head Sale (L3) — ปรับระดับอัตโนมัติถ้ายังเป็น admin อยู่
   HEAD_SALES_EMAILS.forEach(function (em) {
