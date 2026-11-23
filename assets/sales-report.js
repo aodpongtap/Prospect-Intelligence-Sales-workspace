@@ -998,6 +998,7 @@
     var today = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
     var scD = scopeOf();
+    var saleScope = (scD.type === 'sale');
     var dashTeams = TEAMS.filter(function (t) {
       if (state.team && t.code !== state.team) return false;
       if (scD.type === 'team') return t.code === scD.team;
@@ -1008,16 +1009,16 @@
     var teamRows = dashTeams.map(function (t) {
       var list = k.list.filter(function (d) { return sale(d.saleId).team === t.code; });
       var ts = summarize(list);
+      var teamSize = SALES.filter(function (r) { return r.team === t.code; }).length || 1;
+      var isMine = (scD.type === 'sale');
       var tg = targetOf(t.code, state.year, state.month);
+      if (isMine) tg = tg / teamSize;              /* ระดับเซลล์ → เปรียบเทียบกับเป้าต่อคน */
       var pAch = tg ? ts.s4 / tg * 100 : 0;
       var pFc = tg ? ts.forecast / tg * 100 : 0;
-      var cnt = SALES.filter(function (r) {
-        if (r.team !== t.code) return false;
-        if (scD.type === 'sale') return r.id === scD.saleId;
-        return true;
-      }).length;
+      var cnt = isMine ? 1 : teamSize;
       return '<div class="sr-trow">'
-        + '<div class="sr-trow-h"><b>' + esc(t.name) + '</b><span>' + cnt + ' คน</span></div>'
+        + '<div class="sr-trow-h"><b>' + esc(isMine ? (sale(scD.saleId).name + ' · ผลงานของฉัน') : t.name) + '</b>'
+        + '  <span>' + cnt + (isMine ? ' คน (เป้า/คน)' : ' คน') + '</span></div>'
         + '<div class="sr-trow-n">' + money(ts.s4) + ' <span>/ ' + money(tg) + '</span><em>' + pct(pAch) + '</em></div>'
         + '<div class="sr-bar"><span style="width:' + Math.max(0, Math.min(100, pAch)) + '%;background:#2563EB"></span></div>'
         + '<div class="sr-trow-f">Forecast ' + money(ts.forecast) + ' · ' + pct(pFc) + '</div>'
@@ -1056,7 +1057,7 @@
       payAll.cash += o.cash; payAll.inst += o.inst; payAll.term += o.term;
       payAll.total += o.total; payAll.count += o.count;
       return '<tr>'
-        + '<td><div class="sr-pay-tm"><b>' + esc(t.name) + '</b><span>' + o.count + ' ดีล</span></div></td>'
+        + '<td><div class="sr-pay-tm"><b>' + esc(saleScope ? sale(scD.saleId).name : t.name) + '</b><span>' + o.count + ' ดีล</span></div></td>'
         + PAY_KEYS.map(function (c) {
           return '<td class="sr-num">' + (o[c.code] ? money(o[c.code]) : '<span class="sr-dim">—</span>') + '</td>';
         }).join('')
@@ -1116,7 +1117,7 @@
     }).join('');
 
     var cards = [
-      cardKpi('เป้าหมายทีม (Target)', money(k.target),
+      cardKpi(saleScope ? 'เป้าหมายของฉัน (Target)' : 'เป้าหมายทีม (Target)', money(k.target),
         'จำนวนคน <b>' + k.headCount + '</b> คน · เฉลี่ย/คน <b>' + money(k.perHead) + '</b>',
         undefined, '#0F2B46', 'fa-solid fa-bullseye'),
       cardKpi('ผลงานเทียบเป้า (ปิดงานแล้ว)', pct(k.ach4),
@@ -1153,6 +1154,7 @@
       + '  <div class="sr-fbtn"><button class="sr-btn" data-sr-goto="reports"><i class="fa-solid fa-arrow-right"></i> ดูรายละเอียดทั้งหมด</button></div>'
       + '</div>'
       + '<div class="sr-scope"><i class="fa-regular fa-calendar"></i> '
+      + (saleScope ? 'ข้อมูลของ <b>' + esc(sale(scD.saleId).name) + '</b> · ' : '')
       + esc(state.month ? monthLabel(state.year, state.month) : ('ปี ' + (state.year + 543)))
       + ' · ' + k.list.length + ' ดีล</div>'
       + '<div class="sr-kpis">' + cards.join('') + '</div>'
