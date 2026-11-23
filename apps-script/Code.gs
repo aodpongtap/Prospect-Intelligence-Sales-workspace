@@ -584,14 +584,19 @@ function updateUser(token, email, level, status, parent, saleId, name, team) {
   }
   if (parent !== undefined && parent !== null && String(parent) !== '') {
     var p = String(parent).toLowerCase();
-    var all = readRows_();
-    var pr = null;
-    for (var i = 0; i < all.length; i++) if (all[i].email === p) { pr = all[i]; break; }
-    if (!pr) throw new Error('ไม่พบผู้ดูแลต้นสาย');
-    if (!canManageTarget_(s, p)) throw new Error('เลือกผู้ดูแลต้นสายได้เฉพาะในสายงานของตัวเอง');
-    var curLevel = String(sh.getRange(row, 3).getValue() || '').toLowerCase();
-    if (levelN_(pr.level) >= levelN_(curLevel)) throw new Error('ผู้ดูแลต้นสายต้องอยู่ระดับสูงกว่า');
-    sh.getRange(row, 9).setValue(p);
+    if (p === '__none__') {
+      /* ล้างผู้ดูแลต้นสาย (ใช้กับระดับ L1 ที่ไม่มีผู้ดูแล) */
+      sh.getRange(row, 9).setValue('');
+    } else {
+      var all = readRows_();
+      var pr = null;
+      for (var i = 0; i < all.length; i++) if (all[i].email === p) { pr = all[i]; break; }
+      if (!pr) throw new Error('ไม่พบผู้ดูแลต้นสาย');
+      if (!canManageTarget_(s, p)) throw new Error('เลือกผู้ดูแลต้นสายได้เฉพาะในสายงานของตัวเอง');
+      var curLevel = String(sh.getRange(row, 3).getValue() || '').toLowerCase();
+      if (levelN_(pr.level) >= levelN_(curLevel)) throw new Error('ผู้ดูแลต้นสายต้องอยู่ระดับสูงกว่า');
+      sh.getRange(row, 9).setValue(p);
+    }
   }
   if (saleId !== undefined && saleId !== null) {
     var sid = String(saleId).trim().toUpperCase();

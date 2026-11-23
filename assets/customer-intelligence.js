@@ -294,7 +294,8 @@
           }]
         },
         options: {
-          responsive: true, maintainAspectRatio: false, cutout: '60%',
+          responsive: true, maintainAspectRatio: false, cutout: '62%',
+          layout: { padding: 18 },
           plugins: { legend: { position: 'bottom', labels: { boxWidth: 9, usePointStyle: true } } }
         }
       }));
@@ -303,7 +304,12 @@
     var tc = document.getElementById('ciTopChart');
     if (tc) {
       var top = all.slice().sort(function (a, b) { return b.won - a.won; }).filter(function (c) { return c.won > 0; }).slice(0, 5);
-      charts.push(new Chart(tc, {
+      if (!top.length) {
+        /* ไม่มีข้อมูล → แสดงข้อความ แทนกราฟที่แกนไม่มีความหมาย */
+        var box = tc.parentNode;
+        if (box) box.innerHTML = '<div class="ci-empty"><i class="fa-regular fa-chart-bar"></i><div>ยังไม่มียอดปิดงาน — เมื่อมีดีลที่ปิดแล้ว กราฟ Top 5 จะแสดงที่นี่</div></div>';
+      } else {
+        charts.push(new Chart(tc, {
         type: 'bar',
         data: {
           labels: top.map(function (c) { return c.name.length > 18 ? c.name.slice(0, 18) + '…' : c.name; }),
@@ -321,7 +327,8 @@
             y: { grid: { display: false } }
           }
         }
-      }));
+        }));
+      }
     }
   }
 
@@ -407,6 +414,8 @@
       + '.ci-rec-cell{color:#667085;font-size:10.5px;max-width:220px;overflow:hidden;text-overflow:ellipsis}'
       + '.ci-acts{text-align:right}'
       + '.ci-empty{text-align:center;color:#98A2B3;padding:20px}'
+      + '.ci-chartbox .ci-empty{display:grid;place-content:center;gap:8px;height:100%;padding:0;line-height:1.6;font-size:11px}'
+      + '.ci-chartbox .ci-empty i{font-size:22px;color:#C7D2E0}'
       + '.ci-sortable{cursor:pointer;user-select:none}'
       + '.ci-sortable:hover{background:#EEF2F7;color:#344054}'
       + '.ci-arrow{font-size:8px;color:#2563EB}'

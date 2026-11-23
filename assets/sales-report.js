@@ -1238,10 +1238,10 @@
         data: {
           labels: teams.map(function (t) { return t.name; }),
           datasets: [
-            { label: 'ปิดงานแล้ว', data: series.s4, backgroundColor: '#2563EB', borderRadius: 4, stack: 'a' },
-            { label: 'รอส่งของ', data: series.s3, backgroundColor: '#38BDF8', borderRadius: 4, stack: 'a' },
-            { label: 'รอ PO', data: series.s2, backgroundColor: '#F59E0B', borderRadius: 4, stack: 'a' },
-            { label: 'Pipeline', data: series.s1, backgroundColor: '#A78BFA', borderRadius: 4, stack: 'a' }
+            { label: 'ปิดงานแล้ว', data: series.s4, backgroundColor: '#2563EB', borderRadius: 4, stack: 'a', maxBarThickness: 46 },
+            { label: 'รอส่งของ', data: series.s3, backgroundColor: '#38BDF8', borderRadius: 4, stack: 'a', maxBarThickness: 46 },
+            { label: 'รอ PO', data: series.s2, backgroundColor: '#F59E0B', borderRadius: 4, stack: 'a', maxBarThickness: 46 },
+            { label: 'Pipeline', data: series.s1, backgroundColor: '#A78BFA', borderRadius: 4, stack: 'a', maxBarThickness: 46 }
           ]
         },
         options: {
@@ -1278,7 +1278,8 @@
           }]
         },
         options: {
-          responsive: true, maintainAspectRatio: false, cutout: '60%',
+          responsive: true, maintainAspectRatio: false, cutout: '62%',
+          layout: { padding: 18 },
           plugins: {
             legend: { position: 'bottom', labels: { boxWidth: 9, usePointStyle: true } },
             tooltip: { callbacks: { label: function (c) { return c.label + ': ' + money(c.parsed); } } }
@@ -1629,10 +1630,10 @@
         data: {
           labels: names,
           datasets: [
-            { label: '4.Actual', data: d4, backgroundColor: '#2563EB', borderRadius: 4, stack: 'a' },
-            { label: '3.รอส่งของ', data: d3, backgroundColor: '#38BDF8', borderRadius: 4, stack: 'a' },
-            { label: '2.รอยืนยัน PO', data: d2, backgroundColor: '#F59E0B', borderRadius: 4, stack: 'a' },
-            { label: '1.Pipeline', data: d1, backgroundColor: '#A78BFA', borderRadius: 4, stack: 'a' },
+            { label: '4.Actual', data: d4, backgroundColor: '#2563EB', borderRadius: 4, stack: 'a', maxBarThickness: 44 },
+            { label: '3.รอส่งของ', data: d3, backgroundColor: '#38BDF8', borderRadius: 4, stack: 'a', maxBarThickness: 44 },
+            { label: '2.รอยืนยัน PO', data: d2, backgroundColor: '#F59E0B', borderRadius: 4, stack: 'a', maxBarThickness: 44 },
+            { label: '1.Pipeline', data: d1, backgroundColor: '#A78BFA', borderRadius: 4, stack: 'a', maxBarThickness: 44 },
             {
               type: 'line', label: 'เป้าหมาย/คน', data: target, borderColor: '#EF4444',
               borderDash: [6, 4], borderWidth: 2, pointRadius: 0, fill: false, order: 0

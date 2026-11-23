@@ -376,6 +376,21 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(37,99,235,.13);
     return call('update', params).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'อัปเดตไม่สำเร็จ');
       cache = r.users || cache;
+      /* ถ้าแก้สิทธิ์ของตัวเอง → อัปเดต session ในเครื่องให้ตรงทันที */
+      if (params.level !== undefined && params.level !== null && String(params.level) !== '') {
+        var meLv = getSession();
+        if (meLv && String(meLv.email || '').toLowerCase() === String(email || '').toLowerCase()) {
+          meLv.level = String(params.level).toLowerCase();
+          meLv.isAdmin = meLv.level === 'admin' || meLv.level === 'bu';
+          setSession(meLv);
+        }
+        try {
+          if (window.__ME__ && String(window.__ME__.email || '').toLowerCase() === String(email || '').toLowerCase()) {
+            window.__ME__.level = String(params.level).toLowerCase();
+            window.__ME__.isAdmin = window.__ME__.level === 'admin' || window.__ME__.level === 'bu';
+          }
+        } catch (e) {}
+      }
       if (params.saleId !== undefined) {
         var me = getSession();
         if (me && String(me.email || '').toLowerCase() === String(email || '').toLowerCase()) {

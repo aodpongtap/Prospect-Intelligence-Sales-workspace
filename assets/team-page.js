@@ -80,6 +80,11 @@
       if (state.team && teamOf(u) !== state.team) return false;
       if (q && (String(u.name || '') + ' ' + String(u.email || '')).toLowerCase().indexOf(q) < 0) return false;
       return true;
+    }).sort(function (a, b) {
+      /* เรียงตามระดับสิทธิ์เสมอ: L1 → L6 */
+      var la = ladder(a.level).n, lb = ladder(b.level).n;
+      if (la !== lb) return la - lb;
+      return String(a.name || a.email || '').localeCompare(String(b.name || b.email || ''), 'th');
     });
   }
 
@@ -107,10 +112,11 @@
     var teamLine = Object.keys(byTeam).filter(function (k) { return k; }).map(function (k) { return k + ' ' + byTeam[k]; }).join(' · ') || 'ยังไม่ผูกทีม';
     var unassigned = byTeam[''] || 0;
 
+    var seesAll = my.n <= 2;   /* L1 Admin + L2 BU เห็นผู้ใช้ทั้งระบบ */
     var head = '<div class="tp-head">'
       + '<div><h1>ทีม &amp; สิทธิ์</h1>'
       + '<div class="tp-sub">คุณคือ <b>L' + my.n + ' ' + my.label + '</b> · '
-      + (my.n === 1 ? 'เห็นทั้งเครือข่าย' : 'เห็นเฉพาะผู้ใช้ในสายงานของคุณ')
+      + (seesAll ? 'เห็นผู้ใช้ทั้งหมดในระบบ' : 'เห็นเฉพาะผู้ใช้ในสายงานของคุณ')
       + (canReg ? ' · ลงทะเบียน ID ได้' : ' · อ่านอย่างเดียว') + '</div></div>'
       + '<div class="tp-head-acts">'
       + '<button class="tp-btn" data-tp-tree><i class="fa-solid fa-sitemap"></i> แผนผังเครือข่าย</button>'
@@ -118,7 +124,7 @@
       + '</div></div>';
 
     var stats = '<div class="tp-stats">'
-      + statCard('ผู้ใช้ในสายงาน', USERS.length + ' คน', 'รวมตัวเอง', '#0F2B46', 'fa-solid fa-users')
+      + statCard(seesAll ? 'ผู้ใช้ทั้งหมด' : 'ผู้ใช้ในสายงาน', USERS.length + ' คน', 'รวมตัวเอง', '#0F2B46', 'fa-solid fa-users')
       + statCard('ลูกข่ายตรง', direct + ' คน', 'ที่คุณดูแลโดยตรง', '#2563EB', 'fa-solid fa-user-group')
       + statCard('แยกตามทีม (BU)', (Object.keys(byTeam).filter(function (k) { return k; }).length) + ' ทีม', teamLine, '#7C3AED', 'fa-solid fa-people-group')
       + statCard('ยังไม่ผูกทีม', unassigned + ' คน', 'กำหนด Head AE ของทีมเพื่อผูกอัตโนมัติ', '#94A3B8', 'fa-solid fa-link-slash')
@@ -257,7 +263,12 @@
 
   /* ---------------- Tree popup ---------------- */
   function childrenOf(email) {
-    return USERS.filter(function (u) { return String(u.parent || '').toLowerCase() === String(email || '').toLowerCase(); });
+    return USERS.filter(function (u) { return String(u.parent || '').toLowerCase() === String(email || '').toLowerCase(); })
+      .sort(function (a, b) {
+        var la = ladder(a.level).n, lb = ladder(b.level).n;
+        if (la !== lb) return la - lb;
+        return String(a.name || a.email || '').localeCompare(String(b.name || b.email || ''), 'th');
+      });
   }
   function treeNode(u, depth) {
     var l = ladder(u.level), kids = childrenOf(u.email), bu = teamOf(u);
