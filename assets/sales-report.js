@@ -1328,6 +1328,7 @@
 
   /** เปิดฟอร์มดีล — null = เพิ่มใหม่, deal object = แก้ไข */
   function openDealForm(d0) {
+    injectCss();
     if (!SALES.length) {
       if (global.toast) global.toast('ยังไม่มีรายชื่อเซลส์ — เพิ่มที่หัวข้อ “รายชื่อเซลส์ (Sale)” ก่อน');
       return;
@@ -1668,6 +1669,7 @@
 
   /* ---------- Modal หมายเหตุ ---------- */
   function openDealModal(no) {
+    injectCss();
     var d = null;
     for (var i = 0; i < DEALS.length; i++) if (DEALS[i].no === no) { d = DEALS[i]; break; }
     if (!d) return;
@@ -1752,6 +1754,7 @@
 
   /* ---------- จัดการสินค้า ---------- */
   function addProductModal() {
+    injectCss();
     if (typeof global.setModal !== 'function') return;
     global.setModal('เพิ่มสินค้า', 'ชื่อสินค้าที่ต้องการแสดงในฟอร์มดีลและรายงาน',
       '<label style="font-size:11px;color:#475467">ชื่อสินค้า *</label>'
@@ -1785,6 +1788,7 @@
   /* ---------- จัดการทีม / เป้าหมาย ---------- */
   /* ---------- จัดการรายชื่อเซลส์ ---------- */
   function addSaleModal() {
+    injectCss();
     if (typeof global.setModal !== 'function') return;
     var lockedTeam = viewerTeam();
     var teamOpts = (lockedTeam ? TEAMS.filter(function (t) { return t.code === lockedTeam; }) : TEAMS)
@@ -1821,6 +1825,7 @@
   }
 
   function addTeamModal() {
+    injectCss();
     if (typeof global.setModal !== 'function') return;
     global.setModal('เพิ่มทีม (BU)', 'ตั้งชื่อทีมให้ตรงกับโครงสร้างองค์กร เช่น BU-CENTRAL',
       '<label style="font-size:11px;color:#475467">ชื่อทีม</label>'
@@ -2159,10 +2164,10 @@
       + '.sr-dimrow td{color:#B0BAC9}'
       + '.sr-achbar{height:5px;width:64px;margin:0 0 3px auto;background:#EEF2F7;border-radius:99px;overflow:hidden}'
       + '.sr-achbar span{display:block;height:100%;background:#2563EB;border-radius:99px}'
-      + '.sr-dform{display:grid;grid-template-columns:1fr 1fr;gap:10px}'
-      + '.sr-df{display:grid;gap:5px;font-size:10px;color:#475467;min-width:0}'
+      + '.sr-dform{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}'
+      + '.sr-df{display:grid;gap:6px;font-size:10px;color:#475467;min-width:0;line-height:1.4}'
       + '.sr-df.full{grid-column:1/-1}'
-      + '.sr-df input,.sr-df select{border:1px solid #DCE3EB;border-radius:8px;padding:9px 10px;font-size:11px;'
+      + '.sr-df input,.sr-df select{width:100%;border:1px solid #DCE3EB;border-radius:9px;padding:10px 11px;font-size:12px;'
       + 'font-family:inherit;outline:none;color:#344054;min-width:0;width:100%}'
       + '.sr-df input:focus,.sr-df select:focus{border-color:#60A5FA;box-shadow:0 0 0 3px rgba(37,99,235,.1)}'
       + '.sr-teamhead i{font-size:9px;margin-right:4px}'
@@ -2200,7 +2205,7 @@
       + '.sr-saletable td{padding:9px 10px}'
       + '.sr-paypcts{display:flex;gap:7px;margin-top:4px;font-size:9px;font-variant-numeric:tabular-nums;white-space:nowrap}'
       + '.sr-drref{display:inline-flex;align-items:center;gap:4px;margin-top:3px;background:#EFF6FF;color:#1D4ED8;border-radius:5px;padding:1px 6px;font-size:8.5px;font-family:ui-monospace,Menlo,Consolas,monospace}'
-      + '.sr-fixed{display:flex;align-items:center;gap:6px;border:1px solid #E9EEF5;background:#F8FAFC;border-radius:8px;padding:8px 10px;font-size:11.5px;color:#0F2B46;min-height:34px}'
+      + '.sr-fixed{display:flex;align-items:center;gap:7px;border:1px dashed #D8E2EC;background:#F8FAFC;border-radius:9px;padding:10px 11px;font-size:12px;color:#0F2B46;min-height:42px}'
       + '.sr-fixed i{color:#64748B;font-size:10px}'
       + '.sr-empty-note{padding:16px;text-align:center;color:#98A2B3;font-size:11px}'
       + '.sr-empty{text-align:center!important;color:#98A2B3;padding:22px!important}'
