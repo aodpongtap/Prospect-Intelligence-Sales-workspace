@@ -435,7 +435,7 @@
     return y + '-' + String(n + 1).padStart(4, '0');
   }
 
-  /** เพิ่มดีลใหม่ (ใช้ร่วมกับหน้า Sale Monitor) */
+  /** เพิ่มดีลใหม่ (ใช้ร่วมกับหน้า AE Pipeline) */
   function addDeal(o) {
     var yr = Number(o.year) || new Date().getFullYear();
     var mo = Number(o.month) || (new Date().getMonth() + 1);
