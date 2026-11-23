@@ -58,11 +58,33 @@
   /* ---------- storage ---------- */
   var ITEMS = load();
   function load() {
+    var arr = [];
     try {
       var a = JSON.parse(localStorage.getItem(LS) || 'null');
-      if (Object.prototype.toString.call(a) === '[object Array]') return a;
+      if (Object.prototype.toString.call(a) === '[object Array]') arr = a;
     } catch (e) {}
-    return [];
+    /* อพยพข้อมูลเก่า: สร้างรหัสอ้างอิงให้รายการที่ยังไม่มี */
+    var need = arr.filter(function (x) { return !x.ref; });
+    if (need.length) {
+      need.sort(function (a, b) { return String(a.date + (a.time || '')).localeCompare(String(b.date + (b.time || ''))); });
+      need.forEach(function (x) { x.ref = genRef(x.date, arr); });
+      try { localStorage.setItem(LS, JSON.stringify(arr)); } catch (e) {}
+    }
+    return arr;
+  }
+
+  /** รหัสอ้างอิง: DR-YYYYMMDD-NN (เรียงลำดับต่อวัน) */
+  function genRef(dateIso, list) {
+    var src = list || ITEMS;
+    var p = 'DR-' + String(dateIso || isoLocal()).replace(/\D/g, '');
+    var n = 0;
+    src.forEach(function (x) {
+      if (x.ref && x.ref.indexOf(p + '-') === 0) {
+        var k = parseInt(String(x.ref).slice(p.length + 1), 10) || 0;
+        if (k > n) n = k;
+      }
+    });
+    return p + '-' + pad2(n + 1);
   }
   function save() {
     try { localStorage.setItem(LS, JSON.stringify(ITEMS)); } catch (e) {}
@@ -100,7 +122,36 @@
     return [];
   }
 
-  /* ---------- state ---------- */
+  /** นับดีล/โครงการที่อ้างอิงรหัสนี้ (Tracking ต้นสายปลายเหตุ) */
+  function linksOf(ref) {
+    var deals = [], projects = [];
+    try {
+      var d = srData();
+      if (d && d.deals) deals = d.deals.filter(function (x) { return String(x.drRef || '').toUpperCase() === ref; });
+    } catch (e) {}
+    try {
+      if (global.ProjectTracking && global.ProjectTracking.list) {
+        projects = global.ProjectTracking.list().filter(function (p) { return String(p.drRef || '').toUpperCase() === ref; });
+      }
+    } catch (e) {}
+    return { deals: deals, projects: projects };
+  }
+
+  function byRef(ref) {
+    var r = String(ref || '').trim().toUpperCase();
+    if (!r) return null;
+    for (var i = 0; i < ITEMS.length; i++) if (String(ITEMS[i].ref || '').toUpperCase() === r) return ITEMS[i];
+    return null;
+  }
+
+  /** ตัวเลือกสำหรับ dropdown/datalist ในฟอร์มอื่น (ดีล / โครงการ) */
+  function options() {
+    return visible().slice().sort(function (a, b) {
+      return String(b.date + (b.time || '')).localeCompare(String(a.date + (a.time || '')));
+    }).map(function (x) {
+      return { ref: x.ref, date: x.date, customer: x.customer, channel: x.channel, summary: x.summary || '', value: num(x.value), saleId: x.saleId };
+    });
+  }
   var state = {
     month: isoLocal().slice(0, 7),
     channel: '',
@@ -199,10 +250,22 @@
       + '  <button class="dr-btn" data-dr-export><i class="fa-solid fa-file-csv"></i> Export CSV</button>'
       + '</div></div>';
 
-    if (sc.type === 'none') {
+    if (sc.type === 'none' || sc.type === 'nosales') {
+      var accName = String(me().name || '').trim() || '(ยังไม่ตั้งชื่อบัญชี)';
+      var accTeam = String(me().team || '').toUpperCase();
+      var detail;
+      if (sc.type === 'nosales') {
+        detail = 'ยังไม่มีรายชื่อเซลส์ในระบบ — Admin กรุณาเพิ่มที่ Reports → “รายชื่อเซลส์ (Sale)” ก่อน';
+      } else if (sc.teamSales === 0) {
+        detail = 'ทีม ' + accTeam + ' ยังไม่มีรายชื่อเซลส์ — ให้เพิ่มที่ Reports → รายชื่อเซลส์ แล้วตั้งชื่อให้ตรงกับ “' + accName + '”';
+      } else if (sc.teamSales > 1) {
+        detail = 'ทีม ' + accTeam + ' มีรายชื่อเซลส์ ' + sc.teamSales + ' คน — ตั้งชื่อบัญชี (“' + accName + '”) ให้ตรงกับชื่อเซลส์คนใดคนหนึ่ง';
+      } else {
+        detail = 'ตั้งชื่อบัญชี (“' + accName + '”) ให้ตรงกับชื่อใน Reports → รายชื่อเซลส์ หรือกำหนดทีม (BU) ให้บัญชีนี้';
+      }
       return '<div class="dr">' + head
         + '<div class="dr-note"><i class="fa-solid fa-circle-info"></i><div><b>บัญชีนี้ยังไม่ถูกผูกกับข้อมูลเซลส์</b>'
-        + '<div class="dr-s2">กรุณาแจ้ง Admin ให้ตั้งชื่อบัญชีให้ตรงกับรายชื่อเซลส์ (Reports → รายชื่อเซลส์) หรือกำหนดทีม BU ให้บัญชีนี้</div></div></div></div>';
+        + '<div class="dr-s2">' + esc(detail) + '</div></div></div></div>';
     }
     if (sc.type === 'pending') {
       return '<div class="dr">' + head + '<div class="dr-note"><i class="fa-solid fa-circle-notch fa-spin"></i>'
@@ -215,7 +278,7 @@
       if (state.channel && x.channel !== state.channel) return false;
       if (state.sale && x.saleId !== state.sale) return false;
       if (state.q) {
-        var t = (x.customer + ' ' + (x.summary || '') + ' ' + (x.nextNote || '')).toLowerCase();
+        var t = ((x.ref || '') + ' ' + x.customer + ' ' + (x.summary || '') + ' ' + (x.nextNote || '')).toLowerCase();
         if (t.indexOf(String(state.q).toLowerCase()) < 0) return false;
       }
       return true;
@@ -254,9 +317,18 @@
     var rows = list.map(function (x) {
       var c = ch(x.channel);
       var late = x.nextDate && x.nextDate < t && !x.done;
+      var lk = linksOf(x.ref || '');
+      var links = (lk.deals.length || lk.projects.length)
+        ? '<div class="dr-links">'
+          + (lk.deals.length ? '<span class="dr-lk"><i class="fa-solid fa-file-invoice-dollar"></i> ดีล ' + lk.deals.length + '</span>' : '')
+          + (lk.projects.length ? '<span class="dr-lk proj"><i class="fa-solid fa-diagram-project"></i> โครงการ ' + lk.projects.length + '</span>' : '')
+          + '</div>'
+        : '';
       return '<tr data-dr-row="' + esc(x.id) + '">'
         + '<td class="dr-num"><b>' + dstrth(x.date) + '</b><div class="dr-s2">' + esc(dayName(x.date)) + ' ' + esc(x.time || '') + '</div></td>'
         + '<td><div class="dr-cust">' + esc(x.customer) + '</div>'
+        + (x.ref ? '<button class="dr-ref" data-dr-copy="' + esc(x.ref) + '" title="คลิกเพื่อคัดลอกรหัสอ้างอิง">' + esc(x.ref) + '</button>' : '')
+        + links
         + (x.value ? '<div class="dr-s2">มูลค่า ' + money(x.value) + '</div>' : '') + '</td>'
         + '<td><span class="dr-chip" style="color:' + c.color + ';background:' + c.color + '14">'
         + '<i class="' + c.icon + '"></i> ' + esc(c.name) + '</span></td>'
@@ -461,9 +533,10 @@
     } else {
       var rec = o;
       rec.id = uid();
+      rec.ref = genRef(o.date);
       rec.createdAt = new Date().toISOString();
       ITEMS.push(rec);
-      if (global.PILog) global.PILog.add('daily.add', o.customer, dstrth(o.date) + ' ' + o.time + ' · ' + ch(o.channel).name + (o.value ? ' · ' + money(o.value) : ''));
+      if (global.PILog) global.PILog.add('daily.add', o.customer, rec.ref + ' · ' + dstrth(o.date) + ' ' + o.time + ' · ' + ch(o.channel).name + (o.value ? ' · ' + money(o.value) : ''));
       /* เพิ่มเข้า Pipeline ของ Reports */
       if (f.toPipeline && f.toPipeline.checked && o.value > 0 && global.SalesReport && global.SalesReport.addDeal) {
         try {
@@ -511,9 +584,9 @@
       if (state.sale && x.saleId !== state.sale) return false;
       return true;
     }).sort(function (a, b) { return String(b.date + (b.time || '')).localeCompare(String(a.date + (a.time || ''))); });
-    var head = ['วันที่', 'เวลา', 'ลูกค้า', 'ช่องทาง', 'สรุป/ผลการ', 'นัดครั้งต่อไป', 'เวลานัด', 'เรื่องที่นัด', 'มูลค่าโครงการ', 'ผู้รับผิดชอบ', 'ทีม'];
+    var head = ['รหัสอ้างอิง', 'วันที่', 'เวลา', 'ลูกค้า', 'ช่องทาง', 'สรุป/ผลการ', 'นัดครั้งต่อไป', 'เวลานัด', 'เรื่องที่นัด', 'มูลค่าโครงการ', 'ผู้รับผิดชอบ', 'ทีม'];
     var rows = [head].concat(list.map(function (x) {
-      return [x.date, x.time || '', x.customer, ch(x.channel).name, x.summary || '', x.nextDate || '', x.nextTime || '', x.nextNote || '',
+      return [x.ref || '', x.date, x.time || '', x.customer, ch(x.channel).name, x.summary || '', x.nextDate || '', x.nextTime || '', x.nextNote || '',
         num(x.value), saleOf(x.saleId).name, saleOf(x.saleId).team];
     }));
     var csv = rows.map(function (r) {
@@ -568,6 +641,15 @@
     var dl = t.closest('[data-dr-del]');
     if (dl) { delRecord(dl.getAttribute('data-dr-del')); return; }
     if (t.closest('[data-dr-export]')) { exportCsv(); return; }
+    var cp = t.closest('[data-dr-copy]');
+    if (cp) {
+      var code = cp.getAttribute('data-dr-copy');
+      try {
+        if (navigator.clipboard) navigator.clipboard.writeText(code);
+      } catch (e) {}
+      if (global.toast) global.toast('คัดลอกรหัสอ้างอิง ' + code + ' แล้ว');
+      return;
+    }
     if (t.closest('[data-dr-today]')) {
       state.month = isoLocal().slice(0, 7);
       state.channel = ''; state.sale = ''; state.q = '';
@@ -618,6 +700,11 @@
       + '.dr-table tbody tr:last-child td{border-bottom:0}'
       + '.dr-num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}'
       + '.dr-cust{color:#0F2B46;font-weight:600}'
+      + '.dr-ref{display:inline-block;margin-top:3px;border:1px dashed #CBD5E1;background:#F8FAFC;color:#475467;border-radius:6px;padding:1px 6px;font-size:9px;font-family:ui-monospace,Menlo,Consolas,monospace;cursor:copy}'
+      + '.dr-ref:hover{border-color:#93C5FD;color:#1D4ED8;background:#EFF6FF}'
+      + '.dr-links{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}'
+      + '.dr-lk{display:inline-flex;align-items:center;gap:4px;background:#F0FDF4;color:#15803D;border:1px solid #DCFCE7;border-radius:99px;padding:1px 7px;font-size:8.5px}'
+      + '.dr-lk.proj{background:#EEF2FF;color:#3730A3;border-color:#E0E7FF}'
       + '.dr-sum{max-width:340px;line-height:1.55;color:#475467}'
       + '.dr-chip{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:3px 9px;font-size:9.5px;white-space:nowrap}'
       + '.dr-fu{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#2563EB;background:#EFF6FF;border-radius:7px;padding:2px 7px;white-space:nowrap}'
@@ -651,6 +738,9 @@
     render: render,
     draw: draw,
     items: function () { return ITEMS; },
+    list: visible,
+    options: options,
+    byRef: byRef,
     channels: CHANNELS
   };
 })(window);

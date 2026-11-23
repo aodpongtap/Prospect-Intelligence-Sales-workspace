@@ -163,14 +163,41 @@
     }
     /* 1.5) ตารางผูกบัญชี → เซลส์ ที่ Admin ตั้งไว้ในหน้า Reports */
     /* 2) ผูกด้วยชื่อ (ตัดช่องว่าง/ตัวอักษรพิเศษออกก่อนเทียบ) */
-    var norm = function (v) { return String(v || '').replace(/[\s\u200B\u00A0]+/g, '').trim(); };
+    var norm = function (v) { return String(v || '').replace(/[\s\u200B\u00A0]+/g, '').trim().toLowerCase(); };
     var nm = norm(me.name);
     if (nm) {
       for (var i = 0; i < SALES.length; i++) {
         if (norm(SALES[i].name) === nm) return { type: 'sale', saleId: SALES[i].id };
       }
+      /* 2.1) ชื่อใกล้เคียง (มีคำนำหน้า/ต่อท้าย หรือชื่อหนึ่งอยู่ในอีกชื่อ) */
+      var near = SALES.filter(function (s) {
+        var sn = norm(s.name);
+        return sn && nm && (sn.indexOf(nm) >= 0 || nm.indexOf(sn) >= 0);
+      });
+      if (near.length === 1) return { type: 'sale', saleId: near[0].id };
     }
-    return { type: 'none' };
+    /* 3) ระดับเซลล์/ตัวแทน → ผูกกับบัญชีผู้ใช้: ถ้ายังไม่มีรายชื่อเซลส์ที่ตรง ให้สร้างให้อัตโนมัติ */
+    if (lvl === 'sale' || lvl === 'agent') {
+      var nmAcc = String(me.name || '').trim();
+      if (nmAcc) {
+        var maxId = 0;
+        SALES.forEach(function (s) { var n = parseInt(String(s.id || '').replace(/\D/g, ''), 10) || 0; if (n > maxId) maxId = n; });
+        var newId = 'S' + String(maxId + 1).padStart(2, '0');
+        SALES.push({ id: newId, name: nmAcc, team: String(me.team || '').toUpperCase(), auto: true });
+        try { localStorage.setItem(LS_SALES, JSON.stringify(SALES)); } catch (e) {}
+        if (global.PILog) global.PILog.add('sale.add', newId + ' · ' + nmAcc, 'สร้างอัตโนมัติจากบัญชีผู้ใช้ (ระดับ ' + lvl + ')');
+        return { type: 'sale', saleId: newId, auto: true };
+      }
+    }
+    /* 4) ยังไม่มีรายชื่อเซลส์ในระบบเลย */
+    if (!SALES.length) return { type: 'nosales' };
+    /* 4) มีทีม (BU) ที่กำหนดไว้ → ถ้าในทีมมีเซลส์คนเดียว ผูกให้อัตโนมัติ */
+    var accTeam = String(me.team || '').toUpperCase();    if (accTeam) {
+      var inTeam = SALES.filter(function (s) { return String(s.team).toUpperCase() === accTeam; });
+      if (inTeam.length === 1) return { type: 'sale', saleId: inTeam[0].id, autoBy: 'team' };
+      return { type: 'none', team: accTeam, teamSales: inTeam.length };
+    }
+    return { type: 'none', teamSales: -1 };
   }
   function inScope(d) {
     var sc = scopeOf();
@@ -189,10 +216,27 @@
         + '<div class="sr-s2">ระบบกำลังโหลดรายชื่อในสายงานของคุณ กรุณารอสักครู่</div></div></div>';
     }
     if (sc.type === 'none') {
+      var me0 = global.__ME__ || {};
+      var accName = String(me0.name || '').trim() || '(ยังไม่ตั้งชื่อบัญชี)';
+      var accTeam0 = String(me0.team || '').toUpperCase();
+      var detail;
+      if (sc.teamSales === 0) {
+        detail = 'ทีม ' + accTeam0 + ' ยังไม่มีรายชื่อเซลส์ — ให้เพิ่มที่ Reports → รายชื่อเซลส์ แล้วตั้งชื่อให้ตรงกับ “' + accName + '”';
+      } else if (sc.teamSales > 1) {
+        detail = 'ทีม ' + accTeam0 + ' มีรายชื่อเซลส์ ' + sc.teamSales + ' คน — ตั้งชื่อบัญชี (“' + accName + '”) ให้ตรงกับชื่อเซลส์คนใดคนหนึ่งเพื่อระบุตัวตน';
+      } else {
+        detail = 'ตั้งชื่อบัญชี (“' + accName + '”) ให้ตรงกับชื่อใน Reports → รายชื่อเซลส์ หรือกำหนดทีม (BU) ให้บัญชีนี้';
+      }
       return '<div class="sr-panel" style="display:flex;gap:10px;align-items:flex-start;background:#FFF7ED;border-color:#FFEDD5">'
         + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
         + '<div><b style="color:#9A3412;font-size:12px">บัญชีนี้ยังไม่ถูกผูกกับข้อมูลเซลส์</b>'
-        + '<div class="sr-s2" style="color:#B45309">ระบบแสดงข้อมูลตามชื่อผู้ใช้ — กรุณาแจ้ง Admin ให้ผูกชื่อของคุณกับรายชื่อเซลส์ หรือกำหนดทีม BU เพื่อให้เห็นยอดขายของตัวเอง</div></div></div>';
+        + '<div class="sr-s2" style="color:#B45309">' + esc(detail) + '</div></div></div>';
+    }
+    if (sc.type === 'nosales') {
+      return '<div class="sr-panel" style="display:flex;gap:10px;align-items:flex-start;background:#FFF7ED;border-color:#FFEDD5">'
+        + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
+        + '<div><b style="color:#9A3412;font-size:12px">ยังไม่มีรายชื่อเซลส์ในระบบ</b>'
+        + '<div class="sr-s2" style="color:#B45309">Admin กรุณาเพิ่มรายชื่อเซลส์ที่ Reports → “รายชื่อเซลส์ (Sale)” ก่อน แล้วตั้งชื่อบัญชีผู้ใช้ให้ตรงกับชื่อเซลส์นั้น</div></div></div>';
     }
     return '';
   }
@@ -329,7 +373,8 @@
       payment: o.payment || 'cash',
       status: Number(o.status),
       prob: Number(o.prob || 0),
-      note: String(o.note || '')
+      note: String(o.note || ''),
+      drRef: String(o.drRef || '').trim().toUpperCase()
     };
     if (!d.customer || !d.job) throw new Error('กรอกชื่อลูกค้าและชื่องาน');
     if (isNaN(d.status)) d.status = 1;
@@ -753,7 +798,8 @@
       return '<tr class="sr-row" data-sr-deal="' + esc(d.no) + '">'
         + '<td class="sr-num sr-dim">' + (i + 1) + '</td>'
         + '<td><span class="sr-badge ' + s.cls + '">' + d.status + ' · ' + esc(s.label) + '</span></td>'
-        + '<td><div class="sr-nm">' + esc(d.customer) + '</div><div class="sr-s2">' + esc(d.job) + '</div></td>'
+        + '<td><div class="sr-nm">' + esc(d.customer) + '</div><div class="sr-s2">' + esc(d.job) + '</div>'
+        + (d.drRef ? '<div class="sr-drref" title="อ้างอิง Daily Report"><i class="fa-solid fa-link"></i> ' + esc(d.drRef) + '</div>' : '') + '</td>'
         + '<td><div>' + esc(d.so) + '</div><div class="sr-s2">' + esc(d.no) + '</div></td>'
         + '<td class="sr-num">' + shortDate(d.quoteDate) + '</td>'
         + '<td class="sr-num">' + String(d.month).padStart(2, '0') + '.' + TH_MONTHS[d.month - 1] + ' ' + String(d.year + 543).slice(-2) + '</td>'
@@ -869,7 +915,9 @@
       return '<tr>'
         + '<td><span class="sr-sid">' + esc(s.id) + '</span></td>'
         + '<td><div class="sr-sale"><span class="sr-av">' + esc(String(s.name).trim().charAt(0) || '?') + '</span>'
-        + '  <div style="min-width:0"><div class="sr-nm">' + esc(s.name) + '</div><div class="sr-s2">' + cnt + ' ดีล</div></div></div></td>'
+        + '  <div style="min-width:0"><div class="sr-nm">' + esc(s.name)
+        + (s.auto ? ' <span class="sr-autotag" title="สร้างอัตโนมัติจากบัญชีผู้ใช้ระดับเซลล์">จากบัญชี</span>' : '')
+        + '</div><div class="sr-s2">' + cnt + ' ดีล</div></div></div></td>'
         + '<td>' + esc(teamByCode(s.team).name) + '</td>'
         + '<td class="sr-num"><button class="sr-xbtn" data-sr-delsale="' + esc(s.id) + '" title="ลบรายชื่อนี้"><i class="fa-solid fa-trash"></i></button></td>'
         + '</tr>';
@@ -1252,6 +1300,15 @@
     var monthOpts = TH_MONTHS.map(function (m, i) {
       return '<option value="' + (i + 1) + '"' + ((i + 1) === curMonth ? ' selected' : '') + '>' + m + '</option>';
     }).join('');
+    /* อ้างอิง Daily Report (ต้นสายปลายเหตุ) */
+    var drOpts = '';
+    if (global.DailyReport && global.DailyReport.options) {
+      try {
+        drOpts = global.DailyReport.options().slice(0, 80).map(function (r) {
+          return '<option value="' + esc(r.ref) + '">' + esc(r.ref + ' · ' + shortDate(r.date) + ' · ' + r.customer) + '</option>';
+        }).join('');
+      } catch (e) { drOpts = ''; }
+    }
 
     var body = '<form id="srDealForm">'
       + '<div class="sr-dform">'
@@ -1266,6 +1323,8 @@
       + '  <label class="sr-df">ปีที่คาดว่าจะปิด<select name="year">' + yearOpts + '</select></label>'
       + '  <label class="sr-df">เดือนที่คาดว่าจะปิด<select name="month">' + monthOpts + '</select></label>'
       + '  <label class="sr-df full">หมายเหตุ<input name="note" placeholder="รายละเอียด/เงื่อนไข (แสดงใน Reports)" value="' + esc(cur.note || '') + '"></label>'
+      + '  <label class="sr-df full">อ้างอิง Daily Report (ไม่บังคับ)<input name="drRef" list="srDrRefs" placeholder="เช่น DR-20261123-01" value="' + esc(cur.drRef || '') + '">'
+      + '    <datalist id="srDrRefs">' + drOpts + '</datalist></label>'
       + '</div>'
       + '<div class="sr-s2" style="margin-top:10px">ข้อมูลนี้จะถูกใช้ใน Reports · Dashboard · Customer Intelligence ทันที</div>'
       + '</form>';
@@ -1288,7 +1347,8 @@
         amount: Number(f.amount.value || 0), prob: Number(f.prob.value || 0),
         product: f.product.value, payment: f.payment.value,
         year: Number(f.year.value), month: Number(f.month.value),
-        note: f.note.value
+        note: f.note.value,
+        drRef: String((f.drRef && f.drRef.value) || '').trim().toUpperCase()
       };
       if (__editNo) {
         var d = null;
@@ -1559,6 +1619,7 @@
       + '  <div><small>วันที่สร้างใบเสนอราคา</small><strong>' + shortDate(d.quoteDate) + '</strong></div>'
       + '  <div><small>เดือนที่คาดว่าจะปิด</small><strong>' + monthLabel(d.year, d.month) + '</strong></div>'
       + '  <div><small>เลขที่ SO / Inv.</small><strong>' + esc(d.so) + '</strong></div>'
+      + (d.drRef ? '  <div><small>อ้างอิง Daily Report</small><strong style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#1D4ED8">' + esc(d.drRef) + '</strong></div>' : '')
       + '</div>'
       + '<div class="sr-md-note"><b>หมายเหตุ</b><p>' + esc(d.note) + '</p></div>';
     if (typeof global.setModal === 'function') {
@@ -1578,12 +1639,12 @@
       return !q || (d.customer + ' ' + d.job + ' ' + d.no + ' ' + d.so).toLowerCase().indexOf(q) >= 0;
     });
     var head = ['No.', 'สถานะ', 'ชื่อลูกค้า', 'ชื่องาน', 'เลขที่ SO/Inv.', 'วันที่เสนอราคา', 'เดือนที่คาดว่าจะปิด',
-      'Sale', 'สินค้า', 'มูลค่างานประมาณ', 'รูปแบบการซื้อ', 'Cash In', 'หมายเหตุ'];
+      'Sale', 'สินค้า', 'มูลค่างานประมาณ', 'รูปแบบการซื้อ', 'Cash In', 'อ้างอิง Daily Report', 'หมายเหตุ'];
     var lines = [head];
     rows.forEach(function (d) {
       lines.push([d.no, d.status + ' · ' + st(d.status).label, d.customer, d.job, d.so, d.quoteDate,
         monthLabel(d.year, d.month), sale(d.saleId).name, product(d.product).name, Math.round(d.amount),
-        payment(d.payment).name, Math.round(cashInOf(d)), d.note]);
+        payment(d.payment).name, Math.round(cashInOf(d)), d.drRef || '', d.note]);
     });
     var csv = lines.map(function (r) {
       return r.map(function (v) { return '"' + String(v === null || v === undefined ? '' : v).replace(/"/g, '""') + '"'; }).join(',');
@@ -2010,8 +2071,10 @@
       + '.sr-paybar{display:flex;height:7px;border-radius:99px;overflow:hidden;background:#EEF2F7;min-width:88px}'
       + '.sr-paybar span{display:block;height:100%}'
       + '.sr-sid{display:inline-block;background:#EEF2FF;color:#3730A3;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600}'
+      + '.sr-autotag{display:inline-block;background:#ECFDF5;color:#15803D;border:1px solid #D1FAE5;border-radius:99px;padding:0 6px;font-size:8.5px;font-weight:500;vertical-align:middle}'
       + '.sr-saletable td{padding:9px 10px}'
       + '.sr-paypcts{display:flex;gap:7px;margin-top:4px;font-size:9px;font-variant-numeric:tabular-nums;white-space:nowrap}'
+      + '.sr-drref{display:inline-flex;align-items:center;gap:4px;margin-top:3px;background:#EFF6FF;color:#1D4ED8;border-radius:5px;padding:1px 6px;font-size:8.5px;font-family:ui-monospace,Menlo,Consolas,monospace}'
       + '.sr-empty-note{padding:16px;text-align:center;color:#98A2B3;font-size:11px}'
       + '.sr-empty{text-align:center!important;color:#98A2B3;padding:22px!important}'
       /* badges */

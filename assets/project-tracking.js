@@ -363,9 +363,18 @@
     var teamOpts = TEAM_LIST.map(function (t) {
       return '<option value="' + esc(t) + '"' + (String(d.team) === t ? ' selected' : '') + '>' + esc(t) + '</option>';
     }).join('');
+    var drOpts = '';
+    if (global.DailyReport && global.DailyReport.options) {
+      try {
+        drOpts = global.DailyReport.options().slice(0, 80).map(function (r) {
+          return '<option value="' + esc(r.ref) + '">' + esc(r.ref + ' · ' + r.date + ' · ' + r.customer) + '</option>';
+        }).join('');
+      } catch (e) { drOpts = ''; }
+    }
     var body = '<form id="ptForm"><div class="pt-form">'
       + '<label class="pt-fg full">ชื่อโครงการ *<input name="name" required value="' + esc(d.name) + '" placeholder="เช่น ระบบ CCTV อาคาร A"></label>'
       + '<label class="pt-fg full">ลูกค้า *<input name="customer" required value="' + esc(d.customer) + '" placeholder="ชื่อบริษัท / หน่วยงาน"></label>'
+      + '<label class="pt-fg full">อ้างอิง Daily Report (ไม่บังคับ)<input name="drRef" list="ptDrRefs" placeholder="เช่น DR-20261123-01" value="' + esc(d.drRef || '') + '"><datalist id="ptDrRefs">' + drOpts + '</datalist></label>'
       + '<label class="pt-fg">ผู้รับผิดชอบโครงการ *<input name="owner" required value="' + esc(d.owner) + '" placeholder="ชื่อผู้ดูแลโครงการ"></label>'
       + '<label class="pt-fg">เซลล์ผู้ส่งงาน<input name="sale" value="' + esc(d.sale) + '" placeholder="ชื่อ Sale"></label>'
       + '<label class="pt-fg">ขั้นตอน<select name="stage">' + stageOpts + '</select></label>'
@@ -386,7 +395,10 @@
     var f = document.getElementById('ptForm');
     if (!f || !f.reportValidity()) return;
     var v = {};
-    ['name', 'customer', 'owner', 'sale', 'blocker', 'startDate', 'deadline', 'note'].forEach(function (k) { v[k] = (f[k].value || '').trim(); });
+    ['name', 'customer', 'owner', 'sale', 'blocker', 'startDate', 'deadline', 'note', 'drRef'].forEach(function (k) {
+      v[k] = (f[k] && f[k].value || '').trim();
+    });
+    v.drRef = String(v.drRef || '').toUpperCase();
     v.stage = Number(f.stage.value);
     v.team = viewerTeam() || (f.team ? f.team.value : '') || TEAM_LIST[0];
     var id = window.__PT_EDIT__;
@@ -427,6 +439,47 @@
     global.toast('ลบโครงการแล้ว');
   }
 
+  /** บล็อก "เรื่องราว / ที่มา" — Daily Report → ดีล → โครงการ */
+  function storyHtml(p) {
+    var ref = String(p.drRef || '').toUpperCase();
+    var dr = null, deals = [];
+    try { if (ref && global.DailyReport && global.DailyReport.byRef) dr = global.DailyReport.byRef(ref); } catch (e) {}
+    try {
+      var d = (global.SalesReport && global.SalesReport.data) ? global.SalesReport.data() : null;
+      if (d && ref) deals = (d.deals || []).filter(function (x) { return String(x.drRef || '').toUpperCase() === ref; });
+    } catch (e) {}
+    if (!ref) return '';
+
+    var money = function (n) { return '฿' + Number(n || 0).toLocaleString('th-TH'); };
+    var node = function (ico, color, bg, title, sub, note) {
+      return '<div class="pt-story-arrow"><i class="fa-solid fa-arrow-down"></i></div>'
+        + '<div class="pt-story-node">'
+        + '<span class="pt-story-ico" style="background:' + bg + ';color:' + color + '"><i class="fa-solid ' + ico + '"></i></span>'
+        + '<div style="min-width:0"><b>' + esc(title) + '</b>'
+        + '<div class="pt-s2">' + sub + '</div>'
+        + (note ? '<div class="pt-story-note">' + esc(note) + '</div>' : '')
+        + '</div></div>';
+    };
+
+    var html = '<h3 class="pt-sect">เรื่องราว / ที่มา (Tracking)</h3><div class="pt-story">';
+    if (dr) {
+      html += node('fa-clipboard-check', '#1D4ED8', '#EFF6FF', ref,
+        esc(dr.customer) + ' · ' + esc(thaiDate(dr.date)) + ' ' + esc(dr.time || '')
+        + (dr.value ? ' · มูลค่า ' + money(dr.value) : ''),
+        dr.summary || '');
+    } else {
+      html += '<div class="pt-story-node"><span class="pt-story-ico" style="background:#FEF3C7;color:#B45309"><i class="fa-solid fa-link"></i></span>'
+        + '<div><b>' + esc(ref) + '</b><div class="pt-s2">ไม่พบรายละเอียด Daily Report ในเครื่องนี้ (อาจบันทึกจากอุปกรณ์อื่น)</div></div></div>';
+    }
+    deals.forEach(function (x) {
+      html += node('fa-file-invoice-dollar', '#15803D', '#F0FDF4',
+        x.no, esc(x.customer) + ' · ' + money(x.amount) + ' · ' + esc(x.job || ''), x.note || '');
+    });
+    html += node('fa-diagram-project', '#3730A3', '#EEF2FF', p.id || '', esc(p.name), '');
+    html += '</div>';
+    return html;
+  }
+
   function openDetail(id) {
     var p = byId(id);
     if (!p) return;
@@ -464,6 +517,7 @@
       + '<div class="pt-prog big"><span style="width:' + pr + '%"></span></div>'
       + '<div class="pt-s2">ความคืบหน้า ' + pr + '% จาก ' + tasks.filter(function (t) { return t.status === 'เสร็จแล้ว'; }).length + '/' + tasks.length + ' งาน</div>'
       + (p.blocker && p.blocker !== 'ไม่มี' && p.blocker !== '-' ? '<div class="pt-block" style="margin-top:10px"><i class="fa-solid fa-circle-exclamation"></i> Blocker: ' + esc(p.blocker) + '</div>' : '')
+      + storyHtml(p)
       + (p.note ? '<div class="pt-note"><b>หมายเหตุ</b><p>' + esc(p.note) + '</p></div>' : '')
       + '<h3 class="pt-sect">เส้นทางโครงการ</h3><div class="pt-journey">' + journey + '</div>'
       + '<h3 class="pt-sect">งานย่อย (' + tasks.length + ')</h3>'
@@ -763,6 +817,18 @@
       + '.pt-note b{color:#92400E;font-size:11px}'
       + '.pt-note p{margin:5px 0 0;color:#78350F;font-size:11px;line-height:1.7;white-space:pre-wrap}'
       + '.pt-sect{margin:16px 0 9px;font-size:11px;color:#0F2B46}'
+      + '.pt-story{display:flex;flex-direction:column;gap:7px}'
+      + '.pt-story-node{display:flex;gap:9px;align-items:flex-start;background:#F8FAFC;border:1px solid #EDF0F4;border-radius:10px;padding:9px 11px}'
+      + '.pt-story-ico{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:10px;flex:0 0 24px}'
+      + '.pt-story-node b{font-size:10.5px;color:#0F2B46;font-family:ui-monospace,Menlo,Consolas,monospace}'
+      + '.pt-story-note{font-size:10px;color:#667085;margin-top:3px;line-height:1.55}'
+      + '.pt-story-arrow{color:#CBD5E1;font-size:9px;margin-left:11px}'
+      + '.pt-story{display:flex;flex-direction:column;gap:7px}'
+      + '.pt-story-node{display:flex;gap:9px;align-items:flex-start;background:#F8FAFC;border:1px solid #EDF0F4;border-radius:10px;padding:9px 11px}'
+      + '.pt-story-ico{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:10px;flex:0 0 24px}'
+      + '.pt-story-node b{font-size:10.5px;color:#0F2B46;font-family:ui-monospace,Menlo,Consolas,monospace}'
+      + '.pt-story-note{font-size:10px;color:#667085;margin-top:3px;line-height:1.55}'
+      + '.pt-story-arrow{color:#CBD5E1;font-size:9px;margin-left:11px}'
       + '.pt-journey{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}'
       + '.pt-step{text-align:center;font-size:9px;color:#98A2B3}'
       + '.pt-step-dot{width:26px;height:26px;border-radius:50%;background:#EEF2F6;color:#94A3B8;display:grid;place-items:center;margin:0 auto 5px;font-size:9px}'
