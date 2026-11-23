@@ -88,6 +88,7 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
       <div><label for="email">อีเมล</label><input id="email" type="email" placeholder="name@gmail.com" autocomplete="off"></div>
       <div><label for="name">ชื่อ (ไม่บังคับ)</label><input id="name" type="text" placeholder="ชื่อ-นามสกุล"></div>
       <div><label for="level">ระดับสิทธิ์</label><select id="level">
+        <option value="admin">L1 · Admin</option>
         <option value="bu">L2 · BU</option>
         <option value="head">L3 · Head Team</option>
         <option value="sup">L4 · Supervisor</option>
@@ -539,11 +540,12 @@ function refreshUplines() {
   if (!sel || !box) return;
   var myN = lvlN(sel.value);
   var opts = (window.__USERS__ || []).filter(function (u) {
+    if (sel.value === 'admin') return lvlN(u.level) === 1;   /* L1 ไม่มีผู้ดูแลที่สูงกว่า — เลือก Admin ด้วยกันได้ */
     return lvlN(u.level) < myN;
   }).map(function (u) {
     return '<option value="' + esc(u.email) + '">' + esc((u.name || u.email) + ' · ' + lvlLabel(u.level)) + '</option>';
   });
-  box.innerHTML = '<option value="">— เลือก —</option>' + opts.join('');
+  box.innerHTML = (sel.value === 'admin' ? '<option value="">— ไม่ระบุ (Admin ระดับสูงสุด) —</option>' : '<option value="">— เลือก —</option>') + opts.join('');
 }
 
 function load() {
@@ -564,17 +566,22 @@ function fillTeamOptions() {
 el('addBtn').addEventListener('click', function () {
   var email = el('email').value.trim();
   if (!email || email.indexOf('@') < 0) return showMsg('กรอกอีเมลให้ถูกต้อง', 'err');
-  if (!el('parent').value) return showMsg('กรุณาเลือกผู้ดูแลต้นสาย (Upline)', 'err');
+
+  var newLevel = el('level').value;
+  var isAdminNew = newLevel === 'admin';
+  if (!isAdminNew && !el('parent').value) return showMsg('กรุณาเลือกผู้ดูแลต้นสาย (Upline)', 'err');
 
   // ตรวจชั้นสิทธิ์ก่อนส่ง: ต้องสร้างได้เฉพาะระดับที่ต่ำกว่าตัวเอง (ยกเว้น Admin)
   var myN = lvlN(me.level);
-  var newN = lvlN(el('level').value);
+  var newN = lvlN(newLevel);
   if (myN !== 1 && newN <= myN) return showMsg('สร้างได้เฉพาะระดับที่ต่ำกว่าตัวเอง (L' + (myN + 1) + ' ลงไป)', 'err');
+  if (isAdminNew && myN !== 1) return showMsg('สร้างระดับ L1 · Admin ได้เฉพาะ Admin เท่านั้น', 'err');
 
   var pv = el('parent').value, pn = 99, pFound = null;
   (window.__USERS__ || []).forEach(function (u) { if (u.email === pv) { pn = lvlN(u.level); pFound = u; } });
-  if (!pFound) return showMsg('ไม่พบผู้ดูแลต้นสายในระบบ', 'err');
-  if (pn >= newN) return showMsg('ผู้ดูแลต้นสายต้องอยู่ระดับสูงกว่าระดับที่เลือก', 'err');
+  if (pv && !pFound) return showMsg('ไม่พบผู้ดูแลต้นสายในระบบ', 'err');
+  if (pFound && !isAdminNew && pn >= newN) return showMsg('ผู้ดูแลต้นสายต้องอยู่ระดับสูงกว่าระดับที่เลือก', 'err');
+  if (pFound && isAdminNew && pn !== 1) return showMsg('ผู้ดูแลของ L1 · Admin ต้องเป็น Admin', 'err');
 
   PIAuth.addUser(email, el('name').value.trim(), el('level').value, el('parent').value, undefined, el('team') ? el('team').value : '').then(function (res) {
     el('email').value = ''; el('name').value = '';

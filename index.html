@@ -61,6 +61,7 @@
       <nav class="nav-list" id="navList">
         <button class="nav-item active" data-page="dashboard"><i class="fa-solid fa-gauge-high"></i>Dashboard</button>
         <button class="nav-item" data-page="sales"><i class="fa-solid fa-bullseye"></i>Sale Monitor</button>
+        <button class="nav-item" data-page="daily"><i class="fa-solid fa-clipboard-check"></i>Daily Report</button>
         <button class="nav-item" data-page="partners"><i class="fa-solid fa-handshake"></i>Partnership Business</button>
         <button class="nav-item" data-page="projects"><i class="fa-solid fa-diagram-project"></i>Project Tracking</button>
         <button class="nav-item" data-page="intelligence"><i class="fa-solid fa-brain"></i>Customer Intelligence</button>
@@ -102,6 +103,7 @@
   <script src="assets/auth-sheets.js?v=8"></script>
   <script src="assets/report-log.js?v=11"></script>
   <script src="assets/sales-report.js?v=35"></script>
+  <script src="assets/daily-report.js?v=1"></script>
   <script src="assets/project-tracking.js?v=6"></script>
   <script src="assets/customer-intelligence.js?v=4"></script>
   <script src="assets/team-page.js?v=6"></script>
@@ -110,9 +112,9 @@
     window.__allowedPages__ = function () {
       var lv = String(((window.__ME__ || {}).level) || '').toLowerCase();
       var MAP = {
-        sup: ['dashboard', 'team', 'sales', 'projects', 'intelligence', 'reports'],
-        sale: ['dashboard', 'sales'],
-        agent: ['dashboard', 'sales']
+        sup: ['dashboard', 'daily', 'team', 'sales', 'projects', 'intelligence', 'reports'],
+        sale: ['dashboard', 'sales', 'daily'],
+        agent: ['dashboard', 'sales', 'daily']
       };
       return MAP[lv] || null;   // admin / bu / head / editor = เข้าได้ทุกหน้า
     };
@@ -124,7 +126,6 @@
         name: String(rawMe.name || '').trim(),
         level: String(rawMe.level || 'viewer').toLowerCase(),
         saleId: String(rawMe.saleId || '').toUpperCase(),
-        team: String(rawMe.team || '').toUpperCase(),
         team: String(rawMe.team || '').toUpperCase(),
         isAdmin: rawMe.isAdmin === true || String(rawMe.level || '').toLowerCase() === 'admin'
       };
@@ -796,7 +797,7 @@
     })();
 
 
-    const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",partners:"Partnership Business",team:"ทีม & สิทธิ์",projects:"Project Tracking",intelligence:"Customer Intelligence",reports:"Reports",log:"Report Log",settings:"Settings"};
+    const pageTitles={dashboard:"Dashboard",sales:"Sale Monitor",daily:"Daily Report",partners:"Partnership Business",team:"ทีม & สิทธิ์",projects:"Project Tracking",intelligence:"Customer Intelligence",reports:"Reports",log:"Report Log",settings:"Settings"};
     const stageNames=["Planning","Sales Handover","Installation","Testing & Acceptance","Completed"];
     const stageLabels=["Prospect","Qualified","Proposal","Negotiation","Won","Lost"];
     const stageLabelsTH={"Prospect":"หาลูกค้า","Qualified":"คัดกรองแล้ว","Proposal":"เสนอราคา","Negotiation":"เจรจา","Won":"ปิดการขาย","Lost":"เสียดีล"};
@@ -820,7 +821,7 @@
     function btn(label,action,icon="",primary=false,extra=""){return `<button class="btn ${primary?"btn-primary":""}" data-action="${action}" ${extra}>${icon?`<i class="${icon}"></i>`:""}${label}</button>`}
     function destroyCharts(){charts.forEach(c=>c.destroy());charts=[]}
     function makeChart(id,config){const canvas=document.getElementById(id);if(canvas&&window.Chart)charts.push(new Chart(canvas,config))}
-    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,partners:renderPartnerCRM,team:(window.TeamPage?TeamPage.render:renderTeam),projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),intelligence:(window.CustomerIntel?CustomerIntel.render:renderIntelligence),reports:renderReports,log:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence"){window.CustomerIntel?CustomerIntel.drawCharts():drawHealthChart()}if(currentPage==="reports")drawReportCharts();if(currentPage==="team"&&!window.TeamPage)loadTeam();if(window.__afterRender__)window.__afterRender__();var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
+    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,daily:(window.DailyReport?DailyReport.render:function(){return '<div class="panel"><div class="panel-title">Daily Report</div><div class="panel-sub">ไม่พบโมดูล Daily Report (assets/daily-report.js)</div></div>'}),partners:renderPartnerCRM,team:(window.TeamPage?TeamPage.render:renderTeam),projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),intelligence:(window.CustomerIntel?CustomerIntel.render:renderIntelligence),reports:renderReports,log:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence"){window.CustomerIntel?CustomerIntel.drawCharts():drawHealthChart()}if(currentPage==="reports")drawReportCharts();if(currentPage==="team"&&!window.TeamPage)loadTeam();if(window.__afterRender__)window.__afterRender__();var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
 
     /* ===== การนำทางแบบเว็บทั่วไป: URL เปลี่ยน + ปุ่ม Back ของเบราว์เซอร์ใช้ได้ ===== */
     function pageUrl(p){return p&&p!=="dashboard"?"index.html?page="+encodeURIComponent(p):"index.html"}

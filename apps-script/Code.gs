@@ -475,12 +475,19 @@ function addUser(token, email, name, level, parent, saleId, team) {
   }
 
   var p = String(parent || '').trim().toLowerCase();
-  if (!p) throw new Error('ต้องเลือกผู้ดูแลต้นสาย');
+  var isAdminNew = (lv === 'admin');
+  if (!p && !isAdminNew) throw new Error('ต้องเลือกผู้ดูแลต้นสาย');
   var pr = null, all = readRows_();
   for (var i = 0; i < all.length; i++) if (all[i].email === p) { pr = all[i]; break; }
-  if (!pr) throw new Error('ไม่พบผู้ดูแลต้นสายในระบบ');
-  if (levelN_(pr.level) >= levelN_(lv)) throw new Error('ผู้ดูแลต้นสายต้องอยู่ระดับสูงกว่า');
-  if (!isAdminLevel_(s.level)) {
+  if (p && !pr) throw new Error('ไม่พบผู้ดูแลต้นสายในระบบ');
+  if (pr) {
+    if (isAdminNew) {
+      if (!isAdminLevel_(pr.level)) throw new Error('ผู้ดูแลของ L1 · Admin ต้องเป็น Admin');
+    } else if (levelN_(pr.level) >= levelN_(lv)) {
+      throw new Error('ผู้ดูแลต้นสายต้องอยู่ระดับสูงกว่า');
+    }
+  }
+  if (p && !isAdminLevel_(s.level)) {
     var myEmail = String(s.email).toLowerCase();
     var allowed = descendantsOf_(myEmail).map(function (r) { return r.email; }).concat([myEmail]);
     if (allowed.indexOf(p) < 0) throw new Error('เลือกผู้ดูแลต้นสายได้เฉพาะในสายงานของตัวเอง');
