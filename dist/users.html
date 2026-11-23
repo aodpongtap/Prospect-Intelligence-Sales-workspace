@@ -204,7 +204,8 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
   }
   function clearSession() { localStorage.removeItem(SESSION_KEY); }
   function token() { var s = getSession(); return s && s.token ? s.token : ''; }
-  function isAdmin(s) { return !!s && String(s.level).toLowerCase() === 'admin'; }
+  /** ระดับที่ได้สิทธิ์เท่า Admin (L1 Admin + L2 BU) */
+  function isAdmin(s) { var l = s ? String(s.level).toLowerCase() : ''; return l === 'admin' || l === 'bu'; }
 
   /* ---------- cache รายชื่อผู้ใช้ ---------- */
   var cache = [];
@@ -349,7 +350,7 @@ if (me && !PIAuth.isAdmin(me)) {
   document.addEventListener('DOMContentLoaded', function () {
     document.body.innerHTML = '<div style="max-width:520px;margin:80px auto;background:#fff;border:1px solid #E5EAF0;border-radius:12px;padding:26px;font-family:Prompt,sans-serif;text-align:center">' +
       '<h2 style="color:#0F2B46;margin:0 0 10px">ไม่มีสิทธิ์เข้าถึง</h2>' +
-      '<p style="color:#667085;font-size:13px">หน้านี้สำหรับ Admin เท่านั้น</p>' +
+      '<p style="color:#667085;font-size:13px">หน้านี้สำหรับ Admin / BU เท่านั้น</p>' +
       '<a href="index.html" style="color:#2563EB">กลับ Dashboard</a></div>';
   });
 }

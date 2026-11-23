@@ -259,6 +259,11 @@ function saveSession_(token, data) {
 }
 
 function isAdminLevel_(level) { return String(level).toLowerCase() === 'admin'; }
+/** ระดับที่เห็นข้อมูลทั้งหมด (L1 Admin + L2 BU) */
+function seesAllLevel_(level) {
+  var l = String(level).toLowerCase();
+  return l === 'admin' || l === 'bu';
+}
 /** ใครบันทึกดีลได้: Admin / BU / Head Team / Supervisor / เซลล์ (L1–L5) */
 function canSell_(level) {
   var l = String(level).toLowerCase();
@@ -311,7 +316,7 @@ function findDealRow_(id) {
 
 function listDeals_(s) {
   var all = readDeals_();
-  if (isAdminLevel_(s.level)) return all;
+  if (seesAllLevel_(s.level)) return all;
   var me = String(s.email).toLowerCase();
 
   // Supervisor ขึ้นไป (L2–L4) เห็นดีลรวมของลูกข่ายใต้สายงานตัวเอง
@@ -367,7 +372,7 @@ function deleteDeal(key, id) {
   if (!row) throw new Error('ไม่พบดีลนี้');
   var sh = getDealsSheet_();
   var owner = String(sh.getRange(row, 2).getValue() || '').toLowerCase();
-  if (!isAdminLevel_(s.level) && owner !== String(s.email).toLowerCase()) {
+  if (!seesAllLevel_(s.level) && owner !== String(s.email).toLowerCase()) {
     throw new Error('ลบได้เฉพาะดีลของตนเอง');
   }
   sh.deleteRow(row);
@@ -400,7 +405,7 @@ function login(email, password) {
 function getMe(token) {
   var s = session_(token);
   if (!s) return { ok: false };
-  return { ok: true, email: s.email, name: s.name, level: s.level, saleId: s.saleId || '', team: s.team || '', isAdmin: isAdminLevel_(s.level) };
+  return { ok: true, email: s.email, name: s.name, level: s.level, saleId: s.saleId || '', team: s.team || '', isAdmin: seesAllLevel_(s.level) };
 }
 
 function logout(token) {
@@ -437,11 +442,11 @@ function descendantsOf_(email) {
   return out;
 }
 
-/** ผู้ใช้ที่มองเห็นได้: admin = ทั้งหมด, อื่น ๆ = ตัวเอง + ลูกข่ายใต้สายงาน */
+/** ผู้ใช้ที่มองเห็นได้: admin/BU = ทั้งหมด, อื่น ๆ = ตัวเอง + ลูกข่ายใต้สายงาน */
 function visibleUsers_(me) {
   var all = readRows_();
   var myEmail = String(me.email || '').toLowerCase();
-  if (isAdminLevel_(me.level)) return all;
+  if (seesAllLevel_(me.level)) return all;
   var ids = descendantsOf_(myEmail).map(function (r) { return r.email; });
   return all.filter(function (r) { return r.email === myEmail || ids.indexOf(r.email) >= 0; });
 }
@@ -452,7 +457,7 @@ function getUsers(token) {
   ensureSeed_();
   var canManage = levelN_(s.level) <= 4;   // Admin / BU / Head Team / Supervisor
   return {
-    ok: true, canManage: canManage, isAdmin: isAdminLevel_(s.level), me: s.email, myLevel: s.level,
+    ok: true, canManage: canManage, isAdmin: seesAllLevel_(s.level), me: s.email, myLevel: s.level,
     users: visibleUsers_(s).map(publicUser_), levels: LEVELS, labels: LEVEL_LABELS, admins: ADMIN_EMAILS
   };
 }

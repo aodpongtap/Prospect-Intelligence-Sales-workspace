@@ -111,9 +111,9 @@
       document.head.appendChild(s);
     })();
   </script>
-  <script src="assets/auth-sheets.js?v=9"></script>
+  <script src="assets/auth-sheets.js?v=10"></script>
   <script src="assets/report-log.js?v=12"></script>
-  <script src="assets/sales-report.js?v=46"></script>
+  <script src="assets/sales-report.js?v=47"></script>
   <script src="assets/daily-report.js?v=12"></script>
   <script src="assets/project-tracking.js?v=7"></script>
   <script src="assets/customer-intelligence.js?v=4"></script>
@@ -138,7 +138,7 @@
         level: String(rawMe.level || 'viewer').toLowerCase(),
         saleId: String(rawMe.saleId || '').toUpperCase(),
         team: String(rawMe.team || '').toUpperCase(),
-        isAdmin: rawMe.isAdmin === true || String(rawMe.level || '').toLowerCase() === 'admin'
+        isAdmin: rawMe.isAdmin === true || String(rawMe.level || '').toLowerCase() === 'admin' || String(rawMe.level || '').toLowerCase() === 'bu'
       };
 
       // เก็บข้อมูลผู้ใช้ไว้ให้สคริปต์ถัดไปใช้กรองข้อมูล (ต้องมาก่อน mock data)
@@ -662,7 +662,7 @@
         if (ls) ls.innerHTML = '<i class="fa-solid fa-circle-check"></i> ข้อมูลอัปเดตล่าสุด: ' + new Date().toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
         if (me.isAdmin) {
           bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#ecfdf3;border:1px solid #d1fae5;color:#15803d';
-          bar.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Admin — เห็นดีลทั้งหมด <strong>' + list.length + '</strong> รายการ (ข้อมูลชุดเดียวกับ Reports)';
+          bar.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Admin / BU — เห็นดีลทั้งหมด <strong>' + list.length + '</strong> รายการ (ข้อมูลชุดเดียวกับ Reports)';
         } else if (isBoss) {
           bar.style.cssText = 'margin:0 30px 0;padding:10px 14px;border-radius:9px;font-size:12px;background:#eef2ff;border:1px solid #e0e7ff;color:#3730a3';
           bar.innerHTML = '<i class="fa-solid fa-users"></i> แดชบอร์ดรวมของสายงาน — เห็นดีลของทีมทั้งหมดใต้สังกัดคุณ <strong>' + list.length + '</strong> รายการ (<strong>' + (me.name || me.email) + '</strong>)';

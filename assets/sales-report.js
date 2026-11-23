@@ -130,10 +130,11 @@
     if (t) return t;
     /* ทีม (BU) ที่กำหนดไว้ที่บัญชีผู้ใช้ — ใช้กับ Head / Supervisor */
     var accTeam = String(me.team || '').toUpperCase();
-    if (accTeam && (lvl === 'bu' || lvl === 'head' || lvl === 'sup')) return accTeam;
+    if (accTeam && (lvl === 'head' || lvl === 'sup')) return accTeam;
     return '';
   }
-  function lvLvlAdmin(l) { return l === 'admin'; }
+  /** ระดับที่เห็นข้อมูลทั้งหมด (L1 Admin + L2 BU) */
+  function lvLvlAdmin(l) { return l === 'admin' || l === 'bu'; }
 
   /** cache ทีมที่เคยตรวจสอบแล้ว (ให้โหลดเร็วในครั้งถัดไป) */
   var LS_SCOPE_CACHE = 'pi_scope_cache_v1';
@@ -188,11 +189,11 @@
   function scopeOf() {
     var me = global.__ME__ || {};
     var lvl = String(me.level || '').toLowerCase();
-    if (lvl === 'admin') return { type: 'all' };
+    if (lvLvlAdmin(lvl)) return { type: 'all' };
     var mail = String(me.email || '').toLowerCase();
     var team = TEAM_HEADS[mail];
     if (team) return { type: 'team', team: team };
-    if (lvl === 'bu' || lvl === 'head' || lvl === 'sup') {
+    if (lvl === 'head' || lvl === 'sup') {
       team = teamViaUpline(mail);
       if (team) return { type: 'team', team: team };
       /* ยังโหลดรายชื่อไม่เสร็จ → อย่าตีความว่า “ไม่มีสิทธิ์” ทันที */

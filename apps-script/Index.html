@@ -79,7 +79,7 @@
         email: rawMe.email,
         name: String(rawMe.name || '').trim(),
         level: String(rawMe.level || 'viewer').toLowerCase(),
-        isAdmin: rawMe.isAdmin === true || String(rawMe.level || '').toLowerCase() === 'admin'
+        isAdmin: rawMe.isAdmin === true || String(rawMe.level || '').toLowerCase() === 'admin' || String(rawMe.level || '').toLowerCase() === 'bu'
       };
 
       // เก็บข้อมูลผู้ใช้ไว้ให้สคริปต์ถัดไปใช้กรองข้อมูล (ต้องมาก่อน mock data)

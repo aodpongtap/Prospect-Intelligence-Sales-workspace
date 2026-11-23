@@ -69,7 +69,8 @@
   }
   function clearSession() { localStorage.removeItem(SESSION_KEY); }
   function token() { var s = getSession(); return s && s.token ? s.token : ''; }
-  function isAdmin(s) { return !!s && String(s.level).toLowerCase() === 'admin'; }
+  /** ระดับที่ได้สิทธิ์เท่า Admin (L1 Admin + L2 BU) */
+  function isAdmin(s) { var l = s ? String(s.level).toLowerCase() : ''; return l === 'admin' || l === 'bu'; }
 
   /* ---------- cache รายชื่อผู้ใช้ ---------- */
   var cache = [];
