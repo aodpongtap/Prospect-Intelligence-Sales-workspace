@@ -743,7 +743,7 @@
 
       var totOther = num(tot.o.s1) + num(tot.o.s0);
       return '<div class="sr-tablewrap"><table class="sr-table sr-sum2"><thead><tr>'
-        + '<th class="sr-sticky sr-td-sale">Sale</th>'
+        + '<th class="sr-sticky sr-td-sale">AE</th>'
         + '<th class="sr-num" style="min-width:96px">Actual</th>'
         + hd('รอส่งของ', '#38BDF8')
         + hd('รอ PO', '#F59E0B')
@@ -1210,7 +1210,7 @@
       + '    <div class="sr-s2">เรียงตามมูลค่าสูงสุด · คลิกแถวเพื่อดูหมายเหตุ</div></div>'
       + '    <button class="sr-btn" data-sr-goto="reports"><i class="fa-solid fa-list"></i> ดูดีลทั้งหมด</button></div>'
       + '  <div class="sr-tablewrap"><table class="sr-table"><thead><tr>'
-      + '    <th>สถานะ</th><th>ลูกค้า / งาน</th><th>Sale</th><th class="sr-num">มูลค่า</th>'
+      + '    <th>สถานะ</th><th>ลูกค้า / งาน</th><th>AE</th><th class="sr-num">มูลค่า</th>'
       + '    <th class="sr-num">คาดปิด</th>'
       + '  </tr></thead><tbody>' + (followRows || '<tr><td colspan="5" class="sr-empty">ไม่มีดีลที่ต้องติดตาม</td></tr>') + '</tbody></table></div>'
       + '</section>'

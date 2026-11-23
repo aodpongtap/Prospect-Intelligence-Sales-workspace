@@ -299,7 +299,7 @@
     var sc = scope();
     var head = '<div class="dr-head">'
       + '<div><h1>Daily Report</h1>'
-      + '  <div class="dr-sub">บันทึกการเข้าพบลูกค้า / แผนงานรายวัน · Customer Visit Log &amp; Daily Plan — ใช้ร่วมกับเป้าหมายการขาย (linked to sales targets)</div></div>'
+      + '  <div class="dr-sub">บันทึกการเข้าพบลูกค้า / แผนงานรายวัน · Customer Visit Log &amp; Daily Plan — ใช้ร่วมกับเป้าหมายการขาย (linked to AE targets)</div></div>'
       + '<div class="dr-tools">'
       + '  <button class="dr-btn primary" data-dr-new><i class="fa-solid fa-plus"></i> บันทึกกิจกรรม · Add Activity</button>'
       + '  <button class="dr-btn" data-dr-export><i class="fa-solid fa-file-csv"></i> Export CSV</button>'
