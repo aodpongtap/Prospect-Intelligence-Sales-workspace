@@ -53,6 +53,10 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
 .l-admin{background:#eff6ff;color:#1d4ed8}.l-editor{background:#ecfdf3;color:#15803d}.l-viewer{background:#f2f4f7;color:#475467}.l-core{background:#0F2B46;color:#fff}
 .pill-warn{background:#fff7ed;color:#b45309;border:1px solid #fed7aa;cursor:help}
 .on{color:var(--green)}.off{color:var(--red)}.acts{display:flex;gap:6px;flex-wrap:wrap}
+.fbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
+.fbar input,.fbar select{width:auto;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:11.5px;background:#fff}
+.fbar input{flex:1 1 220px;max-width:340px}
+.fbar select{flex:0 0 auto;min-width:150px}
 .msg{margin:0 0 12px;padding:9px 11px;border-radius:8px;font-size:12px;display:none}
 .msg.err{background:#fff1f2;border:1px solid #ffe4e6;color:#b91c1c;display:block}
 .msg.ok{background:#ecfdf3;border:1px solid #d1fae5;color:#15803d;display:block}
@@ -107,10 +111,10 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
 
   <section class="panel">
     <h3>รายชื่อผู้ใช้ (<span id="count">0</span>)</h3>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px">
-      <input id="fSearch" placeholder="ค้นหาชื่อ / อีเมล" style="padding:7px 10px;border:1px solid #E5EAF0;border-radius:8px;font-size:11.5px;min-width:180px">
-      <select id="fLevel" style="padding:7px 10px;border:1px solid #E5EAF0;border-radius:8px;font-size:11.5px"><option value="">ทุกระดับ</option></select>
-      <select id="fParent" style="padding:7px 10px;border:1px solid #E5EAF0;border-radius:8px;font-size:11.5px"><option value="">ทุกผู้ดูแลสาย</option></select>
+    <div class="fbar">
+      <input id="fSearch" placeholder="ค้นหาชื่อ / อีเมล">
+      <select id="fLevel"><option value="">ทุกระดับ</option></select>
+      <select id="fParent"><option value="">ทุกผู้ดูแลสาย</option></select>
       <button class="btn" id="fClear" type="button"><i class="fa-solid fa-filter-circle-xmark"></i> ล้างตัวกรอง</button>
     </div>
     <div class="tablewrap">
@@ -548,8 +552,8 @@ function render(users) {
     var direct = (window.__USERS__ || []).filter(function (x) { return x.parent === u.email; }).length;
     var total = descOf(u.email).length;
     var downCell = direct || total
-      ? '<span class="pill l-editor" title="ลูกข่ายตรง ' + direct + ' · ทั้งหมด ' + total + '">' + direct + ' / ' + total + '</span>'
-      : '<span style="color:#98a2b3">—</span>';
+      ? '<span class="pill l-editor" title="ลูกข่ายตรง ' + direct + ' · ทั้งหมด ' + total + '">ลูกข่าย ' + direct + ' / ' + total + '</span>'
+      : '';
 
     var statusCell = u.status === 'disabled'
       ? '<span class="off"><i class="fa-solid fa-circle-xmark"></i> ปิด</span>'
@@ -560,7 +564,7 @@ function render(users) {
       '<button class="btn btn-ic" data-act="reset" data-email="' + esc(u.email) + '" title="รีเซ็ตรหัสผ่าน"><i class="fa-solid fa-rotate"></i></button>' +
       (core ? '' :
         '<button class="btn btn-ic" data-act="toggle" data-email="' + esc(u.email) + '" data-status="' + (u.status === 'disabled' ? 'active' : 'disabled') + '" title="' + (u.status === 'disabled' ? 'เปิดใช้งาน' : 'ปิดการใช้งาน') + '">' +
-        (u.status === 'disabled' ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>') + '</button>' +
+        (u.status === 'disabled' ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-power-off"></i>') + '</button>' +
         '<button class="btn btn-ic btn-danger" data-act="del" data-email="' + esc(u.email) + '" title="ลบผู้ใช้"><i class="fa-solid fa-trash"></i></button>') +
       '</div>';
     return '<tr data-search="' + esc(((u.name || '') + ' ' + u.email).toLowerCase()) + '" data-level="' + esc(u.level) + '" data-parent="' + esc(u.parent || '') + '">'
