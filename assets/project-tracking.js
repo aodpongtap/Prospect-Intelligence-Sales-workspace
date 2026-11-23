@@ -132,10 +132,14 @@
   var PROJECTS = load();
   function load() {
     try {
-      var a = JSON.parse(localStorage.getItem(LS) || 'null');
-      if (Object.prototype.toString.call(a) === '[object Array]' && a.length) return a;
+      var raw = localStorage.getItem(LS);
+      if (raw !== null) {
+        var a = JSON.parse(raw);
+        /* เคารพค่าที่บันทึกไว้ แม้จะเป็นลิสต์ว่าง (ผู้ใช้ล้างข้อมูลเอง) */
+        if (Object.prototype.toString.call(a) === '[object Array]') return a;
+      }
     } catch (e) {}
-    return JSON.parse(JSON.stringify(SEED));
+    return [];   /* เริ่มต้นว่าง — ให้ผู้ใช้คีย์โครงการเอง */
   }
   function save() {
     try { localStorage.setItem(LS, JSON.stringify(PROJECTS)); } catch (e) {
@@ -344,10 +348,13 @@
       + lockTxt
       + '<button class="pt-btn dark" data-pt-new><i class="fa-solid fa-plus"></i> เพิ่มโครงการ</button></div></div>'
       + notice
-      + renderKpis()
-      + renderFilters()
-      + renderBoard(list)
-      + renderTasksTable(list)
+      + (PROJECTS.length === 0
+        ? '<section class="pt-panel" style="padding:34px 20px;text-align:center">'
+          + '<div style="font-size:30px;color:#CBD5E1;margin-bottom:8px"><i class="fa-solid fa-diagram-project"></i></div>'
+          + '<div style="font-size:13px;font-weight:600;color:#0F2B46;margin-bottom:4px">ยังไม่มีโครงการ</div>'
+          + '<div class="pt-s2" style="margin-bottom:14px">เริ่มต้นด้วยการเพิ่มโครงการแรก (หรือสร้างดีลใน Reports แล้วค่อยบันทึกที่นี่)</div>'
+          + '<button class="pt-btn dark" data-pt-new><i class="fa-solid fa-plus"></i> เพิ่มโครงการ</button></section>'
+        : renderKpis() + renderFilters() + renderBoard(list) + renderTasksTable(list))
       + '</div>';
   }
 
@@ -858,6 +865,6 @@
     open: openDetail,
     list: function () { return PROJECTS; },
     visible: visibleProjects,
-    reset: function () { PROJECTS = JSON.parse(JSON.stringify(SEED)); save(); global.render(); }
+    reset: function () { PROJECTS = []; save(); global.render(); }
   };
 })(window);
