@@ -167,7 +167,15 @@
     var nm = norm(me.name);
     if (nm) {
       for (var i = 0; i < SALES.length; i++) {
-        if (norm(SALES[i].name) === nm) return { type: 'sale', saleId: SALES[i].id };
+        if (norm(SALES[i].name) === nm) {
+          /* sync ทีมจากบัญชีผู้ใช้ ถ้ารายชื่อเซลส์ยังไม่มีทีม */
+          var mt = String(me.team || '').toUpperCase();
+          if (mt && !String(SALES[i].team || '').toUpperCase()) {
+            SALES[i].team = mt;
+            try { localStorage.setItem(LS_SALES, JSON.stringify(SALES)); } catch (e) {}
+          }
+          return { type: 'sale', saleId: SALES[i].id };
+        }
       }
       /* 2.1) ชื่อใกล้เคียง (มีคำนำหน้า/ต่อท้าย หรือชื่อหนึ่งอยู่ในอีกชื่อ) */
       var near = SALES.filter(function (s) {
