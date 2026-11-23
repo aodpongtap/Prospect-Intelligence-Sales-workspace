@@ -507,7 +507,17 @@ function dailyCell(u) {
 }
 
 function render(users) {
-  window.__USERS__ = users || [];
+  /* เรียงตามสิทธิ์: Dev อยู่บนสุด → L1 → L2 → … */
+  var DEV_EMAIL = 'aodpongtaptsr@gmail.com';
+  users = (users || []).slice().sort(function (a, b) {
+    var da = String(a.email || '').toLowerCase() === DEV_EMAIL ? 0 : 1;
+    var db = String(b.email || '').toLowerCase() === DEV_EMAIL ? 0 : 1;
+    if (da !== db) return da - db;
+    var la = lvlN(a.level), lb = lvlN(b.level);
+    if (la !== lb) return la - lb;
+    return String(a.name || a.email || '').localeCompare(String(b.name || b.email || ''), 'th');
+  });
+  window.__USERS__ = users;
   el('count').textContent = users.length;
   var rows = users.map(function (u) {
     var core = isCore(u.email);
