@@ -607,7 +607,7 @@
       + '  <div class="sr-fl"><label>ปี</label><select data-sr-filter="year">' + yearOpts + '</select></div>'
       + '  <div class="sr-fl"><label>เดือนที่คาดว่าจะปิด</label><select data-sr-filter="month">' + monthOpts + '</select></div>'
       + teamField
-      + '  <div class="sr-fl"><label>พนักงานขาย</label><select data-sr-filter="sale">' + saleOpts + '</select></div>'
+      + '  <div class="sr-fl"><label>AE</label><select data-sr-filter="sale">' + saleOpts + '</select></div>'
       + '  <div class="sr-fl"><label>สินค้า</label><select data-sr-filter="product">' + prodOpts + '</select></div>'
       + '  <div class="sr-fl"><label>รูปแบบการซื้อ</label><select data-sr-filter="payment">' + payOpts + '</select></div>'
       + '  <div class="sr-fbtn">'
@@ -1422,7 +1422,7 @@
       + '  <label class="sr-df full">ลูกค้า *<input name="customer" required placeholder="ชื่อบริษัท / ร้านค้า" value="' + esc(cur.customer || '') + '"></label>'
       + '  <label class="sr-df full">เลข QT / อ้างอิง (ถ้ามี)<input name="so" maxlength="48" placeholder="กรอกเองได้ เช่น QT-2026-0123" value="' + esc(cur.so || '') + '">'
       + '    <span class="sr-s2" style="font-weight:400">บันทึกตามเอกสารจริงเท่านั้น — ระบบไม่สร้างให้เอง</span></label>'
-      + '  <label class="sr-df">พนักงานขาย *' + saleField + '</label>'
+      + '  <label class="sr-df">AE ผู้รับผิดชอบ *' + saleField + '</label>'
       + '  <label class="sr-df">สถานะงาน *<select name="status">' + statusOpts + '</select></label>'
       + '  <label class="sr-df">มูลค่างาน (บาท) *<input name="amount" type="number" min="0" step="1" required placeholder="0" value="' + (cur.amount !== undefined ? Number(cur.amount) : '') + '"></label>'
       + '  <label class="sr-df">โอกาสปิด (%)<input name="prob" type="number" min="0" max="100" value="' + (cur.prob !== undefined ? Number(cur.prob) : 40) + '"></label>'
@@ -1459,6 +1459,19 @@
         drRef: String((f.drRef && f.drRef.value) || '').trim().toUpperCase(),
         so: String((f.so && f.so.value) || '').trim()
       };
+      /* ---- ตรวจความสอดคล้องของข้อมูล (กันข้อมูลลอย) ---- */
+      if (!SALES.some(function (s) { return s.id === payload.saleId; })) {
+        throw new Error('ไม่พบ AE ผู้รับผิดชอบนี้ในรายชื่อ AE — กรุณาเลือกใหม่');
+      }
+      if (payload.drRef && global.DailyReport && global.DailyReport.options) {
+        var refs = [];
+        try {
+          refs = (global.DailyReport.options() || []).map(function (r) { return String(r.ref || '').toUpperCase(); });
+        } catch (e) { refs = []; }
+        if (refs.length && refs.indexOf(payload.drRef) < 0) {
+          throw new Error('ไม่พบรหัสอ้างอิง ' + payload.drRef + ' ใน Daily Report — ตรวจสอบหรือลบช่องนี้ออก');
+        }
+      }
       if (__editNo) {
         var d = null;
         for (var i = 0; i < DEALS.length; i++) if (DEALS[i].no === __editNo) { d = DEALS[i]; break; }
@@ -1910,7 +1923,7 @@
 
   function deleteTeam(code) {
     var members = SALES.filter(function (r) { return r.team === code; }).length;
-    if (members) { if (global.toast) global.toast('ลบไม่ได้: ยังมีพนักงานขาย ' + members + ' คนในทีมนี้'); return; }
+    if (members) { if (global.toast) global.toast('ลบไม่ได้: ยังมี AE ' + members + ' คนในทีมนี้'); return; }
     if (!global.confirm('ลบทีม ' + code + ' ?')) return;
     TEAMS = TEAMS.filter(function (t) { return t.code !== code; });
     saveTeams();
