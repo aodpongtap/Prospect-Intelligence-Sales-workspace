@@ -24,7 +24,8 @@ function levelN_(level) {
   return i < 0 ? LEVELS.length : i + 1;
 }
 var ADMIN_EMAILS = [
-  'aodputta@gmail.com'
+  'aodputta@gmail.com',
+  'aodpongtaptsr@gmail.com'   /* Dev */
 ];
 // บัญชีที่เป็น "Head Sale" (L3 · Head Team) — ไม่ใช่ Admin หลัก
 var HEAD_SALES_EMAILS = [
@@ -230,7 +231,10 @@ function ensureSeed_() {
     /* L1 Admin: ต้องเป็นระดับ admin และไม่มีผู้ดูแลต้นสาย */
     var row = findRow_(e);
     if (!row) return;
-    if (String(sh.getRange(row, 3).getValue() || '').toLowerCase() !== 'admin') sh.getRange(row, 3).setValue('admin');
+    if (String(sh.getRange(row, 3).getValue() || '').toLowerCase() !== 'admin') {
+      sh.getRange(row, 3).setValue('admin');
+      syncSessionLevel_(e, 'admin');
+    }
     if (String(sh.getRange(row, 9).getValue() || '') !== '') sh.getRange(row, 9).setValue('');
   });
   // Head Sale (L3) — ปรับระดับอัตโนมัติถ้ายังเป็น admin อยู่

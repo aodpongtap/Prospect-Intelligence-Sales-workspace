@@ -233,8 +233,17 @@
       return '<option value="' + c.code + '"' + (state.channel === c.code ? ' selected' : '') + '>' + esc(c.name) + '</option>';
     }).join('');
     var showSale = (sc.type === 'all' || sc.type === 'team' || sc.type === 'pending');
+    var curY = state.month.slice(0, 4), curM = state.month.slice(5, 7);
+    var yOpts = trendYears().map(function (v) {
+      return '<option value="' + v + '"' + (v === curY ? ' selected' : '') + '>' + (Number(v) + 543) + '</option>';
+    }).join('');
+    var mOpts = TH_MONTHS.map(function (n, i) {
+      var v = pad2(i + 1);
+      return '<option value="' + v + '"' + (v === curM ? ' selected' : '') + '>' + esc(n) + '</option>';
+    }).join('');
     return '<div class="dr-filters">'
-      + '<label class="dr-fl"><span>เดือน · Month</span><input type="month" data-dr-filter="month" value="' + esc(state.month) + '"></label>'
+      + '<label class="dr-fl"><span>เดือน · Month</span><select data-dr-month="m">' + mOpts + '</select></label>'
+      + '<label class="dr-fl"><span>ปี · Year</span><select data-dr-month="y">' + yOpts + '</select></label>'
       + '<label class="dr-fl"><span>ช่องทาง · Channel</span><select data-dr-filter="channel">' + chOpts + '</select></label>'
       + (showSale ? '<label class="dr-fl"><span>AE · Account Executive</span><select data-dr-filter="sale">' + saleOpts + '</select></label>' : '')
       + '<label class="dr-fl dr-fl-q"><span>ค้นหา · Search</span><input type="search" data-dr-filter="q" placeholder="ลูกค้า / สรุป / นัดครั้งต่อไป" value="' + esc(state.q) + '"></label>'
@@ -298,7 +307,7 @@
     injectCss();
     var sc = scope();
     var head = '<div class="dr-head">'
-      + '<div><h1>Daily Report</h1>'
+      + '<div><h2 class="dr-h2">Daily Report</h2>'
       + '  <div class="dr-sub">บันทึกการเข้าพบลูกค้า / แผนงานรายวัน · Customer Visit Log &amp; Daily Plan — ใช้ร่วมกับเป้าหมายการขาย (linked to AE targets)</div></div>'
       + '<div class="dr-tools">'
       + '  <button class="dr-btn primary" data-dr-new><i class="fa-solid fa-plus"></i> บันทึกกิจกรรม · Add Activity</button>'
@@ -753,6 +762,19 @@
   document.addEventListener('change', function (e) {
     var t = e.target;
     if (!t || !t.closest) return;
+    var mo = t.closest('[data-dr-month]');
+    if (mo) {
+      var box = mo.parentNode && mo.parentNode.parentNode;
+      var ySel = document.querySelector('[data-dr-month="y"]');
+      var mSel = document.querySelector('[data-dr-month="m"]');
+      var yy = (ySel && ySel.value) || state.month.slice(0, 4);
+      var mm = (mSel && mSel.value) || state.month.slice(5, 7);
+      state.month = yy + '-' + mm;
+      state.trYear = yy; state.trMonth = mm;
+      if (state.trDay && Number(state.trDay) > daysInMonth(yy, mm)) state.trDay = '';
+      if (typeof global.render === 'function') global.render();
+      return;
+    }
     var tr = t.closest('[data-dr-trend]');
     if (tr) {
       state[tr.getAttribute('data-dr-trend')] = tr.value;
@@ -851,6 +873,7 @@
     var css = ''
       + '.dr{display:flex;flex-direction:column;gap:14px}'
       + '.dr-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}'
+      + '.dr-head h2.dr-h2{margin:0;font-size:15px;font-weight:600;color:#0F2B46;line-height:1.35}'
       + '.dr-head h1{margin:0;font-size:19px;font-weight:600;color:#0F2B46;line-height:1.3}'
       + '.dr-sub{color:#667085;font-size:11.5px;margin-top:3px;line-height:1.5}'
       + '.dr-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}'

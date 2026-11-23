@@ -170,7 +170,7 @@
     }).join('');
 
     var table = '<section class="tp-panel">'
-      + '<div class="tp-ph"><div><h3>ผู้ใช้ในสายงาน (' + list.length + (list.length !== USERS.length ? '/' + USERS.length : '') + ')</h3>'
+      + '<div class="tp-ph"><div><h3>' + (seesAll ? 'ผู้ใช้ทั้งหมด' : 'ผู้ใช้ในสายงาน') + ' (' + list.length + (list.length !== USERS.length ? '/' + USERS.length : '') + ')</h3>'
       + '<div class="tp-s2">คลิก “แผนผังเครือข่าย” ด้านบนเพื่อดูโครงสร้างทั้งสายงาน</div></div></div>'
       + toolbar
       + (ERR ? '<div class="tp-err"><i class="fa-solid fa-triangle-exclamation"></i> ' + esc(ERR)
