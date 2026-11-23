@@ -328,7 +328,7 @@
         ? '<button class="dr-ibtn" data-dr-mkdeal="' + esc(x.id) + '" title="สร้างดีล (Pipeline) ใน Reports จากบันทึกนี้"><i class="fa-solid fa-file-invoice-dollar"></i></button>'
         : '';
       return '<tr data-dr-row="' + esc(x.id) + '">'
-        + '<td class="dr-num"><b>' + dstrth(x.date) + '</b><div class="dr-s2">' + esc(dayName(x.date)) + ' ' + esc(x.time || '') + '</div></td>'
+        + '<td><b>' + dstrth(x.date) + '</b><div class="dr-s2">' + esc(dayName(x.date)) + ' ' + esc(x.time || '') + '</div></td>'
         + '<td><div class="dr-cust">' + esc(x.customer) + '</div>'
         + (x.ref ? '<button class="dr-ref" data-dr-copy="' + esc(x.ref) + '" title="คลิกเพื่อคัดลอกรหัสอ้างอิง">' + esc(x.ref) + '</button>' : '')
         + links
@@ -351,7 +351,7 @@
       + '  <div class="dr-s2">เรียงจากใหม่ → เก่า · คลิกปุ่มดินสอเพื่อแก้ไข</div></div></div>'
       + '<div class="dr-tablewrap"><table class="dr-table"><thead><tr>'
       + '<th style="width:96px">วันที่ / เวลา</th><th style="width:170px">ลูกค้า</th><th style="width:104px">ช่องทาง</th>'
-      + '<th>สรุป / ผลการ</th><th style="width:150px">นัดครั้งต่อไป</th><th style="width:110px">ผู้รับผิดชอบ</th><th style="width:64px"></th>'
+      + '<th>สรุป / ผลการ</th><th style="width:150px">นัดครั้งต่อไป</th><th style="width:110px">ผู้รับผิดชอบ</th><th style="width:82px"></th>'
       + '</tr></thead><tbody>'
       + (rows || '<tr><td colspan="7" class="dr-empty">ยังไม่มีบันทึกในเดือนนี้ — กด “บันทึกกิจกรรม” เพื่อเริ่ม</td></tr>')
       + '</tbody></table></div></section>';
@@ -735,7 +735,8 @@
       + '.dr-fu.late{color:#B91C1C;background:#FEF2F2}'
       + '.dr-dim{color:#C2CBD8}'
       + '.dr-act{white-space:nowrap;text-align:right}'
-      + '.dr-ibtn{border:1px solid #E5EAF0;background:#fff;color:#475467;border-radius:7px;width:26px;height:26px;display:inline-grid;place-items:center;cursor:pointer;font-size:10px;margin-left:3px}'
+      + '.dr-act .dr-ibtn:first-child{margin-left:0}'
+      + '.dr-ibtn{border:1px solid #E5EAF0;background:#fff;color:#475467;border-radius:7px;width:26px;height:26px;display:inline-grid;place-items:center;cursor:pointer;font-size:10px;margin-left:4px}'
       + '.dr-ibtn:hover{border-color:#C7D7EE;color:#2563EB}'
       + '.dr-ibtn.danger:hover{border-color:#FECDD3;color:#DC2626;background:#FFF1F2}'
       + '.dr-empty{text-align:center;color:#98A2B3;padding:22px}'
