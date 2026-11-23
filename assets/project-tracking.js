@@ -67,7 +67,7 @@
       stage: 1, deadline: '2026-12-05', startDate: '2026-11-01', blocker: 'รออนุมัติแบบ',
       note: 'วางโครงข่าย 2 อาคาร ต้องประสานงานผู้รับเหมาก่อสร้างเรื่องท่อเดินสาย',
       tasks: [
-        { id: 'T1', name: 'รับ Requirement จาก Sales', owner: 'ณัฐชา', due: '2026-11-05', status: 'เสร็จแล้ว' },
+        { id: 'T1', name: 'รับ Requirement จาก AE', owner: 'ณัฐชา', due: '2026-11-05', status: 'เสร็จแล้ว' },
         { id: 'T2', name: 'อนุมัติแบบ Network', owner: 'ลูกค้า / Sales', due: '2026-11-28', status: 'รอดำเนินการ' },
         { id: 'T3', name: 'สั่งซื้อ Switch', owner: 'ฝ่ายจัดซื้อ', due: '2026-12-01', status: 'รอดำเนินการ' }
       ]
@@ -105,7 +105,7 @@
       stage: 0, deadline: '2026-12-20', startDate: '2026-11-18', blocker: 'รอเซ็นสัญญา',
       note: 'รอลูกค้าเซ็นสัญญาและออก PO ก่อนเริ่มติดตั้ง',
       tasks: [
-        { id: 'T1', name: 'รับช่วงงานจาก Sales', owner: 'ธนกร', due: '2026-11-22', status: 'รอดำเนินการ' }
+        { id: 'T1', name: 'รับช่วงงานจาก AE', owner: 'ธนกร', due: '2026-11-22', status: 'รอดำเนินการ' }
       ]
     },
     {

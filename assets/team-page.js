@@ -121,7 +121,7 @@
       + statCard('ผู้ใช้ในสายงาน', USERS.length + ' คน', 'รวมตัวเอง', '#0F2B46', 'fa-solid fa-users')
       + statCard('ลูกข่ายตรง', direct + ' คน', 'ที่คุณดูแลโดยตรง', '#2563EB', 'fa-solid fa-user-group')
       + statCard('แยกตามทีม (BU)', (Object.keys(byTeam).filter(function (k) { return k; }).length) + ' ทีม', teamLine, '#7C3AED', 'fa-solid fa-people-group')
-      + statCard('ยังไม่ผูกทีม', unassigned + ' คน', 'กำหนด Head Sale ของทีมเพื่อผูกอัตโนมัติ', '#94A3B8', 'fa-solid fa-link-slash')
+      + statCard('ยังไม่ผูกทีม', unassigned + ' คน', 'กำหนด Head AE ของทีมเพื่อผูกอัตโนมัติ', '#94A3B8', 'fa-solid fa-link-slash')
       + '</div>';
 
     var levelOpts = '<option value="">ทุกระดับ</option>' + LADDER.map(function (l) {
