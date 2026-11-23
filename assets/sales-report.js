@@ -1135,10 +1135,13 @@
       TH_MONTHS.map(function (mth, i) { return opt(i + 1, String(i + 1).padStart(2, '0') + '.' + mth, state.month); }).join('');
     var teamOpts = '<option value="">ทุกทีม</option>' + TEAMS.map(function (t) { return opt(t.code, t.name, state.team); }).join('');
     var lockedTeam = viewerTeam();
-    var teamField = lockedTeam
-      ? '<div class="sr-fl"><label>ทีม (BU)</label><div class="sr-locked"><i class="fa-solid fa-lock"></i> '
-        + esc(teamByCode(lockedTeam).name) + ' <span class="sr-s2">ทีมที่คุณดูแล</span></div></div>'
-      : '<div class="sr-fl"><label>ทีม (BU)</label><select data-sr-filter="team">' + teamOpts + '</select></div>';
+    var teamField = saleScope
+      ? '<div class="sr-fl"><label>ทีม (BU)</label><div class="sr-locked"><i class="fa-solid fa-user-lock"></i> '
+        + esc(teamByCode(sale(scD.saleId).team).name) + ' <span class="sr-s2">ของฉัน</span></div></div>'
+      : (lockedTeam
+        ? '<div class="sr-fl"><label>ทีม (BU)</label><div class="sr-locked"><i class="fa-solid fa-lock"></i> '
+          + esc(teamByCode(lockedTeam).name) + ' <span class="sr-s2">ทีมที่คุณดูแล</span></div></div>'
+        : '<div class="sr-fl"><label>ทีม (BU)</label><select data-sr-filter="team">' + teamOpts + '</select></div>');
 
     return '<div class="sr">'
       + '<div class="sr-head">'
