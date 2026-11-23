@@ -1476,11 +1476,14 @@
     return lv === '' || lv === 'admin' || lv === 'bu' || lv === 'head' || lv === 'editor';
   }
   function renderTabs() {
-    if (!canSeeLog()) return '';
-    var isLog = state.view === 'log';
+    var showLog = canSeeLog();
+    var isLog = state.view === 'log' && showLog;
+    var isDaily = state.view === 'daily';
+    var showDaily = !!(global.DailyReport && global.DailyReport.render);
     return '<div class="sr-tabsbar">'
-      + '  <button class="sr-tabbtn' + (isLog ? '' : ' on') + '" data-sr-view="report"><i class="fa-solid fa-chart-pie"></i> รายงานยอดขาย</button>'
-      + '  <button class="sr-tabbtn' + (isLog ? ' on' : '') + '" data-sr-view="log"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติกิจกรรม (Log)</button>'
+      + '  <button class="sr-tabbtn' + (isLog || isDaily ? '' : ' on') + '" data-sr-view="report"><i class="fa-solid fa-chart-pie"></i> รายงานยอดขาย</button>'
+      + (showDaily ? '  <button class="sr-tabbtn' + (isDaily ? ' on' : '') + '" data-sr-view="daily"><i class="fa-solid fa-clipboard-check"></i> บันทึกการพบลูกค้า</button>' : '')
+      + (showLog ? '  <button class="sr-tabbtn' + (isLog ? ' on' : '') + '" data-sr-view="log"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติกิจกรรม (Log)</button>' : '')
       + '</div>';
   }
 
@@ -1499,6 +1502,16 @@
         + '</div>'
         + renderTabs()
         + (global.PILog ? global.PILog.render({ embedded: true }) : '<div class="sr-panel">โหลดบันทึกกิจกรรมไม่สำเร็จ</div>')
+        + '</div>';
+    }
+
+    /* แท็บ “บันทึกการพบลูกค้า” = Daily Report (ส่วนหนึ่งของ Reports) */
+    if (state.view === 'daily' && global.DailyReport && global.DailyReport.render) {
+      return '<div class="sr sr-daily-tab">'
+        + '<div class="sr-head"><div><h1>Reports &amp; Log</h1>'
+        + '  <div class="sr-sub">บันทึกการพบลูกค้า (Daily Report) — บันทึกกิจกรรมและติดตามผลรายวัน</div></div></div>'
+        + renderTabs()
+        + global.DailyReport.render()
         + '</div>';
     }
 
@@ -1945,7 +1958,8 @@
     if (dsl) { deleteSale(dsl.getAttribute('data-sr-delsale')); return; }
     var vw = t.closest('[data-sr-view]');
     if (vw) {
-      state.view = vw.getAttribute('data-sr-view') === 'log' ? 'log' : 'report';
+      var vv = vw.getAttribute('data-sr-view');
+      state.view = (vv === 'log') ? 'log' : (vv === 'daily' ? 'daily' : 'report');
       if (typeof global.render === 'function') global.render();
       return;
     }
