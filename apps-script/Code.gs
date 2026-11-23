@@ -259,6 +259,18 @@ function saveSession_(token, data) {
 }
 
 function isAdminLevel_(level) { return String(level).toLowerCase() === 'admin'; }
+/** ปรับระดับสิทธิ์ใน session ที่ค้างอยู่ของผู้ใช้คนนั้น (ไม่ต้อง logout) */
+function syncSessionLevel_(email, level) {
+  var props = PropertiesService.getScriptProperties();
+  var all = {};
+  try { all = JSON.parse(props.getProperty(SESSION_PROP) || '{}'); } catch (e) { return; }
+  var changed = false;
+  Object.keys(all).forEach(function (k) {
+    if (String(all[k].email || '').toLowerCase() === String(email).toLowerCase()) { all[k].level = level; changed = true; }
+  });
+  if (changed) props.setProperty(SESSION_PROP, JSON.stringify(all));
+}
+
 /** นับจำนวน Admin ที่ยังใช้งานอยู่ในระบบ */
 function adminCount_() {
   return readRows_().filter(function (r) {
@@ -562,6 +574,7 @@ function updateUser(token, email, level, status, parent, saleId, name, team) {
     if (LEVELS.indexOf(lv) < 0) throw new Error('ระดับสิทธิ์ไม่ถูกต้อง');
     if (!isAdminLevel_(s.level) && levelN_(lv) <= levelN_(s.level)) throw new Error('กำหนดได้เฉพาะระดับที่ต่ำกว่าตัวเอง');
     sh.getRange(row, 3).setValue(lv);
+    syncSessionLevel_(e, lv);   // ให้ session ที่เปิดค้างอยู่เห็นสิทธิ์ใหม่ทันที
   }
   if (status !== undefined && status !== null && String(status) !== '') {
     if (isProtected) throw new Error('ปิดการใช้งาน Admin หลักไม่ได้');
