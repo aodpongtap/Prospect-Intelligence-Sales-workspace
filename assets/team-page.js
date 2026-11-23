@@ -81,7 +81,11 @@
       if (q && (String(u.name || '') + ' ' + String(u.email || '')).toLowerCase().indexOf(q) < 0) return false;
       return true;
     }).sort(function (a, b) {
-      /* เรียงตามระดับสิทธิ์เสมอ: L1 → L6 */
+      /* Dev อยู่บนสุด แล้วเรียงตามระดับสิทธิ์ L1 → L6 */
+      var DEV = 'aodpongtaptsr@gmail.com';
+      var da = String(a.email || '').toLowerCase() === DEV ? 0 : 1;
+      var db = String(b.email || '').toLowerCase() === DEV ? 0 : 1;
+      if (da !== db) return da - db;
       var la = ladder(a.level).n, lb = ladder(b.level).n;
       if (la !== lb) return la - lb;
       return String(a.name || a.email || '').localeCompare(String(b.name || b.email || ''), 'th');
