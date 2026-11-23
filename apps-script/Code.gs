@@ -24,7 +24,7 @@ function levelN_(level) {
   return i < 0 ? LEVELS.length : i + 1;
 }
 var ADMIN_EMAILS = [
-  'aodpongtaptsr@gmail.com'
+  'aodputta@gmail.com'
 ];
 // บัญชีที่เป็น "Head Sale" (L3 · Head Team) — ไม่ใช่ Admin หลัก
 var HEAD_SALES_EMAILS = [
@@ -259,6 +259,13 @@ function saveSession_(token, data) {
 }
 
 function isAdminLevel_(level) { return String(level).toLowerCase() === 'admin'; }
+/** นับจำนวน Admin ที่ยังใช้งานอยู่ในระบบ */
+function adminCount_() {
+  return readRows_().filter(function (r) {
+    return String(r.level).toLowerCase() === 'admin' && String(r.status).toLowerCase() !== 'disabled';
+  }).length;
+}
+
 /** ระดับที่เห็นข้อมูลทั้งหมด (L1 Admin + L2 BU) */
 function seesAllLevel_(level) {
   var l = String(level).toLowerCase();
@@ -548,7 +555,9 @@ function updateUser(token, email, level, status, parent, saleId, name, team) {
   var sh = getSheet_();
 
   if (level !== undefined && level !== null && String(level) !== '') {
-    if (isProtected) throw new Error('เปลี่ยนสิทธิ์ของ Admin หลักไม่ได้');
+    if (isProtected && isAdminLevel_(String(sh.getRange(row, 3).getValue() || '')) && adminCount_() <= 1) {
+      throw new Error('ต้องเหลือ Admin อย่างน้อย 1 คนในระบบ');
+    }
     var lv = String(level).toLowerCase();
     if (LEVELS.indexOf(lv) < 0) throw new Error('ระดับสิทธิ์ไม่ถูกต้อง');
     if (!isAdminLevel_(s.level) && levelN_(lv) <= levelN_(s.level)) throw new Error('กำหนดได้เฉพาะระดับที่ต่ำกว่าตัวเอง');
