@@ -1104,7 +1104,11 @@
       var stx = st(d.status);
       return '<tr class="sr-row" data-sr-deal="' + esc(d.no) + '">'
         + '<td><span class="sr-badge ' + stx.cls + '">' + esc(stx.short) + '</span></td>'
-        + '<td><div class="sr-nm">' + esc(d.customer) + '</div><div class="sr-s2">' + esc(d.job) + '</div></td>'
+        + '<td><div class="sr-nm">' + esc(d.customer) + '</div><div class="sr-s2">' + esc(d.job) + '</div>'
+        + '  <div class="sr-s2" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:2px">'
+        + '    <span class="sr-drref" style="background:#F8FAFC;color:#475467"><i class="fa-solid fa-hashtag"></i> ' + esc(d.no) + '</span>'
+        + (d.drRef ? '    <span class="sr-drref" title="อ้างอิงบันทึกการพบลูกค้า"><i class="fa-solid fa-link"></i> ' + esc(d.drRef) + '</span>' : '')
+        + '  </div></td>'
         + '<td><div>' + esc(sale(d.saleId).name) + '</div><div class="sr-s2">' + esc(teamByCode(sale(d.saleId).team).name) + '</div></td>'
         + '<td class="sr-num sr-strong">' + money(d.amount) + '</td>'
         + '<td class="sr-num">' + String(d.month).padStart(2, '0') + '.' + TH_MONTHS[d.month - 1] + ' ' + String(d.year + 543).slice(-2) + '</td>'

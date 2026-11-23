@@ -50,6 +50,17 @@
     @media(max-width:760px){.sidebar{transform:translateX(-100%);width:250px;box-shadow:10px 0 35px rgba(0,0,0,.18)}.sidebar.open{transform:translateX(0)}
       .main{margin-left:0}.topbar{height:60px;padding:0 15px;z-index:10}.mobile-menu{display:inline-grid!important;place-items:center}.content{padding:20px 14px 30px}.profile-copy{display:none}.page-head{flex-direction:column}.head-actions{width:100%}.cols-2,.cols-3{grid-template-columns:1fr}.detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kanban{grid-template-columns:repeat(5,220px)}.journey{padding-bottom:8px}}
     @media(max-width:480px){.kpi-grid{gap:9px}.kpi{padding:12px}.kpi-value{font-size:18px}.kpi-top{font-size:10px}.top-actions{gap:7px}.breadcrumb{display:none}.form-grid{grid-template-columns:1fr}.form-group.full{grid-column:auto}.detail-grid{grid-template-columns:1fr 1fr}.content{padding-left:11px;padding-right:11px}}
+    /* ===== Sale Monitor: ตารางดีลแบบใหม่ ===== */
+    .dm-table th{font-size:9.5px;letter-spacing:.02em;border-bottom:1px solid #e9eef5;padding:11px 12px}
+    .dm-table td{padding:12px;border-bottom:1px solid #f1f5f9;vertical-align:middle;font-size:10.5px}
+    .dm-table tbody tr:last-child td{border-bottom:0}
+    .dm-table .dm-num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .dm-no{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;font-weight:600;color:#0f2b46;letter-spacing:.02em}
+    .dm-ref{display:inline-flex;align-items:center;gap:4px;margin-top:4px;background:#eff6ff;color:#1d4ed8;border-radius:5px;padding:1px 6px;font-size:8.5px;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap}
+    .dm-ref.none{background:transparent;color:#c2cbd8;padding:0;font-family:inherit}
+    .dm-table .deal-name{font-size:11px;font-weight:600;color:#0f2b46}
+    .dm-table .muted{font-size:9.5px;color:#98a2b3;margin-top:2px}
+    .dm-table .risk-number{display:inline-flex;min-width:30px;justify-content:center;border-radius:99px;padding:2px 8px;font-size:9.5px}
   </style>
 </head>
 <body>
@@ -635,6 +646,7 @@
         list.forEach(function (d) {
           deals.push({
             id: d.id, name: d.name, customer: d.customer,
+            drRef: d.drRef || '',
             owner: d.ownerName || d.ownerEmail, team: d.team || '-',
             value: Number(d.value || 0), stage: d.stage || 'Prospect',
             probability: Number(d.probability || 0), close: d.close || '',
@@ -681,6 +693,7 @@
           if (d.viewerTeam && s.team !== d.viewerTeam) return;
           out.push({
             id: x.no, name: x.job || x.customer, customer: x.customer,
+            drRef: x.drRef || '',
             ownerName: s.name, ownerEmail: '', team: s.team, value: Number(x.amount || 0),
             stage: STAGE_OF_STATUS[x.status] || 'Prospect',
             probability: Number(x.prob || 0),
@@ -876,7 +889,24 @@
     function drawDashboardCharts(){const colors=["#93c5fd","#60a5fa","#2563eb","#0f2b46","#16a34a","#dc2626"];const vals=stageLabels.map(s=>deals.filter(d=>d.stage===s).reduce((sum,d)=>sum+d.value,0));makeChart("pipelineChart",{type:"bar",data:{labels:stageLabels,datasets:[{data:vals,backgroundColor:colors,borderRadius:5,maxBarThickness:35}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>shortMoney(v)}}}}});makeChart("forecastChart",{type:"line",data:{labels:["พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย."],datasets:[{label:"Forecast",data:[3.1,3.6,3.4,4.2,4,4.85,5.1],borderColor:"#2563eb",backgroundColor:"rgba(37,99,235,.12)",fill:true,tension:.35},{label:"Actual",data:[2.8,3.2,3.7,3.9,4.2,3.9,null],borderColor:"#16a34a",tension:.35}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:"bottom",labels:{boxWidth:9,usePointStyle:true}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>"฿"+v+"M"}},x:{grid:{display:false}}}}})}
 
     /* ===== JavaScript: Sale Monitor and Deal details ===== */
-    function renderDealsTable(list=deals){if(!list.length)return `<div class="empty"><i class="fa-solid fa-magnifying-glass"></i>ไม่พบ Deal ที่ตรงกับการค้นหา</div>`;return `<div class="table-wrap"><table><thead><tr><th>ชื่อดีล</th><th>ลูกค้า</th><th>ผู้รับผิดชอบ</th><th>มูลค่า</th><th>ขั้นตอน</th><th>โอกาสปิด</th><th>คาดว่าจะปิด</th><th>ติดต่อล่าสุด</th><th>ความเสี่ยง</th><th>ขั้นตอนถัดไป</th><th>สถานะ</th></tr></thead><tbody>${list.map(d=>`<tr class="clickable" data-deal="${d.id}"><td><span class="deal-name">${d.name}</span></td><td>${d.customer}</td><td>${d.owner}</td><td>${money(d.value)}</td><td>${stageTH(d.stage)}</td><td>${d.probability}%</td><td>${thaiDate(d.close)}</td><td>${thaiDate(d.lastActivity)}</td><td><span class="risk-number ${riskClass(riskScore(d))}">${riskScore(d)}</span></td><td>${d.nextAction||'<span class="muted">ยังไม่ระบุ</span>'}</td><td><span class="status ${statusClass(d.status)}">${statusTH(d.status)}</span></td></tr>`).join("")}</tbody></table></div>`}
+    function renderDealsTable(list=deals){
+      if(!list.length)return `<div class="empty"><i class="fa-solid fa-magnifying-glass"></i>ไม่พบ Deal ที่ตรงกับการค้นหา</div>`;
+      return `<div class="table-wrap"><table class="dm-table"><thead><tr>
+        <th>เลขดีล / ข้ออ้างอิง</th><th>ลูกค้า / งาน</th><th>ผู้รับผิดชอบ</th>
+        <th class="dm-num">มูลค่า</th><th>สถานะ</th><th class="dm-num">โอกาส</th><th>คาดว่าจะปิด</th><th class="dm-num">ความเสี่ยง</th>
+      </tr></thead><tbody>${list.map(d=>{
+        const rk=riskScore(d);
+        return `<tr class="clickable" data-deal="${d.id}">
+          <td><div class="dm-no">${d.id}</div>${d.drRef?`<div class="dm-ref" title="อ้างอิงบันทึกการพบลูกค้า"><i class="fa-solid fa-link"></i> ${d.drRef}</div>`:'<div class="dm-ref none">—</div>'}</td>
+          <td><div class="deal-name">${d.name}</div><div class="muted">${d.customer}</div></td>
+          <td><div>${d.owner}</div><div class="muted">${d.team}</div></td>
+          <td class="dm-num"><b>${money(d.value)}</b></td>
+          <td><span class="status ${statusClass(d.status)}">${statusTH(d.status)}</span><div class="muted" style="margin-top:3px">${stageTH(d.stage)}</div></td>
+          <td class="dm-num">${d.probability}%</td>
+          <td>${thaiDate(d.close)}</td>
+          <td class="dm-num"><span class="risk-number ${riskClass(rk)}">${rk}</span></td>
+        </tr>`;
+      }).join("")}</tbody></table></div>`}
     function renderSales(){const owners=[...new Set(deals.map(d=>d.owner))],teams=[...new Set(deals.map(d=>d.team))];return `${pageHead("Sale Monitor: Pipeline, Risk & Forecast","ติดตาม Pipeline, ความเสี่ยง และ Forecast ของทีมขาย",`${btn("Export CSV","export-deals","fa-solid fa-download")}${btn("Refresh Data","refresh","fa-solid fa-rotate")}${btn("Add Deal","add-deal","fa-solid fa-plus",true)}`)}<div class="panel"><div class="toolbar"><div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="field" id="dealSearch" placeholder="ค้นหาชื่อลูกค้า หรือชื่อ Deal"></div><div class="filters"><select class="select filter-select" id="ownerFilter"><option value="">ทุก Sales Owner</option>${owners.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="teamFilter"><option value="">ทุก Sales Team</option>${teams.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="stageFilter"><option value="">ทุก Stage</option>${stageLabels.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="riskFilter"><option value="">ทุก Risk Level</option><option value="high">High Risk</option><option value="mid">Medium Risk</option><option value="low">Low Risk</option></select><select class="select filter-select" id="periodFilter"><option value="">ทุกช่วงเวลา</option><option value="month">ปิดภายในเดือนนี้</option><option value="quarter">ปิดภายใน 90 วัน</option></select></div><button class="btn btn-soft" id="sortRisk"><i class="fa-solid fa-arrow-down-wide-short"></i>Sort Risk</button></div><div id="dealTable">${renderDealsTable()}</div><div class="panel-sub" style="margin-top:12px">แสดง <span id="dealCount">${deals.length}</span> ดีล · คลิกแถวเพื่อดูรายละเอียด</div></div>`}
     function applyDealFilters(){const search=(document.getElementById("dealSearch")?.value||"").toLowerCase(),owner=document.getElementById("ownerFilter")?.value||"",team=document.getElementById("teamFilter")?.value||"",stage=document.getElementById("stageFilter")?.value||"",risk=document.getElementById("riskFilter")?.value||"",period=document.getElementById("periodFilter")?.value||"";let list=deals.filter(d=>(!search||`${d.name} ${d.customer}`.toLowerCase().includes(search))&&(!owner||d.owner===owner)&&(!team||d.team===team)&&(!stage||d.stage===stage)&&(!risk||(risk==="high"?riskScore(d)>=60:risk==="mid"?riskScore(d)>=35&&riskScore(d)<60:riskScore(d)<35))&&(!period||(period==="month"?d.close<="2026-10-31":d.close<="2027-01-05")));list.sort((a,b)=>sortDesc?riskScore(b)-riskScore(a):riskScore(a)-riskScore(b));document.getElementById("dealTable").innerHTML=renderDealsTable(list);document.getElementById("dealCount").textContent=list.length}
     function openDeal(id){if(window.SalesReport&&SalesReport.openDealDetail){SalesReport.openDealDetail(id);return}const d=deals.find(x=>String(x.id)===String(id));if(!d)return;const score=riskScore(d),reasons=[];if(dayDiff(d.lastActivity)>7)reasons.push(`ไม่มี Activity มาแล้ว ${dayDiff(d.lastActivity)} วัน`);if(Math.ceil((new Date(d.close)-new Date("2026-10-07"))/86400000)<=14&&["Prospect","Qualified"].includes(d.stage))reasons.push("ใกล้วันปิดการขาย แต่ยังอยู่ใน Stage เริ่มต้น");if(d.probability<40)reasons.push(`Probability ต่ำ (${d.probability}%)`);if(!d.nextAction)reasons.push("ยังไม่ได้กำหนด Next Action");if(d.status==="On Hold")reasons.push("สถานะ Deal เป็น On Hold");const activity=d.activity.map((a,i)=>`<div class="timeline-entry"><strong>${a}</strong><small>${thaiDate(d.lastActivity)} · ${i===0?"ล่าสุด":"Activity ก่อนหน้า"}</small></div>`).join("");const body=`<div class="detail-grid"><div class="detail-cell"><small>มูลค่า Deal</small><strong>${money(d.value)}</strong></div><div class="detail-cell"><small>Stage ปัจจุบัน</small><strong>${d.stage}</strong></div><div class="detail-cell"><small>Probability</small><strong>${d.probability}%</strong></div><div class="detail-cell"><small>Expected Close</small><strong>${thaiDate(d.close)}</strong></div><div class="detail-cell"><small>Sales Owner</small><strong>${d.owner} · ${d.team}</strong></div><div class="detail-cell"><small>Risk Score</small><strong><span class="risk-pill ${riskClass(score)}">${score} / 100</span></strong></div></div><h3 class="modal-section-title">Activity Timeline</h3><div class="timeline">${activity}</div><h3 class="modal-section-title">เหตุผลที่ระบบประเมินความเสี่ยง</h3><div class="alert ${score>=60?"red":""}"><i class="fa-solid fa-triangle-exclamation"></i><span>${reasons.length?reasons.join(" · "):"ไม่มีความเสี่ยงที่ตรวจพบในขณะนี้"}</span></div><h3 class="modal-section-title">AI Suggested Action</h3><div class="suggestion">ควรนัดประชุมกับผู้มีอำนาจตัดสินใจภายใน 3 วัน เนื่องจากดีลใกล้วันปิดการขาย แต่ยังไม่มีการยืนยันงบประมาณ</div>`;setModal(d.name,d.customer,body,[{label:"Cancel"},{label:"Add Activity",icon:"fa-solid fa-plus",action:`add-activity-${d.id}`},{label:"Mark as Follow-up",icon:"fa-solid fa-flag",action:`follow-${d.id}`},{label:"Update Deal",icon:"fa-solid fa-pen",action:`edit-deal-${d.id}`,primary:true}],true)}
