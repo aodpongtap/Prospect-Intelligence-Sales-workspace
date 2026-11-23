@@ -10,11 +10,11 @@
   var LS = 'pi_daily_v1';
 
   var CHANNELS = [
-    { code: 'visit',   name: 'เข้าพบ',     short: 'เข้าพบ',    color: '#2563EB', icon: 'fa-solid fa-handshake' },
-    { code: 'call',    name: 'โทรศัพท์',   short: 'โทร',       color: '#0EA5E9', icon: 'fa-solid fa-phone' },
-    { code: 'email',   name: 'อีเมล',      short: 'อีเมล',     color: '#7C3AED', icon: 'fa-solid fa-envelope' },
-    { code: 'line',    name: 'LINE',       short: 'LINE',      color: '#16A34A', icon: 'fa-brands fa-line' },
-    { code: 'meeting', name: 'ประชุม',     short: 'ประชุม',    color: '#F59E0B', icon: 'fa-solid fa-users' }
+    { code: 'visit',   name: 'เข้าพบ · Visit',    short: 'เข้าพบ',    en: 'Visit',   color: '#2563EB', icon: 'fa-solid fa-handshake' },
+    { code: 'call',    name: 'โทรศัพท์ · Call',   short: 'โทร',       en: 'Call',    color: '#0EA5E9', icon: 'fa-solid fa-phone' },
+    { code: 'email',   name: 'อีเมล · Email',     short: 'อีเมล',     en: 'Email',   color: '#7C3AED', icon: 'fa-solid fa-envelope' },
+    { code: 'line',    name: 'LINE · LINE',       short: 'LINE',      en: 'LINE',    color: '#16A34A', icon: 'fa-brands fa-line' },
+    { code: 'meeting', name: 'ประชุม · Meeting',  short: 'ประชุม',    en: 'Meeting', color: '#F59E0B', icon: 'fa-solid fa-users' }
   ];
   function ch(code) {
     for (var i = 0; i < CHANNELS.length; i++) if (CHANNELS[i].code === code) return CHANNELS[i];
@@ -226,19 +226,19 @@
 
   function filtersBar() {
     var sc = scope();
-    var saleOpts = '<option value="">ทุกคน</option>' + salesList().map(function (s) {
+    var saleOpts = '<option value="">ทุกคน · Everyone</option>' + salesList().map(function (s) {
       return '<option value="' + esc(s.id) + '"' + (state.sale === s.id ? ' selected' : '') + '>' + esc(s.name) + '</option>';
     }).join('');
-    var chOpts = '<option value="">ทุกช่องทาง</option>' + CHANNELS.map(function (c) {
+    var chOpts = '<option value="">ทุกช่องทาง · All channels</option>' + CHANNELS.map(function (c) {
       return '<option value="' + c.code + '"' + (state.channel === c.code ? ' selected' : '') + '>' + esc(c.name) + '</option>';
     }).join('');
     var showSale = (sc.type === 'all' || sc.type === 'team' || sc.type === 'pending');
     return '<div class="dr-filters">'
-      + '<label class="dr-fl"><span>เดือน</span><input type="month" data-dr-filter="month" value="' + esc(state.month) + '"></label>'
-      + '<label class="dr-fl"><span>ช่องทาง</span><select data-dr-filter="channel">' + chOpts + '</select></label>'
-      + (showSale ? '<label class="dr-fl"><span>พนักงานขาย</span><select data-dr-filter="sale">' + saleOpts + '</select></label>' : '')
-      + '<label class="dr-fl dr-fl-q"><span>ค้นหา</span><input type="search" data-dr-filter="q" placeholder="ลูกค้า / สรุป / นัดครั้งต่อไป" value="' + esc(state.q) + '"></label>'
-      + '<button class="dr-btn" data-dr-today><i class="fa-solid fa-calendar-day"></i> วันนี้</button>'
+      + '<label class="dr-fl"><span>เดือน · Month</span><input type="month" data-dr-filter="month" value="' + esc(state.month) + '"></label>'
+      + '<label class="dr-fl"><span>ช่องทาง · Channel</span><select data-dr-filter="channel">' + chOpts + '</select></label>'
+      + (showSale ? '<label class="dr-fl"><span>พนักงานขาย · Salesperson</span><select data-dr-filter="sale">' + saleOpts + '</select></label>' : '')
+      + '<label class="dr-fl dr-fl-q"><span>ค้นหา · Search</span><input type="search" data-dr-filter="q" placeholder="ลูกค้า / สรุป / นัดครั้งต่อไป" value="' + esc(state.q) + '"></label>'
+      + '<button class="dr-btn" data-dr-today><i class="fa-solid fa-calendar-day"></i> วันนี้ · Today</button>'
       + '</div>';
   }
 
@@ -262,7 +262,7 @@
       var v = pad2(i + 1);
       return '<option value="' + v + '"' + (v === m ? ' selected' : '') + '>' + esc(n) + '</option>';
     }).join('');
-    var dOpts = '<option value="">ทั้งเดือน</option>';
+    var dOpts = '<option value="">ทั้งเดือน · Whole month</option>';
     for (var d = 1; d <= daysInMonth(y, m); d++) {
       var dv = pad2(d);
       dOpts += '<option value="' + dv + '"' + (dv === state.trDay ? ' selected' : '') + '>' + d + '</option>';
@@ -271,22 +271,22 @@
       return '<button class="dr-seg' + (state.trMode === k ? ' on' : '') + '" data-dr-tmode="' + k + '">' + label + '</button>';
     };
     var isDay = state.trMode === 'day';
-    var title = isDay ? 'เทรนด์รายวัน' : (state.trMode === 'month' ? 'เทรนด์รายเดือน' : 'เทรนด์รายปี');
+    var title = isDay ? 'เทรนด์รายวัน · Daily Trend' : (state.trMode === 'month' ? 'เทรนด์รายเดือน · Monthly Trend' : 'เทรนด์รายปี · Yearly Trend');
     var sub;
     if (isDay) {
       sub = state.trDay
-        ? 'รายชั่วโมงของวันที่ ' + Number(state.trDay) + ' ' + TH_M_SHORT[Number(m) - 1] + ' ' + (Number(y) + 543)
-        : 'จำนวนกิจกรรมและลูกค้าที่ติดต่อในแต่ละวัน · ' + TH_M_SHORT[Number(m) - 1] + ' ' + (Number(y) + 543);
+        ? 'รายชั่วโมงของวันที่ ' + Number(state.trDay) + ' ' + TH_M_SHORT[Number(m) - 1] + ' ' + (Number(y) + 543) + ' · hourly breakdown'
+        : 'จำนวนกิจกรรมและลูกค้าที่ติดต่อในแต่ละวัน · ' + TH_M_SHORT[Number(m) - 1] + ' ' + (Number(y) + 543) + ' · activities & customers per day';
     } else if (state.trMode === 'month') {
-      sub = 'เปรียบเทียบ 12 เดือนของปี พ.ศ. ' + (Number(y) + 543);
+      sub = 'เปรียบเทียบ 12 เดือนของปี พ.ศ. ' + (Number(y) + 543) + ' · 12-month comparison';
     } else {
-      sub = 'เปรียบเทียบจำนวนกิจกรรมในแต่ละปี';
+      sub = 'เปรียบเทียบจำนวนกิจกรรมในแต่ละปี · activity volume by year';
     }
     var ctl = '<div class="dr-trendctl">'
-      + '<div class="dr-seg-group">' + seg('day', 'รายวัน') + seg('month', 'รายเดือน') + seg('year', 'รายปี') + '</div>'
-      + (state.trMode === 'year' ? '' : '<label class="dr-tl"><span>ปี</span><select data-dr-trend="trYear">' + yOpts + '</select></label>')
-      + (isDay ? '<label class="dr-tl"><span>เดือน</span><select data-dr-trend="trMonth">' + mOpts + '</select></label>'
-        + '<label class="dr-tl"><span>วัน</span><select data-dr-trend="trDay">' + dOpts + '</select></label>' : '')
+      + '<div class="dr-seg-group">' + seg('day', 'รายวัน · Day') + seg('month', 'รายเดือน · Month') + seg('year', 'รายปี · Year') + '</div>'
+      + (state.trMode === 'year' ? '' : '<label class="dr-tl"><span>ปี · Year</span><select data-dr-trend="trYear">' + yOpts + '</select></label>')
+      + (isDay ? '<label class="dr-tl"><span>เดือน · Month</span><select data-dr-trend="trMonth">' + mOpts + '</select></label>'
+        + '<label class="dr-tl"><span>วัน · Day</span><select data-dr-trend="trDay">' + dOpts + '</select></label>' : '')
       + '</div>';
     return '<section class="dr-panel dr-trendpanel">'
       + '<div class="dr-ph"><div><h3>' + title + '</h3><div class="dr-s2">' + sub + '</div></div>' + ctl + '</div>'
@@ -299,9 +299,9 @@
     var sc = scope();
     var head = '<div class="dr-head">'
       + '<div><h1>Daily Report</h1>'
-      + '  <div class="dr-sub">บันทึกการเข้าพบลูกค้า / แผนงานรายวัน · ใช้ร่วมกับเป้าหมายการขาย</div></div>'
+      + '  <div class="dr-sub">บันทึกการเข้าพบลูกค้า / แผนงานรายวัน · Customer Visit Log &amp; Daily Plan — ใช้ร่วมกับเป้าหมายการขาย (linked to sales targets)</div></div>'
       + '<div class="dr-tools">'
-      + '  <button class="dr-btn primary" data-dr-new><i class="fa-solid fa-plus"></i> บันทึกกิจกรรม</button>'
+      + '  <button class="dr-btn primary" data-dr-new><i class="fa-solid fa-plus"></i> บันทึกกิจกรรม · Add Activity</button>'
       + '  <button class="dr-btn" data-dr-export><i class="fa-solid fa-file-csv"></i> Export CSV</button>'
       + '</div></div>';
 
@@ -319,12 +319,12 @@
         detail = 'ตั้งชื่อบัญชี (“' + accName + '”) ให้ตรงกับชื่อใน Reports → รายชื่อเซลส์ หรือกำหนดทีม (BU) ให้บัญชีนี้';
       }
       return '<div class="dr">' + head
-        + '<div class="dr-note"><i class="fa-solid fa-circle-info"></i><div><b>บัญชีนี้ยังไม่ถูกผูกกับข้อมูลเซลส์</b>'
+        + '<div class="dr-note"><i class="fa-solid fa-circle-info"></i><div><b>บัญชีนี้ยังไม่ถูกผูกกับข้อมูลเซลส์ · Account not linked to a salesperson</b>'
         + '<div class="dr-s2">' + esc(detail) + '</div></div></div></div>';
     }
     if (sc.type === 'pending') {
       return '<div class="dr">' + head + '<div class="dr-note"><i class="fa-solid fa-circle-notch fa-spin"></i>'
-        + '<div><b>กำลังตรวจสอบสิทธิ์การเข้าถึงข้อมูล…</b></div></div></div>';
+        + '<div><b>กำลังตรวจสอบสิทธิ์การเข้าถึงข้อมูล… · Checking your data access…</b></div></div></div>';
     }
 
     var all = visible();
@@ -352,20 +352,20 @@
     var overdue = fu.filter(function (x) { return x.nextDate < t; }).length;
 
     var delta = todayList.length - yList.length;
-    var deltaTxt = (delta === 0 ? 'เท่าเมื่อวาน' : (delta > 0 ? '▲ +' + delta + ' จากเมื่อวาน' : '▼ ' + delta + ' จากเมื่อวาน'));
+    var deltaTxt = (delta === 0 ? 'เท่าเมื่อวาน · same as yesterday' : (delta > 0 ? '▲ +' + delta + ' จากเมื่อวาน · vs yesterday' : '▼ ' + delta + ' จากเมื่อวาน · vs yesterday'));
 
     var kpis = ''
-      + kpi('กิจกรรมวันนี้', sumToday.count + ' ครั้ง', deltaTxt + ' · ลูกค้า ' + sumToday.customers + ' ราย', '#2563EB', 'fa-solid fa-clipboard-check')
-      + kpi('เข้าพบ / ประชุมวันนี้', sumToday.visits + ' ราย', 'นับเฉพาะช่องทางเข้าพบและประชุม', '#0EA5E9', 'fa-solid fa-handshake')
-      + kpi('มูลค่าโครงการวันนี้', money(sumToday.value), 'ใช้เป็นข้อมูลตั้ง Pipeline / Target', '#16A34A', 'fa-solid fa-sack-dollar')
-      + kpi('Follow-up ถึงกำหนด', fu.length + ' รายการ', overdue ? '<span class="dr-warn">เลยกำหนด ' + overdue + ' รายการ</span>' : 'ไม่มีรายการเลยกำหนด', overdue ? '#DC2626' : '#7C3AED', 'fa-solid fa-bell');
+      + kpi('กิจกรรมวันนี้ · Activities Today', sumToday.count + ' ครั้ง', deltaTxt + ' · ลูกค้า ' + sumToday.customers + ' ราย', '#2563EB', 'fa-solid fa-clipboard-check')
+      + kpi('เข้าพบ / ประชุมวันนี้ · Visits &amp; Meetings', sumToday.visits + ' ราย', 'นับเฉพาะช่องทางเข้าพบและประชุม · visits + meetings only', '#0EA5E9', 'fa-solid fa-handshake')
+      + kpi('มูลค่าโครงการวันนี้ · Project Value Today', money(sumToday.value), 'ใช้เป็นข้อมูลตั้ง Pipeline / Target · feeds Pipeline &amp; Target', '#16A34A', 'fa-solid fa-sack-dollar')
+      + kpi('Follow-up ถึงกำหนด · Due Follow-ups', fu.length + ' รายการ', overdue ? '<span class="dr-warn">เลยกำหนด ' + overdue + ' รายการ · ' + overdue + ' overdue</span>' : 'ไม่มีรายการเลยกำหนด · none overdue', overdue ? '#DC2626' : '#7C3AED', 'fa-solid fa-bell');
 
     var totalBar = '<div class="dr-total">'
-      + '<div><small>ลูกค้าที่ติดต่อทั้งหมด (ช่วงที่เลือก)</small><b>' + sumList.customers + ' ราย</b></div>'
-      + '<div><small>กิจกรรมรวม</small><b>' + sumList.count + ' ครั้ง</b></div>'
-      + '<div><small>เฉลี่ย/วัน (ที่มีการบันทึก)</small><b>' + (Math.round(avg.avgCust * 10) / 10) + ' ราย/วัน</b></div>'
-      + '<div><small>วันที่มีการบันทึก</small><b>' + avg.days + ' วัน</b></div>'
-      + '<div><small>มูลค่าโครงการรวม</small><b>' + money(sumList.value) + '</b></div>'
+      + '<div><small>ลูกค้าที่ติดต่อทั้งหมด (ช่วงที่เลือก) · Customers Contacted</small><b>' + sumList.customers + ' ราย</b></div>'
+      + '<div><small>กิจกรรมรวม · Total Activities</small><b>' + sumList.count + ' ครั้ง</b></div>'
+      + '<div><small>เฉลี่ย/วัน (ที่มีการบันทึก) · Avg / Active Day</small><b>' + (Math.round(avg.avgCust * 10) / 10) + ' ราย/วัน</b></div>'
+      + '<div><small>วันที่มีการบันทึก · Active Days</small><b>' + avg.days + ' วัน</b></div>'
+      + '<div><small>มูลค่าโครงการรวม · Total Project Value</small><b>' + money(sumList.value) + '</b></div>'
       + '</div>';
 
     /* ตารางรายการ */
@@ -376,7 +376,7 @@
       var links = (lk.deals.length || lk.projects.length)
         ? '<div class="dr-links" title="' + esc(lk.deals.map(function (z) { return z.no; }).join(', ')) + '">'
           + (lk.deals.length ? '<span class="dr-lk"><i class="fa-solid fa-file-invoice-dollar"></i> ' + esc(lk.deals[0].no) + (lk.deals.length > 1 ? ' +' + (lk.deals.length - 1) : '') + '</span>' : '')
-          + (lk.projects.length ? '<span class="dr-lk proj"><i class="fa-solid fa-diagram-project"></i> โครงการ ' + lk.projects.length + '</span>' : '')
+          + (lk.projects.length ? '<span class="dr-lk proj"><i class="fa-solid fa-diagram-project"></i> โครงการ · Projects ' + lk.projects.length + '</span>' : '')
           + '</div>'
         : '';
       var mkBtn = (num(x.value) > 0 && !lk.deals.length)
@@ -388,7 +388,7 @@
         + (x.ref ? '<button class="dr-ref" data-dr-copy="' + esc(x.ref) + '" title="คลิกเพื่อคัดลอกรหัสอ้างอิง">' + esc(x.ref) + '</button>' : '')
         + (x.qt ? '<button class="dr-qt" data-dr-copyqt="' + esc(x.qt) + '" title="เลข QT / เลขอ้างอิงที่บันทึกไว้ (คลิกเพื่อคัดลอก)"><i class="fa-solid fa-hashtag"></i> ' + esc(x.qt) + '</button>' : '')
         + links
-        + (x.value ? '<div class="dr-s2">มูลค่า ' + money(x.value) + '</div>' : '') + '</td>'
+        + (x.value ? '<div class="dr-s2">มูลค่า · Value ' + money(x.value) + '</div>' : '') + '</td>'
         + '<td><span class="dr-chip" style="color:' + c.color + ';background:' + c.color + '14">'
         + '<i class="' + c.icon + '"></i> ' + esc(c.name) + '</span></td>'
         + '<td class="dr-sum">' + (x.summary ? esc(x.summary) : '<span class="dr-dim">—</span>') + '</td>'
@@ -403,13 +403,13 @@
     }).join('');
 
     var table = '<section class="dr-panel">'
-      + '<div class="dr-ph"><div><h3>รายการบันทึก (' + list.length + ')</h3>'
-      + '  <div class="dr-s2">เรียงจากใหม่ → เก่า · คลิกปุ่มดินสอเพื่อแก้ไข</div></div></div>'
+      + '<div class="dr-ph"><div><h3>รายการบันทึก · Records (' + list.length + ')</h3>'
+      + '  <div class="dr-s2">เรียงจากใหม่ → เก่า · คลิกปุ่มดินสอเพื่อแก้ไข · newest first, click the pencil to edit</div></div></div>'
       + '<div class="dr-tablewrap"><table class="dr-table"><thead><tr>'
-      + '<th style="width:96px">วันที่ / เวลา</th><th style="width:170px">ลูกค้า</th><th style="width:104px">ช่องทาง</th>'
-      + '<th>สรุป / ผลการ</th><th style="width:150px">นัดครั้งต่อไป</th><th style="width:110px">ผู้รับผิดชอบ</th><th style="width:82px"></th>'
+      + '<th style="width:104px">วันที่ / เวลา · Date / Time</th><th style="width:196px">ลูกค้า · Customer</th><th style="width:132px">ช่องทาง · Channel</th>'
+      + '<th>สรุป / ผลการ · Summary</th><th style="width:160px">นัดครั้งต่อไป · Next Appointment</th><th style="width:124px">ผู้รับผิดชอบ · Owner</th><th style="width:82px"></th>'
       + '</tr></thead><tbody>'
-      + (rows || '<tr><td colspan="7" class="dr-empty">ยังไม่มีบันทึกในเดือนนี้ — กด “บันทึกกิจกรรม” เพื่อเริ่ม</td></tr>')
+      + (rows || '<tr><td colspan="7" class="dr-empty">ยังไม่มีบันทึกในเดือนนี้ — กด “บันทึกกิจกรรม” เพื่อเริ่ม<br><span class="dr-s2">No records this month — click “Add Activity” to start</span></td></tr>')
       + '</tbody></table></div></section>';
 
     /* สรุปตามเซลส์ (หัวหน้า/admin) */
@@ -431,21 +431,21 @@
       }).join('');
       if (gRows) {
         perSale = '<section class="dr-panel">'
-          + '<div class="dr-ph"><div><h3>สรุปรายพนักงานขาย</h3>'
-          + '<div class="dr-s2">' + esc(state.month) + ' · จำนวนกิจกรรม / ลูกค้า / เข้าพบ / มูลค่าโครงการ</div></div></div>'
+          + '<div class="dr-ph"><div><h3>สรุปรายพนักงานขาย · By Salesperson</h3>'
+          + '<div class="dr-s2">' + esc(state.month) + ' · กิจกรรม / ลูกค้า / เข้าพบ / มูลค่าโครงการ · activities, customers, visits, project value</div></div></div>'
           + '<div class="dr-tablewrap"><table class="dr-table"><thead><tr>'
-          + '<th>พนักงานขาย</th><th class="dr-num">กิจกรรม</th><th class="dr-num">ลูกค้า</th>'
-          + '<th class="dr-num">เข้าพบ/ประชุม</th><th class="dr-num">มูลค่าโครงการ</th>'
+          + '<th>พนักงานขาย · Salesperson</th><th class="dr-num">กิจกรรม · Activities</th><th class="dr-num">ลูกค้า · Customers</th>'
+          + '<th class="dr-num">เข้าพบ/ประชุม · Visits</th><th class="dr-num">มูลค่าโครงการ · Value</th>'
           + '</tr></thead><tbody>' + gRows + '</tbody></table></div></section>';
       }
     }
 
     var charts = '<div class="dr-charts">'
-      + '<section class="dr-panel"><div class="dr-ph"><div><h3>เทรนด์รายเดือน (ปี ' + (Number(String(state.month).slice(0, 4)) + 543) + ')</h3>'
-      + '  <div class="dr-s2">จำนวนกิจกรรมและลูกค้าที่ติดต่อในแต่ละเดือน</div></div></div>'
+      + '<section class="dr-panel"><div class="dr-ph"><div><h3>เทรนด์รายเดือน · Monthly Trend (' + (Number(String(state.month).slice(0, 4)) + 543) + ')</h3>'
+      + '  <div class="dr-s2">จำนวนกิจกรรมและลูกค้าที่ติดต่อในแต่ละเดือน · activities &amp; customers per month</div></div></div>'
       + '  <div class="dr-chartbox"><canvas id="drTrend"></canvas></div></section>'
-      + '<section class="dr-panel"><div class="dr-ph"><div><h3>ช่องทางที่ใช้</h3>'
-      + '  <div class="dr-s2">สัดส่วนการติดต่อลูกค้าแยกตามช่องทาง</div></div></div>'
+      + '<section class="dr-panel"><div class="dr-ph"><div><h3>ช่องทางที่ใช้ · Channels Used</h3>'
+      + '  <div class="dr-s2">สัดส่วนการติดต่อลูกค้าแยกตามช่องทาง · share of contacts by channel</div></div></div>'
       + '  <div class="dr-chartbox"><canvas id="drChannel"></canvas></div></section>'
       + '</div>';
 
@@ -510,8 +510,8 @@
       data: {
         labels: labels,
         datasets: [
-          { label: 'กิจกรรม', data: counts, backgroundColor: '#2563EB', borderRadius: 4, maxBarThickness: thin ? 14 : 30 },
-          { label: 'ลูกค้า', data: custs, backgroundColor: '#93C5FD', borderRadius: 4, maxBarThickness: thin ? 14 : 30 }
+          { label: 'กิจกรรม · Activities', data: counts, backgroundColor: '#2563EB', borderRadius: 4, maxBarThickness: thin ? 14 : 30 },
+          { label: 'ลูกค้า · Customers', data: custs, backgroundColor: '#93C5FD', borderRadius: 4, maxBarThickness: thin ? 14 : 30 }
         ]
       },
       options: {
@@ -554,8 +554,8 @@
         data: {
           labels: TH_M_SHORT,
           datasets: [
-            { label: 'กิจกรรม', data: counts, backgroundColor: '#2563EB', borderRadius: 4, maxBarThickness: 26 },
-            { label: 'ลูกค้า', data: custs, backgroundColor: '#93C5FD', borderRadius: 4, maxBarThickness: 26 }
+            { label: 'กิจกรรม · Activities', data: counts, backgroundColor: '#2563EB', borderRadius: 4, maxBarThickness: 26 },
+            { label: 'ลูกค้า · Customers', data: custs, backgroundColor: '#93C5FD', borderRadius: 4, maxBarThickness: 26 }
           ]
         },
         options: {
@@ -613,25 +613,25 @@
     }
 
     var body = '<form id="drForm"><div class="dr-form">'
-      + '<label class="dr-f"><span>วันที่ *</span><input type="date" name="date" required value="' + esc(cur.date || isoLocal()) + '"></label>'
-      + '<label class="dr-f"><span>เวลา</span><input type="time" name="time" value="' + esc(cur.time || nowTime()) + '"></label>'
-      + '<label class="dr-f full"><span>ชื่อลูกค้า *</span><input type="text" name="customer" required placeholder="เช่น บริษัท สยามคลีน เซอร์วิส จำกัด" value="' + esc(cur.customer || '') + '"></label>'
-      + '<label class="dr-f full"><span>เลข QT / เลขอ้างอิง (ถ้ามี)</span><input type="text" name="qt" maxlength="48" placeholder="กรอกเองได้ เช่น QT-2026-0123" value="' + esc(cur.qt || '') + '">'
-      + '  <span class="dr-hint">ใช้บันทึกอ้างอิงตามเอกสารจริงเท่านั้น — ระบบไม่สร้างให้เอง</span></label>'
-      + '<label class="dr-f"><span>รูปแบบการติดต่อ *</span><select name="channel">' + chOpts + '</select></label>'
-      + '<label class="dr-f"><span>มูลค่าโครงการ (บาท)</span><input type="number" name="value" min="0" step="1000" placeholder="0" value="' + (cur.value ? num(cur.value) : '') + '"></label>'
-      + '<label class="dr-f full"><span>สรุป / ผลการดำเนินการ</span><textarea name="summary" rows="3" placeholder="สรุปสิ่งที่คุย ผลลัพธ์ หรือขั้นตอนถัดไป">' + esc(cur.summary || '') + '</textarea></label>'
-      + '<label class="dr-f"><span>นัดครั้งต่อไป — วันที่</span><input type="date" name="nextDate" value="' + esc(cur.nextDate || '') + '"></label>'
-      + '<label class="dr-f"><span>นัดครั้งต่อไป — เวลา</span><input type="time" name="nextTime" value="' + esc(cur.nextTime || '') + '"></label>'
-      + '<label class="dr-f full"><span>เรื่องที่นัด / สิ่งที่ต้องทำต่อ</span><input type="text" name="nextNote" placeholder="เช่น ส่งใบเสนอราคา, นัดเข้าพบผู้บริหาร" value="' + esc(cur.nextNote || '') + '"></label>'
-      + '<label class="dr-f full"><span>ผู้รับผิดชอบ (Sale)</span>' + saleSel + '</label>'
-      + (editing ? '' : '<label class="dr-f full dr-check"><input type="checkbox" name="toPipeline" value="1"> <span>เพิ่มมูลค่าโครงการนี้เข้า Pipeline ใน Reports (สถานะ Pipeline) เพื่อใช้คิด Target</span></label>')
+      + '<label class="dr-f"><span>วันที่ * · Date</span><input type="date" name="date" required value="' + esc(cur.date || isoLocal()) + '"></label>'
+      + '<label class="dr-f"><span>เวลา · Time</span><input type="time" name="time" value="' + esc(cur.time || nowTime()) + '"></label>'
+      + '<label class="dr-f full"><span>ชื่อลูกค้า * · Customer</span><input type="text" name="customer" required placeholder="เช่น บริษัท สยามคลีน เซอร์วิส จำกัด" value="' + esc(cur.customer || '') + '"></label>'
+      + '<label class="dr-f full"><span>เลข QT / อ้างอิง (ถ้ามี) · QT / Reference (optional)</span><input type="text" name="qt" maxlength="48" placeholder="กรอกเองได้ เช่น QT-2026-0123" value="' + esc(cur.qt || '') + '">'
+      + '  <span class="dr-hint">บันทึกตามเอกสารจริงเท่านั้น — ระบบไม่สร้างให้เอง · manual entry only, the system never generates it</span></label>'
+      + '<label class="dr-f"><span>รูปแบบการติดต่อ * · Channel</span><select name="channel">' + chOpts + '</select></label>'
+      + '<label class="dr-f"><span>มูลค่าโครงการ (บาท) · Project Value (THB)</span><input type="number" name="value" min="0" step="1000" placeholder="0" value="' + (cur.value ? num(cur.value) : '') + '"></label>'
+      + '<label class="dr-f full"><span>สรุป / ผลการดำเนินการ · Summary / Outcome</span><textarea name="summary" rows="3" placeholder="สรุปสิ่งที่คุย ผลลัพธ์ หรือขั้นตอนถัดไป (what was discussed / outcome / next step)">' + esc(cur.summary || '') + '</textarea></label>'
+      + '<label class="dr-f"><span>นัดครั้งต่อไป — วันที่ · Next appointment — date</span><input type="date" name="nextDate" value="' + esc(cur.nextDate || '') + '"></label>'
+      + '<label class="dr-f"><span>นัดครั้งต่อไป — เวลา · Next appointment — time</span><input type="time" name="nextTime" value="' + esc(cur.nextTime || '') + '"></label>'
+      + '<label class="dr-f full"><span>เรื่องที่นัด / สิ่งที่ต้องทำต่อ · Next step / To-do</span><input type="text" name="nextNote" placeholder="เช่น ส่งใบเสนอราคา, นัดเข้าพบผู้บริหาร" value="' + esc(cur.nextNote || '') + '"></label>'
+      + '<label class="dr-f full"><span>ผู้รับผิดชอบ (Sale) · Owner</span>' + saleSel + '</label>'
+      + (editing ? '' : '<label class="dr-f full dr-check"><input type="checkbox" name="toPipeline" value="1"> <span>เพิ่มมูลค่าโครงการนี้เข้า Pipeline ใน Reports (สถานะ Pipeline) · also create a Pipeline deal in Reports for target calculation</span></label>')
       + '</div></form>';
 
-    global.setModal(editing ? 'แก้ไขบันทึกกิจกรรม' : 'บันทึกการเข้าพบลูกค้า',
-      editing ? 'แก้ไขข้อมูลแล้วกดบันทึก' : 'กรอกข้อมูลการเข้าพบ/แผนงานรายวัน',
+    global.setModal(editing ? 'แก้ไขบันทึกกิจกรรม · Edit Record' : 'บันทึกการเข้าพบลูกค้า · Customer Visit',
+      editing ? 'แก้ไขข้อมูลแล้วกดบันทึก · edit the details then save' : 'กรอกข้อมูลการเข้าพบ/แผนงานรายวัน · fill in the visit / daily plan',
       body,
-      [{ label: 'ยกเลิก' }, { label: editing ? 'บันทึกการแก้ไข' : 'บันทึก', icon: 'fa-solid fa-check', action: 'dr-save', primary: true }],
+      [{ label: 'ยกเลิก · Cancel' }, { label: editing ? 'บันทึกการแก้ไข · Save' : 'บันทึก · Save', icon: 'fa-solid fa-check', action: 'dr-save', primary: true }],
       true);
   }
 
@@ -652,7 +652,7 @@
       saleId: String((f.saleId && f.saleId.value) || mySaleId() || ''),
       by: String(me().email || '')
     };
-    if (!o.customer) { if (global.toast) global.toast('กรอกชื่อลูกค้าก่อน'); return; }
+    if (!o.customer) { if (global.toast) global.toast('กรอกชื่อลูกค้าก่อน · customer is required'); return; }
 
     if (editing) {
       for (var i = 0; i < ITEMS.length; i++) {
@@ -678,7 +678,7 @@
     editing = '';
     if (typeof global.closeModal === 'function') global.closeModal();
     if (typeof global.render === 'function') global.render();
-    if (global.toast) global.toast('บันทึกกิจกรรมแล้ว');
+    if (global.toast) global.toast(editing ? 'บันทึกการแก้ไขแล้ว · Saved' : 'บันทึกกิจกรรมแล้ว · Saved');
   }
 
   /** สร้างดีลใน Reports จากบันทึกนี้ พร้อมผูก drRef กลับมา */
@@ -710,12 +710,12 @@
     var rec = null;
     for (var i = 0; i < ITEMS.length; i++) if (ITEMS[i].id === id) rec = ITEMS[i];
     if (!rec) return;
-    if (!global.confirm('ลบบันทึกของ "' + rec.customer + '" (' + dstrth(rec.date) + ') ?')) return;
+    if (!global.confirm('ลบบันทึกของ "' + rec.customer + '" (' + dstrth(rec.date) + ') ?\nDelete this record?')) return;
     ITEMS = ITEMS.filter(function (x) { return x.id !== id; });
     save();
     if (global.PILog) global.PILog.add('daily.del', rec.customer, dstrth(rec.date));
     if (typeof global.render === 'function') global.render();
-    if (global.toast) global.toast('ลบบันทึกแล้ว');
+    if (global.toast) global.toast('ลบบันทึกแล้ว · Deleted');
   }
 
   function exportCsv() {
@@ -725,7 +725,7 @@
       if (state.sale && x.saleId !== state.sale) return false;
       return true;
     }).sort(function (a, b) { return String(b.date + (b.time || '')).localeCompare(String(a.date + (a.time || ''))); });
-    var head = ['รหัสอ้างอิง', 'เลข QT/อ้างอิง', 'วันที่', 'เวลา', 'ลูกค้า', 'ช่องทาง', 'สรุป/ผลการ', 'นัดครั้งต่อไป', 'เวลานัด', 'เรื่องที่นัด', 'มูลค่าโครงการ', 'ผู้รับผิดชอบ', 'ทีม'];
+    var head = ['รหัสอ้างอิง · Reference', 'เลข QT/อ้างอิง · QT/Ref', 'วันที่ · Date', 'เวลา · Time', 'ลูกค้า · Customer', 'ช่องทาง · Channel', 'สรุป/ผลการ · Summary', 'นัดครั้งต่อไป · Next Appointment', 'เวลานัด · Next Time', 'เรื่องที่นัด · Next Step', 'มูลค่าโครงการ · Project Value', 'ผู้รับผิดชอบ · Owner', 'ทีม · Team'];
     var rows = [head].concat(list.map(function (x) {
       return [x.ref || '', x.qt || '', x.date, x.time || '', x.customer, ch(x.channel).name, x.summary || '', x.nextDate || '', x.nextTime || '', x.nextNote || '',
         num(x.value), saleOf(x.saleId).name, saleOf(x.saleId).team];

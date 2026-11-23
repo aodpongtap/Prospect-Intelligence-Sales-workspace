@@ -1513,7 +1513,7 @@
     var showDaily = !!(global.DailyReport && global.DailyReport.render);
     return '<div class="sr-tabsbar">'
       + '  <button class="sr-tabbtn' + (isLog || isDaily ? '' : ' on') + '" data-sr-view="report"><i class="fa-solid fa-chart-pie"></i> รายงานยอดขาย</button>'
-      + (showDaily ? '  <button class="sr-tabbtn' + (isDaily ? ' on' : '') + '" data-sr-view="daily"><i class="fa-solid fa-clipboard-check"></i> บันทึกการพบลูกค้า</button>' : '')
+      + (showDaily ? '  <button class="sr-tabbtn' + (isDaily ? ' on' : '') + '" data-sr-view="daily"><i class="fa-solid fa-clipboard-check"></i> Daily Report</button>' : '')
       + (showLog ? '  <button class="sr-tabbtn' + (isLog ? ' on' : '') + '" data-sr-view="log"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติกิจกรรม (Log)</button>' : '')
       + '</div>';
   }
@@ -1540,7 +1540,7 @@
     if (state.view === 'daily' && global.DailyReport && global.DailyReport.render) {
       return '<div class="sr sr-daily-tab">'
         + '<div class="sr-head"><div><h1>Reports &amp; Log</h1>'
-        + '  <div class="sr-sub">บันทึกการพบลูกค้า (Daily Report) — บันทึกกิจกรรมและติดตามผลรายวัน</div></div></div>'
+        + '  <div class="sr-sub">Daily Report — บันทึกการเข้าพบลูกค้า / แผนงานรายวัน · customer visit log &amp; daily plan</div></div></div>'
         + renderTabs()
         + global.DailyReport.render()
         + '</div>';
