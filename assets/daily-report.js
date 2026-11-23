@@ -388,7 +388,8 @@
       + '<section class="dr-panel"><div class="dr-ph"><div><h3>เทรนด์รายเดือน (ปี ' + (Number(String(state.month).slice(0, 4)) + 543) + ')</h3>'
       + '  <div class="dr-s2">จำนวนกิจกรรมและลูกค้าที่ติดต่อในแต่ละเดือน</div></div></div>'
       + '  <div class="dr-chartbox"><canvas id="drTrend"></canvas></div></section>'
-      + '<section class="dr-panel"><div class="dr-ph"><h3>ช่องทางที่ใช้</h3></div>'
+      + '<section class="dr-panel"><div class="dr-ph"><div><h3>ช่องทางที่ใช้</h3>'
+      + '  <div class="dr-s2">สัดส่วนการติดต่อลูกค้าแยกตามช่องทาง</div></div></div>'
       + '  <div class="dr-chartbox"><canvas id="drChannel"></canvas></div></section>'
       + '</div>';
 
@@ -711,7 +712,8 @@
       + '.dr-total small{display:block;font-size:9.5px;color:#9CB0C5;margin-bottom:4px;line-height:1.3}'
       + '.dr-total b{font-size:14px;line-height:1.25;font-variant-numeric:tabular-nums}'
       + '.dr-charts{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;align-items:stretch}'
-      + '.dr-chartbox{height:216px;position:relative}'
+      + '.dr-charts .dr-panel{display:flex;flex-direction:column}'
+      + '.dr-chartbox{position:relative;flex:1 1 auto;height:auto;min-height:216px}'
       + '.dr-panel{background:#fff;border:1px solid #EDF0F4;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(15,43,70,.05)}'
       + '.dr-ph{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}'
       + '.dr-ph h3{margin:0;font-size:12.5px;font-weight:600;color:#0F2B46;line-height:1.35}'
