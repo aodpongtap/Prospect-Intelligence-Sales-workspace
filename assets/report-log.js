@@ -18,6 +18,8 @@
     'team.del':    { label: 'ลบทีม',           color: '#DC2626', icon: 'fa-solid fa-user-minus' },
     'sale.add':    { label: 'เพิ่มรายชื่อเซลส์', color: '#7C3AED', icon: 'fa-solid fa-user-plus' },
     'sale.del':    { label: 'ลบรายชื่อเซลส์',  color: '#DC2626', icon: 'fa-solid fa-user-minus' },
+    'product.add': { label: 'เพิ่มสินค้า',         color: '#0EA5E9', icon: 'fa-solid fa-box' },
+    'product.del': { label: 'ลบสินค้า',           color: '#DC2626', icon: 'fa-solid fa-box-open' },
     'daily.add':   { label: 'บันทึกกิจกรรม',    color: '#0EA5E9', icon: 'fa-solid fa-clipboard-check' },
     'daily.edit':  { label: 'แก้ไขกิจกรรม',    color: '#2563EB', icon: 'fa-solid fa-pen' },
     'daily.del':   { label: 'ลบกิจกรรม',        color: '#DC2626', icon: 'fa-solid fa-trash' },

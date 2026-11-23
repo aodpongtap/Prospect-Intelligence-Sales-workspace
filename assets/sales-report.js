@@ -29,11 +29,54 @@
   ];
   function st(code) { return STATUS[code] || STATUS[0]; }
 
-  var PRODUCTS = [
+  var PRODUCT_DEFAULT = [
     { code: 'P1', name: 'ร้านสะดวกซัก (เครื่องซักผ้า+อบ)', short: 'ร้านสะดวกซัก', color: '#2563EB' },
     { code: 'P2', name: 'ตู้กดน้ำ',                       short: 'ตู้กดน้ำ',      color: '#0EA5E9' },
     { code: 'P3', name: 'ตู้กดน้ำ + เครื่องทำน้ำแข็ง',      short: 'ตู้กดน้ำ+น้ำแข็ง', color: '#8B5CF6' }
   ];
+  var PRODUCT_COLORS = ['#2563EB', '#0EA5E9', '#8B5CF6', '#16A34A', '#F59E0B', '#DC2626', '#0E9384', '#7C3AED'];
+  var LS_PRODUCTS = 'pi_sr_products_v1';
+  var PRODUCTS = loadProducts();
+  function loadProducts() {
+    try {
+      var a = JSON.parse(localStorage.getItem(LS_PRODUCTS) || 'null');
+      if (Object.prototype.toString.call(a) === '[object Array]' && a.length) {
+        return a.map(function (p, i) {
+          return { code: p.code, name: p.name, short: p.short || p.name, color: p.color || PRODUCT_COLORS[i % PRODUCT_COLORS.length] };
+        });
+      }
+    } catch (e) {}
+    return JSON.parse(JSON.stringify(PRODUCT_DEFAULT));
+  }
+  function saveProducts() {
+    try { localStorage.setItem(LS_PRODUCTS, JSON.stringify(PRODUCTS)); } catch (e) {}
+    __listeners.forEach(function (f) { try { f(); } catch (e) {} });
+  }
+  /** เพิ่มสินค้าใหม่ (Admin) */
+  function addProduct(name, short) {
+    var nm = String(name || '').trim();
+    if (!nm) throw new Error('กรอกชื่อสินค้าก่อน');
+    if (PRODUCTS.some(function (p) { return String(p.name).trim().toLowerCase() === nm.toLowerCase(); })) throw new Error('มีสินค้านี้อยู่แล้ว');
+    var max = 0;
+    PRODUCTS.forEach(function (p) { var n = parseInt(String(p.code).replace(/\D/g, ''), 10) || 0; if (n > max) max = n; });
+    var p = {
+      code: 'P' + String(max + 1),
+      name: nm,
+      short: String(short || nm).trim(),
+      color: PRODUCT_COLORS[max % PRODUCT_COLORS.length]
+    };
+    PRODUCTS.push(p);
+    saveProducts();
+    if (global.PILog) global.PILog.add('product.add', p.code + ' · ' + nm, 'เพิ่มสินค้าใหม่');
+    return p;
+  }
+  function removeProduct(code) {
+    var used = DEALS.filter(function (d) { return d.product === code; }).length;
+    if (used) throw new Error('ลบไม่ได้: มีดีลใช้สินค้านี้ ' + used + ' ใบ');
+    PRODUCTS = PRODUCTS.filter(function (p) { return p.code !== code; });
+    saveProducts();
+    if (global.PILog) global.PILog.add('product.del', code, 'ลบสินค้าออกจากระบบ');
+  }
   function product(code) {
     for (var i = 0; i < PRODUCTS.length; i++) if (PRODUCTS[i].code === code) return PRODUCTS[i];
     return { code: code, name: code, short: code, color: '#94A3B8' };
@@ -909,7 +952,8 @@
           + '  </table></div>'
         : '')
       + '</section>'
-      + salesPanel();
+      + salesPanel()
+      + productsPanel();
   }
 
   /* ---------- รายชื่อเซลส์ (Sale) ---------- */
@@ -1293,9 +1337,21 @@
     if (!list.length) list = SALES;
     if (d0 && !list.some(function (s) { return s.id === d0.saleId; })) list = SALES;
     var cur = d0 || {};
-    var saleOpts = list.map(function (s) {
-      return '<option value="' + esc(s.id) + '"' + (cur.saleId === s.id ? ' selected' : '') + '>' + esc(teamByCode(s.team).name) + ' · ' + esc(s.name) + '</option>';
-    }).join('');
+    var mineSale = '';
+    try {
+      var scf = scopeOf();
+      if (scf.type === 'sale') mineSale = scf.saleId;
+    } catch (e) {}
+    if (!mineSale) mineSale = String((global.__ME__ || {}).saleId || '');
+    var saleField = mineSale
+      ? '<input type="hidden" name="saleId" value="' + esc(mineSale) + '">'
+        + '<div class="sr-fixed" title="กําหนดอัตโนมัติจากบัญชีผู้ใช้"><i class="fa-solid fa-user-lock"></i> '
+        + esc(sale(mineSale).name) + ' <span class="sr-s2">(' + esc(teamByCode(sale(mineSale).team).name) + ')</span></div>'
+      : '<select name="saleId">' + list.map(function (s) {
+          return '<option value="' + esc(s.id) + '"' + (cur.saleId === s.id ? ' selected' : '') + '>' + esc(teamByCode(s.team).name) + ' · ' + esc(s.name) + '</option>';
+        }).join('') + '</select>';
+    var saleOpts = '';   /* ใช้ saleField แทน (คงตัวแปรไว้กันอ้างอิงเดิมในฟังก์ชันอื่น) */
+    void saleOpts;
     var curStatus = cur.status === undefined ? 1 : Number(cur.status);
     var statusOpts = STATUS.map(function (st) {
       return '<option value="' + st.code + '"' + (st.code === curStatus ? ' selected' : '') + '>' + st.code + ' · ' + esc(st.label) + '</option>';
@@ -1322,7 +1378,7 @@
       + '<div class="sr-dform">'
       + '  <label class="sr-df full">ชื่องาน / ดีล *<input name="job" required placeholder="เช่น ร้านสะดวกซัก 6 เครื่อง" value="' + esc(cur.job || '') + '"></label>'
       + '  <label class="sr-df full">ลูกค้า *<input name="customer" required placeholder="ชื่อบริษัท / ร้านค้า" value="' + esc(cur.customer || '') + '"></label>'
-      + '  <label class="sr-df">พนักงานขาย *<select name="saleId">' + saleOpts + '</select></label>'
+      + '  <label class="sr-df">พนักงานขาย *' + saleField + '</label>'
       + '  <label class="sr-df">สถานะงาน *<select name="status">' + statusOpts + '</select></label>'
       + '  <label class="sr-df">มูลค่างาน (บาท) *<input name="amount" type="number" min="0" step="1" required placeholder="0" value="' + (cur.amount !== undefined ? Number(cur.amount) : '') + '"></label>'
       + '  <label class="sr-df">โอกาสปิด (%)<input name="prob" type="number" min="0" max="100" value="' + (cur.prob !== undefined ? Number(cur.prob) : 40) + '"></label>'
@@ -1669,6 +1725,63 @@
     if (typeof global.toast === 'function') global.toast('Export CSV เรียบร้อย (' + rows.length + ' ดีล)');
   }
 
+  /* ---------- รายชื่อสินค้า (Admin) ---------- */
+  function productsPanel() {
+    var sc = scopeOf();
+    if (sc.type === 'sale' || sc.type === 'none') return '';
+    var rows = PRODUCTS.map(function (p) {
+      var cnt = DEALS.filter(function (d) { return d.product === p.code; }).length;
+      return '<tr>'
+        + '<td><span class="sr-sid">' + esc(p.code) + '</span></td>'
+        + '<td><span class="sr-dot" style="background:' + esc(p.color) + '"></span><b style="color:#0F2B46">' + esc(p.name) + '</b>'
+        + '<div class="sr-s2">' + cnt + ' ดีล</div></td>'
+        + '<td class="sr-num"><button class="sr-xbtn" data-sr-delproduct="' + esc(p.code) + '" title="ลบสินค้านี้"><i class="fa-solid fa-trash"></i></button></td>'
+        + '</tr>';
+    }).join('');
+    return '<section class="sr-panel">'
+      + '  <div class="sr-ph"><div><h3>รายชื่อสินค้า (Product)</h3>'
+      + '    <div class="sr-s2">ใช้เลือกในฟอร์มดีล · รหัส P1, P2, … สร้างให้อัตโนมัติ</div></div>'
+      + '    <div class="sr-tools"><button class="sr-btn dark" data-sr-addproduct><i class="fa-solid fa-plus"></i> เพิ่มสินค้า</button></div></div>'
+      + (PRODUCTS.length
+        ? '<div class="sr-tablewrap"><table class="sr-table sr-saletable"><thead><tr>'
+          + '<th style="width:70px">รหัส</th><th>ชื่อสินค้า</th><th style="width:56px"></th>'
+          + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
+        : '<div class="sr-empty-note"><i class="fa-solid fa-circle-info" style="margin-right:6px"></i> ยังไม่มีสินค้า — กด “เพิ่มสินค้า”</div>')
+      + '</section>';
+  }
+
+  /* ---------- จัดการสินค้า ---------- */
+  function addProductModal() {
+    if (typeof global.setModal !== 'function') return;
+    global.setModal('เพิ่มสินค้า', 'ชื่อสินค้าที่ต้องการแสดงในฟอร์มดีลและรายงาน',
+      '<label style="font-size:11px;color:#475467">ชื่อสินค้า *</label>'
+      + '<input id="srNewProduct" placeholder="เช่น ตู้กดน้ำ + เครื่องทำน้ำแข็ง" style="width:100%;margin:6px 0 12px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px;font-family:inherit;font-size:12px">'
+      + '<label style="font-size:11px;color:#475467">ชื่อย่อ (โอปชันนอล)</label>'
+      + '<input id="srNewProductShort" placeholder="เช่น ตู้กดน้ำ" style="width:100%;margin:6px 0 0;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px;font-family:inherit;font-size:12px">',
+      [{ label: 'ยกเลิก' }, { label: 'เพิ่มสินค้า', action: 'sr-add-product', primary: true }]);
+  }
+
+  function doAddProduct() {
+    var inp = document.getElementById('srNewProduct');
+    var sh = document.getElementById('srNewProductShort');
+    try {
+      var p = addProduct(inp ? inp.value : '', sh ? sh.value : '');
+      if (typeof global.closeModal === 'function') global.closeModal();
+      if (typeof global.render === 'function') global.render();
+      if (global.toast) global.toast('เพิ่มสินค้า ' + p.name + ' (' + p.code + ') แล้ว');
+    } catch (err) { if (global.toast) global.toast(err.message || String(err)); }
+  }
+
+  function deleteProduct(code) {
+    var p = product(code);
+    if (!global.confirm('ลบสินค้า ' + (p.name || code) + ' (' + code + ') ?')) return;
+    try {
+      removeProduct(code);
+      if (typeof global.render === 'function') global.render();
+      if (global.toast) global.toast('ลบ ' + code + ' แล้ว');
+    } catch (err) { if (global.toast) global.toast(err.message || String(err)); }
+  }
+
   /* ---------- จัดการทีม / เป้าหมาย ---------- */
   /* ---------- จัดการรายชื่อเซลส์ ---------- */
   function addSaleModal() {
@@ -1809,6 +1922,9 @@
 
     if (t.closest('[data-sr-addteam]')) { addTeamModal(); return; }
     if (t.closest('[data-sr-addsale]')) { addSaleModal(); return; }
+    if (t.closest('[data-sr-addproduct]')) { addProductModal(); return; }
+    var dpl = t.closest('[data-sr-delproduct]');
+    if (dpl) { deleteProduct(dpl.getAttribute('data-sr-delproduct')); return; }
     var dsl = t.closest('[data-sr-delsale]');
     if (dsl) { deleteSale(dsl.getAttribute('data-sr-delsale')); return; }
     var vw = t.closest('[data-sr-view]');
@@ -1846,6 +1962,7 @@
     var actBtn = t.closest('[data-action]');
     if (actBtn && actBtn.getAttribute('data-action') === 'sr-add-team') { doAddTeam(); return; }
     if (actBtn && actBtn.getAttribute('data-action') === 'sr-add-sale') { doAddSale(); return; }
+    if (actBtn && actBtn.getAttribute('data-action') === 'sr-add-product') { doAddProduct(); return; }
 
     var go = t.closest('[data-sr-goto]');
     if (go) {
@@ -2083,6 +2200,8 @@
       + '.sr-saletable td{padding:9px 10px}'
       + '.sr-paypcts{display:flex;gap:7px;margin-top:4px;font-size:9px;font-variant-numeric:tabular-nums;white-space:nowrap}'
       + '.sr-drref{display:inline-flex;align-items:center;gap:4px;margin-top:3px;background:#EFF6FF;color:#1D4ED8;border-radius:5px;padding:1px 6px;font-size:8.5px;font-family:ui-monospace,Menlo,Consolas,monospace}'
+      + '.sr-fixed{display:flex;align-items:center;gap:6px;border:1px solid #E9EEF5;background:#F8FAFC;border-radius:8px;padding:8px 10px;font-size:11.5px;color:#0F2B46;min-height:34px}'
+      + '.sr-fixed i{color:#64748B;font-size:10px}'
       + '.sr-empty-note{padding:16px;text-align:center;color:#98A2B3;font-size:11px}'
       + '.sr-empty{text-align:center!important;color:#98A2B3;padding:22px!important}'
       /* badges */
@@ -2164,7 +2283,11 @@
     saveDeals: saveDeals,
     onChange: onChange,
     statusList: STATUS,
-    products: PRODUCTS,
+    productsList: function () { return PRODUCTS; },
+    addProduct: addProduct,
+    removeProduct: removeProduct,
+    openDealDetail: openDealModal,
+    editDeal: editDeal,
     payments: PAYMENTS,
     resetDeals: function () {
       try { localStorage.removeItem(LS_DEALS); } catch (e) {}
