@@ -142,8 +142,8 @@
     var notice = (sc && sc.type === 'none')
       ? '<div class="ci-panel" style="display:flex;gap:10px;align-items:flex-start;background:#FFF7ED;border:1px solid #FFEDD5;border-radius:12px;padding:12px 14px;margin-bottom:12px">'
         + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
-        + '<div><b style="color:#9A3412;font-size:12px">บัญชีนี้ยังไม่ถูกผูกกับข้อมูลเซลส์</b>'
-        + '<div style="color:#B45309;font-size:11px">กรุณาแจ้ง Admin ให้ผูกชื่อของคุณกับรายชื่อเซลส์หรือทีม BU เพื่อให้เห็นข้อมูลลูกค้าที่เกี่ยวข้อง</div></div></div>'
+        + '<div><b style="color:#9A3412;font-size:12px">บัญชีนี้ยังไม่ถูกผูกกับข้อมูล AE</b>'
+        + '<div style="color:#B45309;font-size:11px">กรุณาแจ้ง Admin ให้ผูกชื่อของคุณกับรายชื่อ AE หรือทีม BU เพื่อให้เห็นข้อมูลลูกค้าที่เกี่ยวข้อง</div></div></div>'
       : '';
     if (!all.length) {
       return '<div class="ci"><div class="ci-head"><div><h1>Customer Intelligence</h1>'

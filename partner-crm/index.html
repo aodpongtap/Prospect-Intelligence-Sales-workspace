@@ -734,7 +734,7 @@
     bu:    { n: 2, name: 'BU (Business Unit)', short: 'BU', cls: 'v' },
     head:  { n: 3, name: 'Head Team', short: 'Head', cls: 'b' },
     sup:   { n: 4, name: 'Supervisor', short: 'Sup', cls: 'b' },
-    sale:  { n: 5, name: 'เซลล์ (Sale)', short: 'Sale', cls: 'g' },
+    sale:  { n: 5, name: 'AE', short: 'AE', cls: 'g' },
     agent: { n: 6, name: 'ตัวแทน / MCN', short: 'Agent', cls: 'n' }
   };
   var LEVEL_ORDER = ['admin', 'bu', 'head', 'sup', 'sale', 'agent'];
@@ -821,10 +821,10 @@
       + '<div class="grid k4" style="margin:0">'
       + kpi('ลูกข่ายในสายงาน', String(total), 'fa-solid fa-users', '#4F46E5', 'ไม่รวมตัวเอง (' + lv(me.level).short + ')')
       + kpi('Supervisor', String(byLevel.sup || 0), 'fa-solid fa-user-tie', '#0E9384', 'ทีมที่ดูแล')
-      + kpi('เซลล์ (Sale)', String(byLevel.sale || 0), 'fa-solid fa-user-group', '#B54708', 'ผู้ขายในสาย')
+      + kpi('AE', String(byLevel.sale || 0), 'fa-solid fa-user-group', '#B54708', 'ผู้ขายในสาย')
       + kpi('ตัวแทน / MCN', String(byLevel.agent || 0), 'fa-solid fa-id-card', '#6941C6', 'ปลายสาย')
       + '</div>'
-      + '<div class="note" style="margin-top:12px"><b>ลำดับชั้น:</b> L1 Admin › L2 BU › L3 Head Team › L4 Supervisor › L5 เซลล์ › L6 ตัวแทน/MCN — การสร้าง ID ต้องเลือกระดับและเลือกผู้ดูแลต้นสาย (ต้องเป็นระดับที่สูงกว่าเท่านั้น)</div>'
+      + '<div class="note" style="margin-top:12px"><b>ลำดับชั้น:</b> L1 Admin › L2 BU › L3 Head Team › L4 Supervisor › L5 AE › L6 ตัวแทน/MCN — การสร้าง ID ต้องเลือกระดับและเลือกผู้ดูแลต้นสาย (ต้องเป็นระดับที่สูงกว่าเท่านั้น)</div>'
       + '</div>'
 
       + '<div class="grid k2">'

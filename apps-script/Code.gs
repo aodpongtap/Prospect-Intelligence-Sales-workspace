@@ -16,7 +16,7 @@ var LEVEL_LABELS = {
   bu: 'L2 · BU',
   head: 'L3 · Head Team',
   sup: 'L4 · Supervisor',
-  sale: 'L5 · เซลล์ (AE)',
+  sale: 'L5 · AE',
   agent: 'L6 · ตัวแทน / MCN'
 };
 function levelN_(level) {

@@ -16,8 +16,8 @@
     'target.save': { label: 'แก้ไขเป้าหมาย',  color: '#7C3AED', icon: 'fa-solid fa-bullseye' },
     'team.add':    { label: 'เพิ่มทีม',        color: '#0E9384', icon: 'fa-solid fa-people-group' },
     'team.del':    { label: 'ลบทีม',           color: '#DC2626', icon: 'fa-solid fa-user-minus' },
-    'sale.add':    { label: 'เพิ่มรายชื่อเซลส์', color: '#7C3AED', icon: 'fa-solid fa-user-plus' },
-    'sale.del':    { label: 'ลบรายชื่อเซลส์',  color: '#DC2626', icon: 'fa-solid fa-user-minus' },
+    'sale.add':    { label: 'เพิ่มรายชื่อ AE', color: '#7C3AED', icon: 'fa-solid fa-user-plus' },
+    'sale.del':    { label: 'ลบรายชื่อ AE',  color: '#DC2626', icon: 'fa-solid fa-user-minus' },
     'product.add': { label: 'เพิ่มสินค้า',         color: '#0EA5E9', icon: 'fa-solid fa-box' },
     'product.del': { label: 'ลบสินค้า',           color: '#DC2626', icon: 'fa-solid fa-box-open' },
     'daily.add':   { label: 'บันทึกกิจกรรม',    color: '#0EA5E9', icon: 'fa-solid fa-clipboard-check' },
@@ -341,7 +341,7 @@
       return { name: id, team: '' };
     };
     var stName = { 0: 'กำลังคุย', 1: 'Pipeline', 2: 'รอยืนยัน PO', 3: 'รอส่งของ', 4: 'Actual (ปิดงานแล้ว)', 5: 'ยกเลิก' };
-    return [['เลขที่ SO', 'เลขที่ QT/INV', 'ลูกค้า', 'ชื่องาน', 'เซลส์', 'ทีม', 'สถานะ', 'มูลค่างาน', 'โอกาสปิด (%)', 'เดือนที่คาดว่าจะปิด', 'ปี', 'วันที่เสนอราคา', 'หมายเหตุ']].concat(
+    return [['เลขที่ SO', 'เลขที่ QT/INV', 'ลูกค้า', 'ชื่องาน', 'AE', 'ทีม', 'สถานะ', 'มูลค่างาน', 'โอกาสปิด (%)', 'เดือนที่คาดว่าจะปิด', 'ปี', 'วันที่เสนอราคา', 'หมายเหตุ']].concat(
       d.deals.map(function (x) {
         var s = saleOf(x.saleId);
         return [x.no, x.so, x.customer, x.job, s.name, s.team, (x.status + ' · ' + (stName[x.status] || '')), num(x.amount), num(x.prob), num(x.month), num(x.year), x.quoteDate || '', x.note || ''];
@@ -351,7 +351,7 @@
   function projectRows() {
     var pr = (global.ProjectTracking && global.ProjectTracking.list) ? global.ProjectTracking.list() : [];
     var ST = ['รับช่วงงาน', 'วางแผน', 'ติดตั้ง', 'ทดสอบ & ส่งมอบ', 'ส่งมอบแล้ว'];
-    return [['รหัส', 'ชื่อโครงการ', 'ลูกค้า', 'ทีม', 'ผู้รับผิดชอบ', 'เซลส์ผู้ส่งงาน', 'ขั้นตอน', 'วันเริ่ม', 'กำหนดส่งมอบ', 'Blocker', 'จำนวนงาน', 'งานเสร็จ', 'หมายเหตุ']].concat(
+    return [['รหัส', 'ชื่อโครงการ', 'ลูกค้า', 'ทีม', 'ผู้รับผิดชอบ', 'AE ผู้ส่งงาน', 'ขั้นตอน', 'วันเริ่ม', 'กำหนดส่งมอบ', 'Blocker', 'จำนวนงาน', 'งานเสร็จ', 'หมายเหตุ']].concat(
       pr.map(function (p) {
         var tasks = p.tasks || [];
         return [p.id, p.name, p.customer, p.team || '', p.owner, p.sale || '', ST[p.stage] || '', p.startDate || '', p.deadline || '', p.blocker || '', tasks.length,
@@ -362,7 +362,7 @@
   function customerRows() {
     if (global.CustomerIntel && global.CustomerIntel.customers) {
       var cs = global.CustomerIntel.customers() || [];
-      return [['ลูกค้า', 'ทีม', 'เซลส์', 'จำนวนดีล', 'ยอดปิดงาน', 'ดีลที่เปิดอยู่', 'สถานะ']].concat(
+      return [['ลูกค้า', 'ทีม', 'AE', 'จำนวนดีล', 'ยอดปิดงาน', 'ดีลที่เปิดอยู่', 'สถานะ']].concat(
         cs.map(function (c) { return [c.name, c.team || '', (c.salesArr || []).join(', '), num(c.dealCount), num(c.won), num(c.open), c.health || '']; })
       );
     }
@@ -385,7 +385,7 @@
     return rows.length > 1 ? rows : [['ยังไม่มีการตั้งเป้าหมาย']];
   }
   function userRows(users) {
-    var LBL = { admin: 'Admin', bu: 'BU', head: 'Head Team', sup: 'Supervisor', sale: 'เซลล์ (Sale)', agent: 'ตัวแทน / MCN', editor: 'Editor', viewer: 'Viewer' };
+    var LBL = { admin: 'Admin', bu: 'BU', head: 'Head Team', sup: 'Supervisor', sale: 'AE', agent: 'ตัวแทน / MCN', editor: 'Editor', viewer: 'Viewer' };
     return [['อีเมล', 'ชื่อ', 'ระดับ', 'ทีม (BU)', 'ผู้ดูแลต้นสาย', 'สถานะ']].concat(
       (users || []).map(function (u) { return [u.email, u.name || '', LBL[u.level] || u.level, u.team || '', u.parent || '', u.status || 'ใช้งาน']; })
     );

@@ -310,16 +310,16 @@
       var accTeam = String(me().team || '').toUpperCase();
       var detail;
       if (sc.type === 'nosales') {
-        detail = 'ยังไม่มีรายชื่อเซลส์ในระบบ — Admin กรุณาเพิ่มที่ Reports → “รายชื่อเซลส์ (AE)” ก่อน';
+        detail = 'ยังไม่มีรายชื่อ AE ในระบบ — Admin กรุณาเพิ่มที่ Reports → “รายชื่อ AE” ก่อน';
       } else if (sc.teamSales === 0) {
-        detail = 'ทีม ' + accTeam + ' ยังไม่มีรายชื่อเซลส์ — ให้เพิ่มที่ Reports → รายชื่อเซลส์ แล้วตั้งชื่อให้ตรงกับ “' + accName + '”';
+        detail = 'ทีม ' + accTeam + ' ยังไม่มีรายชื่อ AE — ให้เพิ่มที่ Reports → รายชื่อ AE แล้วตั้งชื่อให้ตรงกับ “' + accName + '”';
       } else if (sc.teamSales > 1) {
-        detail = 'ทีม ' + accTeam + ' มีรายชื่อเซลส์ ' + sc.teamSales + ' คน — ตั้งชื่อบัญชี (“' + accName + '”) ให้ตรงกับชื่อเซลส์คนใดคนหนึ่ง';
+        detail = 'ทีม ' + accTeam + ' มีรายชื่อ AE ' + sc.teamSales + ' คน — ตั้งชื่อบัญชี (“' + accName + '”) ให้ตรงกับชื่อ AE คนใดคนหนึ่ง';
       } else {
-        detail = 'ตั้งชื่อบัญชี (“' + accName + '”) ให้ตรงกับชื่อใน Reports → รายชื่อเซลส์ หรือกำหนดทีม (BU) ให้บัญชีนี้';
+        detail = 'ตั้งชื่อบัญชี (“' + accName + '”) ให้ตรงกับชื่อใน Reports → รายชื่อ AE หรือกำหนดทีม (BU) ให้บัญชีนี้';
       }
       return '<div class="dr">' + head
-        + '<div class="dr-note"><i class="fa-solid fa-circle-info"></i><div><b>บัญชีนี้ยังไม่ถูกผูกกับข้อมูลเซลส์ · Account not linked to a salesperson</b>'
+        + '<div class="dr-note"><i class="fa-solid fa-circle-info"></i><div><b>บัญชีนี้ยังไม่ถูกผูกกับข้อมูล AE · Account not linked to an AE</b>'
         + '<div class="dr-s2">' + esc(detail) + '</div></div></div></div>';
     }
     if (sc.type === 'pending') {
@@ -608,7 +608,7 @@
       }).join('') + '</select>';
     }
     if (!mine && !salesList().length) {
-      if (global.toast) global.toast('ยังไม่มีรายชื่อเซลส์ — เพิ่มที่ Reports → รายชื่อเซลส์ ก่อน');
+      if (global.toast) global.toast('ยังไม่มีรายชื่อ AE — เพิ่มที่ Reports → รายชื่อ AE ก่อน');
       return;
     }
 

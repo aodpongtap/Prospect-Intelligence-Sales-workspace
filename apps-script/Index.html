@@ -150,7 +150,7 @@
 
       // ปรับคำทักทายตามสิทธิ์: "สวัสดี, Head of Sales" → "สวัสดี, Sale"
       (function () {
-        var labels = { sale: 'เซลล์ (AE)', admin: 'Admin', editor: 'Editor', viewer: 'Viewer' };
+        var labels = { sale: 'AE', admin: 'Admin', editor: 'Editor', viewer: 'Viewer' };
         var want = 'สวัสดี, ' + (labels[String(me.level).toLowerCase()] || me.level);
         var content = document.getElementById('content');
         if (!content) return;

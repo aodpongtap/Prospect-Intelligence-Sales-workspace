@@ -93,7 +93,7 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
         <option value="bu">L2 · BU</option>
         <option value="head">L3 · Head Team</option>
         <option value="sup">L4 · Supervisor</option>
-          <option value="sale" selected>L5 · เซลล์ (AE)</option>
+          <option value="sale" selected>L5 · AE</option>
         <option value="agent">L6 · ตัวแทน / MCN</option>
       </select></div>
       <div><label for="parent">ผู้ดูแลต้นสาย (Upline) *</label><select id="parent"><option value="">— เลือก —</option></select></div>
@@ -112,7 +112,7 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th class="c-email">อีเมล</th><th class="c-name">ชื่อ</th><th class="c-level">ระดับสิทธิ์</th><th class="c-team">ทีม (BU)</th><th class="c-sale">เซลส์ที่ผูก</th><th class="c-daily">บันทึกพบลูกค้า</th><th class="c-parent">ผู้ดูแลสาย</th><th class="c-down">ลูกข่าย</th><th class="c-status">สถานะ</th><th class="c-last">เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
+        <thead><tr><th class="c-email">อีเมล</th><th class="c-name">ชื่อ</th><th class="c-level">ระดับสิทธิ์</th><th class="c-team">ทีม (BU)</th><th class="c-sale">AE ที่ผูก</th><th class="c-daily">บันทึกพบลูกค้า</th><th class="c-parent">ผู้ดูแลสาย</th><th class="c-down">ลูกข่าย</th><th class="c-status">สถานะ</th><th class="c-last">เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
         <tbody id="tb"><tr><td colspan="11" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
       </table>
     </div>
@@ -124,8 +124,8 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
       <div><span class="pill l-admin">L1 · Admin</span><br>เห็นทั้งเครือข่าย</div>
       <div><span class="pill l-editor">L2 · BU</span><br>เห็นทุกทีมใต้ BU</div>
       <div><span class="pill l-editor">L3 · Head Team</span><br>เห็นทั้งทีม</div>
-      <div><span class="pill l-viewer">L4 · Supervisor</span><br>เห็นเซลล์+ตัวแทนใต้ทีม</div>
-      <div><span class="pill l-viewer">L5 · เซลล์</span><br>เห็นตัวแทนใต้ตัวเอง</div>
+      <div><span class="pill l-viewer">L4 · Supervisor</span><br>เห็น AE+ตัวแทนใต้ทีม</div>
+      <div><span class="pill l-viewer">L5 · AE</span><br>เห็นตัวแทนใต้ตัวเอง</div>
       <div><span class="pill l-viewer">L6 · ตัวแทน/MCN</span><br>เห็นเฉพาะงานตัวเอง</div>
     </div>
   </section>
@@ -382,7 +382,7 @@ function isCore(email) { return PIAuth.coreAdmins.indexOf(String(email).toLowerC
 
 var LVLS = [
   ['admin', 'L1 · Admin'], ['bu', 'L2 · BU'], ['head', 'L3 · Head Team'],
-  ['sup', 'L4 · Supervisor'], ['sale', 'L5 · เซลล์ (AE)'], ['agent', 'L6 · ตัวแทน/MCN']
+  ['sup', 'L4 · Supervisor'], ['sale', 'L5 · AE'], ['agent', 'L6 · ตัวแทน/MCN']
 ];
 function lvlLabel(code) {
   for (var i = 0; i < LVLS.length; i++) if (LVLS[i][0] === code) return LVLS[i][1];
@@ -445,10 +445,10 @@ function matchSale(u) {
   var tm = String(u.team || '').toUpperCase();
   if (tm) {
     var inTeam = list.filter(function (s) { return String(s.team || '').toUpperCase() === tm; });
-    if (inTeam.length === 1) return { sale: inTeam[0], how: 'ทีม ' + tm + ' มีเซลส์คนเดียว' };
-    if (inTeam.length > 1) return { sale: null, why: 'ทีม ' + tm + ' มี ' + inTeam.length + ' คน — ตั้งชื่อบัญชีให้ตรงกับชื่อเซลส์' };
+    if (inTeam.length === 1) return { sale: inTeam[0], how: 'ทีม ' + tm + ' มี AE คนเดียว' };
+    if (inTeam.length > 1) return { sale: null, why: 'ทีม ' + tm + ' มี ' + inTeam.length + ' คน — ตั้งชื่อบัญชีให้ตรงกับชื่อ AE' };
   }
-  if (!list.length) return { sale: null, why: 'ยังไม่มีรายชื่อเซลส์ใน Reports' };
+  if (!list.length) return { sale: null, why: 'ยังไม่มีรายชื่อ AE ใน Reports' };
   return { sale: null, why: 'ไม่พบชื่อที่ตรง — เพิ่มใน Reports หรือแก้ชื่อบัญชี' };
 }
 function saleLinkCell(u) {
@@ -681,7 +681,7 @@ function renameUser(email) {
     + '<div style="color:#667085;font-size:11.5px;margin-bottom:12px">' + esc(email) + ' · ' + lvlLabel(u.level) + '</div>'
     + '<label style="font-size:11px;color:#475467">ชื่อ-นามสกุล</label>'
     + '<input id="rnName" maxlength="60" placeholder="เช่น สมชาย ใจดี" value="' + esc(u.name || '') + '" style="width:100%;margin:5px 0 6px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px;font-family:inherit;font-size:12px">'
-    + '<div style="font-size:10.5px;color:#98A2B3;margin:0 0 14px">ใช้แสดงใน Reports / Dashboard และใช้จับคู่กับรายชื่อเซลส์</div>'
+    + '<div style="font-size:10.5px;color:#98A2B3;margin:0 0 14px">ใช้แสดงใน Reports / Dashboard และใช้จับคู่กับรายชื่อ AE</div>'
     + '<div style="display:flex;justify-content:flex-end;gap:8px">'
     + '<button class="btn" id="rnCancel">ยกเลิก</button>'
     + '<button class="btn btn-primary" id="rnOk"><i class="fa-solid fa-check"></i> บันทึก</button></div></div>';

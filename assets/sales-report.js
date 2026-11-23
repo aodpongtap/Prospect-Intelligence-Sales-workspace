@@ -273,22 +273,22 @@
       var accTeam0 = String(me0.team || '').toUpperCase();
       var detail;
       if (sc.teamSales === 0) {
-        detail = 'ทีม ' + accTeam0 + ' ยังไม่มีรายชื่อเซลส์ — ให้เพิ่มที่ Reports → รายชื่อเซลส์ แล้วตั้งชื่อให้ตรงกับ “' + accName + '”';
+        detail = 'ทีม ' + accTeam0 + ' ยังไม่มีรายชื่อ AE — ให้เพิ่มที่ Reports → รายชื่อ AE แล้วตั้งชื่อให้ตรงกับ “' + accName + '”';
       } else if (sc.teamSales > 1) {
-        detail = 'ทีม ' + accTeam0 + ' มีรายชื่อเซลส์ ' + sc.teamSales + ' คน — ตั้งชื่อบัญชี (“' + accName + '”) ให้ตรงกับชื่อเซลส์คนใดคนหนึ่งเพื่อระบุตัวตน';
+        detail = 'ทีม ' + accTeam0 + ' มีรายชื่อ AE ' + sc.teamSales + ' คน — ตั้งชื่อบัญชี (“' + accName + '”) ให้ตรงกับชื่อ AE คนใดคนหนึ่งเพื่อระบุตัวตน';
       } else {
-        detail = 'ตั้งชื่อบัญชี (“' + accName + '”) ให้ตรงกับชื่อใน Reports → รายชื่อเซลส์ หรือกำหนดทีม (BU) ให้บัญชีนี้';
+        detail = 'ตั้งชื่อบัญชี (“' + accName + '”) ให้ตรงกับชื่อใน Reports → รายชื่อ AE หรือกำหนดทีม (BU) ให้บัญชีนี้';
       }
       return '<div class="sr-panel" style="display:flex;gap:10px;align-items:flex-start;background:#FFF7ED;border-color:#FFEDD5">'
         + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
-        + '<div><b style="color:#9A3412;font-size:12px">บัญชีนี้ยังไม่ถูกผูกกับข้อมูลเซลส์</b>'
+        + '<div><b style="color:#9A3412;font-size:12px">บัญชีนี้ยังไม่ถูกผูกกับข้อมูล AE</b>'
         + '<div class="sr-s2" style="color:#B45309">' + esc(detail) + '</div></div></div>';
     }
     if (sc.type === 'nosales') {
       return '<div class="sr-panel" style="display:flex;gap:10px;align-items:flex-start;background:#FFF7ED;border-color:#FFEDD5">'
         + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
-        + '<div><b style="color:#9A3412;font-size:12px">ยังไม่มีรายชื่อเซลส์ในระบบ</b>'
-        + '<div class="sr-s2" style="color:#B45309">Admin กรุณาเพิ่มรายชื่อเซลส์ที่ Reports → “รายชื่อเซลส์ (AE)” ก่อน แล้วตั้งชื่อบัญชีผู้ใช้ให้ตรงกับชื่อเซลส์นั้น</div></div></div>';
+        + '<div><b style="color:#9A3412;font-size:12px">ยังไม่มีรายชื่อ AE ในระบบ</b>'
+        + '<div class="sr-s2" style="color:#B45309">Admin กรุณาเพิ่มรายชื่อ AE ที่ Reports → “รายชื่อ AE” ก่อน แล้วตั้งชื่อบัญชีผู้ใช้ให้ตรงกับชื่อ AE นั้น</div></div></div>';
     }
     return '';
   }
@@ -317,9 +317,9 @@
   function addSale(name, team) {
     var nm = String(name || '').trim();
     var tm = String(team || '').trim().toUpperCase();
-    if (!nm) throw new Error('กรอกชื่อเซลส์ก่อน');
+    if (!nm) throw new Error('กรอกชื่อ AE ก่อน');
     if (!tm) throw new Error('เลือกทีม (BU)');
-    if (SALES.some(function (s) { return normSaleName(s.name) === normSaleName(nm); })) throw new Error('มีชื่อเซลส์นี้อยู่แล้ว');
+    if (SALES.some(function (s) { return normSaleName(s.name) === normSaleName(nm); })) throw new Error('มีชื่อ AE นี้อยู่แล้ว');
     var s = { id: nextSaleId(), name: nm, team: tm };
     SALES.push(s);
     saveSales();
@@ -329,10 +329,10 @@
   /** ลบรายชื่อเซลส์ (ลบไม่ได้ถ้ายังมีดีลค้างอยู่) */
   function removeSale(id) {
     var used = DEALS.filter(function (d) { return d.saleId === id; }).length;
-    if (used) throw new Error('ลบไม่ได้: ยังมีดีลของเซลส์คนนี้ ' + used + ' ใบ');
+    if (used) throw new Error('ลบไม่ได้: ยังมีดีลของ AE คนนี้ ' + used + ' ใบ');
     SALES = SALES.filter(function (s) { return s.id !== id; });
     saveSales();
-    if (global.PILog) global.PILog.add('sale.del', id, 'ลบรายชื่อเซลส์ออกจากระบบ');
+    if (global.PILog) global.PILog.add('sale.del', id, 'ลบรายชื่อ AE ออกจากระบบ');
   }
   function sale(id) {
     for (var i = 0; i < SALES.length; i++) if (SALES[i].id === id) return SALES[i];
@@ -831,10 +831,10 @@
     var isTable = state.summaryView === 'table';
     return ''
       + '<section class="sr-panel">'
-      + '  <div class="sr-ph"><div><h3>สรุปยอดขายรายเซลส์ (Forecast Summary)</h3>'
+      + '  <div class="sr-ph"><div><h3>สรุปยอดขายราย AE (Forecast Summary)</h3>'
       + '    <div class="sr-s2">' + (isTable
             ? 'Actual + แท่ง % เทียบเป้า/คน · คอลัมน์ขวาสุด = งานเดือนอื่นในปี (ชี้ที่ตัวเลขเพื่อดูรายละเอียด)'
-            : 'การ์ดละ 1 เซลส์ — % เทียบเป้าต่อคน · แยกสถานะงาน และ Forecast ของเดือนที่เลือก') + '</div></div>'
+            : 'การ์ดละ 1 AE — % เทียบเป้าต่อคน · แยกสถานะงาน และ Forecast ของเดือนที่เลือก') + '</div></div>'
       + '    <div class="sr-ph-tools">'
       + '      <span class="sr-tag">' + esc(head) + '</span>'
       + '      <div class="sr-seg">'
@@ -999,21 +999,21 @@
         + '<td><span class="sr-sid">' + esc(s.id) + '</span></td>'
         + '<td><div class="sr-sale"><span class="sr-av">' + esc(String(s.name).trim().charAt(0) || '?') + '</span>'
         + '  <div style="min-width:0"><div class="sr-nm">' + esc(s.name)
-        + (s.auto ? ' <span class="sr-autotag" title="สร้างอัตโนมัติจากบัญชีผู้ใช้ระดับเซลล์">จากบัญชี</span>' : '')
+        + (s.auto ? ' <span class="sr-autotag" title="สร้างอัตโนมัติจากบัญชีผู้ใช้ระดับ AE">จากบัญชี</span>' : '')
         + '</div><div class="sr-s2">' + cnt + ' ดีล</div></div></div></td>'
         + '<td>' + esc(teamByCode(s.team).name) + '</td>'
         + '<td class="sr-num"><button class="sr-xbtn" data-sr-delsale="' + esc(s.id) + '" title="ลบรายชื่อนี้"><i class="fa-solid fa-trash"></i></button></td>'
         + '</tr>';
     }).join('');
     return '<section class="sr-panel">'
-      + '  <div class="sr-ph"><div><h3>รายชื่อเซลส์ (AE)</h3>'
+      + '  <div class="sr-ph"><div><h3>รายชื่อ AE</h3>'
       + '    <div class="sr-s2">ใช้เลือกในฟอร์มดีลและคำนวณ “เป้า/คน” · รหัส S01, S02, … ระบบสร้างให้อัตโนมัติ</div></div>'
-      + '    <div class="sr-tools"><button class="sr-btn dark" data-sr-addsale><i class="fa-solid fa-user-plus"></i> เพิ่มเซลส์</button></div></div>'
+      + '    <div class="sr-tools"><button class="sr-btn dark" data-sr-addsale><i class="fa-solid fa-user-plus"></i> เพิ่ม AE</button></div></div>'
       + (list.length
         ? '<div class="sr-tablewrap"><table class="sr-table sr-saletable"><thead><tr>'
-          + '<th style="width:70px">รหัส</th><th>ชื่อเซลส์</th><th style="width:130px">ทีม (BU)</th><th style="width:56px"></th>'
+          + '<th style="width:70px">รหัส</th><th>ชื่อ AE</th><th style="width:130px">ทีม (BU)</th><th style="width:56px"></th>'
           + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
-        : '<div class="sr-empty-note"><i class="fa-solid fa-user-plus" style="margin-right:6px"></i> ยังไม่มีรายชื่อเซลส์ — กด “เพิ่มเซลส์” เพื่อเริ่มต้น</div>')
+        : '<div class="sr-empty-note"><i class="fa-solid fa-user-plus" style="margin-right:6px"></i> ยังไม่มีรายชื่อ AE — กด “เพิ่ม AE” เพื่อเริ่มต้น</div>')
       + '</section>';
   }
 
@@ -1298,7 +1298,7 @@
       if (sc.type === 'none') return false;
       return !tm || s.team === tm;
     });
-    if (!list.length) return '<div class="sr-s2">ไม่มีเซลส์ในทีมนี้</div>';
+    if (!list.length) return '<div class="sr-s2">ไม่มี AE ในทีมนี้</div>';;
     return list.map(function (s) {
       var deals = DEALS.filter(function (d) {
         return d.saleId === s.id && d.year === state.year && (!state.month || d.month === state.month);
@@ -1370,7 +1370,7 @@
   function openDealForm(d0) {
     injectCss();
     if (!SALES.length) {
-      if (global.toast) global.toast('ยังไม่มีรายชื่อเซลส์ — เพิ่มที่หัวข้อ “รายชื่อเซลส์ (AE)” ก่อน');
+      if (global.toast) global.toast('ยังไม่มีรายชื่อ AE — เพิ่มที่หัวข้อ “รายชื่อ AE” ก่อน');
       return;
     }
     var tm = state.team || viewerTeam() || '';
@@ -1568,7 +1568,7 @@
       + '<div class="sr-charts">'
       + '  <section class="sr-panel sr-chart-wide">'
       + '    <div class="sr-ph"><div><h3>ผลงานรายบุคคล (AE Performance)</h3>'
-      + '      <div class="sr-s2">เลือกทีมด้านขวา แล้วคลิกชื่อเซลส์เพื่อดูรายงานยอดขายรายเดือน · เส้นประแดง = เป้าหมายต่อคน</div></div>'
+      + '      <div class="sr-s2">เลือกทีมด้านขวา แล้วคลิกชื่อ AE เพื่อดูรายงานยอดขายรายเดือน · เส้นประแดง = เป้าหมายต่อคน</div></div>'
       + '      <div class="sr-teamtabs">'
       + '        <button class="sr-tab' + (state.perfTeam === '' ? ' on' : '') + '" data-sr-perfteam="">ทุกทีม</button>'
       + TEAMS.map(function (t) {
@@ -1850,14 +1850,14 @@
     var lockedTeam = viewerTeam();
     var teamOpts = (lockedTeam ? TEAMS.filter(function (t) { return t.code === lockedTeam; }) : TEAMS)
       .map(function (t) { return '<option value="' + esc(t.code) + '">' + esc(t.name) + '</option>'; }).join('');
-    global.setModal('เพิ่มเซลส์',
+    global.setModal('เพิ่ม AE',
       'กรอกชื่อ-นามสกุลจริง และเลือกทีมที่สังกัด',
-      '<label style="font-size:11px;color:#475467">ชื่อเซลส์ *</label>'
+      '<label style="font-size:11px;color:#475467">ชื่อ AE *</label>'
       + '<input id="srNewSale" placeholder="เช่น สมชาย ใจดี" style="width:100%;margin:6px 0 12px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px;font-family:inherit;font-size:12px">'
       + '<label style="font-size:11px;color:#475467">ทีม (BU) *</label>'
       + '<select id="srNewSaleTeam" style="width:100%;margin-top:6px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px;font-family:inherit;font-size:12px">' + teamOpts + '</select>'
-      + '<div style="font-size:10.5px;color:#98A2B3;margin-top:8px">ชื่อนี้ต้องตรงกับชื่อบัญชีผู้ใช้ (ระดับ เซลล์) เพื่อให้ Dashboard แสดงเฉพาะดีลของตัวเอง</div>',
-      [{ label: 'ยกเลิก' }, { label: 'เพิ่มเซลส์', action: 'sr-add-sale', primary: true }]);
+      + '<div style="font-size:10.5px;color:#98A2B3;margin-top:8px">ชื่อนี้ต้องตรงกับชื่อบัญชีผู้ใช้ (ระดับ AE) เพื่อให้ Dashboard แสดงเฉพาะดีลของตัวเอง</div>',
+      [{ label: 'ยกเลิก' }, { label: 'เพิ่ม AE', action: 'sr-add-sale', primary: true }]);
   }
 
   function doAddSale() {
@@ -1873,7 +1873,7 @@
 
   function deleteSale(id) {
     var s = sale(id);
-    if (!global.confirm('ลบรายชื่อเซลส์ ' + (s.name || id) + ' (' + id + ') ?')) return;
+    if (!global.confirm('ลบรายชื่อ AE ' + (s.name || id) + ' (' + id + ') ?')) return;
     try {
       removeSale(id);
       if (typeof global.render === 'function') global.render();

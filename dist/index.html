@@ -322,12 +322,12 @@
 })(window);
 
 </script>
-  <script src="assets/report-log.js?v=12"></script>
-  <script src="assets/sales-report.js?v=48"></script>
-  <script src="assets/daily-report.js?v=13"></script>
-  <script src="assets/project-tracking.js?v=7"></script>
-  <script src="assets/customer-intelligence.js?v=4"></script>
-  <script src="assets/team-page.js?v=7"></script>
+  <script src="assets/report-log.js?v=13"></script>
+  <script src="assets/sales-report.js?v=49"></script>
+  <script src="assets/daily-report.js?v=14"></script>
+  <script src="assets/project-tracking.js?v=8"></script>
+  <script src="assets/customer-intelligence.js?v=5"></script>
+  <script src="assets/team-page.js?v=8"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
     window.__allowedPages__ = function () {
@@ -417,7 +417,7 @@
 
       // ปรับคำทักทายตามสิทธิ์: "สวัสดี, Head of Sales" → "สวัสดี, Sale"
       (function () {
-        var labels = { admin: 'Admin', bu: 'BU', head: 'Head Team', sup: 'Supervisor', sale: 'เซลล์ (AE)', agent: 'ตัวแทน / MCN', editor: 'Editor', viewer: 'Viewer' };
+        var labels = { admin: 'Admin', bu: 'BU', head: 'Head Team', sup: 'Supervisor', sale: 'AE', agent: 'ตัวแทน / MCN', editor: 'Editor', viewer: 'Viewer' };
         var want = 'สวัสดี, ' + (labels[String(me.level).toLowerCase()] || me.level);
         var content = document.getElementById('content');
         if (!content) return;
@@ -482,7 +482,7 @@
       { code: 'bu', n: 2, label: 'BU' },
       { code: 'head', n: 3, label: 'Head Team' },
       { code: 'sup', n: 4, label: 'Supervisor' },
-      { code: 'sale', n: 5, label: 'เซลล์ (AE)' },
+      { code: 'sale', n: 5, label: 'AE' },
       { code: 'agent', n: 6, label: 'ตัวแทน / MCN' }
     ];
     function ladderOf(code) {
