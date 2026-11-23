@@ -93,7 +93,7 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
         <option value="bu">L2 · BU</option>
         <option value="head">L3 · Head Team</option>
         <option value="sup">L4 · Supervisor</option>
-        <option value="sale" selected>L5 · เซลล์ (Sale)</option>
+          <option value="sale" selected>L5 · เซลล์ (AE)</option>
         <option value="agent">L6 · ตัวแทน / MCN</option>
       </select></div>
       <div><label for="parent">ผู้ดูแลต้นสาย (Upline) *</label><select id="parent"><option value="">— เลือก —</option></select></div>
@@ -382,7 +382,7 @@ function isCore(email) { return PIAuth.coreAdmins.indexOf(String(email).toLowerC
 
 var LVLS = [
   ['admin', 'L1 · Admin'], ['bu', 'L2 · BU'], ['head', 'L3 · Head Team'],
-  ['sup', 'L4 · Supervisor'], ['sale', 'L5 · เซลล์'], ['agent', 'L6 · ตัวแทน/MCN']
+  ['sup', 'L4 · Supervisor'], ['sale', 'L5 · เซลล์ (AE)'], ['agent', 'L6 · ตัวแทน/MCN']
 ];
 function lvlLabel(code) {
   for (var i = 0; i < LVLS.length; i++) if (LVLS[i][0] === code) return LVLS[i][1];

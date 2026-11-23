@@ -236,7 +236,7 @@
     return '<div class="dr-filters">'
       + '<label class="dr-fl"><span>เดือน · Month</span><input type="month" data-dr-filter="month" value="' + esc(state.month) + '"></label>'
       + '<label class="dr-fl"><span>ช่องทาง · Channel</span><select data-dr-filter="channel">' + chOpts + '</select></label>'
-      + (showSale ? '<label class="dr-fl"><span>พนักงานขาย · Salesperson</span><select data-dr-filter="sale">' + saleOpts + '</select></label>' : '')
+      + (showSale ? '<label class="dr-fl"><span>AE · Account Executive</span><select data-dr-filter="sale">' + saleOpts + '</select></label>' : '')
       + '<label class="dr-fl dr-fl-q"><span>ค้นหา · Search</span><input type="search" data-dr-filter="q" placeholder="ลูกค้า / สรุป / นัดครั้งต่อไป" value="' + esc(state.q) + '"></label>'
       + '<button class="dr-btn" data-dr-today><i class="fa-solid fa-calendar-day"></i> วันนี้ · Today</button>'
       + '</div>';
@@ -310,7 +310,7 @@
       var accTeam = String(me().team || '').toUpperCase();
       var detail;
       if (sc.type === 'nosales') {
-        detail = 'ยังไม่มีรายชื่อเซลส์ในระบบ — Admin กรุณาเพิ่มที่ Reports → “รายชื่อเซลส์ (Sale)” ก่อน';
+        detail = 'ยังไม่มีรายชื่อเซลส์ในระบบ — Admin กรุณาเพิ่มที่ Reports → “รายชื่อเซลส์ (AE)” ก่อน';
       } else if (sc.teamSales === 0) {
         detail = 'ทีม ' + accTeam + ' ยังไม่มีรายชื่อเซลส์ — ให้เพิ่มที่ Reports → รายชื่อเซลส์ แล้วตั้งชื่อให้ตรงกับ “' + accName + '”';
       } else if (sc.teamSales > 1) {
@@ -431,10 +431,10 @@
       }).join('');
       if (gRows) {
         perSale = '<section class="dr-panel">'
-          + '<div class="dr-ph"><div><h3>สรุปรายพนักงานขาย · By Salesperson</h3>'
+          + '<div class="dr-ph"><div><h3>สรุปราย AE · By Account Executive</h3>'
           + '<div class="dr-s2">' + esc(state.month) + ' · กิจกรรม / ลูกค้า / เข้าพบ / มูลค่าโครงการ · activities, customers, visits, project value</div></div></div>'
           + '<div class="dr-tablewrap"><table class="dr-table"><thead><tr>'
-          + '<th>พนักงานขาย · Salesperson</th><th class="dr-num">กิจกรรม · Activities</th><th class="dr-num">ลูกค้า · Customers</th>'
+          + '<th>AE · Account Executive</th><th class="dr-num">กิจกรรม · Activities</th><th class="dr-num">ลูกค้า · Customers</th>'
           + '<th class="dr-num">เข้าพบ/ประชุม · Visits</th><th class="dr-num">มูลค่าโครงการ · Value</th>'
           + '</tr></thead><tbody>' + gRows + '</tbody></table></div></section>';
       }
@@ -624,7 +624,7 @@
       + '<label class="dr-f"><span>นัดครั้งต่อไป — วันที่ · Next appointment — date</span><input type="date" name="nextDate" value="' + esc(cur.nextDate || '') + '"></label>'
       + '<label class="dr-f"><span>นัดครั้งต่อไป — เวลา · Next appointment — time</span><input type="time" name="nextTime" value="' + esc(cur.nextTime || '') + '"></label>'
       + '<label class="dr-f full"><span>เรื่องที่นัด / สิ่งที่ต้องทำต่อ · Next step / To-do</span><input type="text" name="nextNote" placeholder="เช่น ส่งใบเสนอราคา, นัดเข้าพบผู้บริหาร" value="' + esc(cur.nextNote || '') + '"></label>'
-      + '<label class="dr-f full"><span>ผู้รับผิดชอบ (Sale) · Owner</span>' + saleSel + '</label>'
+      + '<label class="dr-f full"><span>ผู้รับผิดชอบ (AE) · Owner</span>' + saleSel + '</label>'
       + (editing ? '' : '<label class="dr-f full dr-check"><input type="checkbox" name="toPipeline" value="1"> <span>เพิ่มมูลค่าโครงการนี้เข้า Pipeline ใน Reports (สถานะ Pipeline) · also create a Pipeline deal in Reports for target calculation</span></label>')
       + '</div></form>';
 

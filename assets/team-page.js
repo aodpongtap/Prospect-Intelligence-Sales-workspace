@@ -12,7 +12,7 @@
     { code: 'bu', n: 2, label: 'BU' },
     { code: 'head', n: 3, label: 'Head Team' },
     { code: 'sup', n: 4, label: 'Supervisor' },
-    { code: 'sale', n: 5, label: 'เซลล์ (Sale)' },
+    { code: 'sale', n: 5, label: 'เซลล์ (AE)' },
     { code: 'agent', n: 6, label: 'ตัวแทน / MCN' }
   ];
   function ladder(code) {

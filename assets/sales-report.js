@@ -288,7 +288,7 @@
       return '<div class="sr-panel" style="display:flex;gap:10px;align-items:flex-start;background:#FFF7ED;border-color:#FFEDD5">'
         + '<i class="fa-solid fa-circle-info" style="color:#C2410C;margin-top:2px"></i>'
         + '<div><b style="color:#9A3412;font-size:12px">ยังไม่มีรายชื่อเซลส์ในระบบ</b>'
-        + '<div class="sr-s2" style="color:#B45309">Admin กรุณาเพิ่มรายชื่อเซลส์ที่ Reports → “รายชื่อเซลส์ (Sale)” ก่อน แล้วตั้งชื่อบัญชีผู้ใช้ให้ตรงกับชื่อเซลส์นั้น</div></div></div>';
+        + '<div class="sr-s2" style="color:#B45309">Admin กรุณาเพิ่มรายชื่อเซลส์ที่ Reports → “รายชื่อเซลส์ (AE)” ก่อน แล้วตั้งชื่อบัญชีผู้ใช้ให้ตรงกับชื่อเซลส์นั้น</div></div></div>';
     }
     return '';
   }
@@ -848,7 +848,7 @@
 
   var SORTABLE = {
     no: 'เลขที่', status: 'สถานะ', customer: 'ชื่อลูกค้า', quoteDate: 'วันที่เสนอราคา',
-    month: 'เดือนที่คาดว่าจะปิด', saleId: 'Sale', product: 'สินค้า', amount: 'มูลค่า', payment: 'รูปแบบ', cashIn: 'Cash In'
+    month: 'เดือนที่คาดว่าจะปิด', saleId: 'AE', product: 'สินค้า', amount: 'มูลค่า', payment: 'รูปแบบ', cashIn: 'Cash In'
   };  function sortValue(d, key) {
     if (key === 'saleId') return sale(d.saleId).name;
     if (key === 'product') return product(d.product).name;
@@ -909,7 +909,7 @@
       + '  <div class="sr-tablewrap"><table class="sr-table sr-deals"><thead><tr>'
       + th('no', 'เลขดีล', 'sr-num') + th('status', 'สถานะงาน') + th('customer', 'ชื่องาน / ลูกค้า') + th('so', 'เลข QT / อ้างอิง')
       + th('quoteDate', 'วันที่สร้างใบเสนอราคา', 'sr-num') + th('month', 'เดือนที่คาดว่าจะปิด', 'sr-num')
-      + th('saleId', 'Sale ผู้รับผิดชอบ') + th('product', 'สินค้า') + th('amount', 'มูลค่างานประมาณ', 'sr-num')
+      + th('saleId', 'AE ผู้รับผิดชอบ') + th('product', 'สินค้า') + th('amount', 'มูลค่างานประมาณ', 'sr-num')
       + th('payment', 'รูปแบบการซื้อ') + th('cashIn', 'Cash In', 'sr-num') + '<th>หมายเหตุ</th>'
       + '  </tr></thead><tbody id="srDealBody">' + dealRowsHtml(list) + '</tbody></table></div>'
       + '  <div class="sr-foot" id="srDealCount">แสดง ' + sortRows(list).filter(function (d) {
@@ -1006,7 +1006,7 @@
         + '</tr>';
     }).join('');
     return '<section class="sr-panel">'
-      + '  <div class="sr-ph"><div><h3>รายชื่อเซลส์ (Sale)</h3>'
+      + '  <div class="sr-ph"><div><h3>รายชื่อเซลส์ (AE)</h3>'
       + '    <div class="sr-s2">ใช้เลือกในฟอร์มดีลและคำนวณ “เป้า/คน” · รหัส S01, S02, … ระบบสร้างให้อัตโนมัติ</div></div>'
       + '    <div class="sr-tools"><button class="sr-btn dark" data-sr-addsale><i class="fa-solid fa-user-plus"></i> เพิ่มเซลส์</button></div></div>'
       + (list.length
@@ -1370,7 +1370,7 @@
   function openDealForm(d0) {
     injectCss();
     if (!SALES.length) {
-      if (global.toast) global.toast('ยังไม่มีรายชื่อเซลส์ — เพิ่มที่หัวข้อ “รายชื่อเซลส์ (Sale)” ก่อน');
+      if (global.toast) global.toast('ยังไม่มีรายชื่อเซลส์ — เพิ่มที่หัวข้อ “รายชื่อเซลส์ (AE)” ก่อน');
       return;
     }
     var tm = state.team || viewerTeam() || '';
@@ -1567,7 +1567,7 @@
       + renderTargets()
       + '<div class="sr-charts">'
       + '  <section class="sr-panel sr-chart-wide">'
-      + '    <div class="sr-ph"><div><h3>ผลงานรายบุคคล (Sale Performance)</h3>'
+      + '    <div class="sr-ph"><div><h3>ผลงานรายบุคคล (AE Performance)</h3>'
       + '      <div class="sr-s2">เลือกทีมด้านขวา แล้วคลิกชื่อเซลส์เพื่อดูรายงานยอดขายรายเดือน · เส้นประแดง = เป้าหมายต่อคน</div></div>'
       + '      <div class="sr-teamtabs">'
       + '        <button class="sr-tab' + (state.perfTeam === '' ? ' on' : '') + '" data-sr-perfteam="">ทุกทีม</button>'
@@ -1735,7 +1735,7 @@
       + '  <div><small>สถานะงาน</small><strong><span class="sr-badge ' + s.cls + '">' + d.status + ' · ' + esc(s.label) + '</span></strong></div>'
       + '  <div><small>มูลค่างานประมาณ</small><strong>' + money(d.amount) + '</strong></div>'
       + '  <div><small>Cash In คาดรับ</small><strong>' + (cashInOf(d) ? money(cashInOf(d)) : '—') + '</strong></div>'
-      + '  <div><small>Sale ผู้รับผิดชอบ</small><strong>' + esc(sale(d.saleId).name) + '</strong></div>'
+      + '  <div><small>AE ผู้รับผิดชอบ</small><strong>' + esc(sale(d.saleId).name) + '</strong></div>'
       + '  <div><small>สินค้า</small><strong>' + esc(p.name) + '</strong></div>'
       + '  <div><small>รูปแบบการซื้อ</small><strong>' + esc(pay.name) + '</strong></div>'
       + '  <div><small>วันที่สร้างใบเสนอราคา</small><strong>' + shortDate(d.quoteDate) + '</strong></div>'
@@ -1762,7 +1762,7 @@
       return !q || (d.customer + ' ' + d.job + ' ' + d.no + ' ' + d.so).toLowerCase().indexOf(q) >= 0;
     });
     var head = ['เลขดีล', 'สถานะ', 'ชื่อลูกค้า', 'ชื่องาน', 'เลข QT/อ้างอิง', 'วันที่เสนอราคา', 'เดือนที่คาดว่าจะปิด',
-      'Sale', 'สินค้า', 'มูลค่างานประมาณ', 'รูปแบบการซื้อ', 'Cash In', 'อ้างอิง Daily Report', 'หมายเหตุ'];
+      'AE', 'สินค้า', 'มูลค่างานประมาณ', 'รูปแบบการซื้อ', 'Cash In', 'อ้างอิง Daily Report', 'หมายเหตุ'];
     var lines = [head];
     rows.forEach(function (d) {
       lines.push([d.no, d.status + ' · ' + st(d.status).label, d.customer, d.job, d.so, d.quoteDate,
