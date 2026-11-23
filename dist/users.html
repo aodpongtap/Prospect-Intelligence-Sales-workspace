@@ -29,7 +29,7 @@ th{font-size:10px;color:#667085;font-weight:500;background:#f8fafc;text-align:le
 td{padding:10px 12px;border-bottom:1px solid #eef1f5;font-size:12px;vertical-align:middle}
 tbody tr:hover{background:#fafcff}
 /* ความกว้างคอลัมน์ให้ตรงกัน (เปอร์เซ็นต์รวม + คอลัมน์ปุ่ม) */
-.c-email{width:16%}.c-name{width:12%}.c-level{width:11%}.c-team{width:12%}.c-parent{width:15%}.c-down{width:6%}.c-status{width:9%}.c-last{width:9%}.c-act{width:186px}
+.c-email{width:15%}.c-name{width:11%}.c-level{width:10%}.c-team{width:10%}.c-sale{width:14%}.c-parent{width:13%}.c-down{width:6%}.c-status{width:8%}.c-last{width:9%}.c-act{width:186px}
 td.c-email>span{display:block;overflow-wrap:anywhere;line-height:1.4}
 td.c-name .name-wrap{display:flex;align-items:center;gap:5px;min-width:0}
 td.c-name .name-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -48,6 +48,7 @@ td.c-act{white-space:nowrap}
 td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
 .pill{display:inline-flex;align-items:center;justify-content:center;padding:2px 9px;border-radius:20px;font-size:10px;line-height:1.6;white-space:nowrap}
 .l-admin{background:#eff6ff;color:#1d4ed8}.l-editor{background:#ecfdf3;color:#15803d}.l-viewer{background:#f2f4f7;color:#475467}.l-core{background:#0F2B46;color:#fff}
+.pill-warn{background:#fff7ed;color:#b45309;border:1px solid #fed7aa;cursor:help}
 .on{color:var(--green)}.off{color:var(--red)}.acts{display:flex;gap:6px;flex-wrap:wrap}
 .msg{margin:0 0 12px;padding:9px 11px;border-radius:8px;font-size:12px;display:none}
 .msg.err{background:#fff1f2;border:1px solid #ffe4e6;color:#b91c1c;display:block}
@@ -111,8 +112,8 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th class="c-email">อีเมล</th><th class="c-name">ชื่อ</th><th class="c-level">ระดับสิทธิ์</th><th class="c-team">ทีม (BU)</th><th class="c-parent">ผู้ดูแลสาย</th><th class="c-down">ลูกข่าย</th><th class="c-status">สถานะ</th><th class="c-last">เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
-        <tbody id="tb"><tr><td colspan="9" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
+        <thead><tr><th class="c-email">อีเมล</th><th class="c-name">ชื่อ</th><th class="c-level">ระดับสิทธิ์</th><th class="c-team">ทีม (BU)</th><th class="c-sale">เซลส์ที่ผูก</th><th class="c-parent">ผู้ดูแลสาย</th><th class="c-down">ลูกข่าย</th><th class="c-status">สถานะ</th><th class="c-last">เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
+        <tbody id="tb"><tr><td colspan="10" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -416,6 +417,49 @@ function teamCell(u) {
   return html;
 }
 
+/* ---------- รีวิว: บัญชีเซลล์ผูกกับรายชื่อเซลส์คนไหน (ใช้กติกาเดียวกับแอป) ---------- */
+function salesStore() {
+  try {
+    var a = JSON.parse(localStorage.getItem('pi_sr_sales_v1') || 'null');
+    if (Object.prototype.toString.call(a) === '[object Array]') return a;
+  } catch (e) {}
+  return [];
+}
+function normStr(v) { return String(v || '').replace(/[\s\u200B\u00A0]+/g, '').toLowerCase(); }
+function matchSale(u) {
+  var lvl = String(u.level || '').toLowerCase();
+  if (lvl !== 'sale' && lvl !== 'agent') return null;
+  var list = salesStore();
+  var nm = normStr(u.name);
+  if (nm) {
+    for (var i = 0; i < list.length; i++) {
+      if (normStr(list[i].name) === nm) return { sale: list[i], how: 'ชื่อตรงกัน' };
+    }
+    var near = list.filter(function (s) {
+      var sn = normStr(s.name);
+      return sn && (sn.indexOf(nm) >= 0 || nm.indexOf(sn) >= 0);
+    });
+    if (near.length === 1) return { sale: near[0], how: 'ชื่อใกล้เคียง' };
+  }
+  var tm = String(u.team || '').toUpperCase();
+  if (tm) {
+    var inTeam = list.filter(function (s) { return String(s.team || '').toUpperCase() === tm; });
+    if (inTeam.length === 1) return { sale: inTeam[0], how: 'ทีม ' + tm + ' มีเซลส์คนเดียว' };
+    if (inTeam.length > 1) return { sale: null, why: 'ทีม ' + tm + ' มี ' + inTeam.length + ' คน — ตั้งชื่อบัญชีให้ตรงกับชื่อเซลส์' };
+  }
+  if (!list.length) return { sale: null, why: 'ยังไม่มีรายชื่อเซลส์ใน Reports' };
+  return { sale: null, why: 'ไม่พบชื่อที่ตรง — เพิ่มใน Reports หรือแก้ชื่อบัญชี' };
+}
+function saleLinkCell(u) {
+  var m = matchSale(u);
+  if (!m) return '<span style="color:#c2cbd8">—</span>';
+  if (m.sale) {
+    return '<span class="pill l-editor" title="ผูกด้วย: ' + esc(m.how) + '">'
+      + esc(m.sale.id) + ' · ' + esc(m.sale.name) + '</span>';
+  }
+  return '<span class="pill pill-warn" title="' + esc(m.why) + '">⚠ ยังไม่ผูก</span>';
+}
+
 function render(users) {
   window.__USERS__ = users || [];
   el('count').textContent = users.length;
@@ -467,13 +511,14 @@ function render(users) {
       + '</div></td>'
       + '<td class="c-level">' + levelCell + '</td>'
       + '<td class="c-team">' + (core ? '<span class="pill l-core">ทั้งหมด</span>' : teamCell(u)) + '</td>'
+      + '<td class="c-sale">' + saleLinkCell(u) + '</td>'
       + '<td class="c-parent" title="' + esc(parentEmail ? parentName + ' · ' + parentEmail : '-') + '">' + parentCell + '</td>'
       + '<td class="c-down">' + downCell + '</td>'
       + '<td class="c-status">' + statusCell + '</td>'
       + '<td class="c-last">' + fmt(u.lastLogin) + '</td>'
       + '<td class="c-act">' + acts + '</td></tr>';
   }).join('');
-  el('tb').innerHTML = rows || '<tr><td colspan="9" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
+  el('tb').innerHTML = rows || '<tr><td colspan="10" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
   fillTeamOptions();
   refreshUplines();
   buildFilterOptions();
