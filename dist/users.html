@@ -81,10 +81,7 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
 </div>
 
 <div class="wrap">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px">
-    <h1 style="margin:0">จัดการผู้ใช้งาน</h1>
-    <a class="btn" href="index.html" style="text-decoration:none"><i class="fa-solid fa-arrow-left"></i> กลับ Dashboard</a>
-  </div>
+  <h1 style="margin:0">จัดการผู้ใช้งาน</h1>
   <div class="subtitle" style="margin:6px 0 16px">เพิ่มอีเมล กำหนดสิทธิ์ ระบบจะสร้างรหัสผ่านให้ทันที (แสดงครั้งเดียว)</div>
 
   <div class="msg" id="msg"></div>
@@ -664,7 +661,12 @@ function load() {
     for (var i = 0; i < list.length; i++) if (String(list[i].email).toLowerCase() === String(me.email).toLowerCase()) mine = list[i];
     if (mine && mine.level && mine.level !== me.level) {
       me.level = mine.level;
-      if (window.PIAuth && PIAuth.setSession) { try { me.isAdmin = (mine.level === 'admin' || mine.level === 'bu'); PIAuth.setSession(me); } catch (e) {} }
+      me.isAdmin = (mine.level === 'admin' || mine.level === 'bu');
+      try {
+        var raw = JSON.parse(localStorage.getItem('pi_session_v2') || '{}');
+        raw.level = mine.level; raw.isAdmin = me.isAdmin;
+        localStorage.setItem('pi_session_v2', JSON.stringify(raw));
+      } catch (e) {}
       if (el('me')) el('me').textContent = me.email + ' · ' + String(me.level).toUpperCase();
     }
     render(list);
