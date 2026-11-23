@@ -157,7 +157,11 @@
     channel: '',
     sale: '',
     q: '',
-    day: ''
+    day: '',
+    trMode: 'day',
+    trYear: isoLocal().slice(0, 4),
+    trMonth: isoLocal().slice(5, 7),
+    trDay: ''
   };
   var editing = '';
 
@@ -236,6 +240,57 @@
       + '<label class="dr-fl dr-fl-q"><span>ค้นหา</span><input type="search" data-dr-filter="q" placeholder="ลูกค้า / สรุป / นัดครั้งต่อไป" value="' + esc(state.q) + '"></label>'
       + '<button class="dr-btn" data-dr-today><i class="fa-solid fa-calendar-day"></i> วันนี้</button>'
       + '</div>';
+  }
+
+  /* ---------- เทรนด์ตามช่วงเวลา (วัน / เดือน / ปี) ---------- */
+  function daysInMonth(y, m) { return new Date(Number(y), Number(m), 0).getDate(); }
+  function trendYear() { return String(state.trYear || state.month.slice(0, 4)); }
+  function trendMonth() { return String(state.trMonth || state.month.slice(5, 7)); }
+  function trendYears() {
+    var ys = {};
+    visible().forEach(function (x) { var y = String(x.date || '').slice(0, 4); if (y) ys[y] = 1; });
+    ys[String(new Date().getFullYear())] = 1;
+    ys[state.month.slice(0, 4)] = 1;
+    return Object.keys(ys).filter(Boolean).sort();
+  }
+  function trendPanel() {
+    var y = trendYear(), m = trendMonth();
+    var yOpts = trendYears().map(function (v) {
+      return '<option value="' + v + '"' + (v === y ? ' selected' : '') + '>พ.ศ. ' + (Number(v) + 543) + '</option>';
+    }).join('');
+    var mOpts = TH_M_SHORT.map(function (n, i) {
+      var v = pad2(i + 1);
+      return '<option value="' + v + '"' + (v === m ? ' selected' : '') + '>' + esc(n) + '</option>';
+    }).join('');
+    var dOpts = '<option value="">ทั้งเดือน</option>';
+    for (var d = 1; d <= daysInMonth(y, m); d++) {
+      var dv = pad2(d);
+      dOpts += '<option value="' + dv + '"' + (dv === state.trDay ? ' selected' : '') + '>' + d + '</option>';
+    }
+    var seg = function (k, label) {
+      return '<button class="dr-seg' + (state.trMode === k ? ' on' : '') + '" data-dr-tmode="' + k + '">' + label + '</button>';
+    };
+    var isDay = state.trMode === 'day';
+    var title = isDay ? 'เทรนด์รายวัน' : (state.trMode === 'month' ? 'เทรนด์รายเดือน' : 'เทรนด์รายปี');
+    var sub;
+    if (isDay) {
+      sub = state.trDay
+        ? 'รายชั่วโมงของวันที่ ' + Number(state.trDay) + ' ' + TH_M_SHORT[Number(m) - 1] + ' ' + (Number(y) + 543)
+        : 'จำนวนกิจกรรมและลูกค้าที่ติดต่อในแต่ละวัน · ' + TH_M_SHORT[Number(m) - 1] + ' ' + (Number(y) + 543);
+    } else if (state.trMode === 'month') {
+      sub = 'เปรียบเทียบ 12 เดือนของปี พ.ศ. ' + (Number(y) + 543);
+    } else {
+      sub = 'เปรียบเทียบจำนวนกิจกรรมในแต่ละปี';
+    }
+    var ctl = '<div class="dr-trendctl">'
+      + '<div class="dr-seg-group">' + seg('day', 'รายวัน') + seg('month', 'รายเดือน') + seg('year', 'รายปี') + '</div>'
+      + (state.trMode === 'year' ? '' : '<label class="dr-tl"><span>ปี</span><select data-dr-trend="trYear">' + yOpts + '</select></label>')
+      + (isDay ? '<label class="dr-tl"><span>เดือน</span><select data-dr-trend="trMonth">' + mOpts + '</select></label>'
+        + '<label class="dr-tl"><span>วัน</span><select data-dr-trend="trDay">' + dOpts + '</select></label>' : '')
+      + '</div>';
+    return '<section class="dr-panel dr-trendpanel">'
+      + '<div class="dr-ph"><div><h3>' + title + '</h3><div class="dr-s2">' + sub + '</div></div>' + ctl + '</div>'
+      + '<div class="dr-chartbox dr-chartbox-lg"><canvas id="drTrendDay"></canvas></div></section>';
   }
 
   /* ---------- render ---------- */
@@ -396,6 +451,7 @@
     setTimeout(draw, 30);
     return '<div class="dr">' + head + filtersBar() + '<div class="dr-kpis">' + kpis + '</div>'
       + '<div class="dr-day">' + totalBar + '</div>'
+      + trendPanel()
       + charts + perSale + table + '</div>';
   }
 
@@ -405,12 +461,80 @@
     charts.forEach(function (c) { try { c.destroy(); } catch (e) {} });
     charts = [];
   }
+  /* ---------- กราฟเทรนด์รายวัน / รายเดือน / รายปี ---------- */
+  function drawTrend() {
+    var el = document.getElementById('drTrendDay');
+    if (!el) return;
+    var all = visible();
+    var y = trendYear(), m = trendMonth();
+    var labels = [], counts = [], custs = [];
+    var push = function (key, label) {
+      var part = all.filter(function (x) { return key(x); });
+      var s = summarize(part);
+      labels.push(label);
+      counts.push(s.count);
+      custs.push(s.customers);
+    };
+    if (state.trMode === 'year') {
+      var ys = {};
+      all.forEach(function (x) { var yy = String(x.date || '').slice(0, 4); if (yy) ys[yy] = 1; });
+      ys[new Date().getFullYear()] = 1;
+      Object.keys(ys).sort().forEach(function (yy) {
+        push(function (x) { return String(x.date || '').slice(0, 4) === yy; }, 'พ.ศ. ' + (Number(yy) + 543));
+      });
+    } else if (state.trMode === 'month') {
+      for (var mm = 1; mm <= 12; mm++) {
+        (function (k) {
+          push(function (x) { return monthOf(x.date) === y + '-' + pad2(k); }, TH_M_SHORT[k - 1]);
+        })(mm);
+      }
+    } else if (state.trDay) {
+      var iso = y + '-' + m + '-' + state.trDay;
+      for (var h = 0; h <= 23; h++) {
+        (function (k) {
+          push(function (x) { return x.date === iso && Number(String(x.time || '00:00').slice(0, 2)) === k; }, pad2(k) + ':00');
+        })(h);
+      }
+    } else {
+      var total = daysInMonth(y, m);
+      for (var d = 1; d <= total; d++) {
+        (function (k) {
+          push(function (x) { return x.date === y + '-' + m + '-' + pad2(k); }, String(k));
+        })(d);
+      }
+    }
+    var thin = labels.length > 14;
+    charts.push(new global.Chart(el, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: 'กิจกรรม', data: counts, backgroundColor: '#2563EB', borderRadius: 4, maxBarThickness: thin ? 14 : 30 },
+          { label: 'ลูกค้า', data: custs, backgroundColor: '#93C5FD', borderRadius: 4, maxBarThickness: thin ? 14 : 30 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 9, usePointStyle: true } },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, autoSkipPadding: 8 } },
+          y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#EFF3F8' } }
+        }
+      }
+    }));
+  }
+
   function draw() {
     destroyCharts();
     if (!global.Chart) return;
     global.Chart.defaults.font.family = 'Prompt, sans-serif';
     global.Chart.defaults.font.size = 10;
     global.Chart.defaults.color = '#64748B';
+
+    drawTrend();
 
     var y = Number(String(state.month).slice(0, 4)) || new Date().getFullYear();
     var all = visible();
@@ -625,9 +749,24 @@
   document.addEventListener('change', function (e) {
     var t = e.target;
     if (!t || !t.closest) return;
+    var tr = t.closest('[data-dr-trend]');
+    if (tr) {
+      state[tr.getAttribute('data-dr-trend')] = tr.value;
+      if (!state.trDay) state.trDay = '';
+      var maxD = daysInMonth(trendYear(), trendMonth());
+      if (state.trDay && Number(state.trDay) > maxD) state.trDay = '';
+      if (typeof global.render === 'function') global.render();
+      return;
+    }
     var f = t.closest('[data-dr-filter]');
     if (!f) return;
-    state[f.getAttribute('data-dr-filter')] = f.value;
+    var key = f.getAttribute('data-dr-filter');
+    state[key] = f.value;
+    if (key === 'month' && f.value) {
+      state.trYear = f.value.slice(0, 4);
+      state.trMonth = f.value.slice(5, 7);
+      if (state.trDay && Number(state.trDay) > daysInMonth(state.trYear, state.trMonth)) state.trDay = '';
+    }
     if (typeof global.render === 'function') global.render();
   });
   document.addEventListener('input', function (e) {
@@ -648,6 +787,13 @@
   document.addEventListener('click', function (e) {
     var t = e.target;
     if (!t || !t.closest) return;
+    var tm = t.closest('[data-dr-tmode]');
+    if (tm) {
+      state.trMode = tm.getAttribute('data-dr-tmode');
+      state.trDay = '';
+      if (typeof global.render === 'function') global.render();
+      return;
+    }
     if (t.closest('[data-dr-new]')) { openForm(''); return; }
     var ed = t.closest('[data-dr-edit]');
     if (ed) { openForm(ed.getAttribute('data-dr-edit')); return; }
@@ -676,6 +822,9 @@
     if (t.closest('[data-dr-today]')) {
       state.month = isoLocal().slice(0, 7);
       state.channel = ''; state.sale = ''; state.q = '';
+      state.trYear = isoLocal().slice(0, 4);
+      state.trMonth = isoLocal().slice(5, 7);
+      state.trDay = '';
       if (typeof global.render === 'function') global.render();
       return;
     }
@@ -714,6 +863,16 @@
       + '.dr-charts{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;align-items:stretch}'
       + '.dr-charts .dr-panel{display:flex;flex-direction:column}'
       + '.dr-chartbox{position:relative;flex:1 1 auto;height:auto;min-height:216px}'
+      + '.dr-trendpanel{display:flex;flex-direction:column}'
+      + '.dr-chartbox-lg{min-height:250px}'
+      + '.dr-trendctl{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}'
+      + '.dr-seg-group{display:inline-flex;gap:2px;background:#F1F5F9;border:1px solid #E5EAF0;border-radius:9px;padding:3px}'
+      + '.dr-seg{border:0;background:transparent;color:#475467;font:inherit;font-size:10.5px;padding:5px 11px;border-radius:7px;cursor:pointer;line-height:1.2}'
+      + '.dr-seg:hover{color:#0F2B46}'
+      + '.dr-seg.on{background:#fff;color:#0F2B46;font-weight:500;box-shadow:0 1px 4px rgba(15,43,70,.12)}'
+      + '.dr-tl{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;color:#667085;line-height:1.2}'
+      + '.dr-tl select{border:1px solid #DCE3EB;border-radius:8px;padding:5px 7px;font:inherit;font-size:10.5px;color:#0F2B46;background:#fff;min-height:29px;outline:none}'
+      + '@media(max-width:640px){.dr-trendctl{justify-content:flex-start;width:100%}}'
       + '.dr-panel{background:#fff;border:1px solid #EDF0F4;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(15,43,70,.05)}'
       + '.dr-ph{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}'
       + '.dr-ph h3{margin:0;font-size:12.5px;font-weight:600;color:#0F2B46;line-height:1.35}'
