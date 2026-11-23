@@ -246,6 +246,14 @@ function matchSale(u) {
   return { sale: null, why: 'ไม่พบชื่อที่ตรง — เพิ่มใน Reports หรือแก้ชื่อบัญชี' };
 }
 function saleLinkCell(u) {
+  var lvl = String(u.level || '').toLowerCase();
+  /* L6 ตัวแทน: แสดง AE ที่ดูแล (ผู้ดูแลสาย) แทนการจับคู่รายชื่อ AE */
+  if (lvl === 'agent') {
+    var up = null;
+    (window.__USERS__ || []).forEach(function (x) { if (String(x.email).toLowerCase() === String(u.parent || '').toLowerCase()) up = x; });
+    if (up) return '<span class="pill l-admin" title="ตัวแทนภายใต้ AE: ' + esc(up.email) + '"><i class="fa-solid fa-user-tie" style="margin-right:4px"></i>' + esc(up.name || up.email) + '</span>';
+    return '<span class="pill pill-warn" title="ยังไม่มี AE ผู้ดูแล">⚠ ยังไม่ผูก AE</span>';
+  }
   var m = matchSale(u);
   if (!m) return '<span style="color:#c2cbd8">—</span>';
   if (m.sale) {
