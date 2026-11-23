@@ -333,7 +333,7 @@
       if (state.channel && x.channel !== state.channel) return false;
       if (state.sale && x.saleId !== state.sale) return false;
       if (state.q) {
-        var t = ((x.ref || '') + ' ' + x.customer + ' ' + (x.summary || '') + ' ' + (x.nextNote || '')).toLowerCase();
+        var t = ((x.ref || '') + ' ' + (x.qt || '') + ' ' + x.customer + ' ' + (x.summary || '') + ' ' + (x.nextNote || '')).toLowerCase();
         if (t.indexOf(String(state.q).toLowerCase()) < 0) return false;
       }
       return true;
@@ -386,6 +386,7 @@
         + '<td><b>' + dstrth(x.date) + '</b><div class="dr-s2">' + esc(dayName(x.date)) + ' ' + esc(x.time || '') + '</div></td>'
         + '<td><div class="dr-cust">' + esc(x.customer) + '</div>'
         + (x.ref ? '<button class="dr-ref" data-dr-copy="' + esc(x.ref) + '" title="คลิกเพื่อคัดลอกรหัสอ้างอิง">' + esc(x.ref) + '</button>' : '')
+        + (x.qt ? '<button class="dr-qt" data-dr-copyqt="' + esc(x.qt) + '" title="เลข QT / เลขอ้างอิงที่บันทึกไว้ (คลิกเพื่อคัดลอก)"><i class="fa-solid fa-hashtag"></i> ' + esc(x.qt) + '</button>' : '')
         + links
         + (x.value ? '<div class="dr-s2">มูลค่า ' + money(x.value) + '</div>' : '') + '</td>'
         + '<td><span class="dr-chip" style="color:' + c.color + ';background:' + c.color + '14">'
@@ -615,6 +616,8 @@
       + '<label class="dr-f"><span>วันที่ *</span><input type="date" name="date" required value="' + esc(cur.date || isoLocal()) + '"></label>'
       + '<label class="dr-f"><span>เวลา</span><input type="time" name="time" value="' + esc(cur.time || nowTime()) + '"></label>'
       + '<label class="dr-f full"><span>ชื่อลูกค้า *</span><input type="text" name="customer" required placeholder="เช่น บริษัท สยามคลีน เซอร์วิส จำกัด" value="' + esc(cur.customer || '') + '"></label>'
+      + '<label class="dr-f full"><span>เลข QT / เลขอ้างอิง (ถ้ามี)</span><input type="text" name="qt" maxlength="48" placeholder="กรอกเองได้ เช่น QT-2026-0123" value="' + esc(cur.qt || '') + '">'
+      + '  <span class="dr-hint">ใช้บันทึกอ้างอิงตามเอกสารจริงเท่านั้น — ระบบไม่สร้างให้เอง</span></label>'
       + '<label class="dr-f"><span>รูปแบบการติดต่อ *</span><select name="channel">' + chOpts + '</select></label>'
       + '<label class="dr-f"><span>มูลค่าโครงการ (บาท)</span><input type="number" name="value" min="0" step="1000" placeholder="0" value="' + (cur.value ? num(cur.value) : '') + '"></label>'
       + '<label class="dr-f full"><span>สรุป / ผลการดำเนินการ</span><textarea name="summary" rows="3" placeholder="สรุปสิ่งที่คุย ผลลัพธ์ หรือขั้นตอนถัดไป">' + esc(cur.summary || '') + '</textarea></label>'
@@ -639,6 +642,7 @@
       date: f.date.value,
       time: f.time.value,
       customer: String(f.customer.value || '').trim(),
+      qt: String((f.qt && f.qt.value) || '').trim(),
       channel: f.channel.value,
       value: num(f.value.value),
       summary: String(f.summary.value || '').trim(),
@@ -695,7 +699,7 @@
       month: Number(ym[1]),
       quoteDate: rec.date,
       drRef: rec.ref,
-      note: 'สร้างจาก Daily Report ' + (rec.ref || '') + (rec.summary ? ' · ' + rec.summary : '')
+      note: 'สร้างจาก Daily Report ' + (rec.ref || '') + (rec.qt ? ' · QT ' + rec.qt : '') + (rec.summary ? ' · ' + rec.summary : '')
     });
     if (global.PILog) global.PILog.add('deal.add', (deal && deal.no ? deal.no : '') + ' · ' + rec.customer, 'จาก Daily Report ' + rec.ref);
     if (!silent && global.toast) global.toast('สร้างดีล ' + (deal && deal.no ? deal.no : '') + ' ใน Reports แล้ว');
@@ -721,9 +725,9 @@
       if (state.sale && x.saleId !== state.sale) return false;
       return true;
     }).sort(function (a, b) { return String(b.date + (b.time || '')).localeCompare(String(a.date + (a.time || ''))); });
-    var head = ['รหัสอ้างอิง', 'วันที่', 'เวลา', 'ลูกค้า', 'ช่องทาง', 'สรุป/ผลการ', 'นัดครั้งต่อไป', 'เวลานัด', 'เรื่องที่นัด', 'มูลค่าโครงการ', 'ผู้รับผิดชอบ', 'ทีม'];
+    var head = ['รหัสอ้างอิง', 'เลข QT/อ้างอิง', 'วันที่', 'เวลา', 'ลูกค้า', 'ช่องทาง', 'สรุป/ผลการ', 'นัดครั้งต่อไป', 'เวลานัด', 'เรื่องที่นัด', 'มูลค่าโครงการ', 'ผู้รับผิดชอบ', 'ทีม'];
     var rows = [head].concat(list.map(function (x) {
-      return [x.ref || '', x.date, x.time || '', x.customer, ch(x.channel).name, x.summary || '', x.nextDate || '', x.nextTime || '', x.nextNote || '',
+      return [x.ref || '', x.qt || '', x.date, x.time || '', x.customer, ch(x.channel).name, x.summary || '', x.nextDate || '', x.nextTime || '', x.nextNote || '',
         num(x.value), saleOf(x.saleId).name, saleOf(x.saleId).team];
     }));
     var csv = rows.map(function (r) {
@@ -819,6 +823,15 @@
       if (global.toast) global.toast('คัดลอกรหัสอ้างอิง ' + code + ' แล้ว');
       return;
     }
+    var cq = t.closest('[data-dr-copyqt]');
+    if (cq) {
+      var qc = cq.getAttribute('data-dr-copyqt');
+      try {
+        if (navigator.clipboard) navigator.clipboard.writeText(qc);
+      } catch (e) {}
+      if (global.toast) global.toast('คัดลอกเลขอ้างอิง ' + qc + ' แล้ว');
+      return;
+    }
     if (t.closest('[data-dr-today]')) {
       state.month = isoLocal().slice(0, 7);
       state.channel = ''; state.sale = ''; state.q = '';
@@ -887,6 +900,10 @@
       + '.dr-cust{color:#0F2B46;font-weight:600}'
       + '.dr-ref{display:inline-block;margin-top:3px;border:1px dashed #CBD5E1;background:#F8FAFC;color:#475467;border-radius:6px;padding:1px 6px;font-size:9px;font-family:ui-monospace,Menlo,Consolas,monospace;cursor:copy}'
       + '.dr-ref:hover{border-color:#93C5FD;color:#1D4ED8;background:#EFF6FF}'
+      + '.dr-qt{display:inline-block;margin:3px 0 0 4px;border:1px solid #E0E7FF;background:#EEF2FF;color:#3730A3;border-radius:6px;padding:1px 6px;font-size:9px;font-family:ui-monospace,Menlo,Consolas,monospace;cursor:copy;line-height:1.5}'
+      + '.dr-qt:hover{border-color:#A5B4FC;background:#E0E7FF}'
+      + '.dr-qt i{font-size:8px;margin-right:2px}'
+      + '.dr-hint{font-size:9px;color:#98A2B3;line-height:1.45;margin-top:1px}'
       + '.dr-links{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}'
       + '.dr-lk{display:inline-flex;align-items:center;gap:4px;background:#F0FDF4;color:#15803D;border:1px solid #DCFCE7;border-radius:99px;padding:1px 7px;font-size:8.5px}'
       + '.dr-lk.proj{background:#EEF2FF;color:#3730A3;border-color:#E0E7FF}'
