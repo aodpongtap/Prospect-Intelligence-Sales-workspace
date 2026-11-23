@@ -120,7 +120,7 @@
     var head = '<div class="tp-head">'
       + '<div><h1>ทีม &amp; สิทธิ์</h1>'
       + '<div class="tp-sub">คุณคือ <b>L' + my.n + ' ' + my.label + '</b> · '
-      + (seesAll ? 'เห็นทุกทีมใต้ BU และเห็นทั้งเครือข่าย' : 'เห็นเฉพาะผู้ใช้ในสายงานของคุณ')
+      + (seesAll ? (my.n === 1 ? 'เห็นทั้งเครือข่าย (ทุก BU / ทุกทีม)' : 'เห็นทุกทีมใต้ BU และเห็นทั้งเครือข่าย') : 'เห็นเฉพาะผู้ใช้ในสายงานของคุณ')
       + (canReg ? ' · ลงทะเบียน ID ได้' : ' · อ่านอย่างเดียว') + '</div></div>'
       + '<div class="tp-head-acts">'
       + '<button class="tp-btn" data-tp-tree><i class="fa-solid fa-sitemap"></i> แผนผังเครือข่าย</button>'
