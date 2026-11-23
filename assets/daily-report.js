@@ -319,10 +319,13 @@
       var late = x.nextDate && x.nextDate < t && !x.done;
       var lk = linksOf(x.ref || '');
       var links = (lk.deals.length || lk.projects.length)
-        ? '<div class="dr-links">'
-          + (lk.deals.length ? '<span class="dr-lk"><i class="fa-solid fa-file-invoice-dollar"></i> ดีล ' + lk.deals.length + '</span>' : '')
+        ? '<div class="dr-links" title="' + esc(lk.deals.map(function (z) { return z.no; }).join(', ')) + '">'
+          + (lk.deals.length ? '<span class="dr-lk"><i class="fa-solid fa-file-invoice-dollar"></i> ' + esc(lk.deals[0].no) + (lk.deals.length > 1 ? ' +' + (lk.deals.length - 1) : '') + '</span>' : '')
           + (lk.projects.length ? '<span class="dr-lk proj"><i class="fa-solid fa-diagram-project"></i> โครงการ ' + lk.projects.length + '</span>' : '')
           + '</div>'
+        : '';
+      var mkBtn = (num(x.value) > 0 && !lk.deals.length)
+        ? '<button class="dr-ibtn" data-dr-mkdeal="' + esc(x.id) + '" title="สร้างดีล (Pipeline) ใน Reports จากบันทึกนี้"><i class="fa-solid fa-file-invoice-dollar"></i></button>'
         : '';
       return '<tr data-dr-row="' + esc(x.id) + '">'
         + '<td class="dr-num"><b>' + dstrth(x.date) + '</b><div class="dr-s2">' + esc(dayName(x.date)) + ' ' + esc(x.time || '') + '</div></td>'
@@ -338,7 +341,7 @@
             + (x.nextNote ? '<div class="dr-s2">' + esc(x.nextNote) + '</div>' : '')
           : '<span class="dr-dim">—</span>') + '</td>'
         + '<td>' + esc(saleOf(x.saleId).name) + '</td>'
-        + '<td class="dr-act"><button class="dr-ibtn" data-dr-edit="' + esc(x.id) + '" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>'
+        + '<td class="dr-act">' + mkBtn + '<button class="dr-ibtn" data-dr-edit="' + esc(x.id) + '" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>'
         + '<button class="dr-ibtn danger" data-dr-del="' + esc(x.id) + '" title="ลบ"><i class="fa-solid fa-trash"></i></button></td>'
         + '</tr>';
     }).join('');
@@ -537,25 +540,9 @@
       rec.createdAt = new Date().toISOString();
       ITEMS.push(rec);
       if (global.PILog) global.PILog.add('daily.add', o.customer, rec.ref + ' · ' + dstrth(o.date) + ' ' + o.time + ' · ' + ch(o.channel).name + (o.value ? ' · ' + money(o.value) : ''));
-      /* เพิ่มเข้า Pipeline ของ Reports */
-      if (f.toPipeline && f.toPipeline.checked && o.value > 0 && global.SalesReport && global.SalesReport.addDeal) {
-        try {
-          var ym = String(o.date).split('-');
-          global.SalesReport.addDeal({
-            job: 'พบลูกค้า: ' + o.customer,
-            customer: o.customer,
-            saleId: o.saleId,
-            amount: o.value,
-            status: 1,
-            prob: 40,
-            product: 'P1',
-            payment: 'cash',
-            year: Number(ym[0]),
-            month: Number(ym[1]),
-            quoteDate: o.date,
-            note: 'สร้างจาก Daily Report · ' + (o.summary || '')
-          });
-        } catch (e) {}
+      /* เพิ่มเข้า Pipeline ของ Reports (พร้อมผูกกลับมาที่รหัสอ้างอิงนี้) */
+      if (f.toPipeline && f.toPipeline.checked && o.value > 0) {
+        try { createDealFrom(rec, true); } catch (e) {}
       }
     }
     save();
@@ -563,6 +550,31 @@
     if (typeof global.closeModal === 'function') global.closeModal();
     if (typeof global.render === 'function') global.render();
     if (global.toast) global.toast('บันทึกกิจกรรมแล้ว');
+  }
+
+  /** สร้างดีลใน Reports จากบันทึกนี้ พร้อมผูก drRef กลับมา */
+  function createDealFrom(rec, silent) {
+    if (!rec || !global.SalesReport || !global.SalesReport.addDeal) return null;
+    var ym = String(rec.date || isoLocal()).split('-');
+    var pl = (global.SalesReport.productsList ? global.SalesReport.productsList() : []) || [];
+    var deal = global.SalesReport.addDeal({
+      job: 'พบลูกค้า: ' + rec.customer,
+      customer: rec.customer,
+      saleId: rec.saleId,
+      amount: num(rec.value),
+      status: 1,
+      prob: 40,
+      product: (pl[0] && pl[0].code) || 'P1',
+      payment: 'cash',
+      year: Number(ym[0]),
+      month: Number(ym[1]),
+      quoteDate: rec.date,
+      drRef: rec.ref,
+      note: 'สร้างจาก Daily Report ' + (rec.ref || '') + (rec.summary ? ' · ' + rec.summary : '')
+    });
+    if (global.PILog) global.PILog.add('deal.add', (deal && deal.no ? deal.no : '') + ' · ' + rec.customer, 'จาก Daily Report ' + rec.ref);
+    if (!silent && global.toast) global.toast('สร้างดีล ' + (deal && deal.no ? deal.no : '') + ' ใน Reports แล้ว');
+    return deal;
   }
 
   function delRecord(id) {
@@ -640,6 +652,16 @@
     if (ed) { openForm(ed.getAttribute('data-dr-edit')); return; }
     var dl = t.closest('[data-dr-del]');
     if (dl) { delRecord(dl.getAttribute('data-dr-del')); return; }
+    var mk = t.closest('[data-dr-mkdeal]');
+    if (mk) {
+      var rid = mk.getAttribute('data-dr-mkdeal'), rec = null;
+      for (var i = 0; i < ITEMS.length; i++) if (ITEMS[i].id === rid) rec = ITEMS[i];
+      if (rec) {
+        try { createDealFrom(rec); } catch (e) { if (global.toast) global.toast('สร้างดีลไม่สำเร็จ: ' + (e.message || e)); }
+        if (typeof global.render === 'function') global.render();
+      }
+      return;
+    }
     if (t.closest('[data-dr-export]')) { exportCsv(); return; }
     var cp = t.closest('[data-dr-copy]');
     if (cp) {
