@@ -398,6 +398,13 @@
       if (Object.prototype.toString.call(a) === '[object Array]' && a.length) {
         DEALS.length = 0;
         Array.prototype.push.apply(DEALS, a);
+        /* อพยพเลขดีลเดิมที่ขึ้นต้นด้วย SO- → เลขรันล้วน (2026-0001) */
+        var changed = false;
+        DEALS.forEach(function (d) {
+          var m = String(d.no || '').match(/^SO-(\d{4}-\d+)$/i);
+          if (m) { d.no = m[1]; changed = true; }
+        });
+        if (changed) { try { localStorage.setItem(LS_DEALS, JSON.stringify(DEALS)); } catch (e) {} }
       }
     } catch (e) {}
   })();
@@ -407,13 +414,33 @@
   }
   function onChange(fn) { if (typeof fn === 'function') __listeners.push(fn); }
 
+  /** เลขดีลรันตามลำดับ (ปี-0001) — กันเลขซ้ำเมื่อมีลบดีล */
+  function seqOf(no, yr) {
+    var s = String(no || '').toUpperCase();
+    var key = String(yr) + '-';
+    var p = s.indexOf(key);
+    if (p < 0) return 0;
+    var tail = s.slice(p + key.length);
+    if (!/^\d+$/.test(tail)) return 0;
+    return parseInt(tail, 10) || 0;
+  }
+  function nextNo(yr) {
+    var y = Number(yr) || new Date().getFullYear();
+    var n = 0;
+    DEALS.forEach(function (d) {
+      var k = seqOf(d.no, y);
+      if (k > n) n = k;
+    });
+    return y + '-' + String(n + 1).padStart(4, '0');
+  }
+
   /** เพิ่มดีลใหม่ (ใช้ร่วมกับหน้า Sale Monitor) */
   function addDeal(o) {
     var yr = Number(o.year) || new Date().getFullYear();
     var mo = Number(o.month) || (new Date().getMonth() + 1);
     var d = {
-      no: o.no || ('SO-' + yr + '-' + String(DEALS.length + 1).padStart(4, '0')),
-      so: o.so || ('QT-' + yr + '-' + String(DEALS.length + 1).padStart(4, '0')),
+      no: o.no || nextNo(yr),
+      so: String(o.so || '').trim(),
       customer: String(o.customer || '').trim(),
       job: String(o.job || o.name || '').trim(),
       quoteDate: o.quoteDate || new Date().toISOString().slice(0, 10),
@@ -541,8 +568,8 @@
   /* ============================ 4) VIEW ============================ */
   var state = { year: 2026, month: 11, team: '', sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1, perfTeam: '', view: 'report', summaryView: 'cards' };
   var ui = { targets: false };
-  var __editNo = '';    // เลขที่ SO ของดีลที่กำลังแก้ไข
-  var __openNo = '';    // เลขที่ SO ของดีลที่เปิดดูอยู่
+  var __editNo = '';    // เลขดีลที่กำลังแก้ไข
+  var __openNo = '';    // เลขดีลที่เปิดดูอยู่
   var charts = [];
 
   function cardKpi(label, value, sub, barPct, color, icon) {
@@ -851,7 +878,8 @@
         + '<td><span class="sr-badge ' + s.cls + '">' + d.status + ' · ' + esc(s.label) + '</span></td>'
         + '<td><div class="sr-nm">' + esc(d.customer) + '</div><div class="sr-s2">' + esc(d.job) + '</div>'
         + (d.drRef ? '<div class="sr-drref" title="อ้างอิง Daily Report"><i class="fa-solid fa-link"></i> ' + esc(d.drRef) + '</div>' : '') + '</td>'
-        + '<td><div>' + esc(d.so) + '</div><div class="sr-s2">' + esc(d.no) + '</div></td>'
+        + '<td><div class="sr-nm">' + esc(d.no) + '</div>'
+        + (d.so ? '<div class="sr-s2">' + esc(d.so) + '</div>' : '<div class="sr-s2 sr-dim">ยังไม่มีเลข QT</div>') + '</td>'
         + '<td class="sr-num">' + shortDate(d.quoteDate) + '</td>'
         + '<td class="sr-num">' + String(d.month).padStart(2, '0') + '.' + TH_MONTHS[d.month - 1] + ' ' + String(d.year + 543).slice(-2) + '</td>'
         + '<td><div class="sr-nm">' + esc(sale(d.saleId).name) + '</div><div class="sr-s2">' + esc(teamByCode(sale(d.saleId).team).name) + '</div></td>'
@@ -876,9 +904,9 @@
       + '  <div class="sr-ph"><div><h3>รายการดีลลูกค้า (Deal Details)</h3>'
       + '    <div class="sr-s2">คลิกที่แถวเพื่อดูหมายเหตุแบบเต็ม · คลิกหัวคอลัมน์เพื่อเรียงลำดับ</div></div>'
       + '    <div class="sr-search"><i class="fa-solid fa-magnifying-glass"></i>'
-      + '      <input id="srSearch" placeholder="ค้นหาชื่อลูกค้า / เลขที่ SO" value="' + esc(state.q) + '"></div></div>'
+      + '      <input id="srSearch" placeholder="ค้นหาชื่อลูกค้า / เลขดีล / เลข QT" value="' + esc(state.q) + '"></div></div>'
       + '  <div class="sr-tablewrap"><table class="sr-table sr-deals"><thead><tr>'
-      + th('no', 'No.', 'sr-num') + th('status', 'สถานะงาน') + th('customer', 'ชื่องาน / ลูกค้า') + th('so', 'เลขที่ SO / Inv.')
+      + th('no', 'เลขดีล', 'sr-num') + th('status', 'สถานะงาน') + th('customer', 'ชื่องาน / ลูกค้า') + th('so', 'เลข QT / อ้างอิง')
       + th('quoteDate', 'วันที่สร้างใบเสนอราคา', 'sr-num') + th('month', 'เดือนที่คาดว่าจะปิด', 'sr-num')
       + th('saleId', 'Sale ผู้รับผิดชอบ') + th('product', 'สินค้า') + th('amount', 'มูลค่างานประมาณ', 'sr-num')
       + th('payment', 'รูปแบบการซื้อ') + th('cashIn', 'Cash In', 'sr-num') + '<th>หมายเหตุ</th>'
@@ -1390,6 +1418,8 @@
       + '<div class="sr-dform">'
       + '  <label class="sr-df full">ชื่องาน / ดีล *<input name="job" required placeholder="เช่น ร้านสะดวกซัก 6 เครื่อง" value="' + esc(cur.job || '') + '"></label>'
       + '  <label class="sr-df full">ลูกค้า *<input name="customer" required placeholder="ชื่อบริษัท / ร้านค้า" value="' + esc(cur.customer || '') + '"></label>'
+      + '  <label class="sr-df full">เลข QT / อ้างอิง (ถ้ามี)<input name="so" maxlength="48" placeholder="กรอกเองได้ เช่น QT-2026-0123" value="' + esc(cur.so || '') + '">'
+      + '    <span class="sr-s2" style="font-weight:400">บันทึกตามเอกสารจริงเท่านั้น — ระบบไม่สร้างให้เอง</span></label>'
       + '  <label class="sr-df">พนักงานขาย *' + saleField + '</label>'
       + '  <label class="sr-df">สถานะงาน *<select name="status">' + statusOpts + '</select></label>'
       + '  <label class="sr-df">มูลค่างาน (บาท) *<input name="amount" type="number" min="0" step="1" required placeholder="0" value="' + (cur.amount !== undefined ? Number(cur.amount) : '') + '"></label>'
@@ -1406,7 +1436,7 @@
       + '</form>';
 
     global.setModal(d0 ? 'แก้ไขดีล' : 'เพิ่มดีลใหม่',
-      d0 ? (cur.customer + ' · ' + cur.no) : 'กรอกข้อมูลให้ครบเพื่อให้รายงานคำนวณถูกต้อง',
+      d0 ? (cur.customer + ' · ' + cur.no) : ('เลขดีลถัดไป ' + nextNo(state.year) + ' · กรอกข้อมูลให้ครบเพื่อให้รายงานคำนวณถูกต้อง'),
       body, [
         { label: 'ยกเลิก' },
         { label: d0 ? 'บันทึกการแก้ไข' : 'บันทึกดีล', icon: 'fa-solid fa-check', action: 'sr-save-deal', primary: true }
@@ -1424,7 +1454,8 @@
         product: f.product.value, payment: f.payment.value,
         year: Number(f.year.value), month: Number(f.month.value),
         note: f.note.value,
-        drRef: String((f.drRef && f.drRef.value) || '').trim().toUpperCase()
+        drRef: String((f.drRef && f.drRef.value) || '').trim().toUpperCase(),
+        so: String((f.so && f.so.value) || '').trim()
       };
       if (__editNo) {
         var d = null;
@@ -1461,7 +1492,7 @@
     if (typeof global.toast === 'function') global.toast('ลบดีลแล้ว');
   }
 
-  /** เปิดฟอร์มแก้ไขดีลจากเลขที่ SO */
+  /** เปิดฟอร์มแก้ไขดีลจากเลขดีล */
   function editDeal(no) {
     var d = null;
     for (var i = 0; i < DEALS.length; i++) if (DEALS[i].no === no) { d = DEALS[i]; break; }
@@ -1708,7 +1739,8 @@
       + '  <div><small>รูปแบบการซื้อ</small><strong>' + esc(pay.name) + '</strong></div>'
       + '  <div><small>วันที่สร้างใบเสนอราคา</small><strong>' + shortDate(d.quoteDate) + '</strong></div>'
       + '  <div><small>เดือนที่คาดว่าจะปิด</small><strong>' + monthLabel(d.year, d.month) + '</strong></div>'
-      + '  <div><small>เลขที่ SO / Inv.</small><strong>' + esc(d.so) + '</strong></div>'
+      + '  <div><small>เลขดีล</small><strong>' + esc(d.no) + '</strong></div>'
+      + '  <div><small>เลข QT / อ้างอิง</small><strong>' + (d.so ? esc(d.so) : '—') + '</strong></div>'
       + (d.drRef ? '  <div><small>อ้างอิง Daily Report</small><strong style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#1D4ED8">' + esc(d.drRef) + '</strong></div>' : '')
       + '</div>'
       + '<div class="sr-md-note"><b>หมายเหตุ</b><p>' + esc(d.note) + '</p></div>';
@@ -1728,7 +1760,7 @@
     var rows = sortRows(filteredDeals()).filter(function (d) {
       return !q || (d.customer + ' ' + d.job + ' ' + d.no + ' ' + d.so).toLowerCase().indexOf(q) >= 0;
     });
-    var head = ['No.', 'สถานะ', 'ชื่อลูกค้า', 'ชื่องาน', 'เลขที่ SO/Inv.', 'วันที่เสนอราคา', 'เดือนที่คาดว่าจะปิด',
+    var head = ['เลขดีล', 'สถานะ', 'ชื่อลูกค้า', 'ชื่องาน', 'เลข QT/อ้างอิง', 'วันที่เสนอราคา', 'เดือนที่คาดว่าจะปิด',
       'Sale', 'สินค้า', 'มูลค่างานประมาณ', 'รูปแบบการซื้อ', 'Cash In', 'อ้างอิง Daily Report', 'หมายเหตุ'];
     var lines = [head];
     rows.forEach(function (d) {

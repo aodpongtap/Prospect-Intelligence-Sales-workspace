@@ -58,6 +58,7 @@
     .dm-no{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;font-weight:600;color:#0f2b46;letter-spacing:.02em}
     .dm-ref{display:inline-flex;align-items:center;gap:4px;margin-top:4px;background:#eff6ff;color:#1d4ed8;border-radius:5px;padding:1px 6px;font-size:8.5px;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap}
     .dm-ref.none{background:transparent;color:#c2cbd8;padding:0;font-family:inherit}
+    .dm-qt{display:inline-flex;align-items:center;gap:4px;margin-top:4px;margin-left:4px;background:#eef2ff;color:#3730a3;border-radius:5px;padding:1px 6px;font-size:8.5px;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap}
     .dm-table .deal-name{font-size:11px;font-weight:600;color:#0f2b46}
     .dm-table .muted{font-size:9.5px;color:#98a2b3;margin-top:2px}
     .dm-table .risk-number{display:inline-flex;min-width:30px;justify-content:center;border-radius:99px;padding:2px 8px;font-size:9.5px}
@@ -112,7 +113,7 @@
   </script>
   <script src="assets/auth-sheets.js?v=9"></script>
   <script src="assets/report-log.js?v=12"></script>
-  <script src="assets/sales-report.js?v=44"></script>
+  <script src="assets/sales-report.js?v=45"></script>
   <script src="assets/daily-report.js?v=10"></script>
   <script src="assets/project-tracking.js?v=7"></script>
   <script src="assets/customer-intelligence.js?v=4"></script>
@@ -643,6 +644,7 @@
           deals.push({
             id: d.id, name: d.name, customer: d.customer,
             drRef: d.drRef || '',
+            qt: d.qt || '',
             owner: d.ownerName || d.ownerEmail, team: d.team || '-',
             value: Number(d.value || 0), stage: d.stage || 'Prospect',
             probability: Number(d.probability || 0), close: d.close || '',
@@ -690,6 +692,7 @@
           out.push({
             id: x.no, name: x.job || x.customer, customer: x.customer,
             drRef: x.drRef || '',
+            qt: x.so || '',
             ownerName: s.name, ownerEmail: '', team: s.team, value: Number(x.amount || 0),
             stage: STAGE_OF_STATUS[x.status] || 'Prospect',
             probability: Number(x.prob || 0),
@@ -894,7 +897,7 @@
       </tr></thead><tbody>${list.map(d=>{
         const rk=riskScore(d);
         return `<tr class="clickable" data-deal="${d.id}">
-          <td><div class="dm-no">${d.id}</div>${d.drRef?`<div class="dm-ref" title="อ้างอิงบันทึกการพบลูกค้า"><i class="fa-solid fa-link"></i> ${d.drRef}</div>`:'<div class="dm-ref none">—</div>'}</td>
+          <td><div class="dm-no">${d.id}</div>${d.qt?`<div class="dm-qt" title="เลข QT / อ้างอิง"><i class="fa-solid fa-hashtag"></i> ${d.qt}</div>`:''}${d.drRef?`<div class="dm-ref" title="อ้างอิงบันทึกการพบลูกค้า"><i class="fa-solid fa-link"></i> ${d.drRef}</div>`:'<div class="dm-ref none">—</div>'}</td>
           <td><div class="deal-name">${d.name}</div><div class="muted">${d.customer}</div></td>
           <td><div>${d.owner}</div><div class="muted">${d.team}</div></td>
           <td class="dm-num"><b>${money(d.value)}</b></td>
