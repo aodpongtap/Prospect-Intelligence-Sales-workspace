@@ -1227,7 +1227,14 @@
 
     var bar = document.getElementById('srDashBar');
     if (bar) {
-      var teams = TEAMS.filter(function (t) { return !state.team || t.code === state.team; });
+      /* เคารพขอบเขตสิทธิ์: AE เห็นเฉพาะ BU ของตัวเอง, Head/Sup เห็นเฉพาะทีมที่ดูแล */
+      var scC = scopeOf();
+      var teams = TEAMS.filter(function (t) {
+        if (scC.type === 'sale') return t.code === sale(scC.saleId).team;
+        if (scC.type === 'team') return t.code === scC.team;
+        if (scC.type === 'none') return false;
+        return !state.team || t.code === state.team;
+      });
       var series = { s4: [], s3: [], s2: [], s1: [] };
       teams.forEach(function (t) {
         var ts = summarize(k.list.filter(function (d) { return sale(d.saleId).team === t.code; }));
