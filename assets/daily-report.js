@@ -356,7 +356,7 @@
 
     var kpis = ''
       + kpi('กิจกรรมวันนี้ · Activities Today', sumToday.count + ' ครั้ง', deltaTxt + ' · ลูกค้า ' + sumToday.customers + ' ราย', '#2563EB', 'fa-solid fa-clipboard-check')
-      + kpi('เข้าพบ / ประชุมวันนี้ · Visits &amp; Meetings', sumToday.visits + ' ราย', 'นับเฉพาะช่องทางเข้าพบและประชุม · visits + meetings only', '#0EA5E9', 'fa-solid fa-handshake')
+      + kpi('เข้าพบ / ประชุมวันนี้ · Visits & Meetings', sumToday.visits + ' ราย', 'นับเฉพาะช่องทางเข้าพบและประชุม · visits + meetings only', '#0EA5E9', 'fa-solid fa-handshake')
       + kpi('มูลค่าโครงการวันนี้ · Project Value Today', money(sumToday.value), 'ใช้เป็นข้อมูลตั้ง Pipeline / Target · feeds Pipeline &amp; Target', '#16A34A', 'fa-solid fa-sack-dollar')
       + kpi('Follow-up ถึงกำหนด · Due Follow-ups', fu.length + ' รายการ', overdue ? '<span class="dr-warn">เลยกำหนด ' + overdue + ' รายการ · ' + overdue + ' overdue</span>' : 'ไม่มีรายการเลยกำหนด · none overdue', overdue ? '#DC2626' : '#7C3AED', 'fa-solid fa-bell');
 
