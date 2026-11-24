@@ -195,8 +195,19 @@
       __syncing = false;
       __syncedAt = Date.now();
       var list = (r && r.projects) || [];
-      if (!list.length) return;
-      var changed = false, idx = {};
+      var changed = false;
+      var gone = {};
+      ((r && r.deletedNos) || []).forEach(function (id) { gone[id] = 1; });
+      if (Object.keys(gone).length) {
+        var before = PROJECTS.length;
+        PROJECTS = PROJECTS.filter(function (p) { return !gone[p.id]; });
+        if (PROJECTS.length !== before) { save(); changed = true; }
+      }
+      if (!list.length) {
+        if (changed && typeof global.render === 'function') global.render();
+        return;
+      }
+      var idx = {};
       PROJECTS.forEach(function (p, i) { idx[p.id] = i; });
       var order = [];
       list.forEach(function (c) {
@@ -212,7 +223,7 @@
       /* โครงการที่มีในเครื่องแต่ยังไม่ขึ้นคลาวด์ → ดันขึ้นให้ */
       var remote = {};
       list.forEach(function (c) { remote[c.id] = 1; });
-      PROJECTS.filter(function (p) { return !remote[p.id]; }).slice(0, 20).forEach(function (p) {
+      PROJECTS.filter(function (p) { return !remote[p.id] && !gone[p.id]; }).slice(0, 20).forEach(function (p) {
         global.PIAuth.saveProject(toCloud(p)).catch(function () {});
       });
       if (changed) {

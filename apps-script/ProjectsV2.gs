@@ -84,7 +84,28 @@ function listProjectsApi_(token) {
   var s = session_(token);
   if (!s) return { ok: false, error: 'กรุณาเข้าสู่ระบบใหม่', projects: [] };
   var all = readProjects_().filter(function (p) { return projVisible_(s, p); });
-  return { ok: true, projects: all };
+  return { ok: true, projects: all, deletedNos: deletedProjNos_(s) };
+}
+
+/** เลขโครงการที่ถูกลบแล้ว (ให้ client ลบสำเนาในเครื่อง) */
+function deletedProjNos_(s) {
+  var out = [];
+  try {
+    var sh = projSheet_();
+    var map = projColMap_(sh);
+    if (!map.no || !map.deleted) return out;
+    var last = sh.getLastRow();
+    if (last < 2) return out;
+    var rows = sh.getRange(2, 1, last - 1, sh.getLastColumn()).getValues();
+    rows.forEach(function (r) {
+      var no = String(r[map.no - 1] || '').trim();
+      if (!no) return;
+      if (Number(r[map.deleted - 1]) !== 1) return;
+      var owner = String(map.ownerEmail ? r[map.ownerEmail - 1] : '').toLowerCase();
+      if (seesAllLevel_(s.level) || owner === String(s.email).toLowerCase()) out.push(no);
+    });
+  } catch (e) {}
+  return out.slice(0, 2000);
 }
 
 function saveProjectApi_(token, payload) {
@@ -122,6 +143,10 @@ function saveProjectApi_(token, payload) {
   }
   var prev = rowIdx ? sh.getRange(rowIdx, 1, 1, width).getValues()[0] : [];
   function prevVal(name) { var c = map[name]; return (c && prev.length) ? prev[c - 1] : ''; }
+  /* กันการ “ฟื้นคืน” โครงการที่ถูกลบไปแล้ว */
+  if (rowIdx && map.deleted && Number(prevVal('deleted')) === 1) {
+    return { ok: true, skipped: true, deleted: true, no: no };
+  }
   var createdAt = rowIdx ? String(prevVal('createdAt') || nowIso) : nowIso;
 
   var rec = {

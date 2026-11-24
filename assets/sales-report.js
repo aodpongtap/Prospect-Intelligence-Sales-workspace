@@ -546,10 +546,21 @@
   function syncFromCloud() {
     if (!cloudReady() || !global.PIAuth.listDealsV2) return;
     try {
-      global.PIAuth.listDealsV2().then(function (list) {
+      global.PIAuth.listDealsV2().then(function (res) {
+        var list = (res && res.deals) || [];
+        var deleted = {};
+        ((res && res.deletedNos) || []).forEach(function (no) { deleted[no] = 1; });
         var changed = false;
+        /* ดีลที่ถูกลบบนคลาวด์ → ลบสำเนาในเครื่องทิ้ง (กันการฟื้นคืน) */
+        if (Object.keys(deleted).length) {
+          var before = DEALS.length;
+          for (var q = DEALS.length - 1; q >= 0; q--) {
+            if (deleted[DEALS[q].no]) { DEALS.splice(q, 1); changed = true; }
+          }
+          if (DEALS.length !== before) changed = true;
+        }
         var cloudNos = {};
-        (list || []).forEach(function (c) {
+        list.forEach(function (c) {
           cloudNos[c.no] = 1;
           var loc = null;
           for (var i = 0; i < DEALS.length; i++) if (DEALS[i].no === c.no) { loc = DEALS[i]; break; }
@@ -559,8 +570,8 @@
           var cu = Date.parse(remote.updatedAt || '') || 0;
           if (cu > lu) { for (var k in remote) if (Object.prototype.hasOwnProperty.call(remote, k)) loc[k] = remote[k]; changed = true; }
         });
-        /* ดีลในเครื่องที่ยังไม่เคยขึ้นคลาวด์ → ดันขึ้นครั้งแรก (สูงสุด 200 ใบ/รอบ) */
-        DEALS.filter(function (d) { return !cloudNos[d.no]; }).slice(0, 200).forEach(function (d) {
+        /* ดีลในเครื่องที่ยังไม่เคยขึ้นคลาวด์ → ดันขึ้นครั้งแรก (ข้ามใบที่ถูกลบไปแล้ว) */
+        DEALS.filter(function (d) { return !cloudNos[d.no] && !deleted[d.no]; }).slice(0, 200).forEach(function (d) {
           cloudSave(d);
         });
         if (changed) saveDeals();

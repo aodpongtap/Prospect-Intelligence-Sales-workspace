@@ -83,7 +83,28 @@ function listDealsV2Api_(token) {
   var s = session_(token);
   if (!s) return { ok: false, error: 'กรุณาเข้าสู่ระบบใหม่', deals: [] };
   var all = readDealsV2_().filter(function (d) { return dealVisible_(s, d); });
-  return { ok: true, deals: all, count: all.length, level: s.level };
+  return { ok: true, deals: all, count: all.length, level: s.level, deletedNos: deletedDealNos_(s) };
+}
+
+/** รายการเลขดีลที่ถูกลบแล้ว (ให้ client ลบสำเนาในเครื่องทิ้ง ไม่ให้ดันกลับขึ้นมาฟื้นคืน) */
+function deletedDealNos_(s) {
+  var out = [];
+  try {
+    var sh = dealSheet_();
+    var map = dealColMap_(sh);
+    if (!map.no || !map.deleted) return out;
+    var last = sh.getLastRow();
+    if (last < 2) return out;
+    var rows = sh.getRange(2, 1, last - 1, sh.getLastColumn()).getValues();
+    rows.forEach(function (r) {
+      var no = String(r[map.no - 1] || '').trim();
+      if (!no) return;
+      if (Number(r[map.deleted - 1]) !== 1) return;
+      var owner = String(map.ownerEmail ? r[map.ownerEmail - 1] : '').toLowerCase();
+      if (seesAllLevel_(s.level) || owner === String(s.email).toLowerCase()) out.push(no);
+    });
+  } catch (e) {}
+  return out.slice(0, 3000);
 }
 
 /** เลขดีลถัดไปของปี (YYYY-NNNN) จากข้อมูลบนชีต */
@@ -157,6 +178,11 @@ function saveDealV2(token, payload) {
     }
   }
   if (!row) no = no || nextDealNo_(year, sh);
+
+  /* กันการ “ฟื้นคืน” ดีลที่ถูกลบไปแล้ว (client อื่นที่ยังมีสำเนาในเครื่องพยายามดันกลับ) */
+  if (row && map.deleted && Number(sh.getRange(row, map.deleted).getValue()) === 1) {
+    return { ok: true, skipped: true, deleted: true, no: no };
+  }
 
   var nowIso = new Date().toISOString();
   var saleId = String(p.saleId || s.saleId || '').trim().toUpperCase();
