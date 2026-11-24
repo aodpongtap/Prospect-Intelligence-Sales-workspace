@@ -540,24 +540,30 @@
 
   /**
    * สรุปตัวเลขของชุดดีล (ใช้ทั้ง KPI และแถวรายคน)
-   * weightedPipeline = Pipeline × prob รายดีล (50/40/30)
+   * สูตรที่ใช้ทั้งระบบ:
+   *   รวม 1 = ปิดงานแล้ว + รอส่งของ
+   *   รวม 2 = ปิดงานแล้ว + รอส่งของ + รอยืนยัน PO
+   *   Forecast ปิดเดือน = (ปิดแล้ว + รอส่งของ) 100% + รอยืนยัน PO 50% + Pipeline 25%
    */
   function summarize(list) {
-    var s = { s0: 0, s1: 0, s2: 0, s3: 0, s4: 0, s5: 0, weighted1: 0, cashIn: 0, count: 0 };
+    var s = { s0: 0, s1: 0, s2: 0, s3: 0, s4: 0, s5: 0, weighted1: 0, weighted2: 0, cashIn: 0, count: 0 };
     list.forEach(function (d) {
       var a = num(d.amount);
       if (d.status === 5) { s.s5 += a; return; }
       if (d.status === 4) s.s4 += a;
       else if (d.status === 3) s.s3 += a;
       else if (d.status === 2) s.s2 += a;
-      else if (d.status === 1) { s.s1 += a; s.weighted1 += a * probOfStatus(d.status) / 100; }
+      else if (d.status === 1) s.s1 += a;
       else s.s0 += a;
       s.count++;
       s.cashIn += cashInOf(d);
     });
-    /* ยอดการันตี = 4 (100%) + 3 (90%) + 2 (80%) */
-    s.secured = s.s4 + s.s3 * 0.9 + s.s2 * 0.8;
-    s.forecast = s.secured + s.weighted1;
+    s.sum43 = s.s4 + s.s3;                    /* ปิดงานแล้ว + รอส่งของ */
+    s.sum432 = s.s4 + s.s3 + s.s2;            /* + รอยืนยัน PO */
+    s.weighted2 = s.s2 * 0.5;                 /* รอยืนยัน PO ถ่วง 50% */
+    s.weighted1 = s.s1 * 0.25;                /* Pipeline ถ่วง 25% */
+    s.secured = s.sum43;                      /* ยอดที่มั่นใจ (ปิดแล้ว + รอส่งของ) */
+    s.forecast = s.sum43 + s.weighted2 + s.weighted1;
     s.totalSale = s.s4 + s.s3 + s.s2 + s.s1;
     return s;
   }
@@ -590,8 +596,8 @@
       sum: sum, list: list, target: target, headCount: headCount, perHead: perHead,
       teams: scopeTeams, monthTargets: monthTargets,
       ach4: target ? sum.s4 / target * 100 : 0,
-      ach43: target ? (sum.s4 + sum.s3 * 0.9) / target * 100 : 0,
-      ach432: target ? sum.secured / target * 100 : 0,
+      ach43: target ? sum.sum43 / target * 100 : 0,
+      ach432: target ? sum.sum432 / target * 100 : 0,
       forecastPct: target ? sum.forecast / target * 100 : 0
     };
   }
@@ -678,13 +684,17 @@
         pct(k.ach4),
         money(s.s4) + ' จากเป้า ' + money(k.target),
         k.ach4, '#2563EB', 'fa-solid fa-circle-check'),
-      cardKpi('Actual + รอส่งของ',
+      cardKpi('ปิดงานแล้ว + รอส่งของ',
         pct(k.ach43),
-        money(s.s4 + s.s3 * 0.9) + ' (รอส่งของถ่วง 90%)',
+        money(s.sum43) + ' (ปิด ' + money(s.s4) + ' + รอส่ง ' + money(s.s3) + ')',
         k.ach43, '#0EA5E9', 'fa-solid fa-truck-fast'),
-      cardKpi('Forecast ปิดเดือน',
+      cardKpi('ปิดแล้ว + รอส่งของ + รอยืนยัน PO',
+        pct(k.ach432),
+        money(s.sum432) + ' (+PO ' + money(s.s2) + ')',
+        k.ach432, '#7C3AED', 'fa-solid fa-layer-group'),
+      cardKpi('ประมาณการยอดขายปิดเดือน',
         money(s.forecast),
-        'การันตี <b>' + money(s.secured) + '</b> + Pipeline <b>' + money(s.weighted1) + '</b>',
+        'ปิด+รอส่ง <b>' + money(s.secured) + '</b> + PO 50% <b>' + money(s.weighted2) + '</b> + Pipeline 25% <b>' + money(s.weighted1) + '</b>',
         k.forecastPct, '#16A34A', 'fa-solid fa-chart-line')
     ];
     return '<div class="sr-scope"><i class="fa-regular fa-calendar"></i> ขอบเขตข้อมูล: <b>' + esc(scope) + '</b>' +
@@ -1202,12 +1212,20 @@
       cardKpi(saleScope ? 'เป้าหมายของฉัน (Target)' : 'เป้าหมายทีม (Target)', money(k.target),
         'จำนวนคน <b>' + k.headCount + '</b> คน · เฉลี่ย/คน <b>' + money(k.perHead) + '</b>',
         undefined, '#0F2B46', 'fa-solid fa-bullseye'),
-      cardKpi('ผลงานเทียบเป้า (ปิดงานแล้ว)', pct(k.ach4),
-        money(s.s4) + ' / ' + money(k.target), k.ach4, '#2563EB', 'fa-solid fa-circle-check'),
-      cardKpi('ผลงานเทียบเป้า (รวมรอส่งของ 90%)', pct(k.ach43),
-        money(s.s4 + s.s3 * 0.9) + ' / ' + money(k.target), k.ach43, '#0EA5E9', 'fa-solid fa-truck-fast'),
-      cardKpi('ประมาณการยอดปิดเดือน (Weighted Forecast)', money(s.forecast),
-        'ยอดการันตี <b>' + money(s.secured) + '</b> + Pipeline ถ่วงน้ำหนัก <b>' + money(s.weighted1) + '</b>',
+      cardKpi('ผลงานที่ปิดแล้ว (Actual 100%)', money(s.s4),
+        pct(k.ach4) + ' ของเป้า · ' + money(s.s4) + ' / ' + money(k.target), k.ach4, '#2563EB', 'fa-solid fa-circle-check'),
+      cardKpi('ผลงานรอส่งของ (90%)', money(s.s3),
+        s.count ? (s.s3 ? 'รอเปิดบิล/ส่งมอบ' : 'ยังไม่มีงานรอส่งของ') : 'ยังไม่มีดีล', undefined, '#38BDF8', 'fa-solid fa-truck-fast'),
+      cardKpi('ผลงานรอยืนยัน PO (75%)', money(s.s2),
+        s.s2 ? 'ปิดได้เมื่อได้ PO' : 'ยังไม่มีงานรอ PO', undefined, '#F59E0B', 'fa-solid fa-file-signature'),
+      cardKpi('Pipeline — กำลังรอพิจารณา (50%)', money(s.s1),
+        s.s1 ? 'อยู่ระหว่างการพิจารณา' : 'ยังไม่มีงานใน Pipeline', undefined, '#A78BFA', 'fa-solid fa-hourglass-half'),
+      cardKpi('รวม ปิดงานแล้ว + รอส่งของ', money(s.sum43),
+        pct(k.ach43) + ' ของเป้า', k.ach43, '#0EA5E9', 'fa-solid fa-layer-group'),
+      cardKpi('รวม ปิดแล้ว + รอส่งของ + รอยืนยัน PO', money(s.sum432),
+        pct(k.ach432) + ' ของเป้า', k.ach432, '#7C3AED', 'fa-solid fa-calculator'),
+      cardKpi('ประมาณการยอดขายปิดเดือน', money(s.forecast),
+        'ปิด+รอส่ง 100% <b>' + money(s.secured) + '</b> + PO 50% <b>' + money(s.weighted2) + '</b> + Pipeline 25% <b>' + money(s.weighted1) + '</b>',
         k.forecastPct, '#16A34A', 'fa-solid fa-chart-line')
     ];
 
