@@ -189,13 +189,17 @@
           ? 'ทุกวัน ~02:00 (ตัวตั้งเวลาภายนอก) + เมื่อเข้าใช้งาน'
           : (r.lazy ? 'อัตโนมัติเมื่อเข้าใช้งานครั้งแรกของวัน' : 'ยังไม่เปิด'));
       var cls = (r.installed || r.lazy) ? 'al-bk-ok' : 'al-bk-warn';
-      var dest = r.driveReady
-        ? 'ไฟล์สำรองใน Drive (' + esc(r.lastMode === 'sheet' ? 'ล่าสุดเป็นแท็บสำรอง' : 'โฟลเดอร์ PI Backups') + ')'
-        : 'แท็บสำรองในไฟล์เดียวกัน (' + esc(String(r.keepTabs || 3)) + ' ชุดล่าสุด)';
+      var dest = r.lastMode === 'drive'
+        ? 'โฟลเดอร์ PI Backups ใน Google Drive'
+        : (r.lastMode === 'pool'
+          ? 'ไฟล์สำรองแยกใน Google Drive (' + esc(String(r.poolSize || 7)) + ' ชุดหมุนเวียน)'
+          : (r.driveReady ? 'โฟลเดอร์ PI Backups' : 'แท็บสำรองในไฟล์เดียวกัน (' + esc(String(r.keepTabs || 3)) + ' ชุด)'));
       box.innerHTML = 'โหมดสำรองอัตโนมัติ: <b class="' + cls + '">' + esc(modeTxt) + '</b><br>'
         + 'ปลายทาง: <b>' + dest + '</b><br>'
         + 'สำรองล่าสุด: <b>' + last + '</b>' + (r.lastName ? ' · ' + esc(r.lastName) : '') + '<br>'
         + 'เก็บย้อนหลัง <b>' + r.keepDays + '</b> วัน'
+        + (r.lastUrl ? '<div style="margin-top:6px"><a href="' + esc(r.lastUrl) + '" target="_blank" rel="noopener" '
+          + 'style="color:#2563EB;font-size:10px"><i class="fa-solid fa-up-right-from-square"></i> เปิดไฟล์สำรองล่าสุด</a></div>' : '')
         + (r.cronUrl ? '<div style="margin-top:6px;font-size:9.5px;color:#98A2B3">'
           + 'ตัวตั้งเวลา: GitHub Actions ทุกวัน 19:00 UTC (02:00 ไทย) · กันการซ้ำ 20 ชม. · กด “คัดลอก URL ตั้งเวลา” ถ้าจะใช้ cron อื่น</div>' : '');
     }).catch(function (e) { box.textContent = e.message || String(e); });

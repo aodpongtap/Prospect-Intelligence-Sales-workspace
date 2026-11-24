@@ -14,6 +14,7 @@
 var BACKUP_FOLDER_NAME = 'PI Backups';
 var BACKUP_KEEP_DAYS = 30;
 var BACKUP_KEEP_TABS = 3;
+var BACKUP_POOL_SIZE = 7;
 var WEBAPP_URL_FALLBACK = 'https://script.google.com/macros/s/AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-/exec';
 
 /* ---------------------------- Backup ---------------------------- */
@@ -106,19 +107,76 @@ function sheetSnapshot_(props) {
   return { ok: true, mode: 'sheet', file: name, url: url, removed: removed, folder: 'แท็บสำรองในไฟล์เดียวกัน' };
 }
 
+/** สำรองเป็น "ไฟล์ Spreadsheet แยก" ใน Drive แบบหมุนเวียน 7 ไฟล์ (ใช้สิทธิ์ spreadsheets เท่านั้น ไม่ต้องมี Drive scope) */
+function poolBackup_(props) {
+  var src = getSheet_().getParent();
+  var ids = [];
+  try { ids = JSON.parse(props.getProperty('BACKUP_POOL_IDS') || '[]'); } catch (e) { ids = []; }
+  ids = (ids || []).filter(function (id) {
+    try { SpreadsheetApp.openById(id); return true; } catch (e2) { return false; }
+  });
+  while (ids.length < BACKUP_POOL_SIZE) {
+    var fresh = SpreadsheetApp.create('PI-backup-slot-' + (ids.length + 1));
+    ids.push(fresh.getId());
+  }
+  props.setProperty('BACKUP_POOL_IDS', JSON.stringify(ids));
+
+  var stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd-HHmm');
+  var idx = Number(props.getProperty('BACKUP_POOL_IDX') || 0) % ids.length;
+  if (isNaN(idx) || idx < 0) idx = 0;
+  var dst = SpreadsheetApp.openById(ids[idx]);
+
+  /* เคลียร์แท็บเดิมทั้งหมด เหลือแท็บชั่วคราว 1 แท็บ */
+  var olds = dst.getSheets();
+  var tmp = olds[0];
+  try { tmp.setName('_tmp'); } catch (e3) {}
+  for (var i = 1; i < olds.length; i++) {
+    try { dst.deleteSheet(olds[i]); } catch (e4) {}
+  }
+
+  var copied = 0, sheets = src.getSheets();
+  for (var j = 0; j < sheets.length; j++) {
+    var sh = sheets[j], nm = sh.getName();
+    if (nm.indexOf('BK ') === 0) continue;         /* ไม่คัดลอกแท็บสำรองชั่วคราว */
+    var vals = [];
+    try { vals = sh.getDataRange().getValues(); } catch (e5) { vals = []; }
+    var target = dst.insertSheet(nm.slice(0, 99));
+    if (vals.length && vals[0] && vals[0].length) {
+      try { target.getRange(1, 1, vals.length, vals[0].length).setValues(vals); } catch (e6) {}
+    }
+    copied++;
+  }
+  try { dst.deleteSheet(tmp); } catch (e7) {}
+  try { dst.rename('PI-backup-' + stamp); } catch (e8) {}
+
+  props.setProperty('BACKUP_POOL_IDX', String((idx + 1) % ids.length));
+  props.setProperty('LAST_BACKUP_AT', new Date().toISOString());
+  props.setProperty('LAST_BACKUP_NAME', 'PI-backup-' + stamp);
+  props.setProperty('LAST_BACKUP_URL', dst.getUrl());
+  props.setProperty('LAST_BACKUP_MODE', 'pool');
+  return {
+    ok: true, mode: 'pool', file: 'PI-backup-' + stamp, url: dst.getUrl(),
+    removed: 0, folder: 'ไฟล์สำรองแยกใน Drive (' + ids.length + ' ชุดหมุนเวียน)', sheets: copied
+  };
+}
+
 /** สำรองข้อมูลทั้งไฟล์ (เรียกโดย trigger รายวัน หรือปุ่ม "สำรองเดี๋ยวนี้") */
 function dailyBackup_(forceMode) {
   var props = PropertiesService.getScriptProperties();
   var out;
-  if (forceMode === 'sheet') {
-    out = sheetSnapshot_(props);
-  } else {
+  if (forceMode === 'sheet') return sheetSnapshot_(props);
+  if (forceMode === 'pool') return poolBackup_(props);
+  try {
+    out = driveBackup_(props);                 /* กรณีมีสิทธิ์ Drive เต็มรูปแบบ */
+  } catch (e) {
     try {
-      out = driveBackup_(props);
-    } catch (e) {
-      out = sheetSnapshot_(props);
-      out.note = 'ยังไม่มีสิทธิ์ Drive — สำรองเป็นแท็บในไฟล์เดียวกันแทน';
-      out.driveError = String((e && e.message) || e);
+      out = poolBackup_(props);                /* ไฟล์แยกแบบหมุนเวียน (spreadsheets scope) */
+      out.note = 'สำรองเป็นไฟล์แยกใน Drive แบบหมุนเวียน (ไม่ต้องมีสิทธิ์ Drive)';
+    } catch (e2) {
+      out = sheetSnapshot_(props);             /* สำรองเป็นแท็บในไฟล์เดียวกัน */
+      out.note = 'สำรองเป็นแท็บในไฟล์เดียวกันแทน';
+      out.driveError = String((e && e.message) || e).slice(0, 160);
+      out.poolError = String((e2 && e2.message) || e2).slice(0, 160);
     }
   }
   return out;
@@ -247,6 +305,7 @@ function backupInfoApi_(token) {
     lastMode: props.getProperty('LAST_BACKUP_MODE') || '',
     cronUrl: isAdminLevel_(s.level) ? backupCronUrl_() : '',
     cronDaily: true,
+    poolSize: BACKUP_POOL_SIZE,
     busy: !!props.getProperty('BACKUP_LAZY')
   };
 }
