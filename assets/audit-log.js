@@ -77,7 +77,7 @@
   function shell() {
     var counts = st.counts || {};
     var cards = [
-      ['รายการทั้งหมด', counts.total || 0, 'fa-list'],
+      ['รายการที่แสดง', counts.total || 0, 'fa-list'],
       ['ดีล', counts.deal || 0, 'fa-bullseye'],
       ['บันทึกกิจกรรม', counts.daily || 0, 'fa-clipboard-list'],
       ['ผู้ใช้', counts.user || 0, 'fa-user-gear'],
@@ -197,7 +197,7 @@
       box.innerHTML = 'โหมดสำรองอัตโนมัติ: <b class="' + cls + '">' + esc(modeTxt) + '</b><br>'
         + 'ปลายทาง: <b>' + dest + '</b><br>'
         + 'สำรองล่าสุด: <b>' + last + '</b>' + (r.lastName ? ' · ' + esc(r.lastName) : '') + '<br>'
-        + 'เก็บย้อนหลัง <b>' + r.keepDays + '</b> วัน'
+        + 'เก็บย้อนหลัง <b>' + esc(String(r.retentionDays || r.keepDays || 7)) + '</b> วัน'
         + (r.lastUrl ? '<div style="margin-top:6px"><a href="' + esc(r.lastUrl) + '" target="_blank" rel="noopener" '
           + 'style="color:#2563EB;font-size:10px"><i class="fa-solid fa-up-right-from-square"></i> เปิดไฟล์สำรองล่าสุด</a></div>' : '')
         + (r.cronUrl ? '<div style="margin-top:6px;font-size:9.5px;color:#98A2B3">'
@@ -257,7 +257,7 @@
       b1.disabled = true;
       global.PIAuth.backupNow().then(function (r) {
         b1.disabled = false;
-        if (global.toast) global.toast('สำรองแล้ว: ' + r.file + (r.mode === 'sheet' ? ' (แท็บสำรองในไฟล์)' : ' (Drive)'));
+        if (global.toast) global.toast('สำรองแล้ว: ' + r.file + (r.mode === 'pool' ? ' (ไฟล์แยกใน Drive)' : (r.mode === 'sheet' ? ' (แท็บในไฟล์)' : ' (Drive)')));
         loadBackup();
       }).catch(function (err) { b1.disabled = false; if (global.toast) global.toast('สำรองไม่สำเร็จ: ' + (err.message || err)); });
       return;

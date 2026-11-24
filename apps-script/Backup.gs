@@ -308,6 +308,7 @@ function backupInfoApi_(token) {
     cronUrl: isAdminLevel_(s.level) ? backupCronUrl_() : '',
     cronDaily: true,
     poolSize: BACKUP_POOL_SIZE,
+    retentionDays: BACKUP_POOL_SIZE,
     busy: !!props.getProperty('BACKUP_LAZY')
   };
 }
