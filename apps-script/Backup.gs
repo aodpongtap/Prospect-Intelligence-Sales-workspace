@@ -390,7 +390,13 @@ function listLogsApi_(token, q, kind, by, limit) {
     };
   }).filter(function (l) {
     if (!l.ts && !l.action) return false;
-    if (kd && l.action.indexOf(kd) !== 0) return false;
+    if (kd) {
+      if (kd === 'task') { if (l.action.indexOf('task.') !== 0) return false; }
+      else {
+        var fam = (l.action.indexOf('task.') === 0) ? 'project' : l.action.split('.')[0];
+        if (fam !== kd) return false;
+      }
+    }
     if (uid && l.by !== uid) return false;
     if (kw && (l.ref + ' ' + l.detail + ' ' + l.by + ' ' + l.action).toLowerCase().indexOf(kw) < 0) return false;
     return true;
@@ -402,6 +408,7 @@ function listLogsApi_(token, q, kind, by, limit) {
   var counts = { total: out.length };
   out.forEach(function (l) {
     var k = String(l.action || 'other').split('.')[0] || 'other';
+    if (k === 'task') k = 'project';        /* งานย่อยนับรวมในหมวดโครงการ */
     counts[k] = (counts[k] || 0) + 1;
   });
   return { ok: true, logs: sliced, counts: counts, actions: LOG_ACTIONS };
