@@ -99,6 +99,18 @@ function saveProjectApi_(token, payload) {
   var sh = projSheet_();
   var map = projColMap_(sh);
   var nowIso = new Date().toISOString();
+
+  /* ทีม: ถ้าไม่ได้ระบุ ให้เดาจากทีมของผู้รับผิดชอบ/AE */
+  if (!String(p.team || '').trim()) {
+    var guess = '';
+    try {
+      var users = readRows_();
+      var own = String(p.owner || '').trim();
+      var hit = users.filter(function (r) { return String(r.name || '').trim() === own; })[0];
+      if (hit) guess = String(hit.team || '').toUpperCase();
+    } catch (eTeam) { guess = ''; }
+    p.team = guess;
+  }
   var width = sh.getLastColumn();
   var last = sh.getLastRow();
   var rowIdx = 0;

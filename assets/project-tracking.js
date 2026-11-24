@@ -430,10 +430,38 @@
   }
 
   /* ---------- Modals ---------- */
+  /** รายชื่อผู้ใช้ในระบบ (ใช้เลือกผู้รับผิดชอบโครงการ) */
+  function userList_() {
+    var out = [];
+    try {
+      if (global.PIAuth && global.PIAuth.listUsers) out = global.PIAuth.listUsers() || [];
+    } catch (e) { out = []; }
+    return Array.isArray(out) ? out : [];
+  }
+  /** รายชื่อ AE + ทีม (ใช้เลือก "AE ผู้ส่งงาน") */
+  function saleList_() {
+    var out = [];
+    try {
+      if (global.SalesReport && global.SalesReport.salesList) out = global.SalesReport.salesList() || [];
+    } catch (e) { out = []; }
+    return Array.isArray(out) ? out : [];
+  }
+  function meSession_() {
+    try {
+      if (global.PIAuth && global.PIAuth.session) return global.PIAuth.session() || null;
+    } catch (e) {}
+    return null;
+  }
+
   function openProjectModal(id) {
     var p = id ? byId(id) : null;
     var isEdit = !!p;
-    var d = p || { name: '', customer: '', owner: '', sale: '', stage: 0, startDate: todayISO(), deadline: '', blocker: '', note: '', team: viewerTeam() || TEAM_LIST[0] };
+    var me = meSession_() || {};
+    var d = p || {
+      name: '', customer: '', owner: String(me.name || ''), sale: String(me.name || ''),
+      stage: 0, startDate: todayISO(), deadline: '', blocker: '', note: '',
+      team: viewerTeam() || (String(me.team || '').toUpperCase() || TEAM_LIST[0])
+    };
     var stageOpts = STAGES.map(function (s) {
       return '<option value="' + s.code + '"' + (Number(d.stage) === s.code ? ' selected' : '') + '>' + esc(s.name) + '</option>';
     }).join('');
@@ -441,6 +469,49 @@
     var teamOpts = TEAM_LIST.map(function (t) {
       return '<option value="' + esc(t) + '"' + (String(d.team) === t ? ' selected' : '') + '>' + esc(t) + '</option>';
     }).join('');
+
+    /* ผู้รับผิดชอบโครงการ = เลือกจากบัญชีผู้ใช้ (พร้อมทีมของคนนั้น) */
+    var users = userList_();
+    var salesL = saleList_();
+    function teamOfSale(name) {
+      var hit = salesL.filter(function (s) { return String(s.name).trim() === String(name).trim(); })[0];
+      return hit ? String(hit.team || '').toUpperCase() : '';
+    }
+    function teamOfUser(u) {
+      if (!u) return '';
+      var t = String(u.team || '').toUpperCase();
+      if (t) return t;
+      var viaSale = teamOfSale(u.name);
+      if (viaSale) return viaSale;
+      if (u.saleId) {
+        var s2 = salesL.filter(function (x) { return String(x.id) === String(u.saleId); })[0];
+        if (s2) return String(s2.team || '').toUpperCase();
+      }
+      return '';
+    }
+    var ownerOpts = '<option value="">— เลือกผู้รับผิดชอบ —</option>' + users.map(function (u) {
+      var nm = String(u.name || u.email || '').trim();
+      if (!nm) return '';
+      var tm = teamOfUser(u);
+      return '<option value="' + esc(nm) + '" data-team="' + esc(tm) + '"'
+        + (String(d.owner).trim() === nm ? ' selected' : '') + '>' + esc(nm) + (tm ? ' · ' + esc(tm) : '') + '</option>';
+    }).join('');
+    if (d.owner && !users.some(function (u) { return String(u.name || '').trim() === String(d.owner).trim(); })) {
+      ownerOpts += '<option value="' + esc(d.owner) + '" data-team="' + esc(String(d.team || '')) + '" selected>'
+        + esc(d.owner) + ' (เดิม)</option>';
+    }
+
+    /* AE ผู้ส่งงาน = เลือกจากรายชื่อ AE (พาทีมมาด้วย) */
+    var saleOpts = '<option value="">— ไม่ระบุ —</option>' + salesL.map(function (s) {
+      return '<option value="' + esc(s.name) + '" data-team="' + esc(String(s.team || '').toUpperCase()) + '"'
+        + (String(d.sale).trim() === String(s.name).trim() ? ' selected' : '') + '>'
+        + esc(s.name) + ' · ' + esc(s.team || '') + '</option>';
+    }).join('');
+    if (d.sale && !salesL.some(function (s) { return String(s.name).trim() === String(d.sale).trim(); })) {
+      saleOpts += '<option value="' + esc(d.sale) + '" data-team="' + esc(String(d.team || '')) + '" selected>'
+        + esc(d.sale) + ' (เดิม)</option>';
+    }
+
     var drOpts = '';
     if (global.DailyReport && global.DailyReport.options) {
       try {
@@ -453,10 +524,11 @@
       + '<label class="pt-fg full">ชื่อโครงการ *<input name="name" required value="' + esc(d.name) + '" placeholder="เช่น ระบบ CCTV อาคาร A"></label>'
       + '<label class="pt-fg full">ลูกค้า *<input name="customer" required value="' + esc(d.customer) + '" placeholder="ชื่อบริษัท / หน่วยงาน"></label>'
       + '<label class="pt-fg full">อ้างอิง Daily Report (ไม่บังคับ)<input name="drRef" list="ptDrRefs" placeholder="เช่น DR-20261123-01" value="' + esc(d.drRef || '') + '"><datalist id="ptDrRefs">' + drOpts + '</datalist></label>'
-      + '<label class="pt-fg">ผู้รับผิดชอบโครงการ *<input name="owner" required value="' + esc(d.owner) + '" placeholder="ชื่อผู้ดูแลโครงการ"></label>'
-      + '<label class="pt-fg">AE ผู้ส่งงาน<input name="sale" value="' + esc(d.sale) + '" placeholder="ชื่อ AE"></label>'
+      + '<label class="pt-fg">ผู้รับผิดชอบโครงการ *<select name="owner" required>' + ownerOpts + '</select></label>'
+      + '<label class="pt-fg">AE ผู้ส่งงาน<select name="sale">' + saleOpts + '</select></label>'
       + '<label class="pt-fg">ขั้นตอน<select name="stage">' + stageOpts + '</select></label>'
-      + '<label class="pt-fg">ทีม (BU)<select name="team"' + (vt ? ' disabled' : '') + '>' + teamOpts + '</select></label>'
+      + '<label class="pt-fg">ทีม (BU)<select name="team"' + (vt ? ' disabled' : '') + '>' + teamOpts + '</select>'
+      + (vt ? '' : '<div class="pt-s2" style="margin-top:3px">เลือกจากทีมของ AE / ผู้รับผิดชอบอัตโนมัติ</div>') + '</label>'
       + '<label class="pt-fg">Blocker<input name="blocker" value="' + esc(d.blocker) + '" placeholder="ถ้าไม่มีใส่ -"></label>'
       + '<label class="pt-fg">วันเริ่ม<input name="startDate" type="date" value="' + esc(d.startDate) + '"></label>'
       + '<label class="pt-fg">กำหนดส่งมอบ *<input name="deadline" type="date" required value="' + esc(d.deadline) + '"></label>'
@@ -742,6 +814,17 @@
   });
 
   document.addEventListener('change', function (e) {
+    var el = e.target;
+    if (el && el.name && (el.name === 'owner' || el.name === 'sale')) {
+      var f = document.getElementById('ptForm');
+      if (f) {
+        var teamSel = f.querySelector('[name="team"]');
+        var opt = el.selectedOptions && el.selectedOptions[0];
+        var tm = opt ? String(opt.getAttribute('data-team') || '').toUpperCase() : '';
+        if (teamSel && !teamSel.disabled && tm && TEAM_LIST.indexOf(tm) >= 0) teamSel.value = tm;
+        return;
+      }
+    }
     var sel = e.target.closest && e.target.closest('[data-pt-filter]');
     if (!sel) return;
     state[sel.getAttribute('data-pt-filter')] = sel.value;
