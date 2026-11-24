@@ -340,7 +340,8 @@ function authorizeBackup() {
 /* ---------------------------- Activity Log ---------------------------- */
 
 var LOG_ACTIONS = ['deal.add', 'deal.edit', 'deal.del', 'daily.add', 'daily.edit', 'daily.del',
-  'target.save', 'user.add', 'user.edit', 'user.del', 'auth.login', 'sale.add', 'sale.del'];
+  'target.save', 'user.add', 'user.edit', 'user.del', 'auth.login', 'sale.add', 'sale.del',
+  'project.add', 'project.edit', 'project.del'];
 
 function listLogsApi_(token, q, kind, by, limit) {
   var s = session_(token);

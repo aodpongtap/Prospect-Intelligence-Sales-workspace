@@ -151,6 +151,76 @@
     return null;
   }
 
+  /* ---------- Cloud sync (Google Sheet: แท็บ Projects) ---------- */
+  var __syncing = false, __syncedAt = 0, __pushT = null;
+  function cloudOn() {
+    return !!(global.PIAuth && global.PIAuth.listProjects && global.PIAuth.saveProject);
+  }
+  function toCloud(p) {
+    return {
+      id: p.id, customer: p.customer, name: p.name, stage: Number(p.stage) || 0,
+      owner: p.owner || '', ownerEmail: p.ownerEmail || '', sale: p.sale || '',
+      team: p.team || '', startDate: p.startDate || '', deadline: p.deadline || '',
+      blocker: p.blocker || '', note: p.note || '', drRef: p.drRef || '',
+      progress: progressOf(p), tasks: p.tasks || []
+    };
+  }
+  function fromCloud(c) {
+    return {
+      id: c.id, name: c.name || '', customer: c.customer || '', owner: c.owner || '',
+      ownerEmail: c.ownerEmail || '', sale: c.sale || '', team: c.team || '',
+      stage: Number(c.stage) || 0, startDate: c.startDate || '', deadline: c.deadline || '',
+      blocker: c.blocker || '', note: c.note || '', drRef: c.drRef || '',
+      tasks: Array.isArray(c.tasks) ? c.tasks : [],
+      createdAt: c.createdAt || '', updatedAt: c.updatedAt || ''
+    };
+  }
+  function pushCloud(p) {
+    if (!cloudOn() || !p) return;
+    if (!p.updatedAt) p.updatedAt = new Date().toISOString();
+    save();
+    clearTimeout(__pushT);
+    __pushT = setTimeout(function () {
+      global.PIAuth.saveProject(toCloud(p)).catch(function (e) {
+        if (global.toast) global.toast('ซิงก์คลาวด์ไม่สำเร็จ: ' + ((e && e.message) || e));
+      });
+    }, 400);
+  }
+  function syncFromCloud(force) {
+    if (!cloudOn() || __syncing) return;
+    if (!force && Date.now() - __syncedAt < 60000) return;
+    __syncing = true;
+    global.PIAuth.listProjects().then(function (r) {
+      __syncing = false;
+      __syncedAt = Date.now();
+      var list = (r && r.projects) || [];
+      if (!list.length) return;
+      var changed = false, idx = {};
+      PROJECTS.forEach(function (p, i) { idx[p.id] = i; });
+      var order = [];
+      list.forEach(function (c) {
+        var local = idx[c.id] !== undefined ? PROJECTS[idx[c.id]] : null;
+        if (!local) { order.push(fromCloud(c)); changed = true; }
+        else if (String(c.updatedAt || '') > String(local.updatedAt || '')) {
+          var merged = fromCloud(c);
+          Object.keys(merged).forEach(function (k) { local[k] = merged[k]; });
+          changed = true;
+        }
+      });
+      if (order.length) { PROJECTS = order.concat(PROJECTS); changed = true; }
+      /* โครงการที่มีในเครื่องแต่ยังไม่ขึ้นคลาวด์ → ดันขึ้นให้ */
+      var remote = {};
+      list.forEach(function (c) { remote[c.id] = 1; });
+      PROJECTS.filter(function (p) { return !remote[p.id]; }).slice(0, 20).forEach(function (p) {
+        global.PIAuth.saveProject(toCloud(p)).catch(function () {});
+      });
+      if (changed) {
+        save();
+        if (typeof global.render === 'function') global.render();
+      }
+    }).catch(function () { __syncing = false; });
+  }
+
   /* ---------- คำนวณ ---------- */
   function progressOf(p) {
     if (!p.tasks || !p.tasks.length) return p.stage >= 4 ? 100 : 0;
@@ -323,6 +393,7 @@
 
   function render() {
     injectCss();
+    syncFromCloud(false);
     var list = filtered();
     var sc = scopeNow();
     if (sc.type === 'pending') {
@@ -343,7 +414,7 @@
       : '';
     return '<div class="pt">'
       + '<div class="pt-head"><div><h1>Project Tracking</h1>'
-      + '<div class="pt-sub">ติดตามโครงการตั้งแต่รับช่วงงานจนถึงส่งมอบลูกค้า — บันทึกอัตโนมัติในเครื่องนี้</div></div>'
+      + '<div class="pt-sub">ติดตามโครงการตั้งแต่รับช่องงานจนถึงส่งมอบลูกค้า — ซิงก์กับ Google Sheet อัตโนมัติ</div></div>'
       + '<div class="pt-head-acts">'
       + lockTxt
       + '<button class="pt-btn dark" data-pt-new><i class="fa-solid fa-plus"></i> เพิ่มโครงการ</button></div></div>'
@@ -427,6 +498,7 @@
     save();
     global.closeModal();
     global.render();
+    pushCloud(byId(v.id || id));
     if (global.PILog) {
       if (id) global.PILog.add('project.edit', (p ? p.name : id), 'บันทึกการแก้ไขขั้นตอน: ' + (STAGES[v.stage] ? STAGES[v.stage].name : v.stage));
       else global.PILog.add('project.add', v.name, v.customer + ' · ทีม ' + v.team);
@@ -440,6 +512,12 @@
     if (!global.confirm('ลบโครงการ ' + p.name + ' ?')) return;
     PROJECTS = PROJECTS.filter(function (x) { return x.id !== id; });
     save();
+    if (cloudOn()) {
+      clearTimeout(__pushT);
+      global.PIAuth.deleteProject(id).catch(function (e) {
+        if (global.toast) global.toast('ลบบนคลาวด์ไม่สำเร็จ: ' + ((e && e.message) || e));
+      });
+    }
     if (global.PILog) global.PILog.add('project.del', p.name, p.customer + ' · ' + p.id);
     global.closeModal();
     global.render();
@@ -578,6 +656,7 @@
     }
     save();
     global.toast(ctx.task ? 'บันทึกงานแล้ว' : 'เพิ่มงานแล้ว');
+    pushCloud(p);
     if (global.PILog) global.PILog.add(ctx.task ? 'task.edit' : 'task.add', val.name, p.name + ' · ' + val.status);
     openDetail(p.id);
     global.render();
@@ -593,6 +672,7 @@
       }
     });
     save();
+    pushCloud(p);
     openDetail(projectId);
     global.render();
   }
@@ -602,6 +682,7 @@
     var rm = (p.tasks || []).filter(function (t) { return t.id === taskId; })[0];
     p.tasks = (p.tasks || []).filter(function (t) { return t.id !== taskId; });
     save();
+    pushCloud(p);
     if (global.PILog && rm) global.PILog.add('task.del', rm.name, p.name);
     openDetail(projectId);
     global.render();
@@ -648,6 +729,7 @@
     p.stage = target;
     if (target >= 4) (p.tasks || []).forEach(function (t) { t.status = 'เสร็จแล้ว'; });
     save();
+    pushCloud(p);
     global.render();
     global.toast('ย้าย "' + p.name + '" ไปขั้น "' + stageOf(target).name + '" แล้ว');
   });

@@ -31,7 +31,7 @@ var DATA_SCHEMA = {
       'status': ['0', '1', '2', '3', '4', '5'],
       'payment': ['cash', 'inst', 'term']
     },
-    formats: { '9': 'yyyy-mm-dd', '12': '#,##0', '13': 'yyyy-mm-dd' }
+    formats: { '8': 'yyyy-mm-dd', '12': '#,##0' }
   },
 
   /* บันทึกการเข้าพบลูกค้า (ต้นทางของดีล) */
@@ -40,14 +40,14 @@ var DATA_SCHEMA = {
       'nextDate', 'nextTime', 'nextNote', 'saleId', 'by', 'createdAt', 'updatedAt', 'deleted'],
     widths: [130, 95, 60, 170, 110, 70, 90, 240, 95, 60, 200, 60, 180, 130, 130, 55],
     validations: { 'channel': ['visit', 'call', 'email', 'line', 'meeting'] },
-    formats: { '2': 'yyyy-mm-dd', '8': 'yyyy-mm-dd', '7': '#,##0' }
+    formats: { '1': 'yyyy-mm-dd', '8': 'yyyy-mm-dd', '6': '#,##0' }
   },
 
   /* เป้าหมาย: ระดับทีม (saleId ว่าง) หรือรายคน (saleId = S01) */
   Targets: {
     headers: ['team', 'saleId', 'year', 'month', 'amount', 'updatedAt'],
     widths: [80, 60, 55, 55, 100, 130],
-    formats: { '5': '#,##0' },
+    formats: { '4': '#,##0' },
     validations: { 'month': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'] }
   },
 
@@ -66,9 +66,10 @@ var DATA_SCHEMA = {
   /* โครงการหลังการขาย / ติดตั้ง (Project Tracking) */
   Projects: {
     headers: ['no', 'customer', 'job', 'dealNo', 'stage', 'ownerEmail', 'startDate', 'dueDate',
-      'deliveredDate', 'progress', 'blocker', 'createdAt', 'updatedAt', 'deleted'],
-    widths: [120, 170, 190, 110, 130, 180, 95, 95, 95, 70, 220, 130, 130, 55],
-    formats: { '7': 'yyyy-mm-dd', '8': 'yyyy-mm-dd', '9': 'yyyy-mm-dd', '10': '#,##0' }
+      'deliveredDate', 'progress', 'blocker', 'createdAt', 'updatedAt', 'deleted',
+      'ownerName', 'saleName', 'team', 'drRef', 'note', 'tasksJson'],
+    widths: [120, 170, 190, 110, 130, 180, 95, 95, 95, 70, 220, 130, 130, 55, 150, 150, 90, 110, 240, 320],
+    formats: { '6': 'yyyy-mm-dd', '7': 'yyyy-mm-dd', '8': 'yyyy-mm-dd', '9': '#,##0', '10': '@' }
   },
 
   /* Log การใช้งาน ( audit trail ) */

@@ -519,6 +519,26 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(37,99,235,.13);
     });
   }
 
+  /* ---------- Projects (Project Tracking) ---------- */
+  function listProjects() {
+    return call('projectsV2', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดโครงการไม่สำเร็จ');
+      return r;
+    });
+  }
+  function saveProject(p) {
+    return call('saveProject', { token: token(), project: JSON.stringify(p || {}) }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'บันทึกโครงการบนคลาวด์ไม่สำเร็จ');
+      return r;
+    });
+  }
+  function deleteProject(no) {
+    return call('delProject', { token: token(), no: no }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ลบโครงการบนคลาวด์ไม่สำเร็จ');
+      return r;
+    });
+  }
+
   /* ---------- Activity Log / Backup ---------- */
   function listLogs(opts) {
     var o = opts || {};
@@ -580,6 +600,9 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(37,99,235,.13);
     saveDailyV2: saveDailyV2,
     deleteDailyV2: deleteDailyV2,
     listLogs: listLogs,
+    listProjects: listProjects,
+    saveProject: saveProject,
+    deleteProject: deleteProject,
     backupInfo: backupInfo,
     backupNow: backupNow,
     installBackup: installBackup
