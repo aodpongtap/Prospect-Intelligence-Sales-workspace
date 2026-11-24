@@ -783,7 +783,7 @@
   }
 
   /* ============================ 4) VIEW ============================ */
-  var state = { year: 2026, month: 11, team: '', sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1, perfTeam: '', view: 'report', summaryView: 'cards' };
+  var state = { year: 2026, month: 11, team: '', sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1, perfTeam: '', dashPerf: 'team', view: 'report', summaryView: 'cards' };
   var ui = { targets: false };
   var __editNo = '';    // เลขดีลที่กำลังแก้ไข
   var __openNo = '';    // เลขดีลที่เปิดดูอยู่
@@ -1257,6 +1257,230 @@
   }
 
   /* ---------- Dashboard (เวอร์ชันย่อของ Reports — ใช้สูตร/ข้อมูลชุดเดียวกัน) ---------- */
+  /* ======= Dashboard 2.0: pipeline funnel / forecast calc / gauge / insights =======
+     เพิ่มเป็นการ์ดวิเคราะห์ต่อจาก Hero เดิม โดยไม่เปลี่ยนโครง KPI/ตารางที่มีอยู่ */
+  var DASH_FLOW = [4, 3, 2, 1, 0, 5];
+  var LS_REFRESH = 'pi_dash_refresh_min';
+  var __dashTimer = null;
+
+  function statusAgg(list) {
+    var o = {
+      amt: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      cnt: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      total: 0, count: Array.isArray(list) ? list.length : 0
+    };
+    (list || []).forEach(function (d) {
+      var c = Number(d.status);
+      if (isNaN(c) || !st(c)) c = 0;
+      o.amt[c] += num(d.amount);
+      o.cnt[c]++;
+      o.total += num(d.amount);
+    });
+    return o;
+  }
+  function secOfDeal(d) { return (Number(d.status) === 4 || Number(d.status) === 3) ? num(d.amount) : 0; }
+  function fcOfDeal(d) {
+    var a = num(d.amount), c = Number(d.status);
+    if (c === 4 || c === 3) return a;
+    if (c === 2) return a * 0.5;
+    if (c === 1) return a * 0.25;
+    return 0;
+  }
+
+  /** เป้ารวมของเดือน (คำนวณแบบเดียวกับ kpis(): AE ใช้เป้า/คน × จำนวนคนในความดูแล) */
+  function dashTargetOfMonth(month) {
+    var sc = scopeOf();
+    var teams = TEAMS.filter(function (t) {
+      if (state.team && t.code !== state.team) return false;
+      if (sc.type === 'team') return t.code === sc.team;
+      if (sc.type === 'sale') return sale(sc.saleId).team === t.code;
+      if (sc.type === 'none') return false;
+      return true;
+    });
+    if (!teams.length) return 0;
+    var total = teams.reduce(function (a, t) { return a + targetOf(t.code, state.year, month); }, 0);
+    var teamSize = SALES.filter(function (r) { return r.team === teams[0].code; }).length || 1;
+    if (sc.type === 'sale') return total / teamSize * (mySaleIds(sc).length || 1);
+    if (state.sale) return total / teamSize;
+    return total;
+  }
+
+  function dashRefreshMin() {
+    var v = null;
+    try { v = global.localStorage.getItem(LS_REFRESH); } catch (e) { v = null; }
+    if (v === null || v === '') return 5;
+    var n = Number(v);
+    return isNaN(n) ? 5 : n;
+  }
+  function scheduleDashRefresh() {
+    if (__dashTimer) { clearTimeout(__dashTimer); __dashTimer = null; }
+    var mins = dashRefreshMin();
+    if (!mins) return;
+    __dashTimer = setTimeout(function () {
+      __dashTimer = null;
+      var active = document.querySelector('.nav-item.active');
+      if (!active || active.getAttribute('data-page') !== 'dashboard') return;
+      var nav = document.querySelector('#navList [data-page="dashboard"]') || active;
+      var y = global.pageYOffset || 0;
+      try { if (global.SalesReport && SalesReport.syncFromCloud) SalesReport.syncFromCloud(); } catch (e) {}
+      nav.click();
+      setTimeout(function () { try { global.scrollTo(0, y); } catch (e) {} }, 60);
+    }, mins * 60000);
+  }
+
+  function dashFunnelPanel(k) {
+    var a = statusAgg(k.list);
+    var max = DASH_FLOW.reduce(function (m, c) { return Math.max(m, a.amt[c]); }, 0) || 1;
+    var rows = DASH_FLOW.map(function (c) {
+      var v = a.amt[c];
+      var w = a.total ? Math.max(3, v / max * 100) : 3;
+      return '<div class="sr-fn-row">'
+        + '<div class="sr-fn-lbl"><span class="sr-dot" style="background:' + st(c).color + '"></span>'
+        + '  <span>' + esc(st(c).short) + '</span><em>' + probOfStatus(c) + '%</em></div>'
+        + '<div class="sr-fn-track"><span style="width:' + w.toFixed(1) + '%;background:' + st(c).color + '"></span></div>'
+        + '<div class="sr-fn-val"><b>' + (v ? money(v) : '—') + '</b><i>' + (a.total ? pct(v / a.total * 100) : '—') + '</i></div>'
+        + '</div>';
+    }).join('');
+    return '<section class="sr-panel sr-fn">'
+      + '<div class="sr-ph"><div><h3><i class="fa-solid fa-filter"></i> Sales Pipeline Status</h3>'
+      + '  <div class="sr-s2">' + a.count + ' ดีล · รวม ' + money(a.total) + ' · % คือโอกาสปิดของสถานะ</div></div></div>'
+      + rows
+      + '</section>';
+  }
+
+  function dashForecastPanel(k) {
+    var s = k.sum;
+    var parts = [
+      { t: 'Actual', sub: 'ปิดงานแล้ว', v: s.s4, w: 100, c: '#2563EB' },
+      { t: 'Delivery', sub: 'รอส่งของ', v: s.s3, w: 100, c: '#38BDF8' },
+      { t: 'PO', sub: 'รอยืนยัน', v: s.s2, w: 50, c: '#F59E0B' },
+      { t: 'Pipeline', sub: 'กำลังคุย', v: s.s1, w: 25, c: '#A78BFA' }
+    ];
+    var chips = parts.map(function (p, i) {
+      return (i ? '<span class="sr-fc-plus">+</span>' : '')
+        + '<div class="sr-fc-chip" style="border-color:' + p.c + '33">'
+        + '  <small style="color:' + p.c + '">' + esc(p.t) + ' · ' + p.w + '%</small>'
+        + '  <b>' + money(p.v) + '</b>'
+        + '  <i>→ ' + money(p.v * p.w / 100) + '</i>'
+        + '</div>';
+    }).join('');
+    return '<section class="sr-panel sr-fc">'
+      + '<div class="sr-ph"><div><h3><i class="fa-solid fa-calculator"></i> Forecast Calculation</h3>'
+      + '  <div class="sr-s2">ถ่วงน้ำหนักตามโอกาสปิดของแต่ละสถานะ</div></div></div>'
+      + '<div class="sr-fc-row">' + chips + '</div>'
+      + '<div class="sr-fc-res"><div><small>Forecast Sales</small><b>' + money(s.forecast) + '</b></div>'
+      + '<span class="sr-pill-pct">' + pct(k.forecastPct) + ' ของเป้า</span></div>'
+      + '<div class="sr-s2" style="margin-top:8px">ปิดงานแล้ว + รอส่งของ นับ 100% · รอยืนยัน PO 50% · Pipeline 25%'
+      + (s.s0 ? ' · กำลังคุยยังไม่นับ' : '') + '</div>'
+      + '</section>';
+  }
+
+  function dashGaugePanel(k) {
+    var p = Math.max(0, Math.min(100, num(k.forecastPct)));
+    var color = p >= 100 ? '#16A34A' : (p >= 70 ? '#0EA5E9' : (p >= 40 ? '#F59E0B' : '#EF4444'));
+    var tag = p >= 100 ? 'ถึงเป้าแล้ว' : (p >= 70 ? 'On Track' : (p >= 40 ? 'ต้องเร่งยอด' : 'ต่ำกว่าเป้า'));
+    return '<section class="sr-panel sr-gp">'
+      + '<div class="sr-ph"><div><h3><i class="fa-solid fa-gauge-high"></i> Performance to Target</h3></div></div>'
+      + '<div class="sr-gauge" style="--p:' + p.toFixed(1) + ';--c:' + color + '">'
+      + '  <div class="sr-gauge-in"><b style="color:' + color + '">' + pct(p) + '</b><small>ของเป้า</small></div>'
+      + '</div>'
+      + '<div class="sr-gauge-tag" style="background:' + color + '1A;color:' + color + '">' + tag + '</div>'
+      + '<div class="sr-gauge-ft"><b>' + money(k.sum.forecast) + '</b><span> / ' + money(k.target) + '</span></div>'
+      + '</section>';
+  }
+
+  function dashInsightsPanel(k) {
+    var s = k.sum, a = statusAgg(k.list);
+    var items = [];
+    items.push({ i: 'fa-chart-line', c: '#16A34A', t: 'Forecast ' + pct(k.forecastPct), d: 'คาดปิด ' + money(s.forecast) });
+    var pipe = a.amt[1] + a.amt[0];
+    items.push({ i: 'fa-diagram-project', c: '#2563EB', t: 'Pipeline ' + money(pipe), d: (a.cnt[1] + a.cnt[0]) + ' ดีลที่ยังไม่ปิด' });
+    if (a.amt[2] > 0) items.push({ i: 'fa-hourglass-half', c: '#F59E0B', t: 'รอยืนยัน PO ' + money(a.amt[2]), d: a.cnt[2] + ' ดีล · ถ่วง 50% = ' + money(a.amt[2] * 0.5) });
+    var talk = k.list.filter(function (d) { return Number(d.status) === 0; });
+    if (talk.length) {
+      items.push({
+        i: 'fa-triangle-exclamation', c: '#DC2626', t: 'ต้องติดตาม ' + talk.length + ' ดีล',
+        d: 'กำลังคุย ' + money(talk.reduce(function (x, d) { return x + num(d.amount); }, 0))
+      });
+    }
+    var gap = k.target - s.forecast;
+    if (gap > 0.5) items.push({ i: 'fa-bullseye', c: '#7C3AED', t: 'ต้องเติมอีก ' + money(gap), d: pct(k.target ? gap / k.target * 100 : 0) + ' ของเป้า' });
+    var shown = items.slice(0, 4);
+    return '<section class="sr-panel sr-ins">'
+      + '<div class="sr-ph"><div><h3><i class="fa-solid fa-lightbulb"></i> Key Insights</h3>'
+      + '  <div class="sr-s2">สรุปจากข้อมูลตามตัวกรองปัจจุบัน</div></div></div>'
+      + shown.map(function (it) {
+        return '<div class="sr-ins-row"><span class="sr-ins-ico" style="background:' + it.c + '1A;color:' + it.c + '">'
+          + '<i class="fa-solid ' + it.i + '"></i></span>'
+          + '<div><b style="color:' + it.c + '">' + it.t + '</b><small>' + it.d + '</small></div></div>';
+      }).join('')
+      + '<button class="sr-btn" data-sr-goto="reports" style="width:100%;justify-content:center;margin-top:10px">'
+      + '  <i class="fa-solid fa-arrow-right"></i> ดูรายละเอียด</button>'
+      + '</section>';
+  }
+
+  function dashFilterCard(k) {
+    var sc = scopeOf();
+    var mine = sc.type === 'sale' ? sale(sc.saleId) : null;
+    var teamName = mine ? teamByCode(mine.team).name : (state.team ? teamByCode(state.team).name : 'ทุกทีม');
+    var aeName = state.sale ? sale(state.sale).name : (mine ? mine.name : 'ทุกคน');
+    var prodName = state.product ? product(state.product).name : 'ทุกสินค้า';
+    var payName = state.payment ? payment(state.payment).name : 'ทุกรูปแบบ';
+    var rows = [
+      ['ช่วงเวลา', state.month ? monthLabel(state.year, state.month) : ('ปี ' + (state.year + 543))],
+      ['ทีม (BU)', teamName],
+      ['AE', aeName],
+      ['สินค้า', prodName],
+      ['การซื้อ', payName],
+      ['ดีลในขอบเขต', k.list.length + ' ดีล']
+    ];
+    return '<section class="sr-panel sr-fsum">'
+      + '<div class="sr-ph"><div><h3><i class="fa-solid fa-sliders"></i> Filter Summary</h3></div></div>'
+      + rows.map(function (r) {
+        return '<div class="sr-fsum-row"><span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b></div>';
+      }).join('')
+      + '<button class="sr-btn" data-sr-reset style="width:100%;justify-content:center;margin-top:10px">'
+      + '  <i class="fa-solid fa-rotate-left"></i> Reset Filter</button>'
+      + '</section>';
+  }
+
+  /** อนุกรมแนวโน้ม: เลือกเดือน → รายสัปดาห์ (W1–W4), ทั้งปี → รายเดือน */
+  function dashTrend(k) {
+    var labels = [], actual = [], forecast = [], target = [];
+    if (state.month) {
+      var b = { 1: [0, 0], 2: [0, 0], 3: [0, 0], 4: [0, 0] };
+      k.list.forEach(function (d) {
+        var p = String(d.quoteDate || d.createdAt || '').slice(0, 10).split('-');
+        var day = Number(p[2]) || 1;
+        var w = day <= 7 ? 1 : (day <= 14 ? 2 : (day <= 21 ? 3 : 4));
+        b[w][0] += secOfDeal(d);
+        b[w][1] += fcOfDeal(d);
+      });
+      var tg = dashTargetOfMonth(state.month) / 4;
+      for (var i = 1; i <= 4; i++) {
+        labels.push('W' + i);
+        actual.push(Math.round(b[i][0]));
+        forecast.push(Math.round(b[i][1]));
+        target.push(Math.round(tg));
+      }
+    } else {
+      var m = [];
+      for (var j = 0; j < 12; j++) m.push([0, 0]);
+      k.list.forEach(function (d) {
+        var mi = (Number(d.month) || 1) - 1;
+        m[mi][0] += secOfDeal(d);
+        m[mi][1] += fcOfDeal(d);
+      });
+      for (var mm = 1; mm <= 12; mm++) {
+        labels.push(TH_MONTHS[mm - 1].slice(0, 3));
+        actual.push(Math.round(m[mm - 1][0]));
+        forecast.push(Math.round(m[mm - 1][1]));
+        target.push(Math.round(dashTargetOfMonth(mm)));
+      }
+    }
+    return { labels: labels, actual: actual, forecast: forecast, target: target };
+  }
+
   function renderDashboard() {
     injectCss();
     if (scopeOf().type === 'pending') {
@@ -1266,6 +1490,9 @@
     var k = kpis();
     var s = k.sum;
     var today = new Date().toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    var nowStr = new Date().toLocaleString('th-TH', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    var refreshMin = dashRefreshMin();
+    scheduleDashRefresh();
 
     var scD = scopeOf();
     var saleScope = (scD.type === 'sale');
@@ -1295,6 +1522,35 @@
         + '<div class="sr-trow-f">Forecast ' + money(ts.forecast) + ' · ' + pct(pFc) + '</div>'
         + '</div>';
     }).join('');
+
+    /* ---- Team Performance: สลับดูแบบรายทีม / ราย AE ---- */
+    var perfMode = state.dashPerf === 'rep' ? 'rep' : 'team';
+    var repRows = '';
+    if (perfMode === 'rep') {
+      var repOut = [];
+      dashTeams.forEach(function (t) {
+        var teamSize = SALES.filter(function (r) { return r.team === t.code; }).length || 1;
+        var base = targetOf(t.code, state.year, state.month);
+        SALES.filter(function (r) {
+          if (r.team !== t.code) return false;
+          if (scD.type === 'sale') return mySaleIds(scD).indexOf(r.id) >= 0;
+          return !state.sale || r.id === state.sale;
+        }).forEach(function (r) {
+          var list = k.list.filter(function (d) { return d.saleId === r.id; });
+          var rs = summarize(list);
+          var tg = base / teamSize;   /* เป้ารายคน = เป้าทีม / จำนวนคนในทีม */
+          var pA = tg ? rs.s4 / tg * 100 : 0;
+          var pF = tg ? rs.forecast / tg * 100 : 0;
+          repOut.push('<div class="sr-trow">'
+            + '<div class="sr-trow-h"><b>' + esc(r.name) + '</b><span>' + esc(t.name) + '</span></div>'
+            + '<div class="sr-trow-n">' + money(rs.s4) + ' <span>/ ' + money(tg) + '</span><em>' + pct(pA) + '</em></div>'
+            + '<div class="sr-bar"><span style="width:' + Math.max(0, Math.min(100, pA)) + '%;background:#2563EB"></span></div>'
+            + '<div class="sr-trow-f">Forecast ' + money(rs.forecast) + ' · ' + pct(pF) + ' · ' + list.length + ' ดีล</div>'
+            + '</div>');
+        });
+      });
+      repRows = repOut.join('') || '<div class="sr-trow">ยังไม่มีผลงานราย AE</div>';
+    }
 
     /* ---- ยอดขายแยกตามรูปแบบการชำระเงิน (เงินสด / ผ่อนชำระ / เครดิต) รายทีม ---- */
     var PAY_KEYS = [
@@ -1373,15 +1629,17 @@
     var follow = k.list.filter(function (d) { return d.status === 0 || d.status === 1; })
       .sort(function (a, b) { return num(b.amount) - num(a.amount); }).slice(0, 8);
 
-    var followRows = follow.map(function (d) {
+    var followRows = follow.map(function (d, idx) {
       var stx = st(d.status);
       return '<tr class="sr-row" data-sr-deal="' + esc(d.no) + '">'
         + '<td><span class="sr-badge ' + stx.cls + '">' + esc(stx.short) + '</span></td>'
-        + '<td><div class="sr-nm">' + esc(d.customer) + '</div><div class="sr-s2">' + esc(d.job) + '</div>'
+        + '<td><div class="sr-rank-wrap">'
+        + (idx < 3 ? '<span class="sr-rank r' + (idx + 1) + '">' + (idx + 1) + '</span>' : '<span class="sr-rank">—</span>')
+        + '<div><div class="sr-nm">' + esc(d.customer) + '</div><div class="sr-s2">' + esc(d.job) + '</div>'
         + '  <div class="sr-s2" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:2px">'
         + '    <span class="sr-drref" style="background:#F8FAFC;color:#475467"><i class="fa-solid fa-hashtag"></i> ' + esc(d.no) + '</span>'
         + (d.drRef ? '    <span class="sr-drref" title="อ้างอิงบันทึกการพบลูกค้า"><i class="fa-solid fa-link"></i> ' + esc(d.drRef) + '</span>' : '')
-        + '  </div></td>'
+        + '  </div></div></div></td>'
         + '<td><div>' + esc(sale(d.saleId).name) + '</div><div class="sr-s2">' + esc(teamByCode(sale(d.saleId).team).name) + '</div></td>'
         + '<td class="sr-num sr-strong">' + money(d.amount) + '</td>'
         + '<td class="sr-num">' + String(d.month).padStart(2, '0') + '.' + TH_MONTHS[d.month - 1] + ' ' + String(d.year + 543).slice(-2) + '</td>'
@@ -1442,7 +1700,14 @@
       + '<div class="sr-head">'
       + '  <div><h1>ภาพรวมยอดขาย &amp; Forecast</h1>'
       + '    <div class="sr-sub">' + esc(today) + ' · ใช้สูตรและข้อมูลชุดเดียวกับหน้า Reports</div></div>'
-      + '  <button class="sr-btn dark" data-sr-goto="reports"><i class="fa-solid fa-chart-pie"></i> เปิด Reports ฉบับเต็ม</button>'
+      + '  <div class="sr-head-r">'
+      + '    <div class="sr-upd"><i class="fa-regular fa-clock"></i> อัปเดตล่าสุด <b>' + esc(nowStr) + '</b></div>'
+      + '    <label class="sr-ar"><i class="fa-solid fa-rotate"></i> Auto Refresh'
+      + '      <select data-sr-refresh>' + [0, 1, 5, 10, 15].map(function (m) {
+        return '<option value="' + m + '"' + (m === refreshMin ? ' selected' : '') + '>' + (m ? m + ' นาที' : 'ปิด') + '</option>';
+      }).join('') + '</select></label>'
+      + '    <button class="sr-btn dark" data-sr-goto="reports"><i class="fa-solid fa-chart-pie"></i> เปิด Reports ฉบับเต็ม</button>'
+      + '  </div>'
       + '</div>'
       + scopeNotice().replace('margin-bottom', 'margin-bottom')
       + '<div class="sr-filters sr-f3">'
@@ -1456,7 +1721,20 @@
       + esc(state.month ? monthLabel(state.year, state.month) : ('ปี ' + (state.year + 543)))
       + ' · ' + k.list.length + ' ดีล</div>'
       + hero
-      + '<div class="sr-dash-teams">' + (teamRows || '<div class="sr-trow">ยังไม่มีทีม</div>') + '</div>'
+      + '<div class="sr-dash-r2">'
+      + dashFunnelPanel(k)
+      + dashForecastPanel(k)
+      + dashGaugePanel(k)
+      + dashInsightsPanel(k)
+      + '</div>'
+      + '<div class="sr-sec-h">'
+      + '  <div><h3>ผลงานตามทีม / AE</h3><div class="sr-s2">เป้าเทียบกับ Actual และ Forecast ของแต่ละคน</div></div>'
+      + '  <div class="sr-seg">'
+      + '    <button data-sr-dashperf="team"' + (perfMode === 'team' ? ' class="on"' : '') + '>By Team</button>'
+      + '    <button data-sr-dashperf="rep"' + (perfMode === 'rep' ? ' class="on"' : '') + '>By Sales Rep</button>'
+      + '  </div>'
+      + '</div>'
+      + '<div class="sr-dash-teams">' + (perfMode === 'rep' ? repRows : (teamRows || '<div class="sr-trow">ยังไม่มีทีม</div>')) + '</div>'
       + payPanel
       + '<div class="sr-dash-charts">'
       + '  <section class="sr-panel">'
@@ -1468,8 +1746,14 @@
       + '    <div class="sr-ph"><h3>สัดส่วนสถานะงาน</h3></div>'
       + '    <div class="sr-chartbox"><canvas id="srDashStatus"></canvas></div>'
       + '  </section>'
+      + '  <section class="sr-panel sr-span-all">'
+      + '    <div class="sr-ph"><div><h3>Sales Trend &amp; Forecast</h3>'
+      + '      <div class="sr-s2">' + (state.month ? 'รายสัปดาห์ของเดือนที่เลือก' : 'รายเดือนของปีที่เลือก') + ' · เทียบเป้า</div></div></div>'
+      + '    <div class="sr-chartbox sm"><canvas id="srDashTrend"></canvas></div>'
+      + '  </section>'
       + '</div>'
-      + '<section class="sr-panel">'
+      + '<div class="sr-dash-bottom">'
+      + '<section class="sr-panel" style="margin-bottom:0">'
       + '  <div class="sr-ph"><div><h3>ดีลที่ต้องติดตาม (Pipeline / กำลังคุย)</h3>'
       + '    <div class="sr-s2">เรียงตามมูลค่าสูงสุด · คลิกแถวเพื่อดูหมายเหตุ</div></div>'
       + '    <button class="sr-btn" data-sr-goto="reports"><i class="fa-solid fa-list"></i> ดูดีลทั้งหมด</button></div>'
@@ -1478,6 +1762,8 @@
       + '    <th class="sr-num">คาดปิด</th>'
       + '  </tr></thead><tbody>' + (followRows || '<tr><td colspan="5" class="sr-empty">ไม่มีดีลที่ต้องติดตาม</td></tr>') + '</tbody></table></div>'
       + '</section>'
+      + dashFilterCard(k)
+      + '</div>'
       + '</div>';
   }
 
@@ -1554,6 +1840,49 @@
           plugins: {
             legend: { position: 'bottom', labels: { boxWidth: 9, usePointStyle: true } },
             tooltip: { callbacks: { label: function (c) { return c.label + ': ' + money(c.parsed); } } }
+          }
+        }
+      }));
+    }
+
+    /* ---- Sales Trend & Forecast (รายสัปดาห์/รายเดือน) ---- */
+    var trendEl = document.getElementById('srDashTrend');
+    if (trendEl) {
+      var td = dashTrend(k);
+      charts.push(new Chart(trendEl, {
+        type: 'line',
+        data: {
+          labels: td.labels,
+          datasets: [
+            {
+              label: 'Actual (ปิด + รอส่ง)', data: td.actual, borderColor: '#2563EB',
+              backgroundColor: 'rgba(37,99,235,.09)', fill: true, tension: .35,
+              pointRadius: 3, pointBackgroundColor: '#2563EB', borderWidth: 2
+            },
+            {
+              label: 'Forecast', data: td.forecast, borderColor: '#0EA5E9',
+              borderDash: [6, 4], fill: false, tension: .35, pointRadius: 2, pointBackgroundColor: '#0EA5E9', borderWidth: 2
+            },
+            {
+              label: 'Target', data: td.target, borderColor: '#CBD5E1',
+              borderDash: [3, 3], fill: false, pointRadius: 0, tension: 0, borderWidth: 1.6
+            }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 9, usePointStyle: true } },
+            tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + money(c.parsed.y); } } }
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: {
+              beginAtZero: true,
+              ticks: { callback: function (v) { return Number(v).toLocaleString('th-TH'); } },
+              grid: { color: '#EFF3F8' }
+            }
           }
         }
       }));
@@ -2324,6 +2653,13 @@
 
   document.addEventListener('change', function (e) {
     if (e.target && e.target.name === 'status' && onDealStatusChange(e.target)) return;
+    if (e.target && e.target.closest && e.target.closest('[data-sr-refresh]')) {
+      var mins = Number(e.target.value) || 0;
+      try { global.localStorage.setItem(LS_REFRESH, String(mins)); } catch (err) {}
+      scheduleDashRefresh();
+      if (typeof global.toast === 'function') global.toast(mins ? 'ตั้ง Auto Refresh ทุก ' + mins + ' นาที' : 'ปิด Auto Refresh แล้ว');
+      return;
+    }
     var tin = e.target.closest && e.target.closest('[data-sr-target]');
     if (tin) {
       var parts = tin.getAttribute('data-sr-target').split('|');
@@ -2386,6 +2722,12 @@
     }
     var ptBtn = t.closest('[data-sr-perfteam]');
     if (ptBtn) { state.perfTeam = ptBtn.getAttribute('data-sr-perfteam'); if (typeof global.render === 'function') global.render(); return; }
+    var dpBtn = t.closest('[data-sr-dashperf]');
+    if (dpBtn) {
+      state.dashPerf = dpBtn.getAttribute('data-sr-dashperf') === 'rep' ? 'rep' : 'team';
+      if (typeof global.render === 'function') global.render();
+      return;
+    }
     var saleBtn = t.closest('[data-sr-sale]');
     if (saleBtn) { openSaleMonthly(saleBtn.getAttribute('data-sr-sale')); return; }
     var act0 = t.closest('[data-action]');
@@ -2709,15 +3051,81 @@
       + '.sr-hist-row{display:grid;grid-template-columns:18px 1fr;gap:8px;align-items:start}'
       + '.sr-hist-ico{width:18px;height:18px;border-radius:50%;background:#fff;border:1px solid #E6EDF5;display:grid;place-items:center;font-size:8px}'
       + '.sr-hist-row b{font-size:10.5px;color:#0F2B46}'
+      /* ---- Dashboard 2.0: analytics cards ---- */
+      + '.sr-head-r{display:flex;align-items:center;gap:9px;flex-wrap:wrap}'
+      + '.sr-upd{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #E6EDF5;border-radius:9px;'
+      + 'padding:7px 11px;font-size:10px;color:#667085}'
+      + '.sr-upd b{color:#0F2B46;font-weight:600}'
+      + '.sr-upd i{color:#94A3B8;font-size:10px}'
+      + '.sr-ar{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #E6EDF5;border-radius:9px;'
+      + 'padding:5px 8px 5px 11px;font-size:10px;color:#667085}'
+      + '.sr-ar i{color:#94A3B8;font-size:10px}'
+      + '.sr-ar select{border:0;background:transparent;font-family:inherit;font-size:10.5px;color:#0F2B46;outline:none;cursor:pointer}'
+      + '.sr-dash-r2{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,.85fr) minmax(0,1fr);gap:12px;margin-bottom:15px}'
+      + '.sr-dash-r2 .sr-panel{margin-bottom:0;padding:13px}'
+      + '.sr-dash-r2 .sr-ph{margin-bottom:10px}'
+      + '.sr-fn-row{display:grid;grid-template-columns:88px minmax(0,1fr) 96px;align-items:center;gap:8px;margin-bottom:7px}'
+      + '.sr-fn-lbl{display:flex;align-items:center;gap:5px;font-size:10px;color:#475467;min-width:0}'
+      + '.sr-fn-lbl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+      + '.sr-fn-lbl em{font-style:normal;font-size:9px;color:#98A2B3;margin-left:auto}'
+      + '.sr-fn-track{height:14px;background:#F1F5F9;border-radius:7px;overflow:hidden}'
+      + '.sr-fn-track span{display:block;height:100%;border-radius:7px;transition:width .4s ease}'
+      + '.sr-fn-val{text-align:right;line-height:1.25}'
+      + '.sr-fn-val b{display:block;font-size:10.5px;color:#0F2B46;font-weight:600;font-variant-numeric:tabular-nums}'
+      + '.sr-fn-val i{font-style:normal;font-size:9px;color:#98A2B3}'
+      + '.sr-fc-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:6px;align-items:stretch}'
+      + '.sr-fc-chip{border:1px solid #E6EDF5;background:#F8FAFC;border-radius:9px;padding:7px 8px;display:grid;gap:1px;min-width:0;text-align:center}'
+      + '.sr-fc-chip small{font-size:8.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+      + '.sr-fc-chip b{font-size:10.5px;color:#0F2B46;font-weight:600;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}'
+      + '.sr-fc-chip i{font-style:normal;font-size:8.5px;color:#98A2B3}'
+      + '.sr-fc-plus{display:none}'
+      + '.sr-fc-res{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;'
+      + 'background:#EFF6FF;border:1px solid #DBEAFE;border-radius:10px;padding:9px 11px}'
+      + '.sr-fc-res small{display:block;font-size:9px;color:#1D4ED8}'
+      + '.sr-fc-res b{font-size:17px;color:#0F2B46;font-weight:600;letter-spacing:-.2px}'
+      + '.sr-gauge{width:122px;height:122px;border-radius:50%;margin:2px auto 0;display:grid;place-items:center;'
+      + 'background:conic-gradient(var(--c) calc(var(--p) * 1%),#EDF1F7 0)}'
+      + '.sr-gauge-in{width:90px;height:90px;border-radius:50%;background:#fff;display:grid;place-items:center;text-align:center;line-height:1.15}'
+      + '.sr-gauge-in b{font-size:18px;font-weight:600;letter-spacing:-.3px}'
+      + '.sr-gauge-in small{font-size:8.5px;color:#98A2B3}'
+      + '.sr-gauge-tag{margin:10px auto 0;display:block;width:fit-content;border-radius:99px;padding:3px 11px;font-size:10px;font-weight:600}'
+      + '.sr-gauge-ft{margin-top:9px;text-align:center;font-size:10px;color:#98A2B3}'
+      + '.sr-gauge-ft b{color:#0F2B46;font-size:11.5px}'
+      + '.sr-ins-row{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;align-items:start;margin-bottom:9px}'
+      + '.sr-ins-ico{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font-size:10px}'
+      + '.sr-ins-row b{display:block;font-size:10.5px;font-weight:600;line-height:1.4}'
+      + '.sr-ins-row small{display:block;font-size:9.5px;color:#667085;line-height:1.45;margin-top:1px}'
+      + '.sr-sec-h{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin:0 0 10px;flex-wrap:wrap}'
+      + '.sr-sec-h h3{margin:0;color:#0F2B46;font-size:13px;font-weight:600}'
+      + '.sr-seg{display:inline-flex;background:#F1F5F9;border-radius:9px;padding:2px;gap:2px}'
+      + '.sr-seg button{border:0;background:transparent;font-family:inherit;font-size:10px;color:#667085;border-radius:7px;'
+      + 'padding:5px 11px;cursor:pointer}'
+      + '.sr-seg button.on{background:#fff;color:#0F2B46;font-weight:600;box-shadow:0 1px 3px rgba(15,43,70,.12)}'
+      + '.sr-span-all{grid-column:1/-1}'
+      + '.sr-dash-bottom{display:grid;grid-template-columns:minmax(0,2.4fr) minmax(0,1fr);gap:15px;margin-bottom:15px;align-items:start}'
+      + '.sr-fsum-row{display:flex;justify-content:space-between;gap:10px;font-size:10px;padding:7px 0;border-bottom:1px dashed #EEF2F7}'
+      + '.sr-fsum-row:last-of-type{border-bottom:0}'
+      + '.sr-fsum-row span{color:#98A2B3}'
+      + '.sr-fsum-row b{color:#0F2B46;font-weight:600;text-align:right}'
+      + '.sr-rank-wrap{display:grid;grid-template-columns:20px minmax(0,1fr);gap:7px;align-items:start}'
+      + '.sr-rank{width:20px;height:20px;border-radius:50%;background:#F1F5F9;color:#98A2B3;display:grid;place-items:center;'
+      + 'font-size:9px;font-weight:600}'
+      + '.sr-rank.r1{background:#FEF3C7;color:#B45309}'
+      + '.sr-rank.r2{background:#E0F2FE;color:#0369A1}'
+      + '.sr-rank.r3{background:#F3E8FF;color:#6D28D9}'
       /* responsive */
       + '@media(max-width:1280px){.sr-kpis{gap:10px}}'
       + '@media(max-width:1024px){.sr-filters{grid-template-columns:repeat(3,minmax(0,1fr))}.sr-fbtn{grid-column:1/-1}'
       + '.sr-donuts{grid-template-columns:1fr}'
+      + '.sr-dash-r2{grid-template-columns:1fr 1fr}'
+      + '.sr-dash-bottom{grid-template-columns:1fr}'
       + '.sr-dash-charts{grid-template-columns:1fr}}'
       + '@media(max-width:760px){.sr-filters,.sr-filters.sr-f3{position:static;grid-template-columns:1fr 1fr;padding:11px}'
       + '.sr-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}'
       + '.sr-card-val{font-size:16px}.sr-chartbox{height:250px}'
-      + '.sr-md-grid{grid-template-columns:1fr 1fr}.sr-head h1{font-size:18px}}'
+      + '.sr-md-grid{grid-template-columns:1fr 1fr}.sr-head h1{font-size:18px}'
+      + '.sr-dash-r2{grid-template-columns:1fr}.sr-head-r{width:100%}.sr-ar{flex:1}'
+      + '.sr-fn-row{grid-template-columns:78px minmax(0,1fr) 84px}}'
       + '@media(max-width:480px){.sr-filters{grid-template-columns:1fr 1fr;gap:7px;padding:9px}'
       + '.sr-fl label{font-size:9.5px}.sr-filters select,.sr-filters input{font-size:11px;padding:7px 8px}'
       + '.sr-fbtn{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:7px}'
