@@ -1,7 +1,7 @@
 # Production Runbook — Prospect Intelligence Sales workspace
 
-**เวอร์ชัน Production:** v1.0 · 24 พ.ย. 2569
-**Apps Script deployment:** `AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-` @ `PROD v1.0 2026-11-24`
+**เวอร์ชัน Production:** v1.2 · 24 พ.ย. 2569
+**Apps Script deployment:** `AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-` @ `75` (PROD v1.1.1 → ใช้งานกับ frontend v1.2)
 
 ## 1) URL ที่ใช้งานจริง
 | ส่วน | URL |
@@ -62,3 +62,15 @@ git add -A && git commit -m "<ข้อความ>" && git push pi main
 - Drive scope ของสคริปต์ยังไม่ได้รับอนุมัติ → สำรองเป็น **ไฟล์แยกแบบหมุนเวียน** (7 ชุด) แทนโฟลเดอร์ `PI Backups`
 - Activity Log ครั้งแรกอาจใช้ 3–6 วินาที (Apps Script cold start)
 - GitHub Actions cron อาจล่าช้าได้ 5–15 นาทีในชั่วโมงเร่งด่วน
+
+## 8) Go-live checklist (v1.2)
+- [x] ล้างข้อมูลทดสอบ (ดีล QC/PROD, โครงการ QA) — soft delete + archive log
+- [x] กันการฟื้นคืนข้อมูลที่ถูกลบ (server ปฏิเสธ upsert เมื่อ `deleted=1`)
+- [x] client ลบสำเนาในเครื่องตาม `deletedNos`
+- [x] ไม่บันทึก log ซ้ำเมื่อดีลไม่ได้เปลี่ยน
+- [x] cache-busting ทุก API call (กันข้อมูลค้าง)
+- [x] UI มาตรฐานเดียวทุกหน้า (h1 21px, panel radius 12, ปุ่ม 34px)
+- [x] แจ้งเตือน “ข้อมูลพนักงานไม่ครบ” ใน User Management
+- [ ] เติมโปรไฟล์พนักงานที่เหลือ (ดู `docs/DATA-READINESS.md`)
+- [ ] ใส่ Target ของเดือนที่ยังขาด
+- [ ] คีย์ดีล/โครงการจริงรอบแรก แล้วตรวจ Dashboard อีกครั้ง
