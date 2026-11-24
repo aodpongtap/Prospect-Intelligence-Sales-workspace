@@ -573,7 +573,12 @@
       return scopeTeams.some(function (t) { return t.code === r.team; });
     }).length || 1;
     var perHead = target / headCount;
-    if (sc.type === 'sale') { target = perHead; headCount = 1; }
+    if (sc.type === 'sale') {
+      /* AE: เห็นตัวเอง + ตัวแทนที่ผูกไว้ → เป้า = เป้า/คน × จำนวนคนในความดูแล */
+      var mineN = mySaleIds(sc).length || 1;
+      target = perHead * mineN;
+      headCount = mineN;
+    }
     else if (state.sale) { target = perHead; headCount = 1; }
     return {
       sum: sum, list: list, target: target, headCount: headCount, perHead: perHead,
@@ -1078,15 +1083,16 @@
       var list = k.list.filter(function (d) { return sale(d.saleId).team === t.code; });
       var ts = summarize(list);
       var teamSize = SALES.filter(function (r) { return r.team === t.code; }).length || 1;
+      var mineN = mySaleIds(scD).length || 1;
       var isMine = (scD.type === 'sale');
       var tg = targetOf(t.code, state.year, state.month);
-      if (isMine) tg = tg / teamSize;              /* ระดับเซลล์ → เปรียบเทียบกับเป้าต่อคน */
+      if (isMine) tg = tg / teamSize * mineN;      /* AE → เป้า/คน × (ตัวเอง + ตัวแทน) */
       var pAch = tg ? ts.s4 / tg * 100 : 0;
       var pFc = tg ? ts.forecast / tg * 100 : 0;
-      var cnt = isMine ? 1 : teamSize;
+      var cnt = isMine ? mineN : teamSize;
       return '<div class="sr-trow">'
-        + '<div class="sr-trow-h"><b>' + esc(isMine ? (sale(scD.saleId).name + ' · ผลงานของฉัน') : t.name) + '</b>'
-        + '  <span>' + cnt + (isMine ? ' คน (เป้า/คน)' : ' คน') + '</span></div>'
+        + '<div class="sr-trow-h"><b>' + esc(isMine ? (sale(scD.saleId).name + ' · ผลงานของฉัน' + (mineN > 1 ? ' + ตัวแทน ' + (mineN - 1) + ' คน' : '')) : t.name) + '</b>'
+        + '  <span>' + cnt + (isMine ? (mineN > 1 ? ' คน (เป้า/คน × ' + mineN + ')' : ' คน (เป้า/คน)') : ' คน') + '</span></div>'
         + '<div class="sr-trow-n">' + money(ts.s4) + ' <span>/ ' + money(tg) + '</span><em>' + pct(pAch) + '</em></div>'
         + '<div class="sr-bar"><span style="width:' + Math.max(0, Math.min(100, pAch)) + '%;background:#2563EB"></span></div>'
         + '<div class="sr-trow-f">Forecast ' + money(ts.forecast) + ' · ' + pct(pFc) + '</div>'
@@ -1124,8 +1130,9 @@
       var o = payAgg(k.list.filter(function (d) { return sale(d.saleId).team === t.code; }));
       payAll.cash += o.cash; payAll.inst += o.inst; payAll.term += o.term;
       payAll.total += o.total; payAll.count += o.count;
+      var mineNP = mySaleIds(scD).length || 1;
       return '<tr>'
-        + '<td><div class="sr-pay-tm"><b>' + esc(saleScope ? sale(scD.saleId).name : t.name) + '</b><span>' + o.count + ' ดีล</span></div></td>'
+        + '<td><div class="sr-pay-tm"><b>' + esc(saleScope ? (sale(scD.saleId).name + (mineNP > 1 ? ' + ตัวแทน ' + (mineNP - 1) + ' คน' : '')) : t.name) + '</b><span>' + o.count + ' ดีล</span></div></td>'
         + PAY_KEYS.map(function (c) {
           return '<td class="sr-num">' + (o[c.code] ? money(o[c.code]) : '<span class="sr-dim">—</span>') + '</td>';
         }).join('')
