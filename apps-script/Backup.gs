@@ -197,6 +197,17 @@ function backupCronApi_(key, mode) {
   return r;
 }
 
+/** เรียกจากภายนอกแบบไม่ต้องมี key: ทำได้ไม่เกิน 1 ครั้ง / 20 ชั่วโมง และไม่เปิดเผยข้อมูลไฟล์ */
+function backupDailyApi_() {
+  var props = PropertiesService.getScriptProperties();
+  var last = props.getProperty('LAST_BACKUP_AT');
+  if (last && (Date.now() - new Date(last).getTime()) < 20 * 3600 * 1000) {
+    return { ok: true, skipped: true, lastAt: last };
+  }
+  var r = dailyBackup_();
+  return { ok: !!r.ok, mode: r.mode, skipped: false, at: new Date().toISOString() };
+}
+
 /** ตรวจว่าบัญชีที่เว็บแอปรันอยู่คือใคร และมีสิทธิ์ Drive/Trigger หรือไม่ (ใช้ diagnost) */
 function whoAmI_() {
   var out = { ok: true };
@@ -235,6 +246,7 @@ function backupInfoApi_(token) {
     lastUrl: props.getProperty('LAST_BACKUP_URL') || '',
     lastMode: props.getProperty('LAST_BACKUP_MODE') || '',
     cronUrl: isAdminLevel_(s.level) ? backupCronUrl_() : '',
+    cronDaily: true,
     busy: !!props.getProperty('BACKUP_LAZY')
   };
 }

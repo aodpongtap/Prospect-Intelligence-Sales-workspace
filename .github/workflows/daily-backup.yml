@@ -1,10 +1,7 @@
 name: daily-sheet-backup
 
-# สำรอง Google Sheet อัตโนมัติทุกวัน 02:00 (Asia/Bangkok = 19:00 UTC ของวันก่อน)
-# ต้องตั้งค่า secret ชื่อ BACKUP_CRON_URL ใน repo นี้ก่อน:
-#   Settings → Secrets and variables → Actions → New repository secret
-#   Name:  BACKUP_CRON_URL
-#   Value: URL ที่ได้จากปุ่ม "คัดลอก URL ตั้งเวลา" ในหน้า Activity Log (มี key อยู่ในตัว)
+# สำรอง Google Sheet อัตโนมัติทุกวัน ~02:00 (Asia/Bangkok = 19:00 UTC ของวันก่อน)
+# ไม่ต้องตั้ง secret: endpoint ฝั่ง Apps Script จำกัดการทำงานไม่เกิน 1 ครั้ง / 20 ชั่วโมง
 
 on:
   schedule:
@@ -17,9 +14,6 @@ jobs:
     steps:
       - name: Trigger Apps Script backup
         run: |
-          if [ -z "${{ secrets.BACKUP_CRON_URL }}" ]; then
-            echo "ยังไม่ได้ตั้ง secret BACKUP_CRON_URL — ข้ามการทำงาน"
-            exit 0
-          fi
-          curl -sS -L --max-time 180 "${{ secrets.BACKUP_CRON_URL }}" -o /tmp/backup.json -w "HTTP %{http_code}\n"
-          head -c 400 /tmp/backup.json || true
+          URL="https://script.google.com/macros/s/AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-/exec?api=1&action=backupDaily"
+          curl -sS -L --max-time 180 "$URL" -o /tmp/backup.json -w "HTTP %{http_code}\n"
+          head -c 300 /tmp/backup.json || true

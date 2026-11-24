@@ -185,7 +185,9 @@
       var last = r.lastAt ? fmtTs(r.lastAt) : 'ยังไม่มี';
       var modeTxt = r.installed
         ? 'trigger รายวัน 02:00 (ติดตั้งแล้ว)'
-        : (r.lazy ? 'อัตโนมัติเมื่อเข้าใช้งานครั้งแรกของวัน' : 'ยังไม่เปิด');
+        : (r.cronDaily
+          ? 'ทุกวัน ~02:00 (ตัวตั้งเวลาภายนอก) + เมื่อเข้าใช้งาน'
+          : (r.lazy ? 'อัตโนมัติเมื่อเข้าใช้งานครั้งแรกของวัน' : 'ยังไม่เปิด'));
       var cls = (r.installed || r.lazy) ? 'al-bk-ok' : 'al-bk-warn';
       var dest = r.driveReady
         ? 'ไฟล์สำรองใน Drive (' + esc(r.lastMode === 'sheet' ? 'ล่าสุดเป็นแท็บสำรอง' : 'โฟลเดอร์ PI Backups') + ')'
@@ -195,7 +197,7 @@
         + 'สำรองล่าสุด: <b>' + last + '</b>' + (r.lastName ? ' · ' + esc(r.lastName) : '') + '<br>'
         + 'เก็บย้อนหลัง <b>' + r.keepDays + '</b> วัน'
         + (r.cronUrl ? '<div style="margin-top:6px;font-size:9.5px;color:#98A2B3">'
-          + 'ตั้งเวลา 02:00 แบบไม่มีเงื่อนไข: กด “คัดลอก URL ตั้งเวลา” แล้ววางใน GitHub Actions / cron-job.org (วันละครั้ง)</div>' : '');
+          + 'ตัวตั้งเวลา: GitHub Actions ทุกวัน 19:00 UTC (02:00 ไทย) · กันการซ้ำ 20 ชม. · กด “คัดลอก URL ตั้งเวลา” ถ้าจะใช้ cron อื่น</div>' : '');
     }).catch(function (e) { box.textContent = e.message || String(e); });
   }
 
