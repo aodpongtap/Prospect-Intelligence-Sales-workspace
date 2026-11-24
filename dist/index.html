@@ -889,6 +889,7 @@
             docNo: d.docNo || '',
             owner: d.ownerName || d.ownerEmail, team: d.team || '-',
             value: Number(d.value || 0), stage: d.stage || 'Prospect',
+            statusNo: (d.statusNo === undefined ? undefined : Number(d.statusNo)),
             probability: Number(d.probability || 0), close: d.close || '',
             lastActivity: d.lastActivity || (d.updatedAt || d.createdAt || '').slice(0, 10),
             nextAction: d.nextAction || '', status: d.status || 'Healthy', activity: []
