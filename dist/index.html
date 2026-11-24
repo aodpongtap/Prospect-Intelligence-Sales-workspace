@@ -430,6 +430,12 @@
       return r;
     });
   }
+  function clearLogs() {
+    return call('logsClear', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ล้าง Log ไม่สำเร็จ');
+      return r;
+    });
+  }
 
   global.PIAuth = {
     coreAdmins: [
@@ -470,7 +476,8 @@
     deleteProject: deleteProject,
     backupInfo: backupInfo,
     backupNow: backupNow,
-    installBackup: installBackup
+    installBackup: installBackup,
+    clearLogs: clearLogs
   };
 })(window);
 
@@ -480,7 +487,7 @@
   <script src="assets/daily-report.js?v=17"></script>
   <script src="assets/project-tracking.js?v=13"></script>
   <script src="assets/customer-intelligence.js?v=6"></script>
-  <script src="assets/audit-log.js?v=7"></script>
+  <script src="assets/audit-log.js?v=8"></script>
   <script src="assets/team-page.js?v=13"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script

@@ -80,6 +80,7 @@ function apiResponse_(p) {
     else if (action === 'saveDaily') out = saveDailyApi_(p.token, p.item ? JSON.parse(p.item) : {});
     else if (action === 'delDaily') out = delDailyApi_(p.token, p.ref);
     else if (action === 'logs') out = listLogsApi_(p.token, p.q, p.kind, p.by, p.limit);
+    else if (action === 'logsClear') out = clearLogsApi_(p.token);
     else if (action === 'backupNow') out = backupNowApi_(p.token, p.mode);
     else if (action === 'backupCron') out = backupCronApi_(p.key, p.mode);
     else if (action === 'backupDaily') out = backupDailyApi_();

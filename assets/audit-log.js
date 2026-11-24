@@ -101,7 +101,9 @@
     return '<div class="al">'
       + '<div class="al-head"><div><h1><i class="fa-solid fa-clock-rotate-left" style="color:#2563EB;margin-right:7px"></i>Activity Log</h1>'
       + '  <div class="al-sub">ประวัติการใช้งานทั้งหมด (ดีล / บันทึกกิจกรรม / โครงการ / ผู้ใช้ / เป้าหมาย) จากแท็บ Logs บน Google Sheet</div></div>'
-      + '  <button class="al-btn" id="alRefresh"><i class="fa-solid fa-rotate"></i> รีเฟรช</button></div>'
+      + '  <button class="al-btn" id="alRefresh"><i class="fa-solid fa-rotate"></i> รีเฟรช</button>'
+      + (isAdmin() ? '  <button class="al-btn" id="alClear" title="ล้าง Log ทั้งหมด (สำรองข้อมูลเดิมก่อน)"><i class="fa-solid fa-eraser"></i> ล้าง Log</button>' : '')
+      + '</div>'
       + '<div class="al-cards">' + cards + '</div>'
       + '<section class="al-panel">'
       + '  <div class="al-fbar">'
@@ -253,6 +255,31 @@
     var t = e.target;
     if (!t || !t.closest) return;
     if (t.closest('#alRefresh')) { load(); loadBackup(); return; }
+    if (t.closest('#alClear')) {
+      if (!global.confirm('ล้าง Log ทั้งหมด? ระบบจะสำรองข้อมูลเดิมลงแท็บ Logs_archive_… ก่อนล้าง')) return;
+      var bc = t.closest('#alClear');
+      bc.disabled = true;
+      global.PIAuth.clearLogs().then(function (r) {
+        bc.disabled = false;
+        if (global.toast) global.toast('ล้าง Log แล้ว ' + (r.cleared || 0) + ' รายการ' + (r.archived ? ' · สำรองไว้ที่ ' + r.archived : ''));
+        st.logs = [];
+        st.counts = null;
+        load();
+      }).catch(function (err) { bc.disabled = false; if (global.toast) global.toast('ล้างไม่สำเร็จ: ' + (err.message || err)); });
+      return;
+    }
+    if (t.closest('#alClear')) {
+      if (!global.confirm('ล้าง Log ทั้งหมด? ระบบจะสำรองข้อมูลเดิมลงแท็บ Logs_archive_… ก่อนล้าง')) return;
+      var bc = t.closest('#alClear');
+      bc.disabled = true;
+      global.PIAuth.clearLogs().then(function (r) {
+        bc.disabled = false;
+        if (global.toast) global.toast('ล้าง Log แล้ว ' + (r.cleared || 0) + ' รายการ' + (r.archived ? ' · สำรองไว้ที่ ' + r.archived : ''));
+        st.logs = []; st.counts = null;
+        load();
+      }).catch(function (err) { bc.disabled = false; if (global.toast) global.toast('ล้างไม่สำเร็จ: ' + (err.message || err)); });
+      return;
+    }
     if (t.closest('#alExport')) { exportCsv(); return; }
     if (t.closest('#alBkNow')) {
       var b1 = t.closest('#alBkNow');

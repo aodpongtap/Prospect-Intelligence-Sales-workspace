@@ -314,6 +314,12 @@
       return r;
     });
   }
+  function clearLogs() {
+    return call('logsClear', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ล้าง Log ไม่สำเร็จ');
+      return r;
+    });
+  }
 
   global.PIAuth = {
     coreAdmins: [
@@ -354,6 +360,7 @@
     deleteProject: deleteProject,
     backupInfo: backupInfo,
     backupNow: backupNow,
-    installBackup: installBackup
+    installBackup: installBackup,
+    clearLogs: clearLogs
   };
 })(window);

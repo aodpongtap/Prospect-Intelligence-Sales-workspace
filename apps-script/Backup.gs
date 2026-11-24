@@ -255,6 +255,32 @@ function backupCronApi_(key, mode) {
   return r;
 }
 
+/** ล้าง Log ทั้งหมด (Admin เท่านั้น) — สำรองข้อมูลเดิมลงแท็บ Logs_archive_… ก่อน */
+function clearLogsApi_(token) {
+  var s = session_(token);
+  if (!s || !isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
+  var ss = getSheet_().getParent();
+  var sh = ss.getSheetByName('Logs');
+  if (!sh) return { ok: true, cleared: 0, archived: '' };
+  var last = sh.getLastRow();
+  var n = Math.max(0, last - 1);
+  var archived = '';
+  if (n > 0) {
+    var width = Math.max(sh.getLastColumn(), 5);
+    var vals = sh.getRange(1, 1, last, width).getValues();
+    archived = ('Logs_archive_' + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd-HHmm')).slice(0, 99);
+    var a = ss.getSheetByName(archived) || ss.insertSheet(archived);
+    a.clear();
+    a.getRange(1, 1, vals.length, width).setValues(vals);
+    sh.getRange(2, 1, n, width).clearContent();
+  }
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty('LAST_LOG_CLEAR_AT', new Date().toISOString());
+  props.setProperty('LAST_LOG_CLEAR_BY', String(s.email));
+  props.setProperty('LAST_LOG_CLEAR_N', String(n));
+  return { ok: true, cleared: n, archived: archived };
+}
+
 /** เรียกจากภายนอกแบบไม่ต้องมี key: ทำได้ไม่เกิน 1 ครั้ง / 20 ชั่วโมง และไม่เปิดเผยข้อมูลไฟล์ */
 function backupDailyApi_() {
   var props = PropertiesService.getScriptProperties();
