@@ -19,6 +19,13 @@ h1{font-size:20px;font-weight:600;color:var(--navy);margin:0}.subtitle{color:var
 .panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(15,43,70,.07);padding:16px;margin-bottom:16px}
 .panel h3{margin:0 0 12px;font-size:14px;font-weight:500}
 .fg{display:grid;grid-template-columns:1.6fr 1.2fr 1fr auto;gap:9px;align-items:end}
+.fg2{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;align-items:end;margin-top:10px;padding-top:11px;border-top:1px dashed var(--line)}
+.hint{font-size:10px;color:#98a2b3;margin-top:4px;line-height:1.4}
+.hint b{color:#0F2B46;font-weight:600}
+.emp-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;background:#F2F4F7;color:#344054;border-radius:5px;padding:1px 6px;display:inline-block}
+.emp-st{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;border-radius:20px;padding:1px 7px;line-height:1.7}
+.st-probation{background:#fff7ed;color:#b45309}.st-regular{background:#ecfdf3;color:#15803d}.st-review{background:#fef2f2;color:#b91c1c}
+.mini{font-size:10px;color:#98a2b3;line-height:1.4}
 label{display:block;font-size:10px;color:#475467;margin-bottom:5px}
 input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12px;background:#fff}
 .btn{border:1px solid var(--line);background:#fff;color:#344054;border-radius:8px;padding:8px 11px;font:inherit;font-size:11px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
@@ -37,7 +44,7 @@ td{padding:9px;border-bottom:1px solid #eef1f5;font-size:12px}
 .pwbox code{background:#fff;border:1px solid #fde68a;padding:2px 8px;border-radius:6px;font-size:13px;font-weight:600;letter-spacing:.5px}
 .legend{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .legend div{border:1px solid var(--line);border-radius:9px;padding:9px;font-size:11px;color:#475467;line-height:1.55}
-@media(max-width:760px){.fg{grid-template-columns:1fr}.legend{grid-template-columns:1fr}}
+@media(max-width:760px){.fg,.fg2{grid-template-columns:1fr}.legend{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -77,14 +84,28 @@ td{padding:9px;border-bottom:1px solid #eef1f5;font-size:12px}
       <div><label for="parent">ผู้ดูแลต้นสาย (Upline) *</label><select id="parent"><option value="">— เลือก —</option></select></div>
       <div><button class="btn btn-primary" id="addBtn"><i class="fa-solid fa-user-plus"></i> เพิ่ม + สร้างรหัส</button></div>
     </div>
+    <div class="fg2">
+      <div><label for="empCode">รหัสพนักงาน</label><input id="empCode" maxlength="20" placeholder="EMP-0142"></div>
+      <div><label for="startDate">เริ่มงานวันที่</label><input id="startDate" type="date"><div class="hint" id="tenureHint">– ยังไม่ระบุวันที่เริ่มงาน</div></div>
+      <div><label for="empStatus">สถานะพนักงาน</label><select id="empStatus">
+        <option value="">— ไม่ระบุ —</option>
+        <option value="probation">ทดลองงาน</option>
+        <option value="regular">ประจำ</option>
+        <option value="review">ช่วงพิจารณางานใหม่</option>
+      </select></div>
+      <div><label for="nickname">ชื่อเล่น</label><input id="nickname" maxlength="40"></div>
+      <div><label for="phone">เบอร์โทรติดต่อ</label><input id="phone" inputmode="tel" maxlength="24"></div>
+      <div><label for="lineId">ID Line</label><input id="lineId" maxlength="40"></div>
+      <div><label for="gmail">Gmail (ติดต่อ)</label><input id="gmail" type="email" maxlength="80"></div>
+    </div>
   </section>
 
   <section class="panel">
     <h3>รายชื่อผู้ใช้ (<span id="count">0</span>)</h3>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>อีเมล</th><th>ชื่อ</th><th>ระดับสิทธิ์</th><th>ผู้ดูแลสาย</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead>
-        <tbody id="tb"><tr><td colspan="7" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
+        <thead><tr><th>อีเมล</th><th>ชื่อ</th><th>ระดับสิทธิ์</th><th>ข้อมูลพนักงาน</th><th>ผู้ดูแลสาย</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead>
+        <tbody id="tb"><tr><td colspan="8" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
       </table>
     </div>
   </section>
@@ -132,6 +153,57 @@ function fmt(iso) {
   var d = new Date(iso);
   return isNaN(d.getTime()) ? '—' : d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
 }
+/* ---------- ข้อมูลพนักงาน ---------- */
+var EMP_STATUS = [['probation', 'ทดลองงาน', 'st-probation'], ['regular', 'ประจำ', 'st-regular'], ['review', 'ช่วงพิจารณางานใหม่', 'st-review']];
+function empStatusInfo(code) {
+  var c = String(code || '').toLowerCase();
+  for (var i = 0; i < EMP_STATUS.length; i++) if (EMP_STATUS[i][0] === c) return { label: EMP_STATUS[i][1], cls: EMP_STATUS[i][2] };
+  return null;
+}
+function tenureText(sd) {
+  if (!sd) return '';
+  var s = new Date(String(sd).length <= 10 ? String(sd) + 'T00:00:00' : sd);
+  if (isNaN(s.getTime())) return '';
+  var now = new Date();
+  if (s > now) return 'ยังไม่เริ่มงาน';
+  var y = now.getFullYear() - s.getFullYear(), m = now.getMonth() - s.getMonth(), d = now.getDate() - s.getDate();
+  if (d < 0) { m--; d += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+  if (m < 0) { y--; m += 12; }
+  var p = [];
+  if (y) p.push(y + ' ปี');
+  if (m) p.push(m + ' เดือน');
+  p.push(d + ' วัน');
+  return p.join(' ');
+}
+function shortD(sd) {
+  var p = String(sd || '').split('-');
+  if (p.length < 3) return sd || '—';
+  var M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  return Number(p[2]) + ' ' + (M[Number(p[1]) - 1] || '') + ' ' + String(Number(p[0]) + 543).slice(-2);
+}
+function empCell(u) {
+  var st = empStatusInfo(u.empStatus);
+  var top = [];
+  if (u.empCode) top.push('<span class="emp-code">' + esc(u.empCode) + '</span>');
+  if (st) top.push('<span class="emp-st ' + st.cls + '">' + esc(st.label) + '</span>');
+  var l1 = top.length ? top.join(' ') : '<span class="mini">—</span>';
+  var l2 = u.startDate
+    ? '<div class="mini">อายุงาน <b style="color:#0F2B46">' + esc(tenureText(u.startDate)) + '</b> · เริ่ม ' + esc(shortD(u.startDate)) + '</div>'
+    : '<div class="mini">– ยังไม่ระบุวันเริ่มงาน</div>';
+  var ct = [];
+  if (u.nickname) ct.push('ชื่อเล่น ' + u.nickname);
+  if (u.phone) ct.push(u.phone);
+  if (u.lineId) ct.push('LINE ' + u.lineId);
+  if (u.gmail) ct.push(u.gmail);
+  var l3 = ct.length ? '<div class="mini">' + esc(ct.join(' · ')) + '</div>' : '';
+  return l1 + l2 + l3;
+}
+function empExtra(ids) {
+  var o = {};
+  ids.forEach(function (k) { if (el(k)) o[k] = String(el(k).value || '').trim(); });
+  return JSON.stringify(o);
+}
+var EMP_IDS = ['empCode', 'startDate', 'empStatus', 'nickname', 'phone', 'lineId', 'gmail'];
 function isCoreAdmin(email) {
   var core = ['aodputta@gmail.com', 'bch.sarocha@gmail.com', 'sittharphon.1994@gmail.com', 'chanphaphat.k@gmail.com'];
   return core.indexOf(String(email).toLowerCase()) >= 0;
@@ -160,17 +232,20 @@ function render(data) {
       ? '<span class="off"><i class="fa-solid fa-circle-xmark"></i> ปิด</span>'
       : '<span class="on"><i class="fa-solid fa-circle-check"></i> ใช้งาน</span>';
     var acts = core
-      ? '<button class="btn" data-act="reset" data-email="' + esc(u.email) + '"><i class="fa-solid fa-rotate"></i> รีเซ็ตรหัส</button>'
+      ? '<button class="btn" data-act="profile" data-email="' + esc(u.email) + '"><i class="fa-solid fa-id-card"></i> โปรไฟล์</button>'
+        + '<button class="btn" data-act="reset" data-email="' + esc(u.email) + '"><i class="fa-solid fa-rotate"></i> รีเซ็ตรหัส</button>'
       : '<div class="acts">' +
+        '<button class="btn" data-act="profile" data-email="' + esc(u.email) + '"><i class="fa-solid fa-id-card"></i> โปรไฟล์</button>' +
         '<button class="btn" data-act="reset" data-email="' + esc(u.email) + '"><i class="fa-solid fa-rotate"></i> รีเซ็ตรหัส</button>' +
         '<button class="btn" data-act="toggle" data-email="' + esc(u.email) + '" data-status="' + (u.status === 'disabled' ? 'active' : 'disabled') + '">' +
         (u.status === 'disabled' ? '<i class="fa-solid fa-play"></i> เปิดใช้' : '<i class="fa-solid fa-pause"></i> ปิด') + '</button>' +
         '<button class="btn btn-danger" data-act="del" data-email="' + esc(u.email) + '"><i class="fa-solid fa-trash"></i> ลบ</button>' +
         '</div>';
     return '<tr><td>' + esc(u.email) + '</td><td>' + esc(u.name || '—') + '</td><td>' + levelCell + '</td>' +
+      '<td>' + empCell(u) + '</td>' +
       '<td>' + esc(parentName) + '</td><td>' + statusCell + '</td><td>' + fmt(u.lastLogin) + '</td><td>' + acts + '</td></tr>';
   }).join('');
-  el('tb').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
+  el('tb').innerHTML = rows || '<tr><td colspan="8" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
   refreshUplines();
 }
 
@@ -216,12 +291,79 @@ el('addBtn').addEventListener('click', function () {
   google.script.run.withSuccessHandler(function (res) {
     btn.disabled = false;
     el('email').value = ''; el('name').value = '';
+    EMP_IDS.forEach(function (k) { if (el(k)) el(k).value = ''; });
+    updateTenureHint();
     render({ users: res.users, canManage: true, levels: window.__LEVELS__, labels: window.__LABELS__, myLevel: window.__MYLEVEL__ });
     showPw(res.email, res.password);
     showMsg('เพิ่มผู้ใช้และสร้างรหัสผ่านแล้ว', 'ok');
   }).withFailureHandler(function (e) { btn.disabled = false; showMsg(e.message || String(e), 'err'); })
-    .addUser(TOKEN, email, el('name').value.trim(), el('level').value, el('parent').value);
+    .addUser(TOKEN, email, el('name').value.trim(), el('level').value, el('parent').value, '', '', empExtra(EMP_IDS));
 });
+
+function updateTenureHint() {
+  var box = el('tenureHint');
+  if (!box) return;
+  var d = el('startDate') ? el('startDate').value : '';
+  box.innerHTML = d ? 'อายุงาน <b>' + esc(tenureText(d)) + '</b> (ถึงวันนี้)' : '– ยังไม่ระบุวันที่เริ่มงาน';
+}
+el('startDate') && el('startDate').addEventListener('change', updateTenureHint);
+
+/** แก้ไขข้อมูลพนักงานผ่าน google.script.run */
+function editProfile(email) {
+  var u = null;
+  (window.__USERS__ || []).forEach(function (x) { if (x.email === email) u = x; });
+  if (!u) return;
+  var IN = 'width:100%;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px;font-family:inherit;font-size:12px;box-sizing:border-box';
+  var LB = 'font-size:10.5px;color:#475467;display:block;margin-bottom:5px';
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);display:grid;place-items:center;z-index:99;padding:16px;overflow:auto';
+  wrap.innerHTML = '<div style="background:#fff;border-radius:14px;padding:20px;width:min(640px,100%);font-family:Prompt,sans-serif;max-height:92vh;overflow:auto">'
+    + '<h3 style="margin:0 0 4px;color:#0F2B46;font-size:15px"><i class="fa-solid fa-id-card" style="color:#2563EB;margin-right:6px"></i>ข้อมูลพนักงาน</h3>'
+    + '<div style="color:#667085;font-size:11.5px;margin-bottom:14px">' + esc(u.name || email) + ' · ' + esc(email) + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px">'
+    + '  <div><label style="' + LB + '">รหัสพนักงาน</label><input id="pfCode" maxlength="20" value="' + esc(u.empCode || '') + '" style="' + IN + '"></div>'
+    + '  <div><label style="' + LB + '">เริ่มงานวันที่</label><input id="pfStart" type="date" value="' + esc(u.startDate || '') + '" style="' + IN + '">'
+    + '    <div id="pfHint" class="hint">' + (u.startDate ? 'อายุงาน <b>' + esc(tenureText(u.startDate)) + '</b>' : '– ยังไม่ระบุวันที่เริ่มงาน') + '</div></div>'
+    + '  <div><label style="' + LB + '">สถานะพนักงาน</label><select id="pfStatus" style="' + IN + '">'
+    + '    <option value="">— ไม่ระบุ —</option>'
+    + '    <option value="probation"' + (u.empStatus === 'probation' ? ' selected' : '') + '>ทดลองงาน</option>'
+    + '    <option value="regular"' + (u.empStatus === 'regular' ? ' selected' : '') + '>ประจำ</option>'
+    + '    <option value="review"' + (u.empStatus === 'review' ? ' selected' : '') + '>ช่วงพิจารณางานใหม่</option>'
+    + '  </select></div>'
+    + '  <div><label style="' + LB + '">ชื่อเล่น</label><input id="pfNick" maxlength="40" value="' + esc(u.nickname || '') + '" style="' + IN + '"></div>'
+    + '  <div><label style="' + LB + '">เบอร์โทรติดต่อ</label><input id="pfPhone" maxlength="24" value="' + esc(u.phone || '') + '" style="' + IN + '"></div>'
+    + '  <div><label style="' + LB + '">ID Line</label><input id="pfLine" maxlength="40" value="' + esc(u.lineId || '') + '" style="' + IN + '"></div>'
+    + '  <div style="grid-column:1/-1"><label style="' + LB + '">Gmail (ติดต่อ)</label><input id="pfGmail" type="email" maxlength="80" value="' + esc(u.gmail || '') + '" style="' + IN + '"></div>'
+    + '</div>'
+    + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">'
+    + '<button class="btn" id="pfCancel">ยกเลิก</button>'
+    + '<button class="btn btn-primary" id="pfOk"><i class="fa-solid fa-check"></i> บันทึก</button></div></div>';
+  document.body.appendChild(wrap);
+  function close() { if (wrap.parentNode) document.body.removeChild(wrap); }
+  document.getElementById('pfStart').addEventListener('change', function () {
+    var d = this.value;
+    document.getElementById('pfHint').innerHTML = d ? 'อายุงาน <b>' + esc(tenureText(d)) + '</b>' : '– ยังไม่ระบุวันที่เริ่มงาน';
+  });
+  wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
+  document.getElementById('pfCancel').addEventListener('click', close);
+  document.getElementById('pfOk').addEventListener('click', function () {
+    var ex = JSON.stringify({
+      empCode: document.getElementById('pfCode').value,
+      startDate: document.getElementById('pfStart').value,
+      empStatus: document.getElementById('pfStatus').value,
+      nickname: document.getElementById('pfNick').value,
+      phone: document.getElementById('pfPhone').value,
+      lineId: document.getElementById('pfLine').value,
+      gmail: document.getElementById('pfGmail').value
+    });
+    google.script.run.withSuccessHandler(function (res) {
+      close();
+      render({ users: res.users, canManage: true, levels: window.__LEVELS__, labels: window.__LABELS__, myLevel: window.__MYLEVEL__ });
+      showMsg('บันทึกข้อมูลพนักงานแล้ว', 'ok');
+    }).withFailureHandler(function (err) { showMsg(err.message || String(err), 'err'); })
+      .updateUser(TOKEN, email, null, null, null, null, null, null, ex);
+  });
+}
 
 el('level').addEventListener('change', refreshUplines);
 
@@ -245,6 +387,7 @@ el('tb').addEventListener('click', function (e) {
     }).withFailureHandler(function (err) { showMsg(err.message || String(err), 'err'); })
       .resetPassword(TOKEN, email);
   }
+  if (act === 'profile') { editProfile(email); return; }
   if (act === 'toggle') {
     google.script.run.withSuccessHandler(function (res) {
       render({ users: res.users, canManage: true }); showMsg('เปลี่ยนสถานะแล้ว', 'ok');

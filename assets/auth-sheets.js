@@ -99,10 +99,24 @@
     });
   }
 
-  function addUser(email, name, level, parent, saleId, team) {
+  /* ---------- ข้อมูลพนักงาน (รหัสพนักงาน / เริ่มงาน / ชื่อเล่น / ติดต่อ) ---------- */
+  var EMP_KEYS = ['empCode', 'startDate', 'empStatus', 'nickname', 'phone', 'lineId', 'gmail'];
+  function empParam(extra) {
+    if (!extra) return undefined;
+    var o = {};
+    for (var i = 0; i < EMP_KEYS.length; i++) {
+      var k = EMP_KEYS[i];
+      if (extra[k] !== undefined) o[k] = String(extra[k] == null ? '' : extra[k]).trim();
+    }
+    return JSON.stringify(o);
+  }
+
+  function addUser(email, name, level, parent, saleId, team, extra) {
     var params = { token: token(), email: email, name: name, level: level, parent: parent || '' };
     if (saleId !== undefined && saleId !== null) params.saleId = String(saleId).trim().toUpperCase();
     if (team !== undefined && team !== null) params.team = String(team).trim().toUpperCase();
+    var ep = empParam(extra);
+    if (ep) params.extra = ep;
     return call('add', params).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'เพิ่มผู้ใช้ไม่สำเร็จ');
       cache = r.users || cache;
@@ -117,11 +131,13 @@
     });
   }
 
-  function updateUser(email, level, status, parent, saleId, name, team) {
+  function updateUser(email, level, status, parent, saleId, name, team, extra) {
     var params = { token: token(), email: email, level: level, status: status, parent: parent || '' };
     if (saleId !== undefined && saleId !== null) params.saleId = String(saleId).trim().toUpperCase();
     if (name !== undefined && name !== null) params.name = String(name).trim();
     if (team !== undefined && team !== null) params.team = String(team).trim().toUpperCase();
+    var ep2 = empParam(extra);
+    if (ep2) params.extra = ep2;
     return call('update', params).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'อัปเดตไม่สำเร็จ');
       cache = r.users || cache;

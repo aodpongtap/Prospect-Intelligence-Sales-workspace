@@ -65,9 +65,9 @@ function apiResponse_(p) {
     else if (action === 'login') out = login(p.email, p.password);
     else if (action === 'me') out = getMe(p.token);
     else if (action === 'users') out = getUsers(p.token);
-    else if (action === 'add') out = addUser(p.token, p.email, p.name, p.level, p.parent, p.saleId, p.team);
+    else if (action === 'add') out = addUser(p.token, p.email, p.name, p.level, p.parent, p.saleId, p.team, p.extra);
     else if (action === 'reset') out = resetPassword(p.token, p.email);
-    else if (action === 'update') out = updateUser(p.token, p.email, p.level, p.status, p.parent, p.saleId, p.name, p.team);
+    else if (action === 'update') out = updateUser(p.token, p.email, p.level, p.status, p.parent, p.saleId, p.name, p.team, p.extra);
     else if (action === 'remove') out = deleteUser(p.token, p.email);
     else if (action === 'deals') out = getDeals(p.token);
     else if (action === 'addDeal') out = addDeal(p.token, p.name, p.customer, p.value, p.stage, p.probability, p.close, p.nextAction, p.status);
@@ -143,8 +143,9 @@ function getSheet_() {
   var sh = ss.getSheetByName(SHEET_TAB);
   if (!sh) sh = ss.insertSheet(SHEET_TAB);
   if (sh.getLastRow() === 0) {
-    sh.appendRow(['email', 'name', 'level', 'status', 'passHash', 'salt', 'createdAt', 'lastLogin', 'parent', 'saleId', 'team']);
-    sh.getRange('A1:K1').setFontWeight('bold');
+    sh.appendRow(['email', 'name', 'level', 'status', 'passHash', 'salt', 'createdAt', 'lastLogin', 'parent', 'saleId', 'team',
+      'empCode', 'startDate', 'empStatus', 'nickname', 'phone', 'lineId', 'gmail']);
+    sh.getRange('A1:R1').setFontWeight('bold');
     sh.setFrozenRows(1);
   } else if (String(sh.getRange('I1').getValue() || '') === '') {
     // อพยพข้อมูลเดิม: เพิ่มคอลัมน์ parent (ผู้ดูแลต้นสาย)
@@ -161,6 +162,15 @@ function getSheet_() {
     sh.getRange('K1').setValue('team');
     sh.getRange('A1:K1').setFontWeight('bold');
   }
+  /* คอลัมน์ข้อมูลพนักงาน L–R */
+  var extraCols = ['empCode', 'startDate', 'empStatus', 'nickname', 'phone', 'lineId', 'gmail'];
+  extraCols.forEach(function (h, i) {
+    var col = String.fromCharCode(76 + i);   // L, M, N, ...
+    if (String(sh.getRange(col + '1').getValue() || '') === '') {
+      sh.getRange(col + '1').setValue(h);
+      sh.getRange('L1:R1').setFontWeight('bold');
+    }
+  });
   return sh;
 }
 
@@ -168,7 +178,7 @@ function readRows_() {
   var sh = getSheet_();
   var last = sh.getLastRow();
   if (last < 2) return [];
-  return sh.getRange(2, 1, last - 1, 11).getValues()
+  return sh.getRange(2, 1, last - 1, 18).getValues()
     .filter(function (r) { return String(r[0]).trim() !== ''; })
     .map(function (r) {
       return {
@@ -183,6 +193,13 @@ function readRows_() {
         parent: String(r[8] || '').trim().toLowerCase(),
         saleId: String(r[9] || '').trim().toUpperCase(),
         team: String(r[10] || '').trim().toUpperCase(),
+        empCode: String(r[11] || '').trim(),
+        startDate: normDate_(r[12]),
+        empStatus: String(r[13] || '').trim().toLowerCase(),
+        nickname: String(r[14] || '').trim(),
+        phone: String(r[15] || '').trim(),
+        lineId: String(r[16] || '').trim(),
+        gmail: String(r[17] || '').trim().toLowerCase(),
         row: null
       };
     });
@@ -454,6 +471,13 @@ function publicUser_(r) {
     createdAt: r.createdAt, lastLogin: r.lastLogin, parent: r.parent || '',
     saleId: r.saleId || '',
     team: r.team || '',
+    empCode: r.empCode || '',
+    startDate: r.startDate || '',
+    empStatus: r.empStatus || '',
+    nickname: r.nickname || '',
+    phone: r.phone || '',
+    lineId: r.lineId || '',
+    gmail: r.gmail || '',
     levelLabel: LEVEL_LABELS[r.level] || r.level
   };
 }
@@ -491,7 +515,65 @@ function getUsers(token) {
   };
 }
 
-function addUser(token, email, name, level, parent, saleId, team) {
+/** อ่าน/ตรวจสอบข้อมูลพนักงานเพิ่มเติม (JSON string จากฝั่งเว็บ) */
+var EMP_STATUSES = ['probation', 'regular', 'review'];
+/** แปลงวันที่จากชีตให้เป็น YYYY-MM-DD เสมอ (กัน Sheets แปลงเป็น Date) */
+function normDate_(v) {
+  if (!v) return '';
+  if (Object.prototype.toString.call(v) === '[object Date]') {
+    try { return Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM-dd'); } catch (e) { return ''; }
+  }
+  var s = String(v).trim();
+  var m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? m[0] : s;
+}
+function parseExtra_(raw) {
+  if (!raw) return null;
+  var o = raw;
+  if (typeof raw === 'string') {
+    try { o = JSON.parse(raw); } catch (e) { return null; }
+  }
+  if (!o || typeof o !== 'object') return null;
+  var out = {};
+  function s(v, max) { return String(v == null ? '' : v).trim().slice(0, max); }
+  if (o.empCode !== undefined) out.empCode = s(o.empCode, 20);
+  if (o.startDate !== undefined) {
+    var d = s(o.startDate, 10);
+    if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) throw new Error('วันที่เริ่มงานต้องอยู่ในรูป YYYY-MM-DD');
+    out.startDate = d;
+  }
+  if (o.empStatus !== undefined) {
+    var es = s(o.empStatus, 20).toLowerCase();
+    if (es && EMP_STATUSES.indexOf(es) < 0) throw new Error('สถานะพนักงานไม่ถูกต้อง');
+    out.empStatus = es;
+  }
+  if (o.nickname !== undefined) out.nickname = s(o.nickname, 40);
+  if (o.phone !== undefined) {
+    var ph = s(o.phone, 24);
+    if (ph && !/^[0-9+\-\s()]{6,24}$/.test(ph)) throw new Error('เบอร์โทรไม่ถูกต้อง');
+    out.phone = ph;
+  }
+  if (o.lineId !== undefined) out.lineId = s(o.lineId, 40);
+  if (o.gmail !== undefined) {
+    var gm = s(o.gmail, 80).toLowerCase();
+    if (gm && gm.indexOf('@') < 0) throw new Error('Gmail ไม่ถูกต้อง');
+    out.gmail = gm;
+  }
+  return out;
+}
+/** เขียนค่าลงคอลัมน์ L–R ตาม keys ที่ส่งมา */
+function writeEmpFields_(sh, row, ex) {
+  if (!ex) return;
+  var map = { empCode: 12, startDate: 13, empStatus: 14, nickname: 15, phone: 16, lineId: 17, gmail: 18 };
+  Object.keys(map).forEach(function (k) {
+    if (ex[k] === undefined) return;
+    var cell = sh.getRange(row, map[k]);
+    if (k === 'startDate' || k === 'phone') cell.setNumberFormat('@');   // เก็บเป็นข้อความ ไม่ให้ Sheets แปลง
+    cell.setValue(ex[k]);
+  });
+}
+
+function addUser(token, email, name, level, parent, saleId, team, extra) {
   var s = session_(token);
   if (!s) throw new Error('กรุณาเข้าสู่ระบบใหม่');
   if (levelN_(s.level) > 4) throw new Error('เฉพาะ Admin / BU / Head Team / Supervisor เท่านั้นที่สร้าง ID ได้');
@@ -533,7 +615,11 @@ function addUser(token, email, name, level, parent, saleId, team) {
   if (sid && !/^S\d{2}$/.test(sid)) throw new Error('รหัสเซลส์ต้องอยู่ในรูป S01–S99');
   var tm = String(team || '').trim().toUpperCase();
   if (tm.length > 30) throw new Error('ชื่อทีมยาวเกิน 30 ตัวอักษร');
-  getSheet_().appendRow([e, String(name || ''), lv, 'active', hash_(pw, salt), salt, new Date().toISOString(), '', p, sid, tm]);
+  var ex = parseExtra_(extra) || {};
+  var sh0 = getSheet_();
+  sh0.appendRow([e, String(name || ''), lv, 'active', hash_(pw, salt), salt, new Date().toISOString(), '', p, sid, tm,
+    '', '', '', '', '', '', '']);
+  writeEmpFields_(sh0, sh0.getLastRow(), ex);
 
   return { ok: true, email: e, password: pw, users: visibleUsers_(session_(token)).map(publicUser_) };
 }
@@ -564,7 +650,7 @@ function canManageTarget_(s, targetEmail) {
   return descendantsOf_(myEmail).some(function (r) { return r.email === targetEmail; });
 }
 
-function updateUser(token, email, level, status, parent, saleId, name, team) {
+function updateUser(token, email, level, status, parent, saleId, name, team, extra) {
   var s = session_(token);
   if (!s || levelN_(s.level) > 4) throw new Error('เฉพาะ Admin / BU / Head Team / Supervisor เท่านั้น');
 
@@ -624,6 +710,8 @@ function updateUser(token, email, level, status, parent, saleId, name, team) {
     if (tm2.length > 30) throw new Error('ชื่อทีมยาวเกิน 30 ตัวอักษร');
     sh.getRange(row, 11).setValue(tm2);
   }
+  var ex2 = parseExtra_(extra);
+  if (ex2) writeEmpFields_(sh, row, ex2);
   return { ok: true, users: visibleUsers_(s).map(publicUser_) };
 }
 
