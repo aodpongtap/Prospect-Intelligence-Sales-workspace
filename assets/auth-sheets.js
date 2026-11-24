@@ -210,6 +210,26 @@
     });
   }
 
+  /* ---------- Deals v2: ซิงก์กับแท็บ `Deals` บน Google Sheet ---------- */
+  function listDealsV2() {
+    return call('dealsV2', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดดีลจากคลาวด์ไม่สำเร็จ');
+      return r.deals || [];
+    });
+  }
+  function saveDealV2(d) {
+    return call('saveDeal', { token: token(), deal: JSON.stringify(d || {}) }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'บันทึกดีลบนคลาวด์ไม่สำเร็จ');
+      return r;
+    });
+  }
+  function deleteDealV2(no) {
+    return call('delDeal', { token: token(), no: no }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ลบดีลบนคลาวด์ไม่สำเร็จ');
+      return r;
+    });
+  }
+
   global.PIAuth = {
     coreAdmins: [
       'aodputta@gmail.com'
@@ -233,6 +253,9 @@
     removeUser: removeUser,
     listDeals: listDeals,
     addDeal: addDeal,
-    deleteDeal: deleteDeal
+    deleteDeal: deleteDeal,
+    listDealsV2: listDealsV2,
+    saveDealV2: saveDealV2,
+    deleteDealV2: deleteDealV2
   };
 })(window);

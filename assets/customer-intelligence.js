@@ -182,7 +182,7 @@
       + opt('active', 'ปิดงานแล้ว (' + active + ')', state.health)
       + opt('pipeline', 'กำลังเจรจา (' + pipe + ')', state.health)
       + opt('risk', 'ต้องดูแล (' + risk + ')', state.health) + '</select></div>'
-      + '<div class="ci-fl"><label>พนักงานขาย</label><select data-ci-filter="sale">'
+      + '<div class="ci-fl"><label>AE</label><select data-ci-filter="sale">'
       + opt('', 'ทุกคน', state.sale) + sales.map(function (s) { return opt(s, s, state.sale); }).join('') + '</select></div>'
       + '<div class="ci-fbtn"><button class="ci-btn" data-ci-reset><i class="fa-solid fa-rotate-left"></i> ล้างตัวกรอง</button></div>'
       + '</div>';
@@ -206,7 +206,7 @@
       + '<div class="ci-ph"><div><h3>รายชื่อลูกค้า (' + list.length + ')</h3>'
       + '<div class="ci-s2">คลิกแถวเพื่อดูดีลทั้งหมดของลูกค้ารายนั้น</div></div></div>'
       + '<div class="ci-tablewrap"><table class="ci-table"><thead><tr>'
-      + th('name', 'ลูกค้า') + '<th>พนักงานขาย</th>'
+      + th('name', 'ลูกค้า') + '<th>AE</th>'
       + th('deals', 'จำนวนดีล', 'ci-num') + th('won', 'ยอดปิดงาน', 'ci-num') + th('open', 'ดีลที่เปิดอยู่', 'ci-num')
       + th('latest', 'เดือนล่าสุด', 'ci-num') + '<th>สถานะ</th><th>ควรทำต่อ</th><th></th>'
       + '</tr></thead><tbody>' + (rows || '<tr><td colspan="9" class="ci-empty">ไม่พบลูกค้าตามเงื่อนไข</td></tr>') + '</tbody></table></div>'
@@ -254,7 +254,7 @@
       + '<div><small>ยอดปิดงานรวม</small><strong>' + money(c.won) + ' (' + c.wonCount + ' ดีล)</strong></div>'
       + '<div><small>ดีลที่เปิดอยู่</small><strong>' + money(c.open + c.talking) + ' (' + (c.openCount + (c.talking ? 1 : 0)) + ' ดีล)</strong></div>'
       + '<div><small>ทีม</small><strong>' + esc(c.team || '-') + '</strong></div>'
-      + '<div><small>พนักงานขาย</small><strong>' + esc(c.salesArr.join(', ')) + '</strong></div>'
+      + '<div><small>AE</small><strong>' + esc(c.salesArr.join(', ')) + '</strong></div>'
       + '<div><small>ดีลล่าสุด</small><strong>' + monthTH(Math.floor(c.latest / 100), c.latest % 100) + '</strong></div>'
       + '</div>'
       + '<div class="ci-recommend"><i class="' + rec.icon + '"></i><div><b>' + esc(rec.title) + '</b><p>' + esc(rec.detail) + '</p></div></div>'

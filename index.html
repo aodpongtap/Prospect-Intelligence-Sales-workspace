@@ -111,12 +111,12 @@
       document.head.appendChild(s);
     })();
   </script>
-  <script src="assets/auth-sheets.js?v=11"></script>
+  <script src="assets/auth-sheets.js?v=13"></script>
   <script src="assets/report-log.js?v=13"></script>
-  <script src="assets/sales-report.js?v=63"></script>
+  <script src="assets/sales-report.js?v=64"></script>
   <script src="assets/daily-report.js?v=16"></script>
   <script src="assets/project-tracking.js?v=10"></script>
-  <script src="assets/customer-intelligence.js?v=5"></script>
+  <script src="assets/customer-intelligence.js?v=6"></script>
   <script src="assets/team-page.js?v=13"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
@@ -842,8 +842,25 @@
     const shortMoney=n=>n>=1000000?"฿"+(n/1000000).toFixed(1)+"M":"฿"+(n/1000).toFixed(0)+"K";
     const thaiDate=date=>{if(!date)return '—';const d=new Date(String(date).length<=10?date+"T00:00:00":date);return isNaN(d.getTime())?'—':d.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});};
     const dayDiff=date=>Math.floor((new Date("2026-10-07T00:00:00")-new Date(date+"T00:00:00"))/86400000);
+    /* อายุ/กำหนดส่งจริง เทียบวันนี้ (ไม่ใช้ค่าวันที่ตายตัวแล้ว) */
+    const today0=()=>new Date(new Date().toDateString());
+    const toDate=date=>{if(!date)return null;const d=new Date(String(date).length<=10?date+"T00:00:00":date);return isNaN(d.getTime())?null:d;};
+    const daysSince=date=>{const d=toDate(date);return d?Math.floor((today0()-d)/86400000):0;};
+    const daysUntil=date=>{const d=toDate(date);return d?Math.ceil((d-today0())/86400000):null;};
     const statusClass=status=>status==="Healthy"?"healthy":status==="Need Attention"?"attention":status==="At Risk"?"at-risk":"on-hold";
-    function riskScore(d){if(String(d.stage)==="Lost")return 0;let score=0;const inactive=dayDiff(d.lastActivity);if(inactive>7)score+=Math.min(30,15+(inactive-7));const closeDays=Math.ceil((new Date(d.close+"T00:00:00")-new Date("2026-10-07T00:00:00"))/86400000);if(closeDays<=14&&["Prospect","Qualified"].includes(d.stage))score+=25;if(d.probability<40)score+=20;if(!d.nextAction)score+=15;if(d.status==="On Hold")score+=20;return Math.min(100,score)}
+    function riskScore(d){
+      const n=(d.statusNo===undefined?-1:Number(d.statusNo));
+      if(n===4||n===5) return 0;                       /* ปิดงานแล้ว / ยกเลิก = ไม่มีความเสี่ยง */
+      let score=0;
+      const age=daysSince(d.lastActivity||d.close);     /* วันที่เสนอราคา/อัปเดตล่าสุด */
+      if(age>30) score+=25; else if(age>14) score+=15; else if(age>7) score+=8;
+      const left=daysUntil(d.close);                    /* เหลือกี่วันถึงกำหนดปิด */
+      if(left!==null){ if(left<0) score+=30; else if(left<=14) score+=15; else if(left<=30) score+=5; }
+      if(n<=0) score+=15; else if(n===1) score+=10;      /* ยังอยู่ต้นทาง */
+      if(!d.nextAction) score+=10;
+      if(!d.qt) score+=5;                               /* ยังไม่มีเลข QT */
+      return Math.min(100,score);
+    }
     const riskClass=score=>score>=60?"risk-high":score>=35?"risk-mid":"risk-low";
     function toast(message){const el=document.getElementById("toast");document.getElementById("toastText").textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2800)}
     function setModal(title,subtitle,body,buttons=[],large=false){document.getElementById("modalTitle").textContent=title;document.getElementById("modalSubtitle").textContent=subtitle||"";document.getElementById("modalBody").innerHTML=body;document.getElementById("modalFoot").innerHTML=buttons.map(b=>`<button class="btn ${b.primary?"btn-primary":""}" ${b.action?`data-action="${b.action}"`:"data-close-modal"}>${b.icon?`<i class="${b.icon}"></i>`:""}${b.label}</button>`).join("");document.getElementById("modal").classList.toggle("large",large);document.getElementById("modalBackdrop").classList.add("open");document.getElementById("modalBackdrop").setAttribute("aria-hidden","false")}

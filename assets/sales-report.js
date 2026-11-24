@@ -451,6 +451,99 @@
   }
   function onChange(fn) { if (typeof fn === 'function') __listeners.push(fn); }
 
+  /* ============================ 3.5) CLOUD SYNC ============================ */
+  /* ดีลเก็บในเครื่องเป็นหลัก + ซิงก์ขึ้นแท็บ `Deals` บน Google Sheet
+     - ออฟไลน์ได้: เก็บคิวใน pi_sync_queue_v1 แล้วค่อยส่งซ้ำ */
+  var LS_QUEUE = 'pi_sync_queue_v1';
+  function syncQueue() {
+    try { var a = JSON.parse(localStorage.getItem(LS_QUEUE) || '[]'); return Object.prototype.toString.call(a) === '[object Array]' ? a : []; } catch (e) { return []; }
+  }
+  function setQueue(q) { try { localStorage.setItem(LS_QUEUE, JSON.stringify(q)); } catch (e) {} }
+  function enqueue(op) { var q = syncQueue(); q.push(op); setQueue(q); }
+  function cloudReady() {
+    try {
+      return !!(global.PIAuth && global.PIAuth.saveDealV2 && global.PIAuth.session && global.PIAuth.session());
+    } catch (e) { return false; }
+  }
+  /** แปลงดีลจากคลาวด์ → รูปแบบในเครื่อง */
+  function fromCloud(c) {
+    return {
+      no: c.no, so: c.so || '', customer: c.customer || '', job: c.job || '',
+      quoteDate: c.quoteDate || '', year: Number(c.year) || 0, month: Number(c.month) || 0,
+      saleId: String(c.saleId || '').toUpperCase(), product: c.product || 'P1',
+      amount: Number(c.amount) || 0, payment: c.payment || 'cash',
+      status: Number(c.status) || 0, prob: probOfStatus(c.status),
+      note: c.note || '', drRef: (c.drRef || '').toUpperCase(), docNo: c.docNo || '',
+      createdAt: c.createdAt || '', updatedAt: c.updatedAt || ''
+    };
+  }
+  /** ส่งคิวที่ค้างอยู่ขึ้นคลาวด์ */
+  function flushQueue() {
+    if (!cloudReady()) return;
+    var q = syncQueue();
+    if (!q.length) return;
+    var op = q[0];
+    var done = function () { var rest = syncQueue(); rest.shift(); setQueue(rest); flushQueue(); };
+    try {
+      if (op.op === 'save' && global.PIAuth.saveDealV2) global.PIAuth.saveDealV2(op.deal).then(done).catch(function () {});
+      else if (op.op === 'del' && global.PIAuth.deleteDealV2) global.PIAuth.deleteDealV2(op.no).then(done).catch(function () {});
+      else done();
+    } catch (e) {}
+  }
+  /** บันทึกดีลขึ้นคลาวด์ (ล้มเหลว → เข้าคิว) */
+  function cloudSave(d) {
+    if (!cloudReady() || !global.PIAuth.saveDealV2) return;
+    try {
+      global.PIAuth.saveDealV2(d).then(function (res) {
+        /* เซิร์ฟเวอร์อาจให้เลขใหม่เมื่อเลขซ้ำข้ามเครื่อง */
+        if (res && res.no && res.no !== d.no) {
+          d.no = res.no;
+          saveDeals();
+          if (typeof global.toast === 'function') global.toast('เลขดีลซ้ำกับเครื่องอื่น — ระบบออกเลขใหม่ ' + res.no);
+        }
+        flushQueue();
+      }).catch(function () {
+        enqueue({ op: 'save', deal: d, ts: Date.now() });
+        if (typeof global.toast === 'function') global.toast('บันทึกในเครื่องแล้ว — จะซิงก์คลาวด์เมื่อออนไลน์');
+      });
+    } catch (e) {}
+  }
+  function cloudDelete(no) {
+    if (!cloudReady() || !global.PIAuth.deleteDealV2) return;
+    try {
+      global.PIAuth.deleteDealV2(no).then(function () { flushQueue(); }).catch(function () {
+        enqueue({ op: 'del', no: no, ts: Date.now() });
+      });
+    } catch (e) {}
+  }
+  /** ดึงดีลจากคลาวด์มารวมกับข้อมูลในเครื่อง (ใหม่กว่าชนะ) */
+  function syncFromCloud() {
+    if (!cloudReady() || !global.PIAuth.listDealsV2) return;
+    try {
+      global.PIAuth.listDealsV2().then(function (list) {
+        var changed = false;
+        var cloudNos = {};
+        (list || []).forEach(function (c) {
+          cloudNos[c.no] = 1;
+          var loc = null;
+          for (var i = 0; i < DEALS.length; i++) if (DEALS[i].no === c.no) { loc = DEALS[i]; break; }
+          var remote = fromCloud(c);
+          if (!loc) { DEALS.push(remote); changed = true; return; }
+          var lu = Date.parse(loc.updatedAt || loc.createdAt || '') || 0;
+          var cu = Date.parse(remote.updatedAt || '') || 0;
+          if (cu > lu) { for (var k in remote) if (Object.prototype.hasOwnProperty.call(remote, k)) loc[k] = remote[k]; changed = true; }
+        });
+        /* ดีลในเครื่องที่ยังไม่เคยขึ้นคลาวด์ → ดันขึ้นครั้งแรก (สูงสุด 200 ใบ/รอบ) */
+        DEALS.filter(function (d) { return !cloudNos[d.no]; }).slice(0, 200).forEach(function (d) {
+          cloudSave(d);
+        });
+        if (changed) saveDeals();
+        flushQueue();
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  setTimeout(syncFromCloud, 1200);
+
   /** เลขดีลรันตามลำดับ (ปี-0001) — กันเลขซ้ำเมื่อมีลบดีล */
   function seqOf(no, yr) {
     var s = String(no || '').toUpperCase();
@@ -490,19 +583,22 @@
       prob: probOfStatus(o.status),
       docNo: String(o.docNo || '').trim(),
       note: String(o.note || ''),
-      drRef: String(o.drRef || '').trim().toUpperCase()
+      drRef: String(o.drRef || '').trim().toUpperCase(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     if (!d.customer || !d.job) throw new Error('กรอกชื่อลูกค้าและชื่องาน');
     if (isNaN(d.status)) d.status = 1;
     if (d.status === 4 && !d.docNo) throw new Error('สถานะ “ปิดงานแล้ว” ต้องระบุเลขอินวอย / เลขที่สัญญา / เลขที่ SO');
     DEALS.push(d);
     saveDeals();
+    cloudSave(d);
     if (global.PILog) global.PILog.add('deal.add', d.no + ' · ' + d.customer, d.job + ' · ' + money(d.amount) + ' · ' + st(d.status).label);
     return d;
   }
   function removeDeal(no) {
     for (var i = 0; i < DEALS.length; i++) {
-      if (DEALS[i].no === no) { DEALS.splice(i, 1); saveDeals(); return true; }
+      if (DEALS[i].no === no) { DEALS.splice(i, 1); saveDeals(); cloudDelete(no); return true; }
     }
     return false;
   }
@@ -1621,7 +1717,9 @@
         for (var i = 0; i < DEALS.length; i++) if (DEALS[i].no === __editNo) { d = DEALS[i]; break; }
         if (!d) throw new Error('ไม่พบดีลที่ต้องการแก้ไข');
         for (var k in payload) if (Object.prototype.hasOwnProperty.call(payload, k)) d[k] = payload[k];
+        d.updatedAt = new Date().toISOString();
         saveDeals();
+        cloudSave(d);
         if (global.PILog) global.PILog.add('deal.edit', d.no + ' · ' + d.customer, d.job + ' · ' + money(d.amount) + ' · ' + st(d.status).label);
         __editNo = '';
         if (typeof global.closeModal === 'function') global.closeModal();
