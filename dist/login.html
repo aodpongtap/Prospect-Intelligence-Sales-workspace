@@ -288,14 +288,14 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(37,99,235,.13);
   }
 
   function call(action, extra) {
-    var params = { api: '1', action: action };
+    var params = { api: '1', action: action, _ts: Date.now() };
     Object.keys(extra || {}).forEach(function (k) { params[k] = extra[k]; });
     var qs = Object.keys(params)
       .filter(function (k) { return params[k] !== undefined && params[k] !== null; })
       .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); })
       .join('&');
 
-    return fetch(API + '?' + qs, { method: 'GET', redirect: 'follow' })
+    return fetch(API + '?' + qs, { method: 'GET', redirect: 'follow', cache: 'no-store' })
       .then(function (r) { return r.text(); })
       .then(function (txt) {
         try { return JSON.parse(txt); }
