@@ -74,6 +74,11 @@ function apiResponse_(p) {
     else if (action === 'saveDeal') out = saveDealV2(p.token, p.deal ? JSON.parse(p.deal) : {});
     else if (action === 'delDeal') out = deleteDealV2(p.token, p.no);
     else if (action === 'dealLogs') out = dealLogsApi_(p.token, p.no);
+    else if (action === 'targetsV2') out = listTargetsApi_(p.token);
+    else if (action === 'saveTarget') out = saveTargetApi_(p.token, { team: p.team, saleId: p.saleId, year: p.year, month: p.month, amount: p.amount });
+    else if (action === 'dailyV2') out = listDailyApi_(p.token);
+    else if (action === 'saveDaily') out = saveDailyApi_(p.token, p.item ? JSON.parse(p.item) : {});
+    else if (action === 'delDaily') out = delDailyApi_(p.token, p.ref);
     else if (action === 'deals') out = getDeals(p.token);
     else if (action === 'addDeal') out = addDeal(p.token, p.name, p.customer, p.value, p.stage, p.probability, p.close, p.nextAction, p.status);
     else if (action === 'deleteDeal') out = deleteDeal(p.token, p.id);

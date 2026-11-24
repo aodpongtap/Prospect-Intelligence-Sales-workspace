@@ -236,6 +236,38 @@
     });
   }
 
+  /* ---------- Targets / DailyReports ---------- */
+  function listTargetsV2() {
+    return call('targetsV2', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดเป้าหมายไม่สำเร็จ');
+      return r.targets || [];
+    });
+  }
+  function saveTargetV2(team, year, month, amount) {
+    return call('saveTarget', { token: token(), team: team, year: year, month: month, amount: amount }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'บันทึกเป้าหมายไม่สำเร็จ');
+      return r.targets || [];
+    });
+  }
+  function listDailyV2() {
+    return call('dailyV2', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดบันทึกกิจกรรมไม่สำเร็จ');
+      return r.items || [];
+    });
+  }
+  function saveDailyV2(item) {
+    return call('saveDaily', { token: token(), item: JSON.stringify(item || {}) }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'บันทึกกิจกรรมบนคลาวด์ไม่สำเร็จ');
+      return r;
+    });
+  }
+  function deleteDailyV2(ref) {
+    return call('delDaily', { token: token(), ref: ref }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ลบบันทึกบนคลาวด์ไม่สำเร็จ');
+      return r;
+    });
+  }
+
   global.PIAuth = {
     coreAdmins: [
       'aodputta@gmail.com'
@@ -263,6 +295,11 @@
     listDealsV2: listDealsV2,
     saveDealV2: saveDealV2,
     deleteDealV2: deleteDealV2,
-    dealLogs: dealLogs
+    dealLogs: dealLogs,
+    listTargetsV2: listTargetsV2,
+    saveTargetV2: saveTargetV2,
+    listDailyV2: listDailyV2,
+    saveDailyV2: saveDailyV2,
+    deleteDailyV2: deleteDailyV2
   };
 })(window);

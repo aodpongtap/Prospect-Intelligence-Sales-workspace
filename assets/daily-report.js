@@ -89,6 +89,58 @@
   function save() {
     try { localStorage.setItem(LS, JSON.stringify(ITEMS)); } catch (e) {}
   }
+
+  /* ---------- ซิงก์กับคลาวด์ (แท็บ DailyReports) ---------- */
+  function cloudReady() {
+    try { return !!(global.PIAuth && global.PIAuth.saveDailyV2 && global.PIAuth.session && global.PIAuth.session()); } catch (e) { return false; }
+  }
+  function cloudSave(x) {
+    if (!cloudReady() || !global.PIAuth.saveDailyV2) return;
+    try { global.PIAuth.saveDailyV2(x).catch(function () {}); } catch (e) {}
+  }
+  function cloudDelete(ref) {
+    if (!cloudReady() || !global.PIAuth.deleteDailyV2 || !ref) return;
+    try { global.PIAuth.deleteDailyV2(ref).catch(function () {}); } catch (e) {}
+  }
+  /** รวมบันทึกจากคลาวด์เข้ากับข้อมูลในเครื่อง (ใหม่กว่าชนะ) */
+  function syncDailyFromCloud() {
+    if (!cloudReady() || !global.PIAuth.listDailyV2) return;
+    try {
+      global.PIAuth.listDailyV2().then(function (list) {
+        if (!list || !list.length) return;
+        var changed = false;
+        list.forEach(function (c) {
+          var loc = null;
+          for (var i = 0; i < ITEMS.length; i++) if (String(ITEMS[i].ref) === String(c.ref)) { loc = ITEMS[i]; break; }
+          if (!loc) {
+            ITEMS.push({
+              id: uid(), ref: c.ref, date: c.date, time: c.time || '', customer: c.customer || '',
+              qt: c.qt || '', channel: c.channel || 'visit', value: Number(c.value || 0),
+              summary: c.summary || '', nextDate: c.nextDate || '', nextTime: c.nextTime || '',
+              nextNote: c.nextNote || '', saleId: String(c.saleId || '').toUpperCase(), by: c.by || '',
+              updatedAt: c.updatedAt || ''
+            });
+            changed = true;
+            return;
+          }
+          var lu = Date.parse(loc.updatedAt || loc.createdAt || '') || 0;
+          var cu = Date.parse(c.updatedAt || '') || 0;
+          if (cu > lu) {
+            loc.date = c.date; loc.time = c.time; loc.customer = c.customer; loc.qt = c.qt;
+            loc.channel = c.channel; loc.value = Number(c.value || 0); loc.summary = c.summary;
+            loc.nextDate = c.nextDate; loc.nextTime = c.nextTime; loc.nextNote = c.nextNote;
+            loc.saleId = String(c.saleId || '').toUpperCase(); loc.updatedAt = c.updatedAt;
+            changed = true;
+          }
+        });
+        if (changed) {
+          save();
+          if (typeof global.render === 'function') global.render();
+        }
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  setTimeout(syncDailyFromCloud, 1500);
   function uid() { return 'D' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
   /* ---------- อ้างอิงข้อมูลจาก Reports ---------- */
@@ -680,6 +732,7 @@
       rec.id = uid();
       rec.ref = genRef(o.date);
       rec.createdAt = new Date().toISOString();
+      rec.updatedAt = rec.createdAt;
       ITEMS.push(rec);
       if (global.PILog) global.PILog.add('daily.add', o.customer, rec.ref + ' · ' + dstrth(o.date) + ' ' + o.time + ' · ' + ch(o.channel).name + (o.value ? ' · ' + money(o.value) : ''));
       /* เพิ่มเข้า Pipeline ของ Reports (พร้อมผูกกลับมาที่รหัสอ้างอิงนี้) */
@@ -688,6 +741,10 @@
       }
     }
     save();
+    var __rec = null;
+    if (editing) { for (var __i = 0; __i < ITEMS.length; __i++) if (ITEMS[__i].id === editing) __rec = ITEMS[__i]; }
+    else if (ITEMS.length) __rec = ITEMS[ITEMS.length - 1];
+    if (__rec) cloudSave(__rec);
     editing = '';
     if (typeof global.closeModal === 'function') global.closeModal();
     if (typeof global.render === 'function') global.render();
@@ -726,6 +783,7 @@
     if (!global.confirm('ลบบันทึกของ "' + rec.customer + '" (' + dstrth(rec.date) + ') ?\nDelete this record?')) return;
     ITEMS = ITEMS.filter(function (x) { return x.id !== id; });
     save();
+    cloudDelete(rec.ref);
     if (global.PILog) global.PILog.add('daily.del', rec.customer, dstrth(rec.date));
     if (typeof global.render === 'function') global.render();
     if (global.toast) global.toast('ลบบันทึกแล้ว · Deleted');

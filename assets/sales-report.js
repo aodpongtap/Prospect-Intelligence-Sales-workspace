@@ -404,11 +404,37 @@
     var before = num(arr[monthIdx]);
     arr[monthIdx] = num(value);
     saveTargets();
+    try {
+      if (global.PIAuth && global.PIAuth.saveTargetV2 && global.PIAuth.session && global.PIAuth.session()) {
+        global.PIAuth.saveTargetV2(code, year, monthIdx + 1, num(value)).catch(function () {});
+      }
+    } catch (e) {}
     if (before !== num(value) && global.PILog) {
       global.PILog.add('target.save', teamByCode(code).name + ' · ' + TH_MONTHS[monthIdx] + ' ' + (year + 543),
         'เป้า ' + money(before) + ' → ' + money(value));
     }
   }
+  /** ดึงเป้าหมายจากคลาวด์ (Sources of truth: แท็บ Targets) */
+  function syncTargetsFromCloud() {
+    try {
+      if (!(global.PIAuth && global.PIAuth.listTargetsV2 && global.PIAuth.session && global.PIAuth.session())) return;
+      global.PIAuth.listTargetsV2().then(function (rows) {
+        if (!rows || !rows.length) return;
+        var changed = false;
+        rows.forEach(function (t) {
+          if (!t.team || !t.year || !t.month) return;
+          var y = TARGETS[t.year] || (TARGETS[t.year] = {});
+          if (!y[t.team]) y[t.team] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+          if (num(y[t.team][t.month - 1]) !== num(t.amount)) { y[t.team][t.month - 1] = num(t.amount); changed = true; }
+        });
+        if (changed) {
+          try { localStorage.setItem('pi_sr_targets_v2', JSON.stringify(TARGETS)); } catch (e) {}
+          __listeners.forEach(function (f) { try { f(); } catch (e) {} });
+        }
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  setTimeout(syncTargetsFromCloud, 1500);
   /** เป้าหมายของทีม: month = 0 หมายถึงรวมทั้งปี */
   function targetOf(code, year, month) {
     var arr = targetsOfTeam(code, year);
