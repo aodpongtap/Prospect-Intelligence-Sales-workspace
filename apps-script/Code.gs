@@ -70,6 +70,9 @@ function apiResponse_(p) {
     else if (action === 'update') out = updateUser(p.token, p.email, p.level, p.status, p.parent, p.saleId, p.name, p.team, p.extra);
     else if (action === 'remove') out = deleteUser(p.token, p.email);
     else if (action === 'setupSchema') out = setupDataForAdmin_(p.token);
+    else if (action === 'dealsV2') out = listDealsV2Api_(p.token);
+    else if (action === 'saveDeal') out = saveDealV2(p.token, p.deal ? JSON.parse(p.deal) : {});
+    else if (action === 'delDeal') out = deleteDealV2(p.token, p.no);
     else if (action === 'deals') out = getDeals(p.token);
     else if (action === 'addDeal') out = addDeal(p.token, p.name, p.customer, p.value, p.stage, p.probability, p.close, p.nextAction, p.status);
     else if (action === 'deleteDeal') out = deleteDeal(p.token, p.id);
