@@ -697,6 +697,7 @@
             docNo: x.docNo || '',
             ownerName: s.name, ownerEmail: '', team: s.team, value: Number(x.amount || 0),
             stage: STAGE_OF_STATUS[x.status] || 'Prospect',
+            statusNo: Number(x.status),
             probability: Number(x.prob || 0),
             close: x.year + '-' + String(x.month).padStart(2, '0') + '-28',
             lastActivity: x.quoteDate,
@@ -826,6 +827,14 @@
     const stageLabelsTH={"Prospect":"หาลูกค้า","Qualified":"คัดกรองแล้ว","Proposal":"เสนอราคา","Negotiation":"เจรจา","Won":"ปิดการขาย","Lost":"เสียดีล"};
     const statusLabelsTH={"Healthy":"ปกติ","Need Attention":"ต้องติดตาม","At Risk":"เสี่ยง","On Hold":"พักไว้"};
     function stageTH(v){return stageLabelsTH[v]||v}
+    /* สถานะจริงของดีล (0–5) แสดงในหน้า AE Pipeline ให้ตรงกับ Reports */
+    var DEAL_STATUS = { 0:{l:'กำลังคุย Detail',c:'on-hold'}, 1:{l:'Pipeline',c:'attention'}, 2:{l:'รอยืนยัน PO',c:'attention'}, 3:{l:'รอส่งของ / เปิดบิลอินวอย',c:'attention'}, 4:{l:'Actual (ปิดงานแล้ว)',c:'healthy'}, 5:{l:'ยกเลิก',c:'at-risk'} };
+    function statusCellHtml(d){
+      var n = (d.statusNo === undefined ? -1 : Number(d.statusNo));
+      var m = DEAL_STATUS[n];
+      if (!m) return '<span class="status '+statusClass(d.status)+'">'+statusTH(d.status)+'</span><div class="muted" style="margin-top:3px">'+stageTH(d.stage)+'</div>';
+      return '<span class="status '+m.c+'">'+n+' · '+m.l+'</span><div class="muted" style="margin-top:3px">'+stageTH(d.stage)+'</div>';
+    }
     function statusTH(v){return statusLabelsTH[v]||v}
     let currentPage="dashboard",charts=[],sortDesc=true,toastTimer,pageStack=[];
     const money=n=>"฿"+Number(n).toLocaleString("th-TH");
@@ -903,7 +912,7 @@
           <td><div class="deal-name">${d.name}</div><div class="muted">${d.customer}</div></td>
           <td><div>${d.owner}</div><div class="muted">${d.team}</div></td>
           <td class="dm-num"><b>${money(d.value)}</b></td>
-          <td><span class="status ${statusClass(d.status)}">${statusTH(d.status)}</span><div class="muted" style="margin-top:3px">${stageTH(d.stage)}</div></td>
+          <td>${statusCellHtml(d)}</td>
           <td class="dm-num">${d.probability}%</td>
           <td>${thaiDate(d.close)}</td>
           <td class="dm-num"><span class="risk-number ${riskClass(rk)}">${rk}</span> <span class="muted" style="font-size:9px">${rk>=60?'สูง':rk>=35?'กลาง':'ต่ำ'}</span></td>

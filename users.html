@@ -165,7 +165,8 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
 <script>
 var me = PIAuth.session();
 if (!me) { location.replace('login.html'); }
-if (me && !PIAuth.isAdmin(me)) {
+var __DENIED__ = !!(me && !PIAuth.isAdmin(me));
+if (__DENIED__) {
   document.addEventListener('DOMContentLoaded', function () {
     document.body.innerHTML = '<div style="max-width:520px;margin:80px auto;background:#fff;border:1px solid #E5EAF0;border-radius:12px;padding:26px;font-family:Prompt,sans-serif;text-align:center">' +
       '<h2 style="color:#0F2B46;margin:0 0 10px">ไม่มีสิทธิ์เข้าถึง</h2>' +
@@ -378,6 +379,7 @@ function dailyCell(u) {
 }
 
 function render(users) {
+  if (__DENIED__ || !el('tb')) return;
   /* เรียงตามสิทธิ์: Dev อยู่บนสุด → L1 → L2 → … */
   var DEV_EMAIL = 'aodpongtaptsr@gmail.com';
   users = (users || []).slice().sort(function (a, b) {
@@ -522,6 +524,7 @@ function refreshUplines() {
 }
 
 function load() {
+  if (__DENIED__) return;
   fillTeamOptions();
   PIAuth.seed().then(function () {
     var list = PIAuth.listUsers();
@@ -779,7 +782,7 @@ el('lo').addEventListener('click', function () {
 });
 
 if (me) el('me').textContent = me.email + ' · ' + String(me.level).toUpperCase();
-load();
+if (!__DENIED__) load();
 </script>
 </body>
 </html>
