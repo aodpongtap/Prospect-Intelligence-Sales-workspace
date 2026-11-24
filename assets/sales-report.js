@@ -185,6 +185,25 @@
     } catch (e) { global.__SCOPE_FETCHING__ = false; }
   }
 
+  /** รหัส AE ของบัญชีต้นสาย (ใช้ผูก record ของตัวแทนเข้ากับ AE) */
+  function parentSaleIdOf(me) {
+    var pe = String((me && me.parent) || '').toLowerCase();
+    if (!pe) return '';
+    var users = global.__TEAM__ || [];
+    for (var i = 0; i < users.length; i++) {
+      if (String(users[i].email || '').toLowerCase() === pe) return String(users[i].saleId || '').toUpperCase();
+    }
+    return '';
+  }
+  /** รหัส AE ทั้งหมดที่ผู้ใช้เห็น: ของตัวเอง + ตัวแทนที่ผูกไว้ */
+  function mySaleIds(sc) {
+    sc = sc || scopeOf();
+    if (sc.type !== 'sale') return [];
+    var ids = [sc.saleId];
+    SALES.forEach(function (s) { if (String(s.parent || '').toUpperCase() === String(sc.saleId).toUpperCase()) ids.push(s.id); });
+    return ids;
+  }
+
   /** ขอบเขตข้อมูลของผู้ใช้ปัจจุบัน: all | team | sale | none */
   function scopeOf() {
     var me = global.__ME__ || {};
@@ -235,7 +254,7 @@
         var maxId = 0;
         SALES.forEach(function (s) { var n = parseInt(String(s.id || '').replace(/\D/g, ''), 10) || 0; if (n > maxId) maxId = n; });
         var newId = 'S' + String(maxId + 1).padStart(2, '0');
-        SALES.push({ id: newId, name: nmAcc, team: String(me.team || '').toUpperCase(), auto: true });
+        SALES.push({ id: newId, name: nmAcc, team: String(me.team || '').toUpperCase(), auto: true, parent: parentSaleIdOf(me) });
         try { localStorage.setItem(LS_SALES, JSON.stringify(SALES)); } catch (e) {}
         if (global.PILog) global.PILog.add('sale.add', newId + ' · ' + nmAcc, 'สร้างอัตโนมัติจากบัญชีผู้ใช้ (ระดับ ' + lvl + ')');
         return { type: 'sale', saleId: newId, auto: true };
@@ -255,7 +274,7 @@
     var sc = scopeOf();
     if (sc.type === 'all') return true;
     if (sc.type === 'team') return sale(d.saleId).team === sc.team;
-    if (sc.type === 'sale') return d.saleId === sc.saleId;
+    if (sc.type === 'sale') return mySaleIds(sc).indexOf(d.saleId) >= 0;
     return false;
   }
   /** ข้อความแจ้งเตือนตามสถานะสิทธิ์ (none / pending) */
@@ -595,10 +614,26 @@
     }).join('');
     var teamOpts = '<option value="">ทุกทีม</option>' + TEAMS.map(function (t) { return opt(t.code, t.name, state.team); }).join('');
     var lockedTeam = viewerTeam();
-    var teamField = lockedTeam
-      ? '<div class="sr-fl"><label>ทีม (BU)</label><div class="sr-locked"><i class="fa-solid fa-lock"></i> '
-        + esc(teamByCode(lockedTeam).name) + ' <span class="sr-s2">ทีมที่คุณดูแล</span></div></div>'
-      : '<div class="sr-fl"><label>ทีม (BU)</label><select data-sr-filter="team">' + teamOpts + '</select></div>';
+    var scF = scopeOf();
+    var mineSale = scF.type === 'sale' ? sale(scF.saleId) : null;
+    /* AE (L5): ทีมล็อกเป็น BU ของตัวเอง + ตัวกรอง AE แสดงเฉพาะตัวเอง */
+    var teamField = mineSale
+      ? '<div class="sr-fl"><label>ทีม (BU)</label><div class="sr-locked"><i class="fa-solid fa-user-lock"></i> '
+        + esc(teamByCode(mineSale.team).name) + ' <span class="sr-s2">ของฉัน</span></div></div>'
+      : (lockedTeam
+        ? '<div class="sr-fl"><label>ทีม (BU)</label><div class="sr-locked"><i class="fa-solid fa-lock"></i> '
+          + esc(teamByCode(lockedTeam).name) + ' <span class="sr-s2">ทีมที่คุณดูแล</span></div></div>'
+        : '<div class="sr-fl"><label>ทีม (BU)</label><select data-sr-filter="team">' + teamOpts + '</select></div>');
+    var aeField = mineSale
+      ? '<div class="sr-fl"><label>AE</label><div class="sr-locked"><i class="fa-solid fa-user"></i> '
+        + esc(mineSale.id + ' · ' + mineSale.name) + ' <span class="sr-s2">ของฉัน</span></div></div>'
+      : ('<div class="sr-fl"><label>AE</label><select data-sr-filter="sale">'
+        + (scF.type === 'team'
+          ? ('<option value="">ทุกคนในทีม</option>' + SALES.filter(function (s) { return s.team === scF.team; }).map(function (s) {
+              return opt(s.id, s.name, state.sale);
+            }).join(''))
+          : saleOpts)
+        + '</select></div>');
     var prodOpts = '<option value="">ทุกสินค้า</option>' + PRODUCTS.map(function (p) { return opt(p.code, p.name, state.product); }).join('');
     var payOpts = '<option value="">ทุกรูปแบบ</option>' + PAYMENTS.map(function (p) { return opt(p.code, p.name, state.payment); }).join('');
 
@@ -607,7 +642,7 @@
       + '  <div class="sr-fl"><label>ปี</label><select data-sr-filter="year">' + yearOpts + '</select></div>'
       + '  <div class="sr-fl"><label>เดือนที่คาดว่าจะปิด</label><select data-sr-filter="month">' + monthOpts + '</select></div>'
       + teamField
-      + '  <div class="sr-fl"><label>AE</label><select data-sr-filter="sale">' + saleOpts + '</select></div>'
+      + aeField
       + '  <div class="sr-fl"><label>สินค้า</label><select data-sr-filter="product">' + prodOpts + '</select></div>'
       + '  <div class="sr-fl"><label>รูปแบบการซื้อ</label><select data-sr-filter="payment">' + payOpts + '</select></div>'
       + '  <div class="sr-fbtn">'
@@ -658,7 +693,7 @@
       if (sc0.type === 'none') return;
       var members = SALES.filter(function (r) {
         if (r.team !== t.code) return false;
-        if (sc0.type === 'sale') return r.id === sc0.saleId;
+        if (sc0.type === 'sale') return mySaleIds(sc0).indexOf(r.id) >= 0;
         return !state.sale || r.id === state.sale;
       });
       if (!members.length) return;
@@ -1302,7 +1337,7 @@
     var tm = state.perfTeam || state.team || '';
     if (sc.type === 'team') tm = sc.team;
     var list = SALES.filter(function (s) {
-      if (sc.type === 'sale') return s.id === sc.saleId;
+      if (sc.type === 'sale') return mySaleIds(sc).indexOf(s.id) >= 0;
       if (sc.type === 'none') return false;
       return !tm || s.team === tm;
     });
@@ -2360,6 +2395,7 @@
       return { deals: DEALS, teams: TEAMS, sales: SALES, viewerTeam: viewerTeam() };
     },
     scope: scopeOf,
+    mySaleIds: mySaleIds,
     scopedDeals: function () { return DEALS.filter(inScope); },
     addDeal: addDeal,
     openAddDeal: openAddDeal,

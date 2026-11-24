@@ -117,7 +117,11 @@
     if (sc.type === 'pending') return [];
     if (sc.type === 'team') return ITEMS.filter(function (x) { return saleOf(x.saleId).team === sc.team; });
     if (sc.type === 'sale') {
-      return ITEMS.filter(function (x) { return x.saleId === sc.saleId; });
+      var ids = [sc.saleId];
+      try {
+        if (global.SalesReport && global.SalesReport.mySaleIds) ids = global.SalesReport.mySaleIds(sc);
+      } catch (e) {}
+      return ITEMS.filter(function (x) { return ids.indexOf(x.saleId) >= 0; });
     }
     return [];
   }
