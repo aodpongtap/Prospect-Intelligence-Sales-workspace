@@ -1666,7 +1666,7 @@
       + '    <div class="sr-hs-head">ผลงานที่ปิดแล้ว + รอส่งของ <span class="sr-pill-pct">' + pct(k.ach43) + ' ของเป้า</span></div>'
       + '    <div class="sr-hs-total">' + money(s.sum43) + '</div>'
       + '    <div class="sr-hs-cols">'
-      + '      <div><small>ปิดงานแล้ว (Actual 100%)</small><b>' + money(s.s4) + '</b></div>'
+      + '      <div><small>ปิดงานแล้ว (100%)</small><b>' + money(s.s4) + '</b></div>'
       + '      <div><small>รอส่งของ (90%)</small><b>' + money(s.s3) + '</b></div>'
       + '    </div>'
       + '    <div class="sr-bar"><span style="width:' + clampPct(k.ach43) + '%;background:#0EA5E9"></span></div>'
@@ -1708,7 +1708,6 @@
       + '      <select data-sr-refresh>' + [0, 1, 5, 10, 15].map(function (m) {
         return '<option value="' + m + '"' + (m === refreshMin ? ' selected' : '') + '>' + (m ? m + ' นาที' : 'ปิด') + '</option>';
       }).join('') + '</select></label>'
-      + '    <button class="sr-btn dark" data-sr-goto="reports"><i class="fa-solid fa-chart-pie"></i> เปิด Reports ฉบับเต็ม</button>'
       + '  </div>'
       + '</div>'
       + scopeNotice().replace('margin-bottom', 'margin-bottom')
@@ -2832,7 +2831,7 @@
       /* sticky filter bar */
       + '.sr-filters{position:sticky;top:0;z-index:25;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;gap:10px;'
       + 'background:#fff;border:1px solid #E5EAF0;border-radius:12px;padding:12px 14px;box-shadow:0 6px 18px rgba(15,43,70,.07);margin-bottom:15px}'
-      + '.sr-filters.sr-f5{grid-template-columns:repeat(3,minmax(0,1fr))}'
+      + '.sr-filters.sr-f5{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}'
       + '@media(min-width:1340px){.sr-filters{grid-template-columns:repeat(6,minmax(0,1fr))}'
       + '.sr-filters.sr-f5{grid-template-columns:repeat(5,minmax(0,1fr))}}'
       + '.sr-fl{display:grid;gap:5px;min-width:0}'
@@ -3060,7 +3059,7 @@
       + '.sr-hist-ico{width:18px;height:18px;border-radius:50%;background:#fff;border:1px solid #E6EDF5;display:grid;place-items:center;font-size:8px}'
       + '.sr-hist-row b{font-size:10.5px;color:#0F2B46}'
       /* ---- Dashboard 2.0: analytics cards ---- */
-      + '.sr-head-r{display:flex;align-items:center;gap:9px;flex-wrap:wrap}'
+      + '.sr-head-r{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-left:auto}'
       + '.sr-upd{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #E6EDF5;border-radius:9px;'
       + 'padding:7px 11px;font-size:10px;color:#667085}'
       + '.sr-upd b{color:#0F2B46;font-weight:600}'
