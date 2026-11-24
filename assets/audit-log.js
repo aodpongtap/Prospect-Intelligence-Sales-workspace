@@ -24,7 +24,7 @@
       + '.al-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}'
       + '.al-head h1{margin:0;font-size:19px;color:#0F2B46;font-weight:600}'
       + '.al-sub{color:#98A2B3;font-size:11px;margin-top:4px}'
-      + '.al-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}'
+      + '.al-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(122px,1fr));gap:10px;margin-bottom:14px}'
       + '.al-card{background:#fff;border:1px solid #E6EDF5;border-radius:12px;padding:11px 13px;box-shadow:0 4px 14px rgba(15,43,70,.05)}'
       + '.al-card span{display:block;font-size:10px;color:#667085}'
       + '.al-card b{display:block;font-size:18px;color:#0F2B46;margin-top:3px;font-weight:600}'
