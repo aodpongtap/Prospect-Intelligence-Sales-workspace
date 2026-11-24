@@ -1092,7 +1092,7 @@
       var cnt = isMine ? mineN : teamSize;
       return '<div class="sr-trow">'
         + '<div class="sr-trow-h"><b>' + esc(isMine ? (sale(scD.saleId).name + ' · ผลงานของฉัน' + (mineN > 1 ? ' + ตัวแทน ' + (mineN - 1) + ' คน' : '')) : t.name) + '</b>'
-        + '  <span>' + cnt + (isMine ? (mineN > 1 ? ' คน (เป้า/คน × ' + mineN + ')' : ' คน (เป้า/คน)') : ' คน') + '</span></div>'
+        + '  <span>' + cnt + (isMine ? (mineN > 1 ? ' คน · เป้า/คน ' + money(tg / mineN) : ' คน (เป้า/คน)') : ' คน') + '</span></div>'
         + '<div class="sr-trow-n">' + money(ts.s4) + ' <span>/ ' + money(tg) + '</span><em>' + pct(pAch) + '</em></div>'
         + '<div class="sr-bar"><span style="width:' + Math.max(0, Math.min(100, pAch)) + '%;background:#2563EB"></span></div>'
         + '<div class="sr-trow-f">Forecast ' + money(ts.forecast) + ' · ' + pct(pFc) + '</div>'
@@ -1166,7 +1166,7 @@
       }).join('') + '</div></div>'
       + (payAll.count
         ? '<div class="sr-tablewrap"><table class="sr-table sr-paytable"><thead><tr>'
-          + '<th>ทีม (BU)</th>'
+          + '<th>' + (saleScope ? 'AE / ตัวแทน' : 'ทีม (BU)') + '</th>'
           + PAY_KEYS.map(function (c) { return '<th class="sr-num">' + esc(c.label) + '</th>'; }).join('')
           + '<th class="sr-num">รวมปิดงาน</th><th>สัดส่วน (%)</th>'
           + '</tr></thead><tbody>' + payRows + '</tbody><tfoot>' + payFoot + '</tfoot></table></div>'
