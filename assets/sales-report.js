@@ -18,16 +18,18 @@
   var TH_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
     'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
 
-  /* สถานะงาน 0–5 พร้อมน้ำหนักที่ใช้คิด Forecast */
+  /* สถานะงาน 0–5 พร้อมน้ำหนักที่ใช้คิด Forecast + โอกาสปิด (%) ที่ล็อกตามสถานะ */
   var STATUS = [
-    { code: 0, label: 'กำลังคุย Detail', short: 'กำลังคุย', weight: 0,    cls: 's0', color: '#94A3B8' },
-    { code: 1, label: 'Pipeline',        short: 'Pipeline',  weight: null, cls: 's1', color: '#A78BFA' },
-    { code: 2, label: 'รอยืนยัน PO',     short: 'รอ PO',     weight: 0.8,  cls: 's2', color: '#F59E0B' },
-    { code: 3, label: 'รอส่งของ',        short: 'รอส่งของ',  weight: 0.9,  cls: 's3', color: '#38BDF8' },
-    { code: 4, label: 'Actual (ปิดงานแล้ว)', short: 'Actual', weight: 1,   cls: 's4', color: '#2563EB' },
-    { code: 5, label: 'ยกเลิก',          short: 'ยกเลิก',    weight: 0,    cls: 's5', color: '#EF4444' }
+    { code: 0, label: 'กำลังคุย Detail', short: 'กำลังคุย', weight: 0,    prob: 25,  cls: 's0', color: '#94A3B8' },
+    { code: 1, label: 'Pipeline',        short: 'Pipeline',  weight: null, prob: 50,  cls: 's1', color: '#A78BFA' },
+    { code: 2, label: 'รอยืนยัน PO',     short: 'รอ PO',     weight: 0.8,  prob: 75,  cls: 's2', color: '#F59E0B' },
+    { code: 3, label: 'รอส่งของ / เปิดบิลอินวอย', short: 'รอส่งของ', weight: 0.9, prob: 90, cls: 's3', color: '#38BDF8' },
+    { code: 4, label: 'Actual (ปิดงานแล้ว)', short: 'Actual', weight: 1,   prob: 100, cls: 's4', color: '#2563EB' },
+    { code: 5, label: 'ยกเลิก',          short: 'ยกเลิก',    weight: 0,    prob: 0,   cls: 's5', color: '#EF4444' }
   ];
   function st(code) { return STATUS[code] || STATUS[0]; }
+  /** โอกาสปิด (%) ล็อกตามสถานะงาน — ผู้ใช้แก้เองไม่ได้ */
+  function probOfStatus(code) { var s0 = STATUS[Number(code)]; return s0 ? s0.prob : 0; }
 
   var PRODUCT_DEFAULT = [
     { code: 'P1', name: 'ร้านสะดวกซัก (เครื่องซักผ้า+อบ)', short: 'ร้านสะดวกซัก', color: '#2563EB' },
@@ -423,6 +425,8 @@
         DEALS.forEach(function (d) {
           var m = String(d.no || '').match(/^SO-(\d{4}-\d+)$/i);
           if (m) { d.no = m[1]; changed = true; }
+          /* โอกาสปิด (%) ล็อกตามสถานะงาน → ปรับข้อมูลเดิมให้ตรง */
+          if (num(d.prob) !== probOfStatus(d.status)) { d.prob = probOfStatus(d.status); changed = true; }
         });
         if (changed) { try { localStorage.setItem(LS_DEALS, JSON.stringify(DEALS)); } catch (e) {} }
       }
@@ -470,12 +474,14 @@
       amount: Number(o.amount || 0),
       payment: o.payment || 'cash',
       status: Number(o.status),
-      prob: Number(o.prob || 0),
+      prob: probOfStatus(o.status),
+      docNo: String(o.docNo || '').trim(),
       note: String(o.note || ''),
       drRef: String(o.drRef || '').trim().toUpperCase()
     };
     if (!d.customer || !d.job) throw new Error('กรอกชื่อลูกค้าและชื่องาน');
     if (isNaN(d.status)) d.status = 1;
+    if (d.status === 4 && !d.docNo) throw new Error('สถานะ “ปิดงานแล้ว” ต้องระบุเลขอินวอย / เลขที่สัญญา / เลขที่ SO');
     DEALS.push(d);
     saveDeals();
     if (global.PILog) global.PILog.add('deal.add', d.no + ' · ' + d.customer, d.job + ' · ' + money(d.amount) + ' · ' + st(d.status).label);
@@ -544,7 +550,7 @@
       if (d.status === 4) s.s4 += a;
       else if (d.status === 3) s.s3 += a;
       else if (d.status === 2) s.s2 += a;
-      else if (d.status === 1) { s.s1 += a; s.weighted1 += a * num(d.prob) / 100; }
+      else if (d.status === 1) { s.s1 += a; s.weighted1 += a * probOfStatus(d.status) / 100; }
       else s.s0 += a;
       s.count++;
       s.cashIn += cashInOf(d);
@@ -911,7 +917,7 @@
     var q = String(state.q || '').trim().toLowerCase();
     var rows = sortRows(list).filter(function (d) {
       if (!q) return true;
-      return (d.customer + ' ' + d.job + ' ' + d.no + ' ' + d.so).toLowerCase().indexOf(q) >= 0;
+      return (d.customer + ' ' + d.job + ' ' + d.no + ' ' + d.so + ' ' + (d.docNo || '')).toLowerCase().indexOf(q) >= 0;
     });
     if (!rows.length) return '<tr><td colspan="12" class="sr-empty">ไม่พบดีลที่ตรงกับเงื่อนไข</td></tr>';
     return rows.map(function (d, i) {
@@ -922,7 +928,8 @@
         + '<td><div class="sr-nm">' + esc(d.customer) + '</div><div class="sr-s2">' + esc(d.job) + '</div>'
         + (d.drRef ? '<div class="sr-drref" title="อ้างอิง Daily Report"><i class="fa-solid fa-link"></i> ' + esc(d.drRef) + '</div>' : '') + '</td>'
         + '<td><div class="sr-nm">' + esc(d.no) + '</div>'
-        + (d.so ? '<div class="sr-s2">' + esc(d.so) + '</div>' : '<div class="sr-s2 sr-dim">ยังไม่มีเลข QT</div>') + '</td>'
+        + (d.so ? '<div class="sr-s2">' + esc(d.so) + '</div>' : '<div class="sr-s2 sr-dim">ยังไม่มีเลข QT</div>')
+        + (d.docNo ? '<div class="sr-s2" style="color:#0E9384;font-family:ui-monospace,Menlo,Consolas,monospace"><i class="fa-solid fa-file-invoice"></i> ' + esc(d.docNo) + '</div>' : '') + '</td>'
         + '<td class="sr-num">' + shortDate(d.quoteDate) + '</td>'
         + '<td class="sr-num">' + String(d.month).padStart(2, '0') + '.' + TH_MONTHS[d.month - 1] + ' ' + String(d.year + 543).slice(-2) + '</td>'
         + '<td><div class="sr-nm">' + esc(sale(d.saleId).name) + '</div><div class="sr-s2">' + esc(teamByCode(sale(d.saleId).team).name) + '</div></td>'
@@ -1476,7 +1483,12 @@
       + '  <label class="sr-df">AE ผู้รับผิดชอบ *' + saleField + '</label>'
       + '  <label class="sr-df">สถานะงาน *<select name="status">' + statusOpts + '</select></label>'
       + '  <label class="sr-df">มูลค่างาน (บาท) *<input name="amount" type="number" min="0" step="1" required placeholder="0" value="' + (cur.amount !== undefined ? Number(cur.amount) : '') + '"></label>'
-      + '  <label class="sr-df">โอกาสปิด (%)<input name="prob" type="number" min="0" max="100" value="' + (cur.prob !== undefined ? Number(cur.prob) : 40) + '"></label>'
+      + '  <div class="sr-df"><span>โอกาสปิด (%)</span>'
+      + '    <div class="sr-fixed" title="ระบบคำนวณจากสถานะงานอัตโนมัติ แก้ไขเองไม่ได้"><i class="fa-solid fa-lock"></i> <b id="srProbVal">' + probOfStatus(curStatus) + '</b>&nbsp;% <span class="sr-s2">ล็อกตามสถานะ</span></div>'
+      + '    <input type="hidden" name="prob" value="' + probOfStatus(curStatus) + '"></div>'
+      + '  <label class="sr-df full" id="srDocWrap"' + (curStatus === 4 ? '' : ' style="display:none"') + '>เลขอินวอย / เลขที่สัญญา / เลขที่ SO *'
+      + '    <input name="docNo" maxlength="64" placeholder="เช่น INV-2026-0145 / CT-2026-009 / SO-2026-0123" value="' + esc(cur.docNo || '') + '"' + (curStatus === 4 ? ' required' : '') + '>'
+      + '    <span class="sr-s2" style="font-weight:400">บังคับกรอกเมื่อสถานะเป็น “Actual (ปิดงานแล้ว)” — ใช้เป็นหลักฐานปิดงาน</span></label>'
       + '  <label class="sr-df">สินค้า<select name="product">' + prodOpts + '</select></label>'
       + '  <label class="sr-df">รูปแบบการซื้อ<select name="payment">' + payOpts + '</select></label>'
       + '  <label class="sr-df">ปีที่คาดว่าจะปิด<select name="year">' + yearOpts + '</select></label>'
@@ -1496,6 +1508,37 @@
       ], true);
   }
 
+  /** อัปเดต UI ตามสถานะงาน: โอกาสปิดล็อกอัตโนมัติ + บังคับเลขอินวอย/สัญญา/SO เมื่อปิดงานแล้ว */
+  function syncDealStatusUI(f) {
+    if (!f) return;
+    var status = Number((f.status && f.status.value) || 0);
+    var pv = probOfStatus(status);
+    var out = document.getElementById('srProbVal');
+    if (out) out.textContent = pv;
+    var hidden = f.querySelector('input[name="prob"]');
+    if (hidden) hidden.value = pv;
+    var wrap = document.getElementById('srDocWrap');
+    var input = f.querySelector('input[name="docNo"]');
+    var needDoc = status === 4;
+    if (wrap) wrap.style.display = needDoc ? '' : 'none';
+    if (input) {
+      if (needDoc) input.setAttribute('required', 'required');
+      else input.removeAttribute('required');
+    }
+  }
+  function onDealStatusChange(el) {
+    var f = el && el.form;
+    if (!f || f.id !== 'srDealForm') return false;
+    syncDealStatusUI(f);
+    var status = Number(el.value || 0);
+    if (status === 4) {
+      if (typeof global.toast === 'function') global.toast('ปิดงานแล้ว → กรุณากรอกเลขอินวอย / เลขที่สัญญา / เลขที่ SO');
+      var inp = f.querySelector('input[name="docNo"]');
+      if (inp) { try { inp.focus(); } catch (e) {} }
+    }
+    return true;
+  }
+
   function saveDealForm() {
     var f = document.getElementById('srDealForm');
     if (!f || !f.reportValidity()) return;
@@ -1503,7 +1546,8 @@
       var payload = {
         job: f.job.value, customer: f.customer.value,
         saleId: f.saleId.value, status: Number(f.status.value),
-        amount: Number(f.amount.value || 0), prob: Number(f.prob.value || 0),
+        amount: Number(f.amount.value || 0), prob: probOfStatus(Number(f.status.value)),
+        docNo: String((f.docNo && f.docNo.value) || '').trim(),
         product: f.product.value, payment: f.payment.value,
         year: Number(f.year.value), month: Number(f.month.value),
         note: f.note.value,
@@ -1513,6 +1557,9 @@
       /* ---- ตรวจความสอดคล้องของข้อมูล (กันข้อมูลลอย) ---- */
       if (!SALES.some(function (s) { return s.id === payload.saleId; })) {
         throw new Error('ไม่พบ AE ผู้รับผิดชอบนี้ในรายชื่อ AE — กรุณาเลือกใหม่');
+      }
+      if (payload.status === 4 && !payload.docNo) {
+        throw new Error('สถานะ “ปิดงานแล้ว” ต้องระบุเลขอินวอย / เลขที่สัญญา / เลขที่ SO');
       }
       if (payload.drRef && global.DailyReport && global.DailyReport.options) {
         var refs = [];
@@ -1824,6 +1871,7 @@
       + '  <div><small>เดือนที่คาดว่าจะปิด</small><strong>' + monthLabel(d.year, d.month) + '</strong></div>'
       + '  <div><small>เลขดีล</small><strong>' + esc(d.no) + '</strong></div>'
       + '  <div><small>เลข QT / อ้างอิง</small><strong>' + (d.so ? esc(d.so) : '—') + '</strong></div>'
+      + (d.docNo ? '  <div><small>เลขอินวอย / สัญญา / SO</small><strong style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#0E9384">' + esc(d.docNo) + '</strong></div>' : '')
       + (d.drRef ? '  <div><small>อ้างอิง Daily Report</small><strong style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#1D4ED8">' + esc(d.drRef) + '</strong></div>' : '')
       + '</div>'
       + '<div class="sr-md-note"><b>หมายเหตุ</b><p>' + esc(d.note) + '</p></div>';
@@ -1843,11 +1891,11 @@
     var rows = sortRows(filteredDeals()).filter(function (d) {
       return !q || (d.customer + ' ' + d.job + ' ' + d.no + ' ' + d.so).toLowerCase().indexOf(q) >= 0;
     });
-    var head = ['เลขดีล', 'สถานะ', 'ชื่อลูกค้า', 'ชื่องาน', 'เลข QT/อ้างอิง', 'วันที่เสนอราคา', 'เดือนที่คาดว่าจะปิด',
+    var head = ['เลขดีล', 'สถานะ', 'ชื่อลูกค้า', 'ชื่องาน', 'เลข QT/อ้างอิง', 'เลขอินวอย/สัญญา/SO', 'วันที่เสนอราคา', 'เดือนที่คาดว่าจะปิด',
       'AE', 'สินค้า', 'มูลค่างานประมาณ', 'รูปแบบการซื้อ', 'Cash In', 'อ้างอิง Daily Report', 'หมายเหตุ'];
     var lines = [head];
     rows.forEach(function (d) {
-      lines.push([d.no, d.status + ' · ' + st(d.status).label, d.customer, d.job, d.so, d.quoteDate,
+      lines.push([d.no, d.status + ' · ' + st(d.status).label, d.customer, d.job, d.so, d.docNo || '', d.quoteDate,
         monthLabel(d.year, d.month), sale(d.saleId).name, product(d.product).name, Math.round(d.amount),
         payment(d.payment).name, Math.round(cashInOf(d)), d.drRef || '', d.note]);
     });
@@ -2024,6 +2072,7 @@
   }
 
   document.addEventListener('change', function (e) {
+    if (e.target && e.target.name === 'status' && onDealStatusChange(e.target)) return;
     var tin = e.target.closest && e.target.closest('[data-sr-target]');
     if (tin) {
       var parts = tin.getAttribute('data-sr-target').split('|');

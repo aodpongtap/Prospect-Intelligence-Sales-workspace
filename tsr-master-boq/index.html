@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSR Master BOQ &amp; Cost Sheet (มาตรฐานส่วนกลาง)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --navy:#000033;
+  --navy-2:#11114f;
+  --navy-soft:#eceef6;
+  --ink:#14151d;
+  --muted:#6a7080;
+  --line:#e3e6ee;
+  --line-2:#cfd4e0;
+  --bg:#f4f5f9;
+  --card:#ffffff;
+  --gold:#a8863f;
+  --ok:#1c6b46;
+  --shadow:0 1px 2px rgba(0,0,51,.05), 0 8px 24px rgba(0,0,51,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;
+  font-family:"Sarabun","Segoe UI","Leelawadee UI",Tahoma,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0;font-weight:700;letter-spacing:.01em}
+p{margin:0}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+
+/* ================= TOP BAR ================= */
+.topbar{
+  background:var(--navy);color:#fff;padding:14px 26px;
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+  border-bottom:3px solid var(--gold);
+}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.logo{
+  width:44px;height:44px;border-radius:10px;background:#fff;color:var(--navy);
+  display:grid;place-items:center;font-weight:700;font-size:15px;letter-spacing:.04em;
+  flex:0 0 auto;
+}
+.brand h1{font-size:17px;line-height:1.25}
+.brand p{font-size:12px;color:#b9bcd6;margin-top:2px}
+.topActions{margin-left:auto;display:flex;gap:9px;flex-wrap:wrap}
+.btn{
+  border:1px solid transparent;border-radius:8px;padding:9px 16px;font-weight:600;
+  font-size:13px;cursor:pointer;transition:.15s;white-space:nowrap;background:#fff;color:var(--navy);
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.btn:active{transform:translateY(0)}
+.btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.45)}
+.btn.ghost:hover{background:rgba(255,255,255,.12)}
+.btn.gold{background:var(--gold);color:#fff;border-color:#9a7a35}
+.btn.sm{padding:5px 11px;font-size:12px}
+.btn.line{background:#fff;color:var(--navy);border-color:var(--line-2)}
+
+/* ================= TABS ================= */
+.tabs{
+  background:#fff;border-bottom:1px solid var(--line);padding:0 26px;
+  display:flex;gap:2px;overflow-x:auto;position:sticky;top:0;z-index:20;
+}
+.tab{
+  background:transparent;border:0;border-bottom:3px solid transparent;
+  padding:13px 16px;font-weight:600;font-size:13.5px;color:var(--muted);
+  cursor:pointer;white-space:nowrap;transition:.15s;
+}
+.tab:hover{color:var(--navy);background:#f7f8fc}
+.tab.active{color:var(--navy);border-bottom-color:var(--navy);background:#f7f8fc}
+
+/* ================= LAYOUT ================= */
+main{padding:22px 26px 40px;max-width:1460px;margin:0 auto}
+.panel{display:none}
+.panel.active{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.sectionHead{margin-bottom:16px}
+.sectionHead h2{font-size:19px;color:var(--navy)}
+.sectionHead p{color:var(--muted);font-size:13px;margin-top:3px}
+
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  box-shadow:var(--shadow);padding:18px 20px;margin-bottom:16px;
+}
+.card h3{
+  font-size:13px;color:var(--navy);margin-bottom:12px;
+  padding-bottom:9px;border-bottom:1px solid var(--line);
+  letter-spacing:.03em;
+}
+
+/* ================= STAT CARDS ================= */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+.card.stat{padding:16px 18px;border-top:3px solid var(--navy);margin:0}
+.card.stat.s{border-top-color:#000033}
+.card.stat.m{border-top-color:#1f4e79}
+.card.stat.l{border-top-color:#6b4f2a}
+.card.stat.all{border-top-color:var(--gold)}
+.statLabel{font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.statValue{font-size:22px;font-weight:700;color:var(--navy);margin-top:5px;font-variant-numeric:tabular-nums}
+.statNote{font-size:11.5px;color:var(--muted);margin-top:3px}
+
+/* ================= TABLES ================= */
+.tableWrap{width:100%;overflow-x:auto;border-radius:10px;border:1px solid var(--line)}
+.grid{width:100%;border-collapse:collapse;font-size:13.5px;background:#fff}
+.grid thead th{
+  background:var(--navy);color:#fff;text-align:left;font-size:12px;font-weight:600;
+  padding:11px 12px;white-space:nowrap;letter-spacing:.02em;
+}
+.grid thead th.num{text-align:right}
+.grid thead th small{display:block;font-weight:400;font-size:10.5px;color:#b9bcd6;letter-spacing:0}
+.grid tbody td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.grid tbody tr:nth-child(even){background:#fafbfd}
+.grid tbody tr:hover{background:#f4f6fc}
+.grid tbody tr:last-child td{border-bottom:0}
+.grid tfoot td{
+  padding:12px;background:var(--navy-soft);color:var(--navy);font-weight:700;
+  border-top:2px solid var(--navy);font-size:14px;
+}
+.grid .num{text-align:right;font-variant-numeric:tabular-nums}
+.grid .strong{font-weight:700;color:var(--navy)}
+.grid .code{font-weight:600;color:var(--navy);white-space:nowrap;letter-spacing:.02em}
+.grid .unit{color:var(--muted);white-space:nowrap}
+.grid .itemName{min-width:240px}
+.compare{table-layout:fixed}
+.compare td:first-child{font-weight:600;color:var(--navy)}
+.compare th:first-child,.compare td:first-child{width:46%;text-align:left}
+.compare th:not(:first-child){width:18%;text-align:center}
+.compare td{text-align:center}
+.compare .num{text-align:center}
+
+.chip{
+  display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;
+  color:var(--navy);background:color-mix(in srgb, var(--c) 12%, #fff);
+  border:1px solid color-mix(in srgb, var(--c) 32%, #fff);white-space:nowrap;
+}
+.chip.yes{color:#1c6b46;background:#eef7f2;border-color:#cbe7d9}
+.chip.no{color:#8a3b3b;background:#fbf0f0;border-color:#f0d3d3}
+
+/* inputs inside tables */
+.cellInput{
+  width:100%;min-width:84px;border:1px solid transparent;background:transparent;
+  padding:6px 8px;border-radius:6px;text-align:right;font:inherit;
+  font-variant-numeric:tabular-nums;font-weight:600;color:var(--navy);
+}
+.cellInput:hover{border-color:var(--line-2);background:#fff}
+.cellInput:focus{outline:none;border-color:var(--navy);background:#fff;box-shadow:0 0 0 3px rgba(0,0,51,.12)}
+.cellField{border-color:#e0e4ee;background:#fbfcff}
+.iconBtn{
+  border:1px solid var(--line-2);background:#fff;color:#8a3b3b;width:28px;height:28px;
+  border-radius:7px;cursor:pointer;font-size:12px;line-height:1;transition:.15s;
+}
+.iconBtn:hover{background:#fbf0f0;border-color:#e3bcbc}
+
+/* ================= PACKAGE HEADER ================= */
+.pkgHead{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.pkgHead h2{font-size:19px;color:var(--navy);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{
+  font-size:11px;font-weight:700;color:var(--navy);background:var(--navy-soft);
+  border:1px solid #d6d9e8;border-radius:999px;padding:3px 10px;
+}
+.pkgNote{color:var(--muted);font-size:12.5px;margin-top:4px}
+.pkgHead .btn{margin-left:auto}
+
+/* ================= MISC ================= */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.bullet{margin:0;padding-left:20px}
+.bullet li{margin-bottom:6px}
+.note{font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.5}
+.hintBar{
+  display:flex;gap:10px;align-items:flex-start;background:#f7f8fc;border:1px dashed var(--line-2);
+  border-radius:10px;padding:11px 14px;font-size:12.5px;color:#4a5063;margin-bottom:14px;
+}
+.hintBar b{color:var(--navy)}
+
+.footer{
+  text-align:center;color:var(--muted);font-size:11.5px;padding:16px 26px 28px;
+  border-top:1px solid var(--line);margin-top:10px;
+}
+
+/* ================= TOAST ================= */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);
+  background:var(--navy);color:#fff;padding:11px 20px;border-radius:9px;font-size:13px;
+  box-shadow:0 12px 34px rgba(0,0,51,.35);opacity:0;pointer-events:none;transition:.25s;z-index:80;
+  max-width:90vw;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.err{background:#7a1f1f}
+
+/* ================= MODAL ================= */
+.modal{position:fixed;inset:0;background:rgba(0,0,51,.45);display:none;z-index:60;padding:20px}
+.modal.open{display:flex;align-items:center;justify-content:center}
+.modalCard{background:#fff;border-radius:14px;width:min(480px,100%);padding:22px;box-shadow:0 30px 70px rgba(0,0,51,.35)}
+.modalCard h3{font-size:16px;color:var(--navy);margin-bottom:16px}
+.field{display:block;margin-bottom:14px;font-size:12.5px;font-weight:600;color:var(--muted)}
+.field select,.field input{
+  display:block;width:100%;margin-top:6px;padding:9px 11px;border:1px solid var(--line-2);
+  border-radius:8px;font-size:13.5px;font-weight:500;color:var(--ink);background:#fff;outline:none;
+}
+.field select:focus,.field input:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,0,51,.12)}
+.modalActions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
+.modalActions .btn.line{color:var(--muted)}
+.modalActions .btn.primary{background:var(--navy);color:#fff}
+
+/* ================= PRINT ================= */
+.printOnly{display:none}
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  body{background:#fff;font-size:10.5px}
+  .noPrint,.topbar,.tabs,.footer,#toast,.modal{display:none!important}
+  .printOnly{display:block!important}
+  main{padding:0;max-width:none}
+  .panel{display:none!important}
+  .panel.active{display:block!important}
+  .card{box-shadow:none;border:1px solid #c9cedb;page-break-inside:avoid;padding:10px 12px}
+  .cards{grid-template-columns:repeat(4,1fr);gap:8px}
+  .grid{font-size:9.5px}
+  .grid thead th{
+    background:var(--navy)!important;color:#fff!important;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;padding:6px 7px;font-size:9px;
+  }
+  .grid tbody td{padding:5px 7px}
+  .grid tfoot td{padding:7px;background:#eceef6!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .grid thead{display:table-header-group}
+  tr{page-break-inside:avoid}
+  .tableWrap{border:1px solid #c9cedb;overflow:visible}
+  .cellInput{border:0!important;background:transparent!important;box-shadow:none!important;padding:0;min-width:0}
+  .colAction,th.colAction{display:none!important}
+  .printHead{margin-bottom:8px;border-bottom:2px solid var(--navy);padding-bottom:6px}
+  .printHead h1{font-size:15px;color:var(--navy)}
+  .printHead p{font-size:9.5px;color:#555}
+  .hintBar{display:none!important}
+  .btn{display:none!important}
+}
+
+/* ================= RESPONSIVE ================= */
+@media(max-width:1100px){
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .grid2{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  main{padding:16px 14px 30px}
+  .topbar{padding:12px 14px}
+  .tabs{padding:0 10px}
+  .brand h1{font-size:15px}
+  .statValue{font-size:19px}
+  .grid{font-size:12.5px}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= TOP BAR ================= -->
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">TSR</div>
+    <div>
+      <h1>TSR Master BOQ &amp; Cost Sheet</h1>
+      <p>มาตรฐานส่วนกลาง · เอกสารควบคุมต้นทุนภายใน (Central Standard)</p>
+    </div>
+  </div>
+  <div class="topActions">
+    <button id="btnImport" class="btn ghost">นำเข้า Excel (.xlsx)</button>
+    <input type="file" id="fileXlsx" accept=".xlsx,.xls" hidden>
+    <button id="btnExport" class="btn">ส่งออก Excel (.xlsx)</button>
+    <button id="btnPrint" class="btn gold">พิมพ์ / บันทึก PDF</button>
+  </div>
+</header>
+
+<!-- ================= TABS ================= -->
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-tab="summary">สรุปแพ็กเกจ</button>
+  <button class="tab" data-tab="master">ฐานข้อมูลต้นทุนกลาง</button>
+  <button class="tab" data-tab="S">BOQ Package S</button>
+  <button class="tab" data-tab="M">BOQ Package M</button>
+  <button class="tab" data-tab="L">BOQ Package L</button>
+</nav>
+
+<!-- ================= PRINT HEADER ================= -->
+<div class="printOnly printHead" style="margin:0 0 10px">
+  <h1>TSR Master BOQ &amp; Cost Sheet — มาตรฐานส่วนกลาง</h1>
+  <p>พิมพ์เมื่อ <span id="printDate">-</span> · เอกสารแสดงเฉพาะต้นทุนมาตรฐาน (ไม่รวมราคาเสนอขาย)</p>
+</div>
+
+<main>
+
+  <!-- ============ TAB 1 : SUMMARY ============ -->
+  <section class="panel active" id="panel-summary">
+    <div class="sectionHead">
+      <h2>สรุปแพ็กเกจมาตรฐาน (S / M / L)</h2>
+      <p>โครงสร้างแพ็กเกจร้านสะดวกซักตามมาตรฐานส่วนกลาง ประกอบด้วยเครื่องจักร งานระบบ และของแถมมาตรฐาน</p>
+    </div>
+
+    <div class="cards">
+      <div class="card stat s">
+        <div class="statLabel">Package S</div>
+        <div class="statValue" data-pkgcost="S">0</div>
+        <div class="statNote">ต้นทุนรวมตาม BOQ (บาท)</div>
+      </div>
+      <div class="card stat m">
+        <div class="statLabel">Package M</div>
+        <div class="statValue" data-pkgcost="M">0</div>
+        <div class="statNote">ต้นทุนรวมตาม BOQ (บาท)</div>
+      </div>
+      <div class="card stat l">
+        <div class="statLabel">Package L</div>
+        <div class="statValue" data-pkgcost="L">0</div>
+        <div class="statNote">ต้นทุนรวมตาม BOQ (บาท)</div>
+      </div>
+      <div class="card stat all">
+        <div class="statLabel">รวมทั้ง 3 แพ็กเกจ</div>
+        <div class="statValue" data-grandall>0</div>
+        <div class="statNote">ผลรวมต้นทุนมาตรฐานทั้งสิ้น (บาท)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>ตารางเปรียบเทียบสเปคแพ็กเกจ</h3>
+      <div class="tableWrap">
+        <table class="grid compare">
+          <thead>
+            <tr>
+              <th>รายการ</th>
+              <th class="num">Package S<small>รุ่นเริ่มต้น</small></th>
+              <th class="num">Package M<small>รุ่นมาตรฐาน</small></th>
+              <th class="num">Package L<small>Turnkey</small></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ชุดเครื่องซัก-อบ LG Commercial Stack GIAN 13 กก.</td>
+              <td>2 คู่</td><td>2 คู่</td><td>3 คู่</td>
+            </tr>
+            <tr>
+              <td>ชุดเครื่องซัก-อบ LG Commercial Stack TITAN 17 กก.</td>
+              <td>—</td><td>1 คู่</td><td>2 คู่</td>
+            </tr>
+            <tr>
+              <td>รวมจุดบริการซัก-อบ</td>
+              <td><b>2 คู่</b></td><td><b>3 คู่</b></td><td><b>5 คู่</b></td>
+            </tr>
+            <tr>
+              <td>ตู้กดน้ำด่างอัลคาไลน์ SAFE (แบบหยอดเหรียญ)</td>
+              <td>1 ตู้</td><td>1 ตู้</td><td>1 ตู้</td>
+            </tr>
+            <tr>
+              <td>งานระบบน้ำ / ไฟฟ้า / ท่อระบายอากาศ</td>
+              <td><span class="chip yes">รวมในแพ็กเกจ</span></td>
+              <td><span class="chip yes">รวมในแพ็กเกจ</span></td>
+              <td><span class="chip yes">รวมในแพ็กเกจ</span></td>
+            </tr>
+            <tr>
+              <td>งานปรับปรุงพื้น</td>
+              <td><span class="chip no">ไม่รวม</span></td>
+              <td><span class="chip yes">รวมในแพ็กเกจ</span></td>
+              <td><span class="chip yes">รวมในแพ็กเกจ</span></td>
+            </tr>
+            <tr>
+              <td>งานผนังเบาและงานตกแต่ง</td>
+              <td><span class="chip no">ไม่รวม</span></td>
+              <td><span class="chip no">ไม่รวม</span></td>
+              <td><span class="chip yes">รวมในแพ็กเกจ</span></td>
+            </tr>
+            <tr>
+              <td>อุปกรณ์เสริมและงานตกแต่งครบวงจร</td>
+              <td><span class="chip no">ไม่รวม</span></td>
+              <td><span class="chip no">ไม่รวม</span></td>
+              <td><span class="chip yes">รวมในแพ็กเกจ</span></td>
+            </tr>
+            <tr>
+              <td>ของแถมมาตรฐาน (4 รายการ)</td>
+              <td><span class="chip yes">รวม</span></td>
+              <td><span class="chip yes">รวม</span></td>
+              <td><span class="chip yes">รวม</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>เงื่อนไขการรับประกัน</h3>
+        <div class="tableWrap">
+          <table class="grid">
+            <thead>
+              <tr><th>รายการ</th><th class="num" style="width:170px">ระยะเวลารับประกัน</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>ศูนย์เครื่องซัก-อบ (ศูนย์บริการ)</td><td class="num">2 ปี</td></tr>
+              <tr><td>มอเตอร์</td><td class="num">5 ปี</td></tr>
+              <tr><td>กล่องหยอดเหรียญ</td><td class="num">1 ปี</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">เงื่อนไขการรับประกันเป็นไปตามมาตรฐานกลางของแพ็กเกจ และมีผลกับทุกแพ็กเกจ (S / M / L) โดยนับจากวันที่ส่งมอบงาน</p>
+      </div>
+
+      <div class="card">
+        <h3>ของแถมมาตรฐาน</h3>
+        <ul class="bullet">
+          <li>เครื่องแลกเหรียญอัตโนมัติ 1 เครื่อง</li>
+          <li>เครื่องจำหน่ายน้ำยา (น้ำยาซักผ้า / น้ำยาปรับผนัง) 1 เครื่อง</li>
+          <li>กล้องวงจรปิด (CCTV) 1 ตัว</li>
+          <li>ป้ายร้านและป้ายวิธีใช้งาน 1 ชุด</li>
+        </ul>
+        <p class="note">ของแถมมาตรฐานตามรายการข้างต้นมีให้ครบทั้ง 3 แพ็กเกจ และถูกบันทึกเป็นรายการต้นทุนใน BOQ ของแต่ละแพ็กเกจแล้ว</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 2 : MASTER COST ============ -->
+  <section class="panel" id="panel-master">
+    <div class="sectionHead">
+      <h2>ฐานข้อมูลต้นทุนกลาง (Master Cost Database)</h2>
+      <p>ต้นทุนวัสดุและค่าแรงมาตรฐานรายรายการ ใช้เป็นแหล่งอ้างอิงเดียวของทุกแพ็กเกจ</p>
+    </div>
+
+    <div class="hintBar noPrint">
+      <span>ⓘ</span>
+      <div>แก้ไขตัวเลข <b>ต้นทุนวัสดุ</b> หรือ <b>ต้นทุนค่าแรง</b> ได้โดยตรงในตาราง ระบบจะคำนวณ <b>รวมต้นทุน/หน่วย</b> และปรับปรุงยอดในแท็บ BOQ ทุกแพ็กเกจให้อัตโนมัติแบบทันที</div>
+    </div>
+
+    <div class="card">
+      <h3>รายการต้นทุนมาตรฐาน</h3>
+      <div class="tableWrap">
+        <table class="grid">
+          <thead>
+            <tr>
+              <th style="width:104px">รหัสอ้างอิง</th>
+              <th style="width:132px">หมวดหมู่</th>
+              <th>รายการวัสดุ / อุปกรณ์</th>
+              <th style="width:78px">หน่วย</th>
+              <th class="num" style="width:140px">ต้นทุนวัสดุ</th>
+              <th class="num" style="width:140px">ต้นทุนค่าแรง</th>
+              <th class="num" style="width:150px">รวมต้นทุน / หน่วย</th>
+            </tr>
+          </thead>
+          <tbody id="masterBody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6">จำนวนรายการต้นทุนมาตรฐานทั้งสิ้น</td>
+              <td class="num" id="masterCount">0 รายการ</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p class="note">หน่วยนับ "คู่" หมายถึงชุดเครื่องซักผ้าและเครื่องอบผ้าอย่างละ 1 เครื่อง · งานระบบคิดเป็นงานเหมารวมต่อ 1 ชุดพื้นที่ให้บริการ</p>
+    </div>
+  </section>
+
+  <!-- ============ TAB 3 : BOQ S ============ -->
+  <section class="panel" id="panel-S">
+    <div class="pkgHead">
+      <div>
+        <h2>BOQ Package S <span class="badge">รุ่นเริ่มต้น</span></h2>
+        <p class="pkgNote">LG Commercial Stack GIAN 13 กก. 2 คู่ · ตู้กดน้ำด่างอัลคาไลน์ 1 ตู้ · งานระบบ · ไม่รวมงานพื้นและผนังเบา</p>
+      </div>
+      <button class="btn line sm" data-add="S">+ เพิ่มรายการ</button>
+    </div>
+    <div class="cards" id="cardsS"></div>
+    <div class="card">
+      <h3>รายละเอียด BOQ</h3>
+      <div class="tableWrap">
+        <table class="grid">
+          <thead>
+            <tr>
+              <th style="width:104px">รหัสอ้างอิง</th>
+              <th style="width:132px">หมวดหมู่งาน</th>
+              <th>รายการมาตรฐาน</th>
+              <th class="num" style="width:100px">ปริมาณ</th>
+              <th style="width:70px">หน่วย</th>
+              <th class="num" style="width:130px">ต้นทุนต่อหน่วย</th>
+              <th class="num" style="width:140px">ต้นทุนรวม</th>
+              <th class="colAction" style="width:52px"></th>
+            </tr>
+          </thead>
+          <tbody id="boqS"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6">รวมต้นทุนทั้งสิ้น (Grand Total Cost) — Package S</td>
+              <td class="num" id="grandS">0</td>
+              <td class="colAction"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 4 : BOQ M ============ -->
+  <section class="panel" id="panel-M">
+    <div class="pkgHead">
+      <div>
+        <h2>BOQ Package M <span class="badge">รุ่นมาตรฐาน</span></h2>
+        <p class="pkgNote">LG GIAN 13 กก. 2 คู่ · LG TITAN 17 กก. 1 คู่ · ตู้กดน้ำด่างอัลคาไลน์ 1 ตู้ · งานระบบ · งานปรับปรุงพื้น (ไม่รวมผนังเบา)</p>
+      </div>
+      <button class="btn line sm" data-add="M">+ เพิ่มรายการ</button>
+    </div>
+    <div class="cards" id="cardsM"></div>
+    <div class="card">
+      <h3>รายละเอียด BOQ</h3>
+      <div class="tableWrap">
+        <table class="grid">
+          <thead>
+            <tr>
+              <th style="width:104px">รหัสอ้างอิง</th>
+              <th style="width:132px">หมวดหมู่งาน</th>
+              <th>รายการมาตรฐาน</th>
+              <th class="num" style="width:100px">ปริมาณ</th>
+              <th style="width:70px">หน่วย</th>
+              <th class="num" style="width:130px">ต้นทุนต่อหน่วย</th>
+              <th class="num" style="width:140px">ต้นทุนรวม</th>
+              <th class="colAction" style="width:52px"></th>
+            </tr>
+          </thead>
+          <tbody id="boqM"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6">รวมต้นทุนทั้งสิ้น (Grand Total Cost) — Package M</td>
+              <td class="num" id="grandM">0</td>
+              <td class="colAction"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 5 : BOQ L ============ -->
+  <section class="panel" id="panel-L">
+    <div class="pkgHead">
+      <div>
+        <h2>BOQ Package L <span class="badge">Turnkey</span></h2>
+        <p class="pkgNote">LG GIAN 13 กก. 3 คู่ · LG TITAN 17 กก. 2 คู่ · ตู้กดน้ำด่างอัลคาไลน์ 1 ตู้ · งานระบบ · งานปรับปรุงพื้น · ผนังเบาและอุปกรณ์เสริมครบวงจร</p>
+      </div>
+      <button class="btn line sm" data-add="L">+ เพิ่มรายการ</button>
+    </div>
+    <div class="cards" id="cardsL"></div>
+    <div class="card">
+      <h3>รายละเอียด BOQ</h3>
+      <div class="tableWrap">
+        <table class="grid">
+          <thead>
+            <tr>
+              <th style="width:104px">รหัสอ้างอิง</th>
+              <th style="width:132px">หมวดหมู่งาน</th>
+              <th>รายการมาตรฐาน</th>
+              <th class="num" style="width:100px">ปริมาณ</th>
+              <th style="width:70px">หน่วย</th>
+              <th class="num" style="width:130px">ต้นทุนต่อหน่วย</th>
+              <th class="num" style="width:140px">ต้นทุนรวม</th>
+              <th class="colAction" style="width:52px"></th>
+            </tr>
+          </thead>
+          <tbody id="boqL"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="6">รวมต้นทุนทั้งสิ้น (Grand Total Cost) — Package L</td>
+              <td class="num" id="grandL">0</td>
+              <td class="colAction"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="footer">
+  เอกสารมาตรฐานส่วนกลางสำหรับงานประมาณการต้นทุนภายใน · แสดงเฉพาะต้นทุนมาตรฐาน ไม่รวมราคาเสนอขาย
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ================= ADD ITEM MODAL ================= -->
+<div class="modal" id="addModal">
+  <div class="modalCard">
+    <h3 id="addTitle">เพิ่มรายการ</h3>
+    <label class="field">รายการมาตรฐาน
+      <select id="addCode"></select>
+    </label>
+    <label class="field">ปริมาณ
+      <input id="addQty" type="number" min="0" step="1" value="1">
+    </label>
+    <div class="modalActions">
+      <button class="btn line" id="addCancel">ยกเลิก</button>
+      <button class="btn primary" id="addConfirm">เพิ่มรายการ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================
+   TSR Master BOQ & Cost Sheet — มาตรฐานส่วนกลาง
+   ========================================================== */
+
+/* ---------- หมวดหมู่ ---------- */
+const CATS = {
+  MACHINE:   { name: 'เครื่องจักร',   color: '#000033' },
+  SYSTEM:    { name: 'งานระบบ',      color: '#1f4e79' },
+  STRUCTURE: { name: 'โครงสร้าง',    color: '#6b4f2a' },
+  ACCESSORY: { name: 'อุปกรณ์เสริม', color: '#3f4a56' }
+};
+const CAT_KEYS = Object.keys(CATS);
+
+/* ---------- ฐานข้อมูลต้นทุนกลาง ---------- */
+let MASTER = [
+  { code: 'MC-001', cat: 'MACHINE',   name: 'LG Commercial Stack GIAN 13 กก. (ชุดซัก-อบ)', unit: 'คู่',  mat: 285000, lab: 9000 },
+  { code: 'MC-002', cat: 'MACHINE',   name: 'LG Commercial Stack TITAN 17 กก. (ชุดซัก-อบ)', unit: 'คู่', mat: 395000, lab: 11000 },
+  { code: 'MC-003', cat: 'MACHINE',   name: 'SAFE ตู้กดน้ำด่างอัลคาไลน์ แบบหยอดเหรียญ',    unit: 'ตู้',  mat: 58000,  lab: 3500 },
+
+  { code: 'SY-001', cat: 'SYSTEM',    name: 'งานระบบไฟฟ้าและตู้ควบคุม',                    unit: 'งาน', mat: 65000,  lab: 35000 },
+  { code: 'SY-002', cat: 'SYSTEM',    name: 'งานระบบน้ำประปาและวาล์วควบคุม',               unit: 'งาน', mat: 28000,  lab: 18000 },
+  { code: 'SY-003', cat: 'SYSTEM',    name: 'งานท่อระบายน้ำและท่อระบายอากาศ',              unit: 'งาน', mat: 32000,  lab: 22000 },
+
+  { code: 'ST-001', cat: 'STRUCTURE', name: 'งานปรับปรุงพื้นและปูผิวสำเร็จ',                unit: 'ตร.ม.', mat: 850, lab: 420 },
+  { code: 'ST-002', cat: 'STRUCTURE', name: 'งานผนังเบา (โครงเคร่าและแผ่นยิปซัม)',          unit: 'ตร.ม.', mat: 620, lab: 380 },
+  { code: 'ST-003', cat: 'STRUCTURE', name: 'งานฝ้าเพดานพร้อมชุดไฟแสงสว่าง',               unit: 'ตร.ม.', mat: 480, lab: 300 },
+  { code: 'ST-004', cat: 'STRUCTURE', name: 'งานทาสีและเก็บงานผิวสำเร็จ',                  unit: 'ตร.ม.', mat: 120, lab: 130 },
+
+  { code: 'AC-001', cat: 'ACCESSORY', name: 'เครื่องแลกเหรียญอัตโนมัติ',                    unit: 'เครื่อง', mat: 32000, lab: 2000 },
+  { code: 'AC-002', cat: 'ACCESSORY', name: 'เครื่องจำหน่ายน้ำยา (ซัก / ปรับผนัง)',          unit: 'เครื่อง', mat: 28000, lab: 2000 },
+  { code: 'AC-003', cat: 'ACCESSORY', name: 'กล้องวงจรปิดพร้อมติดตั้ง (CCTV)',               unit: 'ชุด', mat: 12500, lab: 3500 },
+  { code: 'AC-004', cat: 'ACCESSORY', name: 'ป้ายร้านและป้ายวิธีใช้งาน',                    unit: 'ชุด', mat: 9500,  lab: 2500 },
+  { code: 'AC-005', cat: 'ACCESSORY', name: 'ชุดโต๊ะพับพร้อมเก้าอี้',                       unit: 'ชุด', mat: 6800,  lab: 500 },
+  { code: 'AC-006', cat: 'ACCESSORY', name: 'ชั้นวางของและตะกร้ารับส่งผ้า',                 unit: 'ชุด', mat: 11000, lab: 1000 }
+];
+
+let masterByCode = {};
+function indexMaster() {
+  masterByCode = {};
+  for (const m of MASTER) masterByCode[m.code] = m;
+}
+
+/* ---------- BOQ แต่ละแพ็กเกจ ---------- */
+let rowSeq = 0;
+const mkRow = (code, qty) => ({ id: 'r' + (++rowSeq), code, qty });
+
+const PKG = {
+  S: {
+    name: 'Package S',
+    tag: 'รุ่นเริ่มต้น',
+    items: [
+      mkRow('MC-001', 2), mkRow('MC-003', 1),
+      mkRow('SY-001', 1), mkRow('SY-002', 1), mkRow('SY-003', 1),
+      mkRow('AC-001', 1), mkRow('AC-002', 1), mkRow('AC-003', 1), mkRow('AC-004', 1)
+    ]
+  },
+  M: {
+    name: 'Package M',
+    tag: 'รุ่นมาตรฐาน',
+    items: [
+      mkRow('MC-001', 2), mkRow('MC-002', 1), mkRow('MC-003', 1),
+      mkRow('SY-001', 1), mkRow('SY-002', 1), mkRow('SY-003', 1),
+      mkRow('ST-001', 35),
+      mkRow('AC-001', 1), mkRow('AC-002', 1), mkRow('AC-003', 1), mkRow('AC-004', 1)
+    ]
+  },
+  L: {
+    name: 'Package L',
+    tag: 'Turnkey',
+    items: [
+      mkRow('MC-001', 3), mkRow('MC-002', 2), mkRow('MC-003', 1),
+      mkRow('SY-001', 1), mkRow('SY-002', 1), mkRow('SY-003', 1),
+      mkRow('ST-001', 45), mkRow('ST-002', 28), mkRow('ST-003', 45), mkRow('ST-004', 45),
+      mkRow('AC-001', 1), mkRow('AC-002', 1), mkRow('AC-003', 1), mkRow('AC-004', 1),
+      mkRow('AC-005', 1), mkRow('AC-006', 1)
+    ]
+  }
+};
+const PKG_KEYS = ['S', 'M', 'L'];
+
+/* ---------- ยูทิลิตี้ ---------- */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const nf = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const fmt = n => nf.format(Math.round((Number(n) || 0) * 100) / 100);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function parseNum(v) {
+  const n = Number(String(v == null ? '' : v).replace(/,/g, '').trim());
+  return isFinite(n) && n >= 0 ? n : 0;
+}
+
+const unitCostOf = code => { const m = masterByCode[code]; return m ? m.mat + m.lab : 0; };
+
+function pkgTotals(k) {
+  const out = { MACHINE: 0, SYSTEM: 0, STRUCTURE: 0, ACCESSORY: 0, grand: 0 };
+  for (const r of PKG[k].items) {
+    const m = masterByCode[r.code];
+    if (!m) continue;
+    const t = (m.mat + m.lab) * r.qty;
+    out[m.cat] = (out[m.cat] || 0) + t;
+    out.grand += t;
+  }
+  return out;
+}
+
+let toastTimer = 0;
+function toast(msg, type) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = 'toast'; }, 2800);
+}
+
+/* ---------- RENDER : MASTER ---------- */
+function renderMaster() {
+  const body = $('#masterBody');
+  body.innerHTML = MASTER.map(m => `
+    <tr>
+      <td class="code">${esc(m.code)}</td>
+      <td><span class="chip" style="--c:${CATS[m.cat].color}">${CATS[m.cat].name}</span></td>
+      <td class="itemName">${esc(m.name)}</td>
+      <td class="unit">${esc(m.unit)}</td>
+      <td class="num"><input class="cellInput cellField" type="number" min="0" step="100" inputmode="decimal"
+            value="${m.mat}" data-code="${esc(m.code)}" data-field="mat"></td>
+      <td class="num"><input class="cellInput cellField" type="number" min="0" step="100" inputmode="decimal"
+            value="${m.lab}" data-code="${esc(m.code)}" data-field="lab"></td>
+      <td class="num strong" data-mtotal="${esc(m.code)}">${fmt(m.mat + m.lab)}</td>
+    </tr>`).join('');
+  $('#masterCount').textContent = MASTER.length + ' รายการ';
+}
+
+/* ---------- RENDER : BOQ PACKAGE ---------- */
+function renderPkg(k) {
+  const tbody = $('#boq' + k);
+  const p = PKG[k];
+  if (!p.items.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#6a7080;padding:22px">ยังไม่มีรายการในแพ็กเกจนี้ — กด "+ เพิ่มรายการ" เพื่อเริ่มต้น</td></tr>';
+  } else {
+    tbody.innerHTML = p.items.map(r => {
+      const m = masterByCode[r.code];
+      if (!m) return '';
+      return `
+      <tr data-row="${r.id}">
+        <td class="code">${esc(m.code)}</td>
+        <td><span class="chip" style="--c:${CATS[m.cat].color}">${CATS[m.cat].name}</span></td>
+        <td class="itemName">${esc(m.name)}</td>
+        <td class="num"><input class="cellInput cellField" type="number" min="0" step="1" inputmode="decimal"
+              value="${r.qty}" data-qty="${r.id}" data-pkg="${k}"></td>
+        <td class="unit">${esc(m.unit)}</td>
+        <td class="num" data-unit="${r.id}">${fmt(unitCostOf(m.code))}</td>
+        <td class="num strong" data-total="${r.id}">${fmt(unitCostOf(m.code) * r.qty)}</td>
+        <td class="num colAction"><button class="iconBtn" data-del="${r.id}" data-pkg="${k}" title="ลบรายการ">✕</button></td>
+      </tr>`;
+    }).join('');
+  }
+  renderCards(k);
+  recalcPkg(k);
+}
+
+/* ---------- การ์ดสรุปตามหมวดหมู่ ---------- */
+function renderCards(k) {
+  const box = $('#cards' + k);
+  box.innerHTML = CAT_KEYS.map(c => `
+    <div class="card stat" style="border-top-color:${CATS[c].color}">
+      <div class="statLabel">${CATS[c].name}</div>
+      <div class="statValue" data-cat="${k}-${c}">0</div>
+      <div class="statNote">ต้นทุนรวมหมวด${CATS[c].name} (บาท)</div>
+    </div>`).join('');
+}
+
+/* ---------- คำนวณและอัปเดตตัวเลข ---------- */
+function recalcPkg(k) {
+  const t = pkgTotals(k);
+  for (const r of PKG[k].items) {
+    const m = masterByCode[r.code];
+    if (!m) continue;
+    const uc = m.mat + m.lab;
+    const uEl = document.querySelector('[data-unit="' + r.id + '"]');
+    if (uEl) uEl.textContent = fmt(uc);
+    const tEl = document.querySelector('[data-total="' + r.id + '"]');
+    if (tEl) tEl.textContent = fmt(uc * r.qty);
+  }
+  const g = document.getElementById('grand' + k);
+  if (g) g.textContent = fmt(t.grand);
+  for (const c of CAT_KEYS) {
+    const el = document.querySelector('[data-cat="' + k + '-' + c + '"]');
+    if (el) el.textContent = fmt(t[c] || 0);
+  }
+  return t.grand;
+}
+
+function updateSummaryCosts() {
+  let all = 0;
+  for (const k of PKG_KEYS) {
+    const v = pkgTotals(k).grand;
+    all += v;
+    const el = document.querySelector('[data-pkgcost="' + k + '"]');
+    if (el) el.textContent = fmt(v);
+  }
+  const gEl = document.querySelector('[data-grandall]');
+  if (gEl) gEl.textContent = fmt(all);
+}
+
+/* ---------- TABS ---------- */
+const TAB_NAMES = {
+  summary: 'สรุปแพ็กเกจ',
+  master: 'ฐานข้อมูลต้นทุนกลาง',
+  S: 'BOQ Package S',
+  M: 'BOQ Package M',
+  L: 'BOQ Package L'
+};
+function activateTab(key) {
+  $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === key));
+  $$('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + key));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ---------- MODAL : เพิ่มรายการ ---------- */
+let addTarget = null;
+function openAdd(k) {
+  addTarget = k;
+  $('#addTitle').textContent = 'เพิ่มรายการใน BOQ ' + PKG[k].name;
+  const sel = $('#addCode');
+  sel.innerHTML = CAT_KEYS.map(c =>
+    '<optgroup label="' + CATS[c].name + '">' +
+    MASTER.filter(m => m.cat === c)
+      .map(m => '<option value="' + esc(m.code) + '">' + esc(m.code) + ' — ' + esc(m.name) + ' (' + esc(m.unit) + ')</option>')
+      .join('') +
+    '</optgroup>').join('');
+  $('#addQty').value = 1;
+  $('#addModal').classList.add('open');
+  setTimeout(() => $('#addQty').select(), 60);
+}
+function closeAdd() { $('#addModal').classList.remove('open'); addTarget = null; }
+
+/* ---------- EXCEL EXPORT ---------- */
+function exportExcel() {
+  if (typeof XLSX === 'undefined') {
+    toast('ไม่พบไลบรารี SheetJS — ต้องเชื่อมต่ออินเทอร์เน็ตก่อนส่งออก', 'err');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+
+  const mHead = ['รหัสอ้างอิง', 'หมวดหมู่', 'รายการวัสดุ / อุปกรณ์', 'หน่วย', 'ต้นทุนวัสดุ', 'ต้นทุนค่าแรง', 'รวมต้นทุน / หน่วย'];
+  const mRows = MASTER.map(m => [m.code, CATS[m.cat].name, m.name, m.unit, m.mat, m.lab, m.mat + m.lab]);
+  const wsM = XLSX.utils.aoa_to_sheet([mHead].concat(mRows));
+  wsM['!cols'] = [{ wch: 12 }, { wch: 16 }, { wch: 46 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 16 }];
+  XLSX.utils.book_append_sheet(wb, wsM, 'ฐานข้อมูลต้นทุนกลาง');
+
+  for (const k of PKG_KEYS) {
+    const head = ['รหัสอ้างอิง', 'หมวดหมู่งาน', 'รายการมาตรฐาน', 'ปริมาณ', 'หน่วย', 'ต้นทุนต่อหน่วย', 'ต้นทุนรวม'];
+    const rows = PKG[k].items.map(r => {
+      const m = masterByCode[r.code];
+      if (!m) return null;
+      return [m.code, CATS[m.cat].name, m.name, r.qty, m.unit, m.mat + m.lab, (m.mat + m.lab) * r.qty];
+    }).filter(Boolean);
+    const t = pkgTotals(k);
+    rows.push([]);
+    for (const c of CAT_KEYS) rows.push(['', CATS[c].name, 'รวมหมวด' + CATS[c].name, '', '', '', t[c] || 0]);
+    rows.push(['', '', 'รวมต้นทุนทั้งสิ้น (Grand Total Cost)', '', '', '', t.grand]);
+    const ws = XLSX.utils.aoa_to_sheet([head].concat(rows));
+    ws['!cols'] = [{ wch: 12 }, { wch: 16 }, { wch: 46 }, { wch: 10 }, { wch: 10 }, { wch: 16 }, { wch: 16 }];
+    XLSX.utils.book_append_sheet(wb, ws, 'BOQ Package ' + k);
+  }
+
+  const d = new Date();
+  const stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+  XLSX.writeFile(wb, 'TSR-Master-BOQ-' + stamp + '.xlsx');
+  toast('ส่งออกไฟล์ Excel เรียบร้อยแล้ว');
+}
+
+/* ---------- EXCEL IMPORT ---------- */
+function findHeader(rows) {
+  for (let i = 0; i < Math.min(rows.length, 12); i++) {
+    const r = (rows[i] || []).map(x => String(x == null ? '' : x).trim());
+    if (r.some(x => x.indexOf('รหัสอ้างอิง') === 0)) {
+      return { index: i, headers: r };
+    }
+  }
+  return null;
+}
+function colOf(headers, key) {
+  for (let i = 0; i < headers.length; i++) {
+    if (headers[i].indexOf(key) === 0) return i;
+  }
+  return -1;
+}
+
+function importWorkbook(wb) {
+  let updatedCost = 0, updatedQty = 0, addedRows = 0;
+
+  for (const name of wb.SheetNames) {
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, blankrows: false, defval: '' });
+    if (!rows.length) continue;
+    const h = findHeader(rows);
+    if (!h) continue;
+
+    const cCode = colOf(h.headers, 'รหัสอ้างอิง');
+    const cMat  = colOf(h.headers, 'ต้นทุนวัสดุ');
+    const cLab  = colOf(h.headers, 'ต้นทุนค่าแรง');
+    const cQty  = colOf(h.headers, 'ปริมาณ');
+    if (cCode < 0) continue;
+
+    /* ---- Master sheet ---- */
+    const isMaster = cMat >= 0 && cLab >= 0;
+    const pkgKey = (name.replace(/\s+/g, ' ').match(/^BOQ\s*Package\s*([SML])$/i) || [])[1];
+    const key = pkgKey ? pkgKey.toUpperCase() : null;
+
+    for (let i = h.index + 1; i < rows.length; i++) {
+      const row = rows[i] || [];
+      const code = String(row[cCode] == null ? '' : row[cCode]).trim();
+      if (!code || !masterByCode[code]) continue;
+
+      if (isMaster && !key) {
+        const mat = parseNum(row[cMat]);
+        const lab = parseNum(row[cLab]);
+        masterByCode[code].mat = mat;
+        masterByCode[code].lab = lab;
+        updatedCost++;
+      } else if (key && cQty >= 0) {
+        const qty = parseNum(row[cQty]);
+        const target = PKG[key].items.find(r => r.code === code);
+        if (target) { target.qty = qty; updatedQty++; }
+        else { PKG[key].items.push(mkRow(code, qty)); addedRows++; }
+      }
+    }
+  }
+
+  renderMaster();
+  PKG_KEYS.forEach(renderPkg);
+  updateSummaryCosts();
+  return { updatedCost, updatedQty, addedRows };
+}
+
+/* ---------- PRINT ---------- */
+function doPrint() {
+  const d = new Date();
+  $('#printDate').textContent = d.toLocaleString('th-TH', {
+    day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+  updateSummaryCosts();
+  window.print();
+}
+
+/* ---------- EVENTS ---------- */
+document.addEventListener('input', e => {
+  const t = e.target;
+
+  /* master cost editing (real-time linkage) */
+  if (t.dataset && t.dataset.code && t.dataset.field) {
+    const m = masterByCode[t.dataset.code];
+    if (!m) return;
+    m[t.dataset.field] = parseNum(t.value);
+    const cell = document.querySelector('[data-mtotal="' + m.code + '"]');
+    if (cell) cell.textContent = fmt(m.mat + m.lab);
+    PKG_KEYS.forEach(recalcPkg);
+    updateSummaryCosts();
+    return;
+  }
+
+  /* BOQ quantity editing */
+  if (t.dataset && t.dataset.qty) {
+    const k = t.dataset.pkg;
+    const row = PKG[k].items.find(r => r.id === t.dataset.qty);
+    if (!row) return;
+    row.qty = parseNum(t.value);
+    recalcPkg(k);
+    updateSummaryCosts();
+  }
+});
+
+document.addEventListener('click', e => {
+  const del = e.target.closest('[data-del]');
+  if (del) {
+    const k = del.dataset.pkg;
+    const i = PKG[k].items.findIndex(r => r.id === del.dataset.del);
+    if (i >= 0) {
+      PKG[k].items.splice(i, 1);
+      renderPkg(k);
+      updateSummaryCosts();
+      toast('ลบรายการออกจาก BOQ ' + PKG[k].name + ' แล้ว');
+    }
+    return;
+  }
+  const add = e.target.closest('[data-add]');
+  if (add) { openAdd(add.dataset.add); return; }
+  if (e.target.id === 'addModal') closeAdd();
+});
+
+$('#addCancel').addEventListener('click', closeAdd);
+$('#addConfirm').addEventListener('click', () => {
+  if (!addTarget) return;
+  const code = $('#addCode').value;
+  const qty = parseNum($('#addQty').value);
+  if (!code) { toast('กรุณาเลือกรายการมาตรฐาน', 'err'); return; }
+  PKG[addTarget].items.push(mkRow(code, qty));
+  renderPkg(addTarget);
+  updateSummaryCosts();
+  toast('เพิ่มรายการลง BOQ ' + PKG[addTarget].name + ' แล้ว');
+  closeAdd();
+});
+
+$('#tabs').addEventListener('click', e => {
+  const tab = e.target.closest('.tab');
+  if (tab) activateTab(tab.dataset.tab);
+});
+
+$('#btnExport').addEventListener('click', exportExcel);
+$('#btnPrint').addEventListener('click', doPrint);
+$('#btnImport').addEventListener('click', () => $('#fileXlsx').click());
+
+$('#fileXlsx').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  if (typeof XLSX === 'undefined') {
+    toast('ไม่พบไลบรารี SheetJS — ต้องเชื่อมต่ออินเทอร์เน็ตก่อนนำเข้า', 'err');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array', codepage: 65001, raw: false });
+      const res = importWorkbook(wb);
+      const parts = [];
+      if (res.updatedCost) parts.push('ปรับต้นทุน ' + res.updatedCost + ' รายการ');
+      if (res.updatedQty) parts.push('ปรับปริมาณ ' + res.updatedQty + ' รายการ');
+      if (res.addedRows) parts.push('เพิ่มรายการใหม่ ' + res.addedRows + ' รายการ');
+      toast(parts.length ? 'นำเข้าข้อมูลสำเร็จ: ' + parts.join(' · ') : 'อ่านไฟล์ได้ แต่ไม่พบข้อมูลที่ตรงกับรหัสอ้างอิง');
+    } catch (err) {
+      console.error(err);
+      toast('ไม่สามารถอ่านไฟล์ Excel ได้', 'err');
+    }
+  };
+  reader.onerror = () => toast('อ่านไฟล์ไม่สำเร็จ', 'err');
+  reader.readAsArrayBuffer(file);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeAdd();
+  }
+});
+
+/* ---------- BOOT ---------- */
+(function boot() {
+  indexMaster();
+  renderMaster();
+  PKG_KEYS.forEach(renderPkg);
+  updateSummaryCosts();
+})();
+</script>
+</body>
+</html>

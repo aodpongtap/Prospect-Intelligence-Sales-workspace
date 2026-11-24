@@ -113,7 +113,7 @@
   </script>
   <script src="assets/auth-sheets.js?v=11"></script>
   <script src="assets/report-log.js?v=13"></script>
-  <script src="assets/sales-report.js?v=58"></script>
+  <script src="assets/sales-report.js?v=59"></script>
   <script src="assets/daily-report.js?v=16"></script>
   <script src="assets/project-tracking.js?v=10"></script>
   <script src="assets/customer-intelligence.js?v=5"></script>
@@ -693,6 +693,7 @@
             id: x.no, name: x.job || x.customer, customer: x.customer,
             drRef: x.drRef || '',
             qt: x.so || '',
+            docNo: x.docNo || '',
             ownerName: s.name, ownerEmail: '', team: s.team, value: Number(x.amount || 0),
             stage: STAGE_OF_STATUS[x.status] || 'Prospect',
             probability: Number(x.prob || 0),
@@ -897,7 +898,7 @@
       </tr></thead><tbody>${list.map(d=>{
         const rk=riskScore(d);
         return `<tr class="clickable" data-deal="${d.id}">
-          <td><div class="dm-no">${d.id}</div>${d.qt?`<div class="dm-qt" title="เลข QT / อ้างอิง"><i class="fa-solid fa-hashtag"></i> ${d.qt}</div>`:''}${d.drRef?`<div class="dm-ref" title="อ้างอิงบันทึกการพบลูกค้า"><i class="fa-solid fa-link"></i> ${d.drRef}</div>`:'<div class="dm-ref none">—</div>'}</td>
+          <td><div class="dm-no">${d.id}</div>${d.qt?`<div class="dm-qt" title="เลข QT / อ้างอิง"><i class="fa-solid fa-hashtag"></i> ${d.qt}</div>`:''}${d.docNo?`<div class="dm-qt" title="เลขอินวอย / สัญญา / SO"><i class="fa-solid fa-file-invoice"></i> ${d.docNo}</div>`:''}${d.drRef?`<div class="dm-ref" title="อ้างอิงบันทึกการพบลูกค้า"><i class="fa-solid fa-link"></i> ${d.drRef}</div>`:'<div class="dm-ref none">—</div>'}</td>
           <td><div class="deal-name">${d.name}</div><div class="muted">${d.customer}</div></td>
           <td><div>${d.owner}</div><div class="muted">${d.team}</div></td>
           <td class="dm-num"><b>${money(d.value)}</b></td>
