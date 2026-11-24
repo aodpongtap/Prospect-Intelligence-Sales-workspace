@@ -14,6 +14,7 @@
 var BACKUP_FOLDER_NAME = 'PI Backups';
 var BACKUP_KEEP_DAYS = 30;
 var BACKUP_KEEP_TABS = 3;
+var WEBAPP_URL_FALLBACK = 'https://script.google.com/macros/s/AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-/exec';
 
 /* ---------------------------- Backup ---------------------------- */
 
@@ -164,6 +165,49 @@ function maybeLazyBackup_() {
   }
 }
 
+/** คีย์ลับสำหรับเรียก backup จากตัวตั้งเวลาภายนอก (cron) */
+function backupKey_() {
+  var props = PropertiesService.getScriptProperties();
+  var k = props.getProperty('BACKUP_KEY');
+  if (!k) {
+    k = (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '').slice(0, 32);
+    props.setProperty('BACKUP_KEY', k);
+  }
+  return k;
+}
+
+/** URL สำหรับให้บริการตั้งเวลา (GitHub Actions / cron-job.org) เรียกวันละครั้ง */
+function backupCronUrl_() {
+  var base = '';
+  try { base = getWebAppUrl(); } catch (e) { base = ''; }
+  if (!base) base = WEBAPP_URL_FALLBACK;
+  return base + '?api=1&action=backupCron&key=' + backupKey_();
+}
+
+/** เรียกจากภายนอก: สำรองข้อมูลถ้ายังไม่ได้ทำใน 20 ชั่วโมงที่ผ่านมา (mode=force บังคับทำเลย) */
+function backupCronApi_(key, mode) {
+  if (String(key || '') !== backupKey_()) return { ok: false, error: 'key ไม่ถูกต้อง' };
+  var props = PropertiesService.getScriptProperties();
+  var last = props.getProperty('LAST_BACKUP_AT');
+  if (mode !== 'force' && last && (Date.now() - new Date(last).getTime()) < 20 * 3600 * 1000) {
+    return { ok: true, skipped: true, lastAt: last, lastName: props.getProperty('LAST_BACKUP_NAME') || '' };
+  }
+  var r = dailyBackup_();
+  r.skipped = false;
+  return r;
+}
+
+/** ตรวจว่าบัญชีที่เว็บแอปรันอยู่คือใคร และมีสิทธิ์ Drive/Trigger หรือไม่ (ใช้ diagnost) */
+function whoAmI_() {
+  var out = { ok: true };
+  try { out.effective = Session.getEffectiveUser().getEmail(); } catch (e) { out.effective = 'ERR: ' + e.message; }
+  try { out.active = Session.getActiveUser().getEmail(); } catch (e2) { out.active = 'ERR: ' + e2.message; }
+  try { DriveApp.getRootFolder(); out.drive = true; } catch (e3) { out.drive = false; out.driveError = String((e3 && e3.message) || e3).slice(0, 140); }
+  try { ScriptApp.getProjectTriggers(); out.trigger = true; } catch (e4) { out.trigger = false; }
+  try { out.sheet = getSheet_().getName(); } catch (e5) { out.sheet = 'ERR: ' + e5.message; }
+  return out;
+}
+
 function backupInfoApi_(token) {
   var s = session_(token);
   if (!s || !seesAllLevel_(s.level)) throw new Error('เฉพาะ Admin / BU เท่านั้น');
@@ -189,7 +233,9 @@ function backupInfoApi_(token) {
     lastAt: props.getProperty('LAST_BACKUP_AT') || '',
     lastName: props.getProperty('LAST_BACKUP_NAME') || '',
     lastUrl: props.getProperty('LAST_BACKUP_URL') || '',
-    lastMode: props.getProperty('LAST_BACKUP_MODE') || ''
+    lastMode: props.getProperty('LAST_BACKUP_MODE') || '',
+    cronUrl: isAdminLevel_(s.level) ? backupCronUrl_() : '',
+    busy: !!props.getProperty('BACKUP_LAZY')
   };
 }
 

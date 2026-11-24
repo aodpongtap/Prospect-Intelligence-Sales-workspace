@@ -81,6 +81,8 @@ function apiResponse_(p) {
     else if (action === 'delDaily') out = delDailyApi_(p.token, p.ref);
     else if (action === 'logs') out = listLogsApi_(p.token, p.q, p.kind, p.by, p.limit);
     else if (action === 'backupNow') out = backupNowApi_(p.token, p.mode);
+    else if (action === 'backupCron') out = backupCronApi_(p.key, p.mode);
+    else if (action === 'whoami') out = whoAmI_();
     else if (action === 'installBackup') out = installBackupApi_(p.token);
     else if (action === 'backupInfo') out = backupInfoApi_(p.token);
     else if (action === 'deals') out = getDeals(p.token);

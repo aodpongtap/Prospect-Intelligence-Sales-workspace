@@ -124,7 +124,8 @@
       + '  <div class="al-bk"><div class="al-bk-info" id="alBkInfo">กำลังอ่านสถานะ…</div>'
       + '    <div style="display:flex;gap:8px;flex-wrap:wrap">'
       + (isAdmin() ? '      <button class="al-btn blue" id="alBkNow"><i class="fa-solid fa-database"></i> สำรองเดี๋ยวนี้</button>'
-        + '      <button class="al-btn" id="alBkInstall"><i class="fa-solid fa-clock"></i> ตั้ง trigger รายวัน</button>' : '')
+        + '      <button class="al-btn" id="alBkInstall"><i class="fa-solid fa-clock"></i> เปิดสำรองอัตโนมัติ</button>'
+        + '      <button class="al-btn" id="alBkCron"><i class="fa-solid fa-copy"></i> คัดลอก URL ตั้งเวลา</button>' : '')
       + '    </div></div>'
       + '</section>';
   }
@@ -182,17 +183,19 @@
     if (!(global.PIAuth && global.PIAuth.backupInfo)) { box.textContent = '—'; return; }
     global.PIAuth.backupInfo().then(function (r) {
       var last = r.lastAt ? fmtTs(r.lastAt) : 'ยังไม่มี';
-      var modeTxt = !r.installed
-        ? (r.lazy ? 'สำรองอัตโนมัติเมื่อเข้าใช้งาน (ครั้งแรกของวัน)' : 'ยังไม่ติดตั้ง')
-        : 'ติดตั้งแล้ว (02:00 ทุกวัน)';
+      var modeTxt = r.installed
+        ? 'trigger รายวัน 02:00 (ติดตั้งแล้ว)'
+        : (r.lazy ? 'อัตโนมัติเมื่อเข้าใช้งานครั้งแรกของวัน' : 'ยังไม่เปิด');
       var cls = (r.installed || r.lazy) ? 'al-bk-ok' : 'al-bk-warn';
       var dest = r.driveReady
-        ? ('ไฟล์สำรองใน Drive (' + esc(r.lastMode === 'sheet' ? 'ล่าสุดเป็นแท็บสำรอง' : 'โฟลเดอร์ PI Backups') + ')')
+        ? 'ไฟล์สำรองใน Drive (' + esc(r.lastMode === 'sheet' ? 'ล่าสุดเป็นแท็บสำรอง' : 'โฟลเดอร์ PI Backups') + ')'
         : 'แท็บสำรองในไฟล์เดียวกัน (' + esc(String(r.keepTabs || 3)) + ' ชุดล่าสุด)';
-      box.innerHTML = 'สถานะ trigger รายวัน: <b class="' + cls + '">' + esc(modeTxt) + '</b><br>'
+      box.innerHTML = 'โหมดสำรองอัตโนมัติ: <b class="' + cls + '">' + esc(modeTxt) + '</b><br>'
         + 'ปลายทาง: <b>' + dest + '</b><br>'
         + 'สำรองล่าสุด: <b>' + last + '</b>' + (r.lastName ? ' · ' + esc(r.lastName) : '') + '<br>'
-        + 'เก็บย้อนหลัง <b>' + r.keepDays + '</b> วัน';
+        + 'เก็บย้อนหลัง <b>' + r.keepDays + '</b> วัน'
+        + (r.cronUrl ? '<div style="margin-top:6px;font-size:9.5px;color:#98A2B3">'
+          + 'ตั้งเวลา 02:00 แบบไม่มีเงื่อนไข: กด “คัดลอก URL ตั้งเวลา” แล้ววางใน GitHub Actions / cron-job.org (วันละครั้ง)</div>' : '');
     }).catch(function (e) { box.textContent = e.message || String(e); });
   }
 
@@ -259,9 +262,22 @@
       global.PIAuth.installBackup().then(function (r) {
         b2.disabled = false;
         if (global.toast) global.toast(r && r.installed ? 'ติดตั้ง trigger สำรองข้อมูลรายวัน 02:00 แล้ว'
-          : 'เปิดโหมดสำรองอัตโนมัติเมื่อเข้าใช้งาน (ยังไม่มีสิทธิ์ trigger)');
+          : 'เปิดโหมดสำรองอัตโนมัติแล้ว (ทุกวันเมื่อเข้าใช้งานครั้งแรก)');
         loadBackup();
       }).catch(function (err) { b2.disabled = false; if (global.toast) global.toast('ติดตั้งไม่สำเร็จ: ' + (err.message || err)); });
+      return;
+    }
+    if (t.closest('#alBkCron')) {
+      global.PIAuth.backupInfo().then(function (r) {
+        var url = r.cronUrl || '';
+        if (!url) { if (global.toast) global.toast('ไม่พบ URL สำหรับตั้งเวลา'); return; }
+        var done = function () { if (global.toast) global.toast('คัดลอก URL ตั้งเวลา backup แล้ว'); };
+        if (global.navigator && navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(done).catch(function () { global.prompt('คัดลอก URL นี้:', url); });
+        } else {
+          global.prompt('คัดลอก URL นี้:', url);
+        }
+      }).catch(function (e) { if (global.toast) global.toast('อ่าน URL ไม่สำเร็จ: ' + (e.message || e)); });
       return;
     }
   });
