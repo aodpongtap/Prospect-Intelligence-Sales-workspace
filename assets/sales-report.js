@@ -1221,6 +1221,8 @@
       + (state.month ? ' · ' + esc(TH_MONTHS[state.month - 1]) : '') + '</div>'
       + '    <div class="sr-ht-val">' + money(k.target) + '</div>'
       + '    <div class="sr-ht-meta">' + k.headCount + ' คน · เฉลี่ย/คน ' + money(k.perHead) + '</div>'
+      + '    <div class="sr-bar" style="margin-top:auto"><span style="width:' + clampPct(k.ach4) + '%;background:#2563EB"></span></div>'
+      + '    <div class="sr-ht-meta">ปิดงานแล้ว ' + pct(k.ach4) + ' ของเป้า</div>'
       + '  </div>'
       + '  <div class="sr-hero-sum">'
       + '    <div class="sr-hs-head">ผลงานที่ปิดแล้ว + รอส่งของ <span class="sr-pill-pct">' + pct(k.ach43) + ' ของเป้า</span></div>'

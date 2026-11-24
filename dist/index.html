@@ -354,7 +354,7 @@
 
 </script>
   <script src="assets/report-log.js?v=13"></script>
-  <script src="assets/sales-report.js?v=61"></script>
+  <script src="assets/sales-report.js?v=62"></script>
   <script src="assets/daily-report.js?v=16"></script>
   <script src="assets/project-tracking.js?v=10"></script>
   <script src="assets/customer-intelligence.js?v=5"></script>
@@ -1074,7 +1074,7 @@
     const thaiDate=date=>{if(!date)return '—';const d=new Date(String(date).length<=10?date+"T00:00:00":date);return isNaN(d.getTime())?'—':d.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});};
     const dayDiff=date=>Math.floor((new Date("2026-10-07T00:00:00")-new Date(date+"T00:00:00"))/86400000);
     const statusClass=status=>status==="Healthy"?"healthy":status==="Need Attention"?"attention":status==="At Risk"?"at-risk":"on-hold";
-    function riskScore(d){let score=0;const inactive=dayDiff(d.lastActivity);if(inactive>7)score+=Math.min(30,15+(inactive-7));const closeDays=Math.ceil((new Date(d.close+"T00:00:00")-new Date("2026-10-07T00:00:00"))/86400000);if(closeDays<=14&&["Prospect","Qualified"].includes(d.stage))score+=25;if(d.probability<40)score+=20;if(!d.nextAction)score+=15;if(d.status==="On Hold")score+=20;return Math.min(100,score)}
+    function riskScore(d){if(String(d.stage)==="Lost")return 0;let score=0;const inactive=dayDiff(d.lastActivity);if(inactive>7)score+=Math.min(30,15+(inactive-7));const closeDays=Math.ceil((new Date(d.close+"T00:00:00")-new Date("2026-10-07T00:00:00"))/86400000);if(closeDays<=14&&["Prospect","Qualified"].includes(d.stage))score+=25;if(d.probability<40)score+=20;if(!d.nextAction)score+=15;if(d.status==="On Hold")score+=20;return Math.min(100,score)}
     const riskClass=score=>score>=60?"risk-high":score>=35?"risk-mid":"risk-low";
     function toast(message){const el=document.getElementById("toast");document.getElementById("toastText").textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2800)}
     function setModal(title,subtitle,body,buttons=[],large=false){document.getElementById("modalTitle").textContent=title;document.getElementById("modalSubtitle").textContent=subtitle||"";document.getElementById("modalBody").innerHTML=body;document.getElementById("modalFoot").innerHTML=buttons.map(b=>`<button class="btn ${b.primary?"btn-primary":""}" ${b.action?`data-action="${b.action}"`:"data-close-modal"}>${b.icon?`<i class="${b.icon}"></i>`:""}${b.label}</button>`).join("");document.getElementById("modal").classList.toggle("large",large);document.getElementById("modalBackdrop").classList.add("open");document.getElementById("modalBackdrop").setAttribute("aria-hidden","false")}
