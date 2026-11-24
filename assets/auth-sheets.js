@@ -268,6 +268,33 @@
     });
   }
 
+  /* ---------- Activity Log / Backup ---------- */
+  function listLogs(opts) {
+    var o = opts || {};
+    return call('logs', { token: token(), q: o.q || '', kind: o.kind || '', by: o.by || '', limit: o.limit || 300 }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลด Logs ไม่สำเร็จ');
+      return r;
+    });
+  }
+  function backupInfo() {
+    return call('backupInfo', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'อ่านสถานะ backup ไม่สำเร็จ');
+      return r;
+    });
+  }
+  function backupNow(mode) {
+    return call('backupNow', { token: token(), mode: mode || '' }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'สำรองข้อมูลไม่สำเร็จ');
+      return r;
+    });
+  }
+  function installBackup() {
+    return call('installBackup', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ติดตั้ง trigger ไม่สำเร็จ');
+      return r;
+    });
+  }
+
   global.PIAuth = {
     coreAdmins: [
       'aodputta@gmail.com'
@@ -300,6 +327,10 @@
     saveTargetV2: saveTargetV2,
     listDailyV2: listDailyV2,
     saveDailyV2: saveDailyV2,
-    deleteDailyV2: deleteDailyV2
+    deleteDailyV2: deleteDailyV2,
+    listLogs: listLogs,
+    backupInfo: backupInfo,
+    backupNow: backupNow,
+    installBackup: installBackup
   };
 })(window);

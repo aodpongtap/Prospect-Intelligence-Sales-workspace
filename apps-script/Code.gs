@@ -62,7 +62,7 @@ function apiResponse_(p) {
   try {
     var action = String(p.action || '');
     if (action === 'seed') { ensureSeed_(); out = { ok: true }; }
-    else if (action === 'login') out = login(p.email, p.password);
+    else if (action === 'login') { out = login(p.email, p.password); if (out && out.ok) { try { maybeLazyBackup_(); } catch (e) { } } }
     else if (action === 'me') out = getMe(p.token);
     else if (action === 'users') out = getUsers(p.token);
     else if (action === 'add') out = addUser(p.token, p.email, p.name, p.level, p.parent, p.saleId, p.team, p.extra);
@@ -79,6 +79,10 @@ function apiResponse_(p) {
     else if (action === 'dailyV2') out = listDailyApi_(p.token);
     else if (action === 'saveDaily') out = saveDailyApi_(p.token, p.item ? JSON.parse(p.item) : {});
     else if (action === 'delDaily') out = delDailyApi_(p.token, p.ref);
+    else if (action === 'logs') out = listLogsApi_(p.token, p.q, p.kind, p.by, p.limit);
+    else if (action === 'backupNow') out = backupNowApi_(p.token, p.mode);
+    else if (action === 'installBackup') out = installBackupApi_(p.token);
+    else if (action === 'backupInfo') out = backupInfoApi_(p.token);
     else if (action === 'deals') out = getDeals(p.token);
     else if (action === 'addDeal') out = addDeal(p.token, p.name, p.customer, p.value, p.stage, p.probability, p.close, p.nextAction, p.status);
     else if (action === 'deleteDeal') out = deleteDeal(p.token, p.id);
