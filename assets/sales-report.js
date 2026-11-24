@@ -655,8 +655,10 @@
   function renderKpis(k) {
     var s = k.sum;
     var scope = state.month ? monthLabel(state.year, state.month) : ('ปี ' + (state.year + 543));
+    var scK = scopeOf();
+    var tgtLabel = scK.type === 'sale' ? 'เป้าหมายของฉัน' : 'เป้าหมายทีม';
     var cards = [
-      cardKpi('เป้าหมายทีม',
+      cardKpi(tgtLabel,
         money(k.target),
         'จำนวนคน <b>' + k.headCount + '</b> คน · เฉลี่ย/คน <b>' + money(k.perHead) + '</b>'
           + '<br><span class="sr-link" data-sr-toggletargets><i class="fa-solid fa-pen-to-square"></i> ใส่ Target รายเดือน</span>',
@@ -1626,10 +1628,27 @@
       + '    <div class="sr-ph"><div><h3>ผลงานรายบุคคล (AE Performance)</h3>'
       + '      <div class="sr-s2">เลือกทีมด้านขวา แล้วคลิกชื่อ AE เพื่อดูรายงานยอดขายรายเดือน · เส้นประแดง = เป้าหมายต่อคน</div></div>'
       + '      <div class="sr-teamtabs">'
-      + '        <button class="sr-tab' + (state.perfTeam === '' ? ' on' : '') + '" data-sr-perfteam="">ทุกทีม</button>'
-      + TEAMS.map(function (t) {
-          return '<button class="sr-tab' + (state.perfTeam === t.code ? ' on' : '') + '" data-sr-perfteam="' + esc(t.code) + '">' + esc(t.name) + '</button>';
-        }).join('')
+      + (function () {
+        var psc = scopeOf();
+        var mineTeam = '';
+        if (psc.type === 'sale') { var ms = sale(psc.saleId); mineTeam = ms ? ms.team : ''; }
+        if (psc.type === 'team') mineTeam = psc.team;
+        var allow = TEAMS.filter(function (t) {
+          if (psc.type === 'all') return true;
+          return t.code === mineTeam;
+        });
+        if (state.perfTeam && !allow.some(function (t) { return t.code === state.perfTeam; })) state.perfTeam = '';
+        if (!allow.length) return '';
+        if (allow.length === 1) {
+          state.perfTeam = allow[0].code;
+          return '<button class="sr-tab on" data-sr-perfteam="' + esc(allow[0].code) + '">'
+            + esc(allow[0].name) + (psc.type === 'sale' ? ' ของฉัน' : '') + '</button>';
+        }
+        return '<button class="sr-tab' + (state.perfTeam === '' ? ' on' : '') + '" data-sr-perfteam="">ทุกทีม</button>'
+          + allow.map(function (t) {
+            return '<button class="sr-tab' + (state.perfTeam === t.code ? ' on' : '') + '" data-sr-perfteam="' + esc(t.code) + '">' + esc(t.name) + '</button>';
+          }).join('');
+      })()
       + '      </div></div>'
       + '    <div class="sr-chartbox"><canvas id="srBarChart"></canvas></div>'
       + '    <div class="sr-salelist">' + saleChips() + '</div>'
