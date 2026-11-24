@@ -135,6 +135,8 @@ function saveDealV2(token, payload) {
   var no = String(p.no || '').trim();
   var row = 0;
   var existing = null;
+  var prevStatus = null;
+  var prevAmount = null;
   if (no) {
     var last = sh.getLastRow();
     var col = last >= 2 ? sh.getRange(2, map.no, last - 1, 1).getValues() : [];
@@ -143,6 +145,8 @@ function saveDealV2(token, payload) {
         row = i + 2;
         var ownerCol = map.ownerEmail ? sh.getRange(row, map.ownerEmail).getValue() : '';
         existing = { ownerEmail: String(ownerCol || '').toLowerCase() };
+        if (map.status) prevStatus = Number(sh.getRange(row, map.status).getValue());
+        if (map.amount) prevAmount = Number(sh.getRange(row, map.amount).getValue() || 0);
         break;
       }
     }
@@ -156,6 +160,7 @@ function saveDealV2(token, payload) {
 
   var nowIso = new Date().toISOString();
   var saleId = String(p.saleId || s.saleId || '').trim().toUpperCase();
+  if (!saleId) throw new Error('บัญชีนี้ยังไม่ถูกผูกกับ AE (saleId) — กรุณาให้แอดมินผูก AE ก่อนบันทึกดีล');
   var team = String(s.team || '').trim().toUpperCase();
   if (!team && saleId) {
     /* หา team ของ saleId จากแท็บ Users */
@@ -207,12 +212,39 @@ function saveDealV2(token, payload) {
     if (map.quoteDate) sh.getRange(sh.getLastRow(), map.quoteDate).setNumberFormat('@');
   }
 
-  if (typeof appendTab_ === 'function' && sh.getName() === 'Logs') { /* no-op */ }
   try {
-    appendTab_('Logs', { ts: nowIso, action: row ? 'deal.edit' : 'deal.add', ref: no + ' · ' + customer, detail: job + ' · ' + Number(p.amount || 0) + ' · st' + status, by: String(s.email).toLowerCase() });
+    var ST_LABEL = { 0: 'กำลังคยุย Detail', 1: 'Pipeline', 2: 'รอยืนยัน PO', 3: 'รอส่งของ/เปิดบิล', 4: 'Actual (ปิดงานแล้ว)', 5: 'ยกเลิก' };
+    var detail = '';
+    if (row && prevStatus !== null && prevStatus !== status) {
+      detail = 'เปลี่ยนสถานะ: ' + (ST_LABEL[prevStatus] || prevStatus) + ' → ' + (ST_LABEL[status] || status) + ' · ฿' + Number(p.amount || 0).toLocaleString('en-US');
+    } else if (row) {
+      detail = 'แก้ไขข้อมูลดีล' + (prevAmount !== null && prevAmount !== Number(p.amount || 0) ? ' · มูลค่า ฿' + Number(prevAmount).toLocaleString('en-US') + ' → ฿' + Number(p.amount || 0).toLocaleString('en-US') : '');
+    } else {
+      detail = 'สร้างดีลใหม่ · ' + (ST_LABEL[status] || status) + ' · ฿' + Number(p.amount || 0).toLocaleString('en-US');
+    }
+    if (status === 4 && String(p.docNo || '').trim()) detail += ' · เอกสาร ' + String(p.docNo).trim();
+    appendTab_('Logs', { ts: nowIso, action: row ? 'deal.edit' : 'deal.add', ref: no + ' · ' + customer, detail: detail, by: String(s.email).toLowerCase() });
   } catch (e) {}
 
   return { ok: true, no: no, deals: readDealsV2_().filter(function (d) { return dealVisible_(s, d); }) };
+}
+
+/** ประวัติของดีลหนึ่งใบ (จากแท็บ Logs) */
+function dealLogsApi_(token, no) {
+  var s = session_(token);
+  if (!s) return { ok: false, error: 'กรุณาเข้าสู่ระบบใหม่', logs: [] };
+  var key = String(no || '').trim();
+  if (!key) return { ok: true, logs: [] };
+  var all = [];
+  try { all = readTab_('Logs'); } catch (e) { all = []; }
+  var out = all.filter(function (r) {
+    var ref = String(r.ref || '');
+    return ref.indexOf(key + ' ·') === 0 || ref === key || ref.indexOf(key) === 0;
+  }).map(function (r) {
+    return { ts: String(r.ts || ''), action: String(r.action || ''), detail: String(r.detail || ''), by: String(r.by || '') };
+  });
+  out.sort(function (a, b) { return String(b.ts).localeCompare(String(a.ts)); });
+  return { ok: true, logs: out.slice(0, 50) };
 }
 
 function deleteDealV2(token, no) {

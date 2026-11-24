@@ -229,6 +229,12 @@
       return r;
     });
   }
+  function dealLogs(no) {
+    return call('dealLogs', { token: token(), no: no }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดประวัติไม่สำเร็จ');
+      return r.logs || [];
+    });
+  }
 
   global.PIAuth = {
     coreAdmins: [
@@ -256,6 +262,7 @@
     deleteDeal: deleteDeal,
     listDealsV2: listDealsV2,
     saveDealV2: saveDealV2,
-    deleteDealV2: deleteDealV2
+    deleteDealV2: deleteDealV2,
+    dealLogs: dealLogs
   };
 })(window);

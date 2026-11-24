@@ -544,6 +544,48 @@
   }
   setTimeout(syncFromCloud, 1200);
 
+  /** ผูก AE ในเครื่องให้ตรงกับบัญชีผู้ใช้บนเซิร์ฟเวอร์ (saleId / ชื่อ / ทีม / ผู้ดูแล) */
+  function syncSalesFromUsers() {
+    if (!(global.PIAuth && global.PIAuth.listUsers)) return;
+    var users = [];
+    try { users = global.PIAuth.listUsers() || []; } catch (e) { return; }
+    if (!users.length) return;
+    var emailToSale = {};
+    users.forEach(function (u) {
+      var sid = String(u.saleId || '').toUpperCase();
+      if (sid) emailToSale[String(u.email || '').toLowerCase()] = sid;
+    });
+    var changed = false;
+    users.forEach(function (u) {
+      var lv = String(u.level || '').toLowerCase();
+      if (lv !== 'sale' && lv !== 'agent') return;
+      var sid = String(u.saleId || '').toUpperCase();
+      if (!sid) return;
+      var team = String(u.team || '').toUpperCase();
+      var rec = null;
+      for (var i = 0; i < SALES.length; i++) if (String(SALES[i].id).toUpperCase() === sid) { rec = SALES[i]; break; }
+      if (!rec) {
+        SALES.push({ id: sid, name: u.name || u.email || sid, team: team, parent: '' });
+        rec = SALES[SALES.length - 1];
+        changed = true;
+      }
+      if (u.name && rec.name !== u.name) { rec.name = u.name; changed = true; }
+      if (team && rec.team !== team) { rec.team = team; changed = true; }
+      if (lv === 'agent') {
+        var pSale = emailToSale[String(u.parent || '').toLowerCase()] || '';
+        if ((rec.parent || '') !== pSale) { rec.parent = pSale; changed = true; }
+      }
+    });
+    if (changed) saveSales();
+  }
+  setTimeout(function () {
+    try {
+      if (global.PIAuth && global.PIAuth.seed) {
+        global.PIAuth.seed().then(syncSalesFromUsers).catch(function () {});
+      }
+    } catch (e) {}
+  }, 900);
+
   /** เลขดีลรันตามลำดับ (ปี-0001) — กันเลขซ้ำเมื่อมีลบดีล */
   function seqOf(no, yr) {
     var s = String(no || '').toUpperCase();
@@ -575,7 +617,7 @@
       job: String(o.job || o.name || '').trim(),
       quoteDate: o.quoteDate || new Date().toISOString().slice(0, 10),
       year: yr, month: mo,
-      saleId: o.saleId || (SALES[0] && SALES[0].id) || 'S01',
+      saleId: o.saleId || '',
       product: o.product || 'P1',
       amount: Number(o.amount || 0),
       payment: o.payment || 'cash',
@@ -588,6 +630,9 @@
       updatedAt: new Date().toISOString()
     };
     if (!d.customer || !d.job) throw new Error('กรอกชื่อลูกค้าและชื่องาน');
+    if (!d.saleId || !SALES.some(function (s) { return s.id === d.saleId; })) {
+      throw new Error('ยังไม่ได้เลือก AE ผู้รับผิดชอบ (หรือบัญชีนี้ไม่ถูกผูกกับ AE)');
+    }
     if (isNaN(d.status)) d.status = 1;
     if (d.status === 4 && !d.docNo) throw new Error('สถานะ “ปิดงานแล้ว” ต้องระบุเลขอินวอย / เลขที่สัญญา / เลขที่ SO');
     DEALS.push(d);
@@ -2018,7 +2063,9 @@
       + (d.docNo ? '  <div><small>เลขอินวอย / สัญญา / SO</small><strong style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#0E9384">' + esc(d.docNo) + '</strong></div>' : '')
       + (d.drRef ? '  <div><small>อ้างอิง Daily Report</small><strong style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#1D4ED8">' + esc(d.drRef) + '</strong></div>' : '')
       + '</div>'
-      + '<div class="sr-md-note"><b>หมายเหตุ</b><p>' + esc(d.note) + '</p></div>';
+      + '<div class="sr-md-note"><b>หมายเหตุ</b><p>' + esc(d.note) + '</p></div>'
+      + '<div class="sr-md-hist"><b><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการแก้ไข</b>'
+      + '  <div id="srDealHist" class="sr-hist"><div class="sr-s2">กำลังโหลดประวัติจากคลาวด์…</div></div></div>';
     if (typeof global.setModal === 'function') {
       global.setModal(d.customer, d.job + ' · ' + d.no, body, [
         { label: 'ลบดีล', icon: 'fa-solid fa-trash', action: 'sr-del-deal' },
@@ -2026,6 +2073,40 @@
         { label: 'ปิด' }
       ]);
       __openNo = no;
+      loadDealHistory(no);
+    }
+  }
+
+  /** โหลดประวัติของดีล (แท็บ Logs บนคลาวด์) */
+  function loadDealHistory(no) {
+    var box = document.getElementById('srDealHist');
+    if (!box) return;
+    if (!(global.PIAuth && global.PIAuth.dealLogs)) {
+      box.innerHTML = '<div class="sr-s2">ไม่พบโมดูลซิงก์คลาวด์</div>';
+      return;
+    }
+    try {
+      global.PIAuth.dealLogs(no).then(function (logs) {
+        if (!document.getElementById('srDealHist')) return;
+        if (!logs || !logs.length) {
+          box.innerHTML = '<div class="sr-s2">ยังไม่มีประวัติ (จะเริ่มบันทึกเมื่อมีการแก้ไขบนคลาวด์)</div>';
+          return;
+        }
+        box.innerHTML = logs.map(function (l) {
+          var isAdd = /add/.test(l.action), isDel = /del/.test(l.action);
+          var icon = isAdd ? 'fa-plus' : (isDel ? 'fa-trash' : 'fa-pen');
+          var color = isAdd ? '#16A34A' : (isDel ? '#DC2626' : '#2563EB');
+          return '<div class="sr-hist-row">'
+            + '<span class="sr-hist-ico" style="color:' + color + '"><i class="fa-solid ' + icon + '"></i></span>'
+            + '<div style="min-width:0"><b>' + (isAdd ? 'สร้างดีล' : (isDel ? 'ลบดีล' : 'แก้ไขดีล')) + '</b>'
+            + '<div class="sr-s2" style="color:#475467">' + esc(l.detail || '') + '</div>'
+            + '<div class="sr-s2" style="font-size:9.5px">' + esc(String(l.ts || '').replace('T', ' ').slice(0, 16)) + (l.by ? ' · ' + esc(l.by) : '') + '</div></div></div>';
+        }).join('');
+      }).catch(function () {
+        if (document.getElementById('srDealHist')) box.innerHTML = '<div class="sr-s2">โหลดประวัติไม่ได้ (ออฟไลน์) — จะลองใหม่เมื่อเชื่อมต่อ</div>';
+      });
+    } catch (e) {
+      box.innerHTML = '<div class="sr-s2">โหลดประวัติไม่ได้</div>';
     }
   }
 
@@ -2595,6 +2676,13 @@
       + '.sr-md-note{margin-top:14px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:9px;padding:12px 14px}'
       + '.sr-md-note b{color:#92400E;font-size:11px}'
       + '.sr-md-note p{margin:6px 0 0;color:#78350F;font-size:11.5px;line-height:1.75;white-space:pre-wrap}'
+      + '.sr-md-hist{margin-top:12px;border:1px solid #E6EDF5;border-radius:10px;padding:12px 14px;background:#F8FAFC}'
+      + '.sr-md-hist>b{display:flex;align-items:center;gap:6px;color:#0F2B46;font-size:11px;margin-bottom:8px}'
+      + '.sr-md-hist>b i{color:#94A3B8;font-size:10px}'
+      + '.sr-hist{display:grid;gap:7px;max-height:190px;overflow:auto}'
+      + '.sr-hist-row{display:grid;grid-template-columns:18px 1fr;gap:8px;align-items:start}'
+      + '.sr-hist-ico{width:18px;height:18px;border-radius:50%;background:#fff;border:1px solid #E6EDF5;display:grid;place-items:center;font-size:8px}'
+      + '.sr-hist-row b{font-size:10.5px;color:#0F2B46}'
       /* responsive */
       + '@media(max-width:1280px){.sr-kpis{gap:10px}}'
       + '@media(max-width:1024px){.sr-filters{grid-template-columns:repeat(3,minmax(0,1fr))}.sr-fbtn{grid-column:1/-1}'

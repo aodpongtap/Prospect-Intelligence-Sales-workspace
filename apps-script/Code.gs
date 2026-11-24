@@ -73,6 +73,7 @@ function apiResponse_(p) {
     else if (action === 'dealsV2') out = listDealsV2Api_(p.token);
     else if (action === 'saveDeal') out = saveDealV2(p.token, p.deal ? JSON.parse(p.deal) : {});
     else if (action === 'delDeal') out = deleteDealV2(p.token, p.no);
+    else if (action === 'dealLogs') out = dealLogsApi_(p.token, p.no);
     else if (action === 'deals') out = getDeals(p.token);
     else if (action === 'addDeal') out = addDeal(p.token, p.name, p.customer, p.value, p.stage, p.probability, p.close, p.nextAction, p.status);
     else if (action === 'deleteDeal') out = deleteDeal(p.token, p.id);
@@ -298,6 +299,21 @@ function syncSessionLevel_(email, level) {
   var changed = false;
   Object.keys(all).forEach(function (k) {
     if (String(all[k].email || '').toLowerCase() === String(email).toLowerCase()) { all[k].level = level; changed = true; }
+  });
+  if (changed) props.setProperty(SESSION_PROP, JSON.stringify(all));
+}
+
+/** อัปเดต saleId ใน session ที่ค้างอยู่ (เมื่อแอดมินผูก AE ให้บัญชี) */
+function syncSessionSale_(email, saleId) {
+  var props = PropertiesService.getScriptProperties();
+  var all = {};
+  try { all = JSON.parse(props.getProperty(SESSION_PROP) || '{}'); } catch (e) { return; }
+  var changed = false;
+  Object.keys(all).forEach(function (k) {
+    if (String(all[k].email || '').toLowerCase() === String(email).toLowerCase()) {
+      all[k].saleId = String(saleId || '').toUpperCase();
+      changed = true;
+    }
   });
   if (changed) props.setProperty(SESSION_PROP, JSON.stringify(all));
 }
@@ -701,8 +717,7 @@ function updateUser(token, email, level, status, parent, saleId, name, team, ext
   if (saleId !== undefined && saleId !== null) {
     var sid = String(saleId).trim().toUpperCase();
     if (sid && !/^S\d{2}$/.test(sid)) throw new Error('รหัสเซลส์ต้องอยู่ในรูป S01–S99');
-    sh.getRange(row, 10).setValue(sid);
-  }
+    sh.getRange(row, 10).setValue(sid);    syncSessionSale_(e, sid);  }
   if (name !== undefined && name !== null) {
     var nm = String(name).trim();
     if (!nm) throw new Error('ชื่อต้องไม่ว่าง');

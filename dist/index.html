@@ -344,6 +344,12 @@
       return r;
     });
   }
+  function dealLogs(no) {
+    return call('dealLogs', { token: token(), no: no }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดประวัติไม่สำเร็จ');
+      return r.logs || [];
+    });
+  }
 
   global.PIAuth = {
     coreAdmins: [
@@ -371,13 +377,14 @@
     deleteDeal: deleteDeal,
     listDealsV2: listDealsV2,
     saveDealV2: saveDealV2,
-    deleteDealV2: deleteDealV2
+    deleteDealV2: deleteDealV2,
+    dealLogs: dealLogs
   };
 })(window);
 
 </script>
   <script src="assets/report-log.js?v=13"></script>
-  <script src="assets/sales-report.js?v=64"></script>
+  <script src="assets/sales-report.js?v=65"></script>
   <script src="assets/daily-report.js?v=16"></script>
   <script src="assets/project-tracking.js?v=10"></script>
   <script src="assets/customer-intelligence.js?v=6"></script>
