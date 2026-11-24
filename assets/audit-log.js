@@ -80,13 +80,14 @@
       ['รายการที่แสดง', counts.total || 0, 'fa-list'],
       ['ดีล', counts.deal || 0, 'fa-bullseye'],
       ['บันทึกกิจกรรม', counts.daily || 0, 'fa-clipboard-list'],
+      ['โครงการ', counts.project || 0, 'fa-diagram-project'],
       ['ผู้ใช้', counts.user || 0, 'fa-user-gear'],
       ['เป้าหมาย', counts.target || 0, 'fa-bullseye']
     ].map(function (c) {
       return '<article class="al-card"><span>' + esc(c[0]) + '</span><b>' + c[1] + '</b></article>';
     }).join('');
 
-    var kindOpts = ['', 'deal', 'daily', 'user', 'target', 'auth', 'sale'].map(function (k) {
+    var kindOpts = ['', 'deal', 'daily', 'project', 'user', 'target', 'auth', 'sale'].map(function (k) {
       return '<option value="' + k + '"' + (st.kind === k ? ' selected' : '') + '>' + (k ? k : 'ทุกประเภท') + '</option>';
     }).join('');
 
@@ -99,7 +100,7 @@
 
     return '<div class="al">'
       + '<div class="al-head"><div><h1><i class="fa-solid fa-clock-rotate-left" style="color:#2563EB;margin-right:7px"></i>Activity Log</h1>'
-      + '  <div class="al-sub">ประวัติการใช้งานทั้งหมด (ดีล / บันทึกกิจกรรม / ผู้ใช้ / เป้าหมาย) จากแท็บ Logs บน Google Sheet</div></div>'
+      + '  <div class="al-sub">ประวัติการใช้งานทั้งหมด (ดีล / บันทึกกิจกรรม / โครงการ / ผู้ใช้ / เป้าหมาย) จากแท็บ Logs บน Google Sheet</div></div>'
       + '  <button class="al-btn" id="alRefresh"><i class="fa-solid fa-rotate"></i> รีเฟรช</button></div>'
       + '<div class="al-cards">' + cards + '</div>'
       + '<section class="al-panel">'
@@ -163,12 +164,13 @@
       st.counts = r.counts || null;
       /* อัปเดตการ์ดสรุป */
       var cards = document.querySelectorAll('.al-card b');
-      if (cards && cards.length >= 5 && st.counts) {
+      if (cards && cards.length >= 6 && st.counts) {
         cards[0].textContent = st.counts.total || 0;
         cards[1].textContent = st.counts.deal || 0;
         cards[2].textContent = st.counts.daily || 0;
-        cards[3].textContent = st.counts.user || 0;
-        cards[4].textContent = st.counts.target || 0;
+        cards[3].textContent = st.counts.project || 0;
+        cards[4].textContent = st.counts.user || 0;
+        cards[5].textContent = st.counts.target || 0;
       }
       paint();
     }).catch(function (e) {
