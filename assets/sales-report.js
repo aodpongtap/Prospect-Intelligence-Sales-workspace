@@ -868,7 +868,7 @@
         pct(k.ach43),
         money(s.sum43) + ' (ปิด ' + money(s.s4) + ' + รอส่ง ' + money(s.s3) + ')',
         k.ach43, '#0EA5E9', 'fa-solid fa-truck-fast'),
-      cardKpi('ปิดแล้ว + รอส่งของ + รอยืนยัน PO',
+      cardKpi('ปิดแล้ว + รอส่ง + รอ PO',
         pct(k.ach432),
         money(s.sum432) + ' (+PO ' + money(s.s2) + ')',
         k.ach432, '#7C3AED', 'fa-solid fa-layer-group'),
@@ -2855,7 +2855,8 @@
       /* KPI */
       + '.sr-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}'
       + '.sr-card{background:#fff;border:1px solid #EDF0F4;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(15,43,70,.05);min-width:0}'
-      + '.sr-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;color:#667085;font-size:10px;line-height:1.5;min-height:30px}'
+      + '.sr-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;color:#667085;font-size:10px;line-height:1.5;min-height:34px}'
+      + '.sr-card-top>span:first-child{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}'
       + '.sr-ico{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:12px;flex:0 0 28px}'
       + '.sr-card-val{font-size:19px;font-weight:600;margin:8px 0 8px;letter-spacing:-.2px}'
       + '.sr-bar{height:6px;background:#EEF2F7;border-radius:99px;overflow:hidden}'
