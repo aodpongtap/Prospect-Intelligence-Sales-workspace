@@ -185,6 +185,7 @@ function saveDealV2(token, payload) {
   }
 
   var nowIso = new Date().toISOString();
+  var noChange = false;
   var saleId = String(p.saleId || s.saleId || '').trim().toUpperCase();
   if (!saleId) throw new Error('บัญชีนี้ยังไม่ถูกผูกกับ AE (saleId) — กรุณาให้แอดมินผูก AE ก่อนบันทึกดีล');
   var team = String(s.team || '').trim().toUpperCase();
@@ -217,6 +218,20 @@ function saveDealV2(token, payload) {
   };
 
   if (row) {
+    /* ตรวจว่ามีอะไรเปลี่ยนจริงไหม — ถ้าไม่มี ไม่ต้องเขียน log ซ้ำ */
+    try {
+      var cur = sh.getRange(row, 1, 1, sh.getLastColumn()).getValues()[0];
+      var diff = 0;
+      Object.keys(map).forEach(function (h) {
+        if (h === 'createdAt' || h === 'updatedAt' || h === 'deleted') return;
+        if (rec[h] === undefined) return;
+        var a = cur[map[h] - 1];
+        var b = rec[h];
+        if (a instanceof Date) a = Utilities.formatDate(a, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+        if (String(a == null ? '' : a).trim() !== String(b == null ? '' : b).trim()) diff++;
+      });
+      noChange = diff === 0;
+    } catch (eDiff) { noChange = false; }
     /* อัปเดตเฉพาะคอลัมน์ที่มี header */
     Object.keys(map).forEach(function (h) {
       if (h === 'createdAt') return;
@@ -249,7 +264,10 @@ function saveDealV2(token, payload) {
       detail = 'สร้างดีลใหม่ · ' + (ST_LABEL[status] || status) + ' · ฿' + Number(p.amount || 0).toLocaleString('en-US');
     }
     if (status === 4 && String(p.docNo || '').trim()) detail += ' · เอกสาร ' + String(p.docNo).trim();
-    appendTab_('Logs', { ts: nowIso, action: row ? 'deal.edit' : 'deal.add', ref: no + ' · ' + customer, detail: detail, by: String(s.email).toLowerCase() });
+    /* ไม่มีอะไรเปลี่ยน (เช่น client ดันสำเนาเดิมขึ้นมา) → ไม่ต้องบันทึก log ซ้ำ */
+    if (!(row && noChange)) {
+      appendTab_('Logs', { ts: nowIso, action: row ? 'deal.edit' : 'deal.add', ref: no + ' · ' + customer, detail: detail, by: String(s.email).toLowerCase() });
+    }
   } catch (e) {}
 
   return { ok: true, no: no, deals: readDealsV2_().filter(function (d) { return dealVisible_(s, d); }) };
