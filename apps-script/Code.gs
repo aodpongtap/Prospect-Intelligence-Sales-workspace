@@ -83,7 +83,7 @@ function apiResponse_(p) {
     else if (action === 'backupNow') out = backupNowApi_(p.token, p.mode);
     else if (action === 'backupCron') out = backupCronApi_(p.key, p.mode);
     else if (action === 'backupDaily') out = backupDailyApi_();
-    else if (action === 'whoami') out = whoAmI_();
+    else if (action === 'whoami') out = whoAmI_(p.token);
     else if (action === 'installBackup') out = installBackupApi_(p.token);
     else if (action === 'backupInfo') out = backupInfoApi_(p.token);
     else if (action === 'deals') out = getDeals(p.token);

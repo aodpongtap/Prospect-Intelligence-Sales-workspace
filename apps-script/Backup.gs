@@ -267,7 +267,9 @@ function backupDailyApi_() {
 }
 
 /** ตรวจว่าบัญชีที่เว็บแอปรันอยู่คือใคร และมีสิทธิ์ Drive/Trigger หรือไม่ (ใช้ diagnost) */
-function whoAmI_() {
+function whoAmI_(token) {
+  var s = token ? session_(token) : null;
+  if (!s || !isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
   var out = { ok: true };
   try { out.effective = Session.getEffectiveUser().getEmail(); } catch (e) { out.effective = 'ERR: ' + e.message; }
   try { out.active = Session.getActiveUser().getEmail(); } catch (e2) { out.active = 'ERR: ' + e2.message; }
