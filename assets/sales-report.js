@@ -2843,6 +2843,8 @@
       + 'color:#3730A3;border-radius:8px;padding:7px 9px;font-size:11px;font-weight:500}'
       + '.sr-locked i{font-size:9px;color:#4F46E5}'
       + '.sr-fbtn{display:flex;align-items:flex-end;gap:8px;grid-column:1/-1;justify-content:flex-end}'
+      + '@media(min-width:900px){.sr-filters{padding-right:252px}'
+      + '.sr-fbtn{position:absolute;right:14px;bottom:12px;grid-column:auto}}'
       + '.sr-btn{border:1px solid #E5EAF0;background:#fff;color:#344054;border-radius:8px;padding:8px 11px;font-size:11px;'
       + 'font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;height:34px}'
       + '.sr-btn:hover{border-color:#B7C5D6;box-shadow:0 3px 9px rgba(15,43,70,.08)}'
