@@ -34,8 +34,11 @@
   var PRODUCT_DEFAULT = [
     { code: 'P1', name: 'ร้านสะดวกซัก (เครื่องซักผ้า+อบ)', short: 'ร้านสะดวกซัก', color: '#2563EB' },
     { code: 'P2', name: 'ตู้กดน้ำ',                       short: 'ตู้กดน้ำ',      color: '#0EA5E9' },
-    { code: 'P3', name: 'ตู้กดน้ำ + เครื่องทำน้ำแข็ง',      short: 'ตู้กดน้ำ+น้ำแข็ง', color: '#8B5CF6' }
+    { code: 'P3', name: 'ตู้กดน้ำ + เครื่องทำน้ำแข็ง',      short: 'ตู้กดน้ำ+น้ำแข็ง', color: '#8B5CF6' },
+    { code: 'P4', name: 'เครื่องทำน้ำแข็ง',               short: 'เครื่องน้ำแข็ง', color: '#0E9384' }
   ];
+  /* สินค้าที่เพิ่มภายหลัง แต่ต้องมีในเครื่องเดิมด้วย (migrate ให้อัตโนมัติ) */
+  var PRODUCT_MIGRATE = ['P4'];
   var PRODUCT_COLORS = ['#2563EB', '#0EA5E9', '#8B5CF6', '#16A34A', '#F59E0B', '#DC2626', '#0E9384', '#7C3AED'];
   var LS_PRODUCTS = 'pi_sr_products_v1';
   var PRODUCTS = loadProducts();
@@ -43,9 +46,19 @@
     try {
       var a = JSON.parse(localStorage.getItem(LS_PRODUCTS) || 'null');
       if (Object.prototype.toString.call(a) === '[object Array]' && a.length) {
-        return a.map(function (p, i) {
+        var list = a.map(function (p, i) {
           return { code: p.code, name: p.name, short: p.short || p.name, color: p.color || PRODUCT_COLORS[i % PRODUCT_COLORS.length] };
         });
+        /* เครื่องเดิม: เติมสินค้าใหม่ที่ยังไม่มี ให้ตรงกับ PRODUCT_DEFAULT */
+        var added = false;
+        PRODUCT_MIGRATE.forEach(function (code) {
+          if (list.some(function (p) { return p.code === code; })) return;
+          var def = null;
+          for (var j = 0; j < PRODUCT_DEFAULT.length; j++) if (PRODUCT_DEFAULT[j].code === code) def = PRODUCT_DEFAULT[j];
+          if (def) { list.push(JSON.parse(JSON.stringify(def))); added = true; }
+        });
+        if (added) { try { localStorage.setItem(LS_PRODUCTS, JSON.stringify(list)); } catch (e) {} }
+        return list;
       }
     } catch (e) {}
     return JSON.parse(JSON.stringify(PRODUCT_DEFAULT));
@@ -973,7 +986,7 @@
       + '  </tr></thead><tbody id="srDealBody">' + dealRowsHtml(list) + '</tbody></table></div>'
       + '  <div class="sr-foot" id="srDealCount">แสดง ' + sortRows(list).filter(function (d) {
             var q = String(state.q || '').trim().toLowerCase();
-            return !q || (d.customer + ' ' + d.job + ' ' + d.no + ' ' + d.so).toLowerCase().indexOf(q) >= 0;
+            return !q || (d.customer + ' ' + d.job + ' ' + d.no + ' ' + d.so + ' ' + (d.docNo || '')).toLowerCase().indexOf(q) >= 0;
           }).length + ' จาก ' + list.length + ' ดีล</div>'
       + '</section>';
   }
@@ -1922,7 +1935,7 @@
   function exportCsv() {
     var q = String(state.q || '').trim().toLowerCase();
     var rows = sortRows(filteredDeals()).filter(function (d) {
-      return !q || (d.customer + ' ' + d.job + ' ' + d.no + ' ' + d.so).toLowerCase().indexOf(q) >= 0;
+      return !q || (d.customer + ' ' + d.job + ' ' + d.no + ' ' + d.so + ' ' + (d.docNo || '')).toLowerCase().indexOf(q) >= 0;
     });
     var head = ['เลขดีล', 'สถานะ', 'ชื่อลูกค้า', 'ชื่องาน', 'เลข QT/อ้างอิง', 'เลขอินวอย/สัญญา/SO', 'วันที่เสนอราคา', 'เดือนที่คาดว่าจะปิด',
       'AE', 'สินค้า', 'มูลค่างานประมาณ', 'รูปแบบการซื้อ', 'Cash In', 'อ้างอิง Daily Report', 'หมายเหตุ'];
@@ -2098,7 +2111,7 @@
     body.innerHTML = dealRowsHtml(list);
     var q = String(state.q || '').trim().toLowerCase();
     var shown = sortRows(list).filter(function (d) {
-      return !q || (d.customer + ' ' + d.job + ' ' + d.no + ' ' + d.so).toLowerCase().indexOf(q) >= 0;
+      return !q || (d.customer + ' ' + d.job + ' ' + d.no + ' ' + d.so + ' ' + (d.docNo || '')).toLowerCase().indexOf(q) >= 0;
     }).length;
     var c = document.getElementById('srDealCount');
     if (c) c.textContent = 'แสดง ' + shown + ' จาก ' + list.length + ' ดีล';
