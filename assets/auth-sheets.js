@@ -214,7 +214,7 @@
   function listDealsV2() {
     return call('dealsV2', { token: token() }).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดดีลจากคลาวด์ไม่สำเร็จ');
-      return r.deals || [];
+      return { deals: r.deals || [], deletedNos: r.deletedNos || [], count: r.count || 0 };
     });
   }
   function saveDealV2(d) {

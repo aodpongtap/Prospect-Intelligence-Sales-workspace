@@ -547,9 +547,10 @@
     if (!cloudReady() || !global.PIAuth.listDealsV2) return;
     try {
       global.PIAuth.listDealsV2().then(function (res) {
-        var list = (res && res.deals) || [];
+        /* รองรับทั้ง 2 รูปแบบ: array ของดีล หรือ { deals, deletedNos } */
+        var list = Array.isArray(res) ? res : ((res && res.deals) || []);
         var deleted = {};
-        ((res && res.deletedNos) || []).forEach(function (no) { deleted[no] = 1; });
+        (!Array.isArray(res) && res && res.deletedNos ? res.deletedNos : []).forEach(function (no) { deleted[no] = 1; });
         var changed = false;
         /* ดีลที่ถูกลบบนคลาวด์ → ลบสำเนาในเครื่องทิ้ง (กันการฟื้นคืน) */
         if (Object.keys(deleted).length) {
