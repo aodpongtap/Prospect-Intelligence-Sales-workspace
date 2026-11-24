@@ -666,7 +666,7 @@
       cardKpi(tgtLabel,
         money(k.target),
         'จำนวนคน <b>' + k.headCount + '</b> คน · เฉลี่ย/คน <b>' + money(k.perHead) + '</b>'
-          + '<br><span class="sr-link" data-sr-toggletargets><i class="fa-solid fa-pen-to-square"></i> ใส่ Target รายเดือน</span>',
+          + (scK.type === 'sale' ? '' : '<br><span class="sr-link" data-sr-toggletargets><i class="fa-solid fa-pen-to-square"></i> ใส่ Target รายเดือน</span>'),
         undefined, '#0F2B46', 'fa-solid fa-bullseye'),
       cardKpi('Actual ปิดงานแล้ว',
         pct(k.ach4),
