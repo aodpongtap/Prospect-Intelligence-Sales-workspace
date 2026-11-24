@@ -16,6 +16,9 @@
 .top a:hover,.top button.link:hover{color:#fff}
 .wrap{max-width:1320px;margin:22px auto;padding:0 16px}
 h1{font-size:21px;font-weight:600;color:var(--navy);margin:0}.subtitle{color:var(--muted);margin:4px 0 14px;font-size:11.5px}
+.emp-todo{display:inline-flex;align-items:center;gap:4px;background:#FFF7ED;border:1px solid #FED7AA;color:#B45309;border-radius:99px;padding:1px 8px;font-size:10px}
+#empGap{display:none;margin:0 0 14px;background:#EFF6FF;border:1px solid #DBEAFE;color:#1E40AF;border-radius:9px;padding:9px 13px;font-size:11.5px;line-height:1.6}
+#empGap i{font-size:11px}
 .panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(15,43,70,.07);padding:16px;margin-bottom:16px}
 .panel h3{margin:0 0 12px;font-size:14px;font-weight:500}
 .fg{display:grid;grid-template-columns:1.3fr 1fr .9fr .85fr 1.05fr auto;gap:9px;align-items:end}
@@ -95,6 +98,7 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
 
   <div class="msg" id="msg"></div>
   <div class="pwbox" id="pwbox"></div>
+  <div id="empGap"></div>
 
   <section class="panel" id="addPanel">
     <h3>เพิ่มผู้ใช้ + สร้างรหัสผ่าน</h3>
@@ -234,12 +238,15 @@ function tenureText(sd) {
   parts.push(d + ' วัน');
   return parts.join(' ');
 }
+function empEmpty(u) {
+  return !(u.empCode || u.startDate || u.empStatus || u.nickname || u.phone || u.lineId || u.gmail);
+}
 function empCell(u) {
   var st = empStatusInfo(u.empStatus);
   var top = [];
   if (u.empCode) top.push('<span class="emp-code">' + esc(u.empCode) + '</span>');
   if (st) top.push('<span class="emp-st ' + st.cls + '"><i class="fa-solid ' + st.icon + '"></i> ' + esc(st.label) + '</span>');
-  var line1 = top.length ? top.join(' ') : '<span style="color:#c2cbd8">ยังไม่มีรหัสพนักงาน</span>';
+  var line1 = top.length ? top.join(' ') : '<span class="emp-todo"><i class="fa-regular fa-circle-exclamation"></i> ยังไม่กรอก</span>';
   var ten = tenureText(u.startDate);
   var line2 = u.startDate
     ? '<div class="mini">อายุงาน <b style="color:#0F2B46">' + esc(ten) + '</b> · เริ่ม ' + esc(shortThai(u.startDate)) + '</div>'
@@ -392,6 +399,21 @@ function render(users) {
   });
   window.__USERS__ = users;
   el('count').textContent = users.length;
+  /* สรุปความครบของข้อมูลพนักงาน */
+  (function () {
+    var box = document.getElementById('empGap');
+    if (!box) return;
+    var missing = users.filter(empEmpty);
+    if (!missing.length) {
+      box.style.display = 'none';
+      return;
+    }
+    box.style.display = 'block';
+    var names = missing.slice(0, 4).map(function (u) { return u.name || u.email; }).join(', ');
+    box.innerHTML = '<i class="fa-solid fa-circle-info"></i> ข้อมูลพนักงานยังไม่ครบ <b>' + missing.length + '/' + users.length +
+      '</b> บัญชี' + (missing.length > 4 ? ' (เช่น ' + esc(names) + ' …)' : ' (' + esc(names) + ')')
+      + ' — กดปุ่ม <i class="fa-solid fa-pen"></i> ท้ายแถวเพื่อเติมข้อมูล';
+  })();
   var rows = users.map(function (u) {
     var core = isCore(u.email);
     var initial = String(String(u.name || '').trim() || String(u.email || '?')).slice(0, 1);
