@@ -1208,26 +1208,39 @@
         + '</tr>';
     }).join('');
 
-    var cards = [
-      cardKpi(saleScope ? 'เป้าหมายของฉัน (Target)' : 'เป้าหมายทีม (Target)', money(k.target),
-        'จำนวนคน <b>' + k.headCount + '</b> คน · เฉลี่ย/คน <b>' + money(k.perHead) + '</b>',
-        undefined, '#0F2B46', 'fa-solid fa-bullseye'),
-      cardKpi('ผลงานที่ปิดแล้ว (Actual 100%)', money(s.s4),
-        pct(k.ach4) + ' ของเป้า · ' + money(s.s4) + ' / ' + money(k.target), k.ach4, '#2563EB', 'fa-solid fa-circle-check'),
-      cardKpi('ผลงานรอส่งของ (90%)', money(s.s3),
-        s.count ? (s.s3 ? 'รอเปิดบิล/ส่งมอบ' : 'ยังไม่มีงานรอส่งของ') : 'ยังไม่มีดีล', undefined, '#38BDF8', 'fa-solid fa-truck-fast'),
-      cardKpi('ผลงานรอยืนยัน PO (75%)', money(s.s2),
-        s.s2 ? 'ปิดได้เมื่อได้ PO' : 'ยังไม่มีงานรอ PO', undefined, '#F59E0B', 'fa-solid fa-file-signature'),
-      cardKpi('Pipeline — กำลังรอพิจารณา (50%)', money(s.s1),
-        s.s1 ? 'อยู่ระหว่างการพิจารณา' : 'ยังไม่มีงานใน Pipeline', undefined, '#A78BFA', 'fa-solid fa-hourglass-half'),
-      cardKpi('รวม ปิดงานแล้ว + รอส่งของ', money(s.sum43),
-        pct(k.ach43) + ' ของเป้า', k.ach43, '#0EA5E9', 'fa-solid fa-layer-group'),
-      cardKpi('รวม ปิดแล้ว + รอส่งของ + รอยืนยัน PO', money(s.sum432),
-        pct(k.ach432) + ' ของเป้า', k.ach432, '#7C3AED', 'fa-solid fa-calculator'),
-      cardKpi('ประมาณการยอดขายปิดเดือน', money(s.forecast),
-        'ปิด+รอส่ง 100% <b>' + money(s.secured) + '</b> + PO 50% <b>' + money(s.weighted2) + '</b> + Pipeline 25% <b>' + money(s.weighted1) + '</b>',
-        k.forecastPct, '#16A34A', 'fa-solid fa-chart-line')
-    ];
+    /* ---- Hero: Target (เล็ก) · Summary ปิดแล้ว+รอส่งของ · Forecast (ใหญ่ + ส่วนที่ต้องเติม) ---- */
+    var clampPct = function (v) { return Math.max(0, Math.min(100, num(v))); };
+    var gap = k.target - s.forecast;
+    var gapHtml = gap > 0.5
+      ? 'ต้องเติมอีก <b>' + money(gap) + '</b> <span style="color:#9EC1E0;font-size:10.5px">(' + pct(k.target ? gap / k.target * 100 : 0) + ' ของเป้า)</span>'
+      : (gap < -0.5 ? 'ถึงเป้าแล้ว · เกินเป้า <b>' + money(-gap) + '</b>' : 'พอดีเป้าแล้ว 🎯');
+    var hero =
+      '<div class="sr-hero">'
+      + '  <div class="sr-hero-target">'
+      + '    <div class="sr-ht-label"><i class="fa-solid fa-bullseye"></i> ' + (saleScope ? 'เป้าหมายของฉัน' : 'เป้าหมายทีม')
+      + (state.month ? ' · ' + esc(TH_MONTHS[state.month - 1]) : '') + '</div>'
+      + '    <div class="sr-ht-val">' + money(k.target) + '</div>'
+      + '    <div class="sr-ht-meta">' + k.headCount + ' คน · เฉลี่ย/คน ' + money(k.perHead) + '</div>'
+      + '  </div>'
+      + '  <div class="sr-hero-sum">'
+      + '    <div class="sr-hs-head">ผลงานที่ปิดแล้ว + รอส่งของ <span class="sr-pill-pct">' + pct(k.ach43) + ' ของเป้า</span></div>'
+      + '    <div class="sr-hs-total">' + money(s.sum43) + '</div>'
+      + '    <div class="sr-hs-cols">'
+      + '      <div><small>ปิดงานแล้ว (Actual 100%)</small><b>' + money(s.s4) + '</b></div>'
+      + '      <div><small>รอส่งของ (90%)</small><b>' + money(s.s3) + '</b></div>'
+      + '    </div>'
+      + '    <div class="sr-bar"><span style="width:' + clampPct(k.ach43) + '%;background:#0EA5E9"></span></div>'
+      + '    <div class="sr-hs-foot">รอยืนยัน PO ' + money(s.s2) + ' · Pipeline ' + money(s.s1) + (s.s0 ? ' · กำลังคุย ' + money(s.s0) : '') + '</div>'
+      + '  </div>'
+      + '  <div class="sr-hero-fc">'
+      + '    <div class="sr-hf-label"><i class="fa-solid fa-chart-line"></i> ประมาณการยอดขายปิดเดือน</div>'
+      + '    <div class="sr-hf-val">' + money(s.forecast) + '</div>'
+      + '    <div class="sr-hf-pct">' + pct(k.forecastPct) + ' ของเป้า ' + money(k.target) + '</div>'
+      + '    <div class="sr-bar"><span style="width:' + clampPct(k.forecastPct) + '%;background:#FDE68A"></span></div>'
+      + '    <div class="sr-hf-gap">' + gapHtml + '</div>'
+      + '    <div class="sr-hf-bd">ปิด+รอส่ง ' + money(s.secured) + ' (100%) · PO ' + money(s.weighted2) + ' (50%) · Pipeline ' + money(s.weighted1) + ' (25%)</div>'
+      + '  </div>'
+      + '</div>';
 
     function opt(v, tx, cur) { return '<option value="' + esc(v) + '"' + (String(cur) === String(v) ? ' selected' : '') + '>' + esc(tx) + '</option>'; }
     var yearOpts = YEARS.map(function (y) { return opt(y, 'ปี ' + (y + 543), state.year); }).join('');
@@ -1260,7 +1273,7 @@
       + (saleScope ? 'ข้อมูลของ <b>' + esc(sale(scD.saleId).name) + '</b> · ' : '')
       + esc(state.month ? monthLabel(state.year, state.month) : ('ปี ' + (state.year + 543)))
       + ' · ' + k.list.length + ' ดีล</div>'
-      + '<div class="sr-kpis">' + cards.join('') + '</div>'
+      + hero
       + '<div class="sr-dash-teams">' + (teamRows || '<div class="sr-trow">ยังไม่มีทีม</div>') + '</div>'
       + payPanel
       + '<div class="sr-dash-charts">'
@@ -2300,6 +2313,29 @@
       + '.sr-sum-sep{color:#C2CBD8}'
       + '.sr-link{display:inline-flex;align-items:center;gap:4px;color:#2563EB;font-size:10px;cursor:pointer;margin-top:5px}'
       + '.sr-link:hover{text-decoration:underline}'
+      /* hero: target (เล็ก) · summary · forecast (ใหญ่) */
+      + '.sr-hero{display:grid;grid-template-columns:minmax(160px,.72fr) minmax(0,1.12fr) minmax(0,1.36fr);gap:12px;margin-bottom:15px;align-items:stretch}'
+      + '.sr-hero>div{background:#fff;border:1px solid #E6EDF5;border-radius:14px;padding:14px 16px;box-shadow:0 6px 18px rgba(15,43,70,.05);display:flex;flex-direction:column;gap:6px;min-width:0}'
+      + '.sr-ht-label,.sr-hs-head,.sr-hf-label{font-size:10.5px;color:#667085;display:flex;align-items:center;gap:6px;flex-wrap:wrap;line-height:1.4}'
+      + '.sr-ht-label i,.sr-hf-label i{font-size:10px;color:#94A3B8}'
+      + '.sr-ht-val{font-size:19px;font-weight:600;color:#0F2B46;letter-spacing:-.2px;line-height:1.2}'
+      + '.sr-ht-meta{font-size:10px;color:#98A2B3;line-height:1.5;margin-top:auto}'
+      + '.sr-hs-total{font-size:24px;font-weight:600;color:#0F2B46;letter-spacing:-.3px;line-height:1.15}'
+      + '.sr-hs-cols{display:grid;grid-template-columns:1fr 1fr;gap:8px}'
+      + '.sr-hs-cols>div{background:#F8FAFC;border:1px solid #EEF2F7;border-radius:10px;padding:7px 9px;display:grid;gap:2px;min-width:0}'
+      + '.sr-hs-cols small{font-size:9.5px;color:#667085;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+      + '.sr-hs-cols b{font-size:13px;color:#0F2B46}'
+      + '.sr-hs-foot{font-size:10px;color:#98A2B3;line-height:1.5;margin-top:auto}'
+      + '.sr-pill-pct{display:inline-flex;align-items:center;padding:1px 8px;border-radius:20px;background:#EFF6FF;color:#1D4ED8;font-size:10px;white-space:nowrap}'
+      + '.sr-hero-fc{background:linear-gradient(160deg,#0F2B46,#173D60)!important;border-color:#173D60!important;color:#fff}'
+      + '.sr-hero-fc .sr-hf-label{color:#9EC1E0}'
+      + '.sr-hf-val{font-size:32px;font-weight:600;letter-spacing:-.6px;line-height:1.1;color:#fff}'
+      + '.sr-hf-pct{font-size:11px;color:#9EC1E0}'
+      + '.sr-hf-gap{font-size:11.5px;color:#E7EEF6;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}'
+      + '.sr-hf-gap b{font-size:15px;color:#FDE68A;font-weight:600}'
+      + '.sr-hf-bd{font-size:9.5px;color:#9EC1E0;line-height:1.55;margin-top:auto}'
+      + '.sr-hero-fc .sr-bar{background:rgba(255,255,255,.16);height:7px}'
+      + '@media(max-width:980px){.sr-hero{grid-template-columns:1fr}}'
       + '.sr-tag{background:#EEF2FF;color:#3730A3;border-radius:99px;padding:4px 10px;font-size:10px;white-space:nowrap}'
       /* table */
       + '.sr-tablewrap{overflow:auto;width:100%;-webkit-overflow-scrolling:touch}'
