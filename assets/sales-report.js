@@ -2992,7 +2992,7 @@
       + '.sr-xbtn{border:1px solid #FFE4E6;background:#FFF1F2;color:#B91C1C;border-radius:7px;padding:5px 8px;cursor:pointer;font-size:10px}'
       + '.sr-xbtn:hover{background:#FFE4E6}'
       + '.sr-filters.sr-f3{grid-template-columns:repeat(3,minmax(0,1fr))}'
-      + '.sr-filters.sr-f5{grid-template-columns:repeat(3,minmax(0,1fr))}'
+      + '.sr-filters.sr-f5{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}'
       + '.sr-dash-teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:15px}'
       + '.sr-trow{background:#fff;border:1px solid #EDF0F4;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(15,43,70,.05);min-width:0}'
       + '.sr-trow-h{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:#667085;margin-bottom:8px}'
