@@ -156,13 +156,14 @@
   function cloudOn() {
     return !!(global.PIAuth && global.PIAuth.listProjects && global.PIAuth.saveProject);
   }
-  function toCloud(p) {
+  function toCloud(p, op, opDetail) {
     return {
       id: p.id, customer: p.customer, name: p.name, stage: Number(p.stage) || 0,
       owner: p.owner || '', ownerEmail: p.ownerEmail || '', sale: p.sale || '',
       team: p.team || '', startDate: p.startDate || '', deadline: p.deadline || '',
       blocker: p.blocker || '', note: p.note || '', drRef: p.drRef || '',
-      progress: progressOf(p), tasks: p.tasks || []
+      progress: progressOf(p), tasks: p.tasks || [],
+      op: op || '', opDetail: opDetail || ''
     };
   }
   function fromCloud(c) {
@@ -175,13 +176,13 @@
       createdAt: c.createdAt || '', updatedAt: c.updatedAt || ''
     };
   }
-  function pushCloud(p) {
+  function pushCloud(p, op, opDetail) {
     if (!cloudOn() || !p) return;
     if (!p.updatedAt) p.updatedAt = new Date().toISOString();
     save();
     clearTimeout(__pushT);
     __pushT = setTimeout(function () {
-      global.PIAuth.saveProject(toCloud(p)).catch(function (e) {
+      global.PIAuth.saveProject(toCloud(p, op, opDetail)).catch(function (e) {
         if (global.toast) global.toast('ซิงก์คลาวด์ไม่สำเร็จ: ' + ((e && e.message) || e));
       });
     }, 400);
@@ -570,7 +571,7 @@
     save();
     global.closeModal();
     global.render();
-    pushCloud(byId(v.id || id));
+    pushCloud(byId(v.id || id), id ? 'project.edit' : 'project.add', id ? '' : 'สร้างโครงการใหม่');
     if (global.PILog) {
       if (id) global.PILog.add('project.edit', (p ? p.name : id), 'บันทึกการแก้ไขขั้นตอน: ' + (STAGES[v.stage] ? STAGES[v.stage].name : v.stage));
       else global.PILog.add('project.add', v.name, v.customer + ' · ทีม ' + v.team);
@@ -728,7 +729,7 @@
     }
     save();
     global.toast(ctx.task ? 'บันทึกงานแล้ว' : 'เพิ่มงานแล้ว');
-    pushCloud(p);
+    pushCloud(p, ctx.task ? 'task.edit' : 'task.add', (ctx.task ? 'แก้งาน: ' : 'เพิ่มงาน: ') + val.name);
     if (global.PILog) global.PILog.add(ctx.task ? 'task.edit' : 'task.add', val.name, p.name + ' · ' + val.status);
     openDetail(p.id);
     global.render();
@@ -736,15 +737,17 @@
 
   function toggleTask(projectId, taskId) {
     var p = byId(projectId); if (!p) return;
+    var tName = '', tStatus = '';
     (p.tasks || []).forEach(function (t) {
       if (t.id === taskId) {
         var i = TASK_STATUS.indexOf(t.status);
         t.status = TASK_STATUS[(i + 1) % TASK_STATUS.length];
+        tName = t.name; tStatus = t.status;
         if (global.PILog) global.PILog.add('task.toggle', t.name, p.name + ' → ' + t.status);
       }
     });
     save();
-    pushCloud(p);
+    pushCloud(p, 'task.toggle', tName + ' → ' + tStatus);
     openDetail(projectId);
     global.render();
   }
@@ -754,7 +757,7 @@
     var rm = (p.tasks || []).filter(function (t) { return t.id === taskId; })[0];
     p.tasks = (p.tasks || []).filter(function (t) { return t.id !== taskId; });
     save();
-    pushCloud(p);
+    pushCloud(p, 'task.del', rm ? ('ลบงาน: ' + rm.name) : '');
     if (global.PILog && rm) global.PILog.add('task.del', rm.name, p.name);
     openDetail(projectId);
     global.render();
@@ -801,7 +804,7 @@
     p.stage = target;
     if (target >= 4) (p.tasks || []).forEach(function (t) { t.status = 'เสร็จแล้ว'; });
     save();
-    pushCloud(p);
+    pushCloud(p, 'project.stage', 'ย้ายขั้นตอน: ' + stageOf(p.stage).name);
     global.render();
     global.toast('ย้าย "' + p.name + '" ไปขั้น "' + stageOf(target).name + '" แล้ว');
   });

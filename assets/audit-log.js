@@ -161,6 +161,12 @@
     st.err = '';
     var body = document.getElementById('alBody');
     if (body && !st.logs.length) body.innerHTML = '<div class="al-empty">กำลังโหลด…</div>';
+    setTimeout(function () {
+      var b2 = document.getElementById('alBody');
+      if (b2 && /กำลังโหลด/.test(b2.innerText)) {
+        b2.innerHTML = '<div class="al-empty">กำลังโหลดจาก Google Sheet… (ครั้งแรกอาจใช้ 3–6 วินาที)</div>';
+      }
+    }, 1400);
     global.PIAuth.listLogs({ q: st.q, kind: st.kind, by: st.by, limit: st.limit }).then(function (r) {
       st.logs = r.logs || [];
       st.counts = r.counts || null;

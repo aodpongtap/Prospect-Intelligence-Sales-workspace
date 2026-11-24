@@ -155,9 +155,15 @@ function saveProjectApi_(token, payload) {
 
   appendTab_('Logs', {
     ts: nowIso,
-    action: rowIdx ? 'project.edit' : 'project.add',
+    action: (function () {
+      var op = String(p.op || '').trim();
+      var ok = ['project.add', 'project.edit', 'task.add', 'task.edit', 'task.del', 'task.toggle', 'project.stage'];
+      if (ok.indexOf(op) >= 0) return op;
+      return rowIdx ? 'project.edit' : 'project.add';
+    })(),
     ref: no + ' · ' + rec.customer,
-    detail: rec.job + ' · ขั้นตอน ' + rec.stage + ' · ทีม ' + (rec.team || '-') + ' · ความคืบหน้า ' + rec.progress + '%',
+    detail: (String(p.opDetail || '').trim() ? String(p.opDetail).slice(0, 120) + ' · ' : '')
+      + rec.job + ' · ขั้นตอน ' + rec.stage + ' · ทีม ' + (rec.team || '-') + ' · ความคืบหน้า ' + rec.progress + '%',
     by: String(s.email).toLowerCase()
   });
 
