@@ -69,6 +69,7 @@ function apiResponse_(p) {
     else if (action === 'reset') out = resetPassword(p.token, p.email);
     else if (action === 'update') out = updateUser(p.token, p.email, p.level, p.status, p.parent, p.saleId, p.name, p.team, p.extra);
     else if (action === 'remove') out = deleteUser(p.token, p.email);
+    else if (action === 'setupSchema') out = setupDataForAdmin_(p.token);
     else if (action === 'deals') out = getDeals(p.token);
     else if (action === 'addDeal') out = addDeal(p.token, p.name, p.customer, p.value, p.stage, p.probability, p.close, p.nextAction, p.status);
     else if (action === 'deleteDeal') out = deleteDeal(p.token, p.id);
