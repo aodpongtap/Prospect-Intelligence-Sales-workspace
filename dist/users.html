@@ -420,7 +420,7 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
   function listDailyV2() {
     return call('dailyV2', { token: token() }).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดบันทึกกิจกรรมไม่สำเร็จ');
-      return r.items || [];
+      return { items: r.items || [], deletedRefs: r.deletedRefs || [] };
     });
   }
   function saveDailyV2(item) {

@@ -131,16 +131,20 @@ function dailyOf_(r) {
 
 function listDailyApi_(token) {
   var s = session_(token);
-  if (!s) return { ok: false, error: 'กรุณาเข้าสู่ระบบใหม่', items: [] };
-  var all = tabRows_(tab_(DAILY_TAB))
+  if (!s) return { ok: false, error: 'กรุณาเข้าสู่ระบบใหม่', items: [], deletedRefs: [] };
+  var rows = tabRows_(tab_(DAILY_TAB));
+  var deletedRefs = rows.filter(function (r) { return Number(r.deleted || 0) === 1 && r.ref; })
+    .map(function (r) { return String(r.ref || '').trim().toUpperCase(); });
+  var all = rows
     .filter(function (r) { return Number(r.deleted || 0) !== 1; })
     .map(dailyOf_)
     .filter(function (d) { return d.ref; });
   if (!seesAllLevel_(s.level)) {
     var mySale = String(s.saleId || '').trim().toUpperCase();
     all = all.filter(function (d) { return d.saleId === mySale && mySale; });
+    deletedRefs = [];   /* ระดับ AE ไม่ต้องรู้รายการที่คนอื่นลบ */
   }
-  return { ok: true, items: all };
+  return { ok: true, items: all, deletedRefs: deletedRefs };
 }
 
 /** ออกเลข ref ถัดไปของวันนั้น (DR-YYYYMMDD-NN) */

@@ -106,9 +106,17 @@
   function syncDailyFromCloud() {
     if (!cloudReady() || !global.PIAuth.listDailyV2) return;
     try {
-      global.PIAuth.listDailyV2().then(function (list) {
-        if (!list || !list.length) return;
+      global.PIAuth.listDailyV2().then(function (res) {
+        var list = (res && res.items) ? res.items : (res || []);
+        var gone = {};
+        ((res && res.deletedRefs) || []).forEach(function (rf) { gone[String(rf).toUpperCase()] = 1; });
+        if (!list.length && !Object.keys(gone).length) return;
         var changed = false;
+        /* ลบบันทึกที่ถูกลบจากเครื่องอื่น */
+        if (Object.keys(gone).length) {
+          var keep = ITEMS.filter(function (x) { return !gone[String(x.ref || '').toUpperCase()]; });
+          if (keep.length !== ITEMS.length) { ITEMS.length = 0; Array.prototype.push.apply(ITEMS, keep); changed = true; }
+        }
         list.forEach(function (c) {
           var loc = null;
           for (var i = 0; i < ITEMS.length; i++) if (String(ITEMS[i].ref) === String(c.ref)) { loc = ITEMS[i]; break; }

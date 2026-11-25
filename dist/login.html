@@ -503,7 +503,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3.5px rgba(37,99,235,.13);
   function listDailyV2() {
     return call('dailyV2', { token: token() }).then(function (r) {
       if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดบันทึกกิจกรรมไม่สำเร็จ');
-      return r.items || [];
+      return { items: r.items || [], deletedRefs: r.deletedRefs || [] };
     });
   }
   function saveDailyV2(item) {
