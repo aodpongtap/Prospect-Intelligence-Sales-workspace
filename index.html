@@ -114,11 +114,11 @@
   </script>
   <script src="assets/auth-sheets.js?v=20"></script>
   <script src="assets/report-log.js?v=13"></script>
-  <script src="assets/sales-report.js?v=80"></script>
+  <script src="assets/sales-report.js?v=81"></script>
   <script src="assets/daily-report.js?v=17"></script>
   <script src="assets/project-tracking.js?v=16"></script>
   <script src="assets/customer-intelligence.js?v=6"></script>
-  <script src="assets/audit-log.js?v=11"></script>
+  <script src="assets/audit-log.js?v=12"></script>
   <script src="assets/team-page.js?v=13"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
@@ -826,7 +826,7 @@
     })();
 
 
-    const pageTitles={dashboard:"Dashboard",sales:"AE Pipeline",daily:"Daily Report",audit:"Activity Log",partners:"Partnership Business",team:"ทีม & สิทธิ์",projects:"Project Tracking",intelligence:"Customer Intelligence",reports:"Reports",log:"Report Log",settings:"Settings"};
+    const pageTitles={dashboard:"Dashboard",sales:"AE Pipeline",daily:"Daily Report",audit:"Activity Log",partners:"Partnership Business",team:"ทีม & สิทธิ์",projects:"Project Tracking",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
     const stageNames=["Planning","AE Handover","Installation","Testing & Acceptance","Completed"];
     const stageLabels=["Prospect","Qualified","Proposal","Negotiation","Won","Lost"];
     const stageLabelsTH={"Prospect":"หาลูกค้า","Qualified":"คัดกรองแล้ว","Proposal":"เสนอราคา","Negotiation":"เจรจา","Won":"ปิดการขาย","Lost":"เสียดีล"};
@@ -875,7 +875,7 @@
     function btn(label,action,icon="",primary=false,extra=""){return `<button class="btn ${primary?"btn-primary":""}" data-action="${action}" ${extra}>${icon?`<i class="${icon}"></i>`:""}${label}</button>`}
     function destroyCharts(){charts.forEach(c=>c.destroy());charts=[]}
     function makeChart(id,config){const canvas=document.getElementById(id);if(canvas&&window.Chart)charts.push(new Chart(canvas,config))}
-    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,audit:(window.AuditLog?AuditLog.render:function(){return '<div class="panel"><div class="panel-title">Activity Log</div><div class="panel-sub">ไม่พบโมดูล Activity Log (assets/audit-log.js)</div></div>'}),daily:(window.DailyReport?DailyReport.render:function(){return '<div class="panel"><div class="panel-title">Daily Report</div><div class="panel-sub">ไม่พบโมดูล Daily Report (assets/daily-report.js)</div></div>'}),partners:renderPartnerCRM,team:(window.TeamPage?TeamPage.render:renderTeam),projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),intelligence:(window.CustomerIntel?CustomerIntel.render:renderIntelligence),reports:renderReports,log:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence"){window.CustomerIntel?CustomerIntel.drawCharts():drawHealthChart()}if(currentPage==="reports")drawReportCharts();if(currentPage==="team"&&!window.TeamPage)loadTeam();if(window.__afterRender__)window.__afterRender__();if(window.__srDailyTab__&&currentPage==="reports"){window.__srDailyTab__=false;var _dt=document.querySelector('[data-sr-view="daily"]');if(_dt)_dt.click()}var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
+    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,audit:(window.AuditLog?AuditLog.render:function(){return '<div class="panel"><div class="panel-title">Activity Log</div><div class="panel-sub">ไม่พบโมดูล Activity Log (assets/audit-log.js)</div></div>'}),daily:(window.DailyReport?DailyReport.render:function(){return '<div class="panel"><div class="panel-title">Daily Report</div><div class="panel-sub">ไม่พบโมดูล Daily Report (assets/daily-report.js)</div></div>'}),partners:renderPartnerCRM,team:(window.TeamPage?TeamPage.render:renderTeam),projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),intelligence:(window.CustomerIntel?CustomerIntel.render:renderIntelligence),reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence"){window.CustomerIntel?CustomerIntel.drawCharts():drawHealthChart()}if(currentPage==="reports")drawReportCharts();if(currentPage==="team"&&!window.TeamPage)loadTeam();if(window.__afterRender__)window.__afterRender__();if(window.__srDailyTab__&&currentPage==="reports"){window.__srDailyTab__=false;var _dt=document.querySelector('[data-sr-view="daily"]');if(_dt)_dt.click()}var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
 
     /* ===== การนำทางแบบเว็บทั่วไป: URL เปลี่ยน + ปุ่ม Back ของเบราว์เซอร์ใช้ได้ ===== */
     function pageUrl(p){return p&&p!=="dashboard"?"index.html?page="+encodeURIComponent(p):"index.html"}

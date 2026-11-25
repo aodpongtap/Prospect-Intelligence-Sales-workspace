@@ -2262,45 +2262,21 @@
     openDealForm(d);
   }
 
-  /** แท็บ Report / Log — แสดงเฉพาะผู้ที่มีสิทธิ์ดูบันทึกกิจกรรม (admin / bu / head) */
-  function canSeeLog() {
-    var lv = String(((global.__ME__ || {}).level) || '').toLowerCase();
-    return lv === '' || lv === 'admin' || lv === 'bu' || lv === 'head' || lv === 'editor';
-  }
+  /** แท็บ Report / Daily Report — บันทึกกิจกรรม (Log) ย้ายไปหน้า Activity Log ของ Admin แล้ว */
   function renderTabs() {
-    var showLog = canSeeLog();
-    var isLog = state.view === 'log' && showLog;
     var isDaily = state.view === 'daily';
     var showDaily = !!(global.DailyReport && global.DailyReport.render);
     return '<div class="sr-tabsbar">'
-      + '  <button class="sr-tabbtn' + (isLog || isDaily ? '' : ' on') + '" data-sr-view="report"><i class="fa-solid fa-chart-pie"></i> รายงานยอดขาย</button>'
+      + '  <button class="sr-tabbtn' + (isDaily ? '' : ' on') + '" data-sr-view="report"><i class="fa-solid fa-chart-pie"></i> รายงานยอดขาย</button>'
       + (showDaily ? '  <button class="sr-tabbtn' + (isDaily ? ' on' : '') + '" data-sr-view="daily"><i class="fa-solid fa-clipboard-check"></i> Daily Report</button>' : '')
-      + (showLog ? '  <button class="sr-tabbtn' + (isLog ? ' on' : '') + '" data-sr-view="log"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติกิจกรรม (Log)</button>' : '')
       + '</div>';
   }
 
   function render() {
-    /* ถ้าเปิดมาด้วย ?page=log (บุ๊กมาร์กเดิม) ให้เริ่มที่แท็บ Log */
-    try {
-      if (!ui.__logInit && /[?&]page=log\b/.test(location.search)) { state.view = 'log'; ui.__logInit = true; }
-    } catch (e) {}
-
-    if (state.view === 'log' && canSeeLog()) {
-      var kp = kpis();
-      return '<div class="sr">'
-        + '<div class="sr-head">'
-        + '  <div><h1>Reports &amp; Log</h1>'
-        + '    <div class="sr-sub">รายงานยอดขาย และประวัติกิจกรรมที่เกิดขึ้นในระบบ</div></div>'
-        + '</div>'
-        + renderTabs()
-        + (global.PILog ? global.PILog.render({ embedded: true }) : '<div class="sr-panel">โหลดบันทึกกิจกรรมไม่สำเร็จ</div>')
-        + '</div>';
-    }
-
     /* แท็บ “บันทึกการพบลูกค้า” = Daily Report (ส่วนหนึ่งของ Reports) */
     if (state.view === 'daily' && global.DailyReport && global.DailyReport.render) {
       return '<div class="sr sr-daily-tab">'
-        + '<div class="sr-head"><div><h1>Reports &amp; Log</h1>'
+        + '<div class="sr-head"><div><h1>Reports</h1>'
         + '  <div class="sr-sub">Daily Report — บันทึกการเข้าพบลูกค้า / แผนงานรายวัน · customer visit log &amp; daily plan</div></div></div>'
         + renderTabs()
         + global.DailyReport.render()
@@ -2310,14 +2286,14 @@
     var k = kpis();
     var notice = scopeNotice();
     if (scopeOf().type === 'pending') {
-      return '<div class="sr"><div class="sr-head"><div><h1>Reports &amp; Log</h1>'
+      return '<div class="sr"><div class="sr-head"><div><h1>Reports</h1>'
         + '<div class="sr-sub">กำลังโหลดข้อมูลตามสิทธิ์ของคุณ…</div></div></div>'
         + renderTabs() + notice + '</div>';
     }
     var k = kpis();
     return '<div class="sr">'
       + '<div class="sr-head">'
-      + '  <div><h1>Reports &amp; Log</h1>'
+      + '  <div><h1>Reports</h1>'
       + '    <div class="sr-sub">สรุปยอดขาย ผลงานรายบุคคล และประมาณการปิดเดือน</div></div>'
       + '</div>'
       + renderTabs()
@@ -2814,7 +2790,7 @@
     var vw = t.closest('[data-sr-view]');
     if (vw) {
       var vv = vw.getAttribute('data-sr-view');
-      state.view = (vv === 'log') ? 'log' : (vv === 'daily' ? 'daily' : 'report');
+      state.view = (vv === 'daily') ? 'daily' : 'report';
       if (typeof global.render === 'function') global.render();
       return;
     }

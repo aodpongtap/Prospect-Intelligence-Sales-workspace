@@ -100,7 +100,7 @@
 
     return '<div class="al">'
       + '<div class="al-head"><div><h1><i class="fa-solid fa-clock-rotate-left" style="color:#2563EB;margin-right:7px"></i>Activity Log</h1>'
-      + '  <div class="al-sub">ประวัติการใช้งานทั้งหมด (ดีล / บันทึกกิจกรรม / โครงการ / ผู้ใช้ / เป้าหมาย) จากแท็บ Logs บน Google Sheet</div></div>'
+      + '  <div class="al-sub">ประวัติการใช้งานทั้งหมด (ดีล / บันทึกกิจกรรม / โครงการ / ผู้ใช้ / เป้าหมาย) จากแท็บ Logs บน Google Sheet — รวมทุกกิจกรรมไว้ที่เดียว (ย้ายจากแท็บ Log ในหน้า Reports แล้ว)</div></div>'
       + '  <button class="al-btn" id="alRefresh"><i class="fa-solid fa-rotate"></i> รีเฟรช</button>'
       + (isAdmin() ? '  <button class="al-btn" id="alClear" title="ล้าง Log ทั้งหมด (สำรองข้อมูลเดิมก่อน)"><i class="fa-solid fa-eraser"></i> ล้าง Log</button>' : '')
       + '</div>'
