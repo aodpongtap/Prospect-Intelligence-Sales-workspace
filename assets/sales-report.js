@@ -842,15 +842,15 @@
     var mineSale = scF.type === 'sale' ? sale(scF.saleId) : null;
     /* AE (L5): ทีมล็อกเป็น BU ของตัวเอง + ตัวกรอง AE แสดงเฉพาะตัวเอง */
     var teamField = mineSale
-      ? '<div class="sr-fl"><label>ทีม (BU)</label><div class="sr-locked"><i class="fa-solid fa-user-lock"></i> '
-        + esc(teamByCode(mineSale.team).name) + ' <span class="sr-s2">ของฉัน</span></div></div>'
+      ? '<div class="sr-fl"><label>ทีม (BU)</label><div class="sr-locked" title="' + esc(teamByCode(mineSale.team).name) + ' ของฉัน"><i class="fa-solid fa-user-lock"></i><span class="sr-lk-t">'
+        + esc(teamByCode(mineSale.team).name) + '</span><span class="sr-lk-b">ของฉัน</span></div></div>'
       : (lockedTeam
-        ? '<div class="sr-fl"><label>ทีม (BU)</label><div class="sr-locked"><i class="fa-solid fa-lock"></i> '
-          + esc(teamByCode(lockedTeam).name) + ' <span class="sr-s2">ทีมที่คุณดูแล</span></div></div>'
+        ? '<div class="sr-fl"><label>ทีม (BU)</label><div class="sr-locked" title="' + esc(teamByCode(lockedTeam).name) + ' · ทีมที่คุณดูแล"><i class="fa-solid fa-lock"></i><span class="sr-lk-t">'
+          + esc(teamByCode(lockedTeam).name) + '</span><span class="sr-lk-b">ทีมที่ดูแล</span></div></div>'
         : '<div class="sr-fl"><label>ทีม (BU)</label><select data-sr-filter="team">' + teamOpts + '</select></div>');
     var aeField = mineSale
-      ? '<div class="sr-fl"><label>AE</label><div class="sr-locked"><i class="fa-solid fa-user"></i> '
-        + esc(mineSale.id + ' · ' + mineSale.name) + ' <span class="sr-s2">ของฉัน</span></div></div>'
+      ? '<div class="sr-fl"><label>AE</label><div class="sr-locked" title="' + esc(mineSale.id + ' · ' + mineSale.name) + ' ของฉัน"><i class="fa-solid fa-user"></i><span class="sr-lk-t">'
+        + esc(mineSale.id + ' · ' + mineSale.name) + '</span><span class="sr-lk-b">ของฉัน</span></div></div>'
       : ('<div class="sr-fl"><label>AE</label><select data-sr-filter="sale">'
         + (scF.type === 'team'
           ? ('<option value="">ทุกคนในทีม</option>' + SALES.filter(function (s) { return s.team === scF.team; }).map(function (s) {
@@ -2939,8 +2939,11 @@
       + 'padding:7px 8px;font-size:11px;min-height:34px;outline:none;font-family:inherit}'
       + '.sr-fl select:focus{border-color:#60A5FA;box-shadow:0 0 0 3px rgba(37,99,235,.1)}'
       + '.sr-locked{display:flex;align-items:center;gap:6px;min-height:34px;border:1px solid #E0E7FF;background:#EEF2FF;'
-      + 'color:#3730A3;border-radius:8px;padding:7px 9px;font-size:11px;font-weight:500}'
-      + '.sr-locked i{font-size:9px;color:#4F46E5}'
+      + 'color:#3730A3;border-radius:8px;padding:7px 9px;font-size:11px;font-weight:500;min-width:0;overflow:hidden;line-height:1.25}'
+      + '.sr-locked i{font-size:9px;color:#4F46E5;flex:0 0 auto}'
+      + '.sr-lk-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}'
+      + '.sr-lk-b{flex:0 0 auto;white-space:nowrap;font-size:9.5px;font-weight:400;color:#6366F1;background:#E0E7FF;'
+      + 'border-radius:999px;padding:1px 6px}'
       + '.sr-fbtn{display:flex;align-items:flex-end;gap:8px;grid-column:1/-1;justify-content:flex-end}'
       + '@media(min-width:900px){.sr-filters{padding-right:252px}'
       + '.sr-fbtn{position:absolute;right:14px;bottom:12px;grid-column:auto}}'
