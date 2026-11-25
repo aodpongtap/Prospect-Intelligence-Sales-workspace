@@ -1255,6 +1255,8 @@
       }catch(e){return true}
     }
     function guardPage(p,notify){
+      /* บุ๊กมาร์กเดิม ?page=log → ย้ายไปหน้า Activity Log (Admin เท่านั้น) */
+      if(p==="log") return canAccessPage("audit")?"audit":"dashboard";
       if(!p||!pageTitles[p]){
         if(notify&&p)toast("ไม่พบหน้าที่ระบุ — กลับสู่ Dashboard");
         return "dashboard";
