@@ -639,8 +639,10 @@ function renameUser(email) {
   document.body.appendChild(wrap);
   var inp = document.getElementById('rnName');
   setTimeout(function () { inp.focus(); inp.select(); }, 60);
-  function close() { if (wrap.parentNode) document.body.removeChild(wrap); }
+  function close() { if (wrap.parentNode) document.body.removeChild(wrap); document.removeEventListener('keydown', onEsc); }
+  function onEsc(e) { if (e.key === 'Escape') close(); }
   wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
+  document.addEventListener('keydown', onEsc);
   document.getElementById('rnCancel').addEventListener('click', close);
   document.getElementById('rnOk').addEventListener('click', function () {
     var nm = inp.value.trim();
@@ -688,13 +690,15 @@ function editProfile(email) {
     + '<button class="btn" id="pfCancel">ยกเลิก</button>'
     + '<button class="btn btn-primary" id="pfOk"><i class="fa-solid fa-check"></i> บันทึก</button></div></div>';
   document.body.appendChild(wrap);
-  function close() { if (wrap.parentNode) document.body.removeChild(wrap); }
+  function close() { if (wrap.parentNode) document.body.removeChild(wrap); document.removeEventListener('keydown', onEsc); }
+  function onEsc(e) { if (e.key === 'Escape') close(); }
   function hint() {
     var d = document.getElementById('pfStart').value;
     var t = tenureText(d);
     document.getElementById('pfHint').innerHTML = d ? 'อายุงาน <b style="color:#0F2B46">' + esc(t) + '</b>' : '– ยังไม่ระบุวันที่เริ่มงาน';
   }
   document.getElementById('pfStart').addEventListener('change', hint);
+  document.addEventListener('keydown', onEsc);
   wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
   document.getElementById('pfCancel').addEventListener('click', close);
   document.getElementById('pfOk').addEventListener('click', function () {
