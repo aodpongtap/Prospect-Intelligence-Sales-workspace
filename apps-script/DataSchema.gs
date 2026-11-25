@@ -38,10 +38,11 @@ var DATA_SCHEMA = {
   /* บันทึกการเข้าพบลูกค้า (ต้นทางของดีล) */
   DailyReports: {
     headers: ['ref', 'date', 'time', 'customer', 'qt', 'channel', 'value', 'summary',
-      'nextDate', 'nextTime', 'nextNote', 'saleId', 'by', 'createdAt', 'updatedAt', 'deleted'],
-    widths: [130, 95, 60, 170, 110, 70, 90, 240, 95, 60, 200, 60, 180, 130, 130, 55],
+      'nextDate', 'nextTime', 'nextNote', 'saleId', 'by', 'createdAt', 'updatedAt', 'deleted',
+      'dmName', 'dmPhone', 'dmEmail'],
+    widths: [130, 95, 60, 170, 110, 70, 90, 240, 95, 60, 200, 60, 180, 130, 130, 55, 150, 130, 190],
     validations: { 'channel': ['visit', 'call', 'email', 'line', 'meeting'] },
-    formats: { '0': '@', '1': 'yyyy-mm-dd', '4': '@', '6': '#,##0', '8': 'yyyy-mm-dd', '9': '@' }
+    formats: { '0': '@', '1': 'yyyy-mm-dd', '4': '@', '6': '#,##0', '8': 'yyyy-mm-dd', '9': '@', '17': '@', '18': '@' }
   },
 
   /* เป้าหมาย: ระดับทีม (saleId ว่าง) หรือรายคน (saleId = S01) */

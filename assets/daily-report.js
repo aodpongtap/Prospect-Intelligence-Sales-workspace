@@ -118,6 +118,7 @@
               qt: c.qt || '', channel: c.channel || 'visit', value: Number(c.value || 0),
               summary: c.summary || '', nextDate: c.nextDate || '', nextTime: c.nextTime || '',
               nextNote: c.nextNote || '', saleId: String(c.saleId || '').toUpperCase(), by: c.by || '',
+              dmName: c.dmName || '', dmPhone: c.dmPhone || '', dmEmail: c.dmEmail || '',
               updatedAt: c.updatedAt || ''
             });
             changed = true;
@@ -129,6 +130,7 @@
             loc.date = c.date; loc.time = c.time; loc.customer = c.customer; loc.qt = c.qt;
             loc.channel = c.channel; loc.value = Number(c.value || 0); loc.summary = c.summary;
             loc.nextDate = c.nextDate; loc.nextTime = c.nextTime; loc.nextNote = c.nextNote;
+            loc.dmName = c.dmName || ''; loc.dmPhone = c.dmPhone || ''; loc.dmEmail = c.dmEmail || '';
             loc.saleId = String(c.saleId || '').toUpperCase(); loc.updatedAt = c.updatedAt;
             changed = true;
           }
@@ -453,6 +455,10 @@
         + (x.ref ? '<button class="dr-ref" data-dr-copy="' + esc(x.ref) + '" title="คลิกเพื่อคัดลอกรหัสอ้างอิง">' + esc(x.ref) + '</button>' : '')
         + (x.qt ? '<button class="dr-qt" data-dr-copyqt="' + esc(x.qt) + '" title="เลข QT / เลขอ้างอิงที่บันทึกไว้ (คลิกเพื่อคัดลอก)"><i class="fa-solid fa-hashtag"></i> ' + esc(x.qt) + '</button>' : '')
         + links
+        + (x.dmName || x.dmPhone || x.dmEmail
+          ? '<div class="dr-dm" title="ผู้มีอำนาจตัดสินใจ"><i class="fa-solid fa-user-tie"></i> '
+            + esc(x.dmName || '—') + (x.dmPhone ? ' · ' + esc(x.dmPhone) : '') + (x.dmEmail ? ' · ' + esc(x.dmEmail) : '') + '</div>'
+          : '')
         + (x.value ? '<div class="dr-s2">มูลค่า · Value ' + money(x.value) + '</div>' : '') + '</td>'
         + '<td><span class="dr-chip" style="color:' + c.color + ';background:' + c.color + '14">'
         + '<i class="' + c.icon + '"></i> ' + esc(c.name) + '</span></td>'
@@ -650,6 +656,85 @@
     }
   }
 
+  /* ---------- ประวัติลูกค้าเดิม (แนะนำ/เติมข้อมูลอัตโนมัติ) ---------- */
+  function normCust(v) { return String(v || '').replace(/[\s\u200B\u00A0]+/g, ' ').trim().toLowerCase(); }
+  /** ลูกค้าที่เคยบันทึกไว้ (ไม่ซ้ำ) — กรองด้วยคำที่พิมพ์ */
+  function customerHistory(q) {
+    var kw = normCust(q);
+    var map = {};
+    visible().forEach(function (x) {
+      var key = normCust(x.customer);
+      if (!key) return;
+      if (kw && key.indexOf(kw) < 0) return;
+      var stamp = String(x.date || '') + ' ' + String(x.time || '');
+      if (!map[key] || stamp > map[key]._stamp) map[key] = { _stamp: stamp, rec: x };
+    });
+    return Object.keys(map).map(function (k) { return map[k].rec; })
+      .sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
+  }
+  /** ข้อมูลผู้ตัดสินใจล่าสุดของลูกค้ารายนี้ */
+  function dmOfCustomer(name) {
+    var key = normCust(name);
+    if (!key) return null;
+    var best = null;
+    ITEMS.forEach(function (x) {
+      if (normCust(x.customer) !== key) return;
+      if (!x.dmName && !x.dmPhone && !x.dmEmail) return;
+      var stamp = String(x.date || '') + ' ' + String(x.time || '');
+      if (!best || stamp > best.stamp) best = { stamp: stamp, dmName: x.dmName || '', dmPhone: x.dmPhone || '', dmEmail: x.dmEmail || '', qt: x.qt || '' };
+    });
+    return best;
+  }
+  /** เติมข้อมูลเดิมเมื่อเลือกลูกค้าที่เคยคีย์ไว้ */
+  function wireCustomerAutofill() {
+    var inp = document.getElementById('drCust');
+    var box = document.getElementById('drHits');
+    var f = document.getElementById('drForm');
+    if (!inp || !box || !f) return;
+
+    function applyDm(name) {
+      var dm = dmOfCustomer(name);
+      if (!dm) return false;
+      if (f.dmName && !f.dmName.value && dm.dmName) f.dmName.value = dm.dmName;
+      if (f.dmPhone && !f.dmPhone.value && dm.dmPhone) f.dmPhone.value = dm.dmPhone;
+      if (f.dmEmail && !f.dmEmail.value && dm.dmEmail) f.dmEmail.value = dm.dmEmail;
+      if (f.qt && !f.qt.value && dm.qt) f.qt.value = dm.qt;
+      return true;
+    }
+    function fill(r) {
+      inp.value = r.customer || inp.value;
+      var ok = applyDm(inp.value);
+      box.hidden = true;
+      box.innerHTML = '';
+      if (global.toast) global.toast(ok ? 'เติมข้อมูลผู้ตัดสินใจเดิมของ “' + (r.customer || '') + '” แล้ว' : 'เลือก “' + (r.customer || '') + '” แล้ว');
+    }
+    function render(q) {
+      var hits = customerHistory(q).slice(0, 6);
+      if (!hits.length) { box.hidden = true; box.innerHTML = ''; return; }
+      box.hidden = false;
+      box.innerHTML = '<div class="dr-hits-t"><i class="fa-solid fa-clock-rotate-left"></i> เคยบันทึกไว้ ' + hits.length + ' ราย — คลิกเพื่อเติมข้อมูลเดิม</div>'
+        + hits.map(function (r, i) {
+          var dm = dmOfCustomer(r.customer) || {};
+          var contact = [dm.dmPhone, dm.dmEmail].filter(Boolean).join(' · ');
+          return '<button type="button" class="dr-hit" data-hit="' + i + '">'
+            + '<b>' + esc(r.customer) + '</b>'
+            + '<small>' + esc(dstrth(r.date)) + ' · ' + esc(ch(r.channel).name) + (dm.dmName ? ' · ผู้ตัดสินใจ: ' + esc(dm.dmName) : '') + '</small>'
+            + (contact ? '<small>' + esc(contact) + '</small>' : '')
+            + '</button>';
+        }).join('');
+      Array.prototype.slice.call(box.querySelectorAll('[data-hit]')).forEach(function (b) {
+        b.addEventListener('click', function () { fill(hits[Number(b.getAttribute('data-hit'))]); });
+      });
+    }
+    inp.addEventListener('input', function () { render(inp.value); });
+    inp.addEventListener('focus', function () { render(inp.value); });
+    inp.addEventListener('blur', function () {
+      setTimeout(function () { box.hidden = true; }, 200);
+      applyDm(inp.value);
+    });
+    if (inp.value) render(inp.value);
+  }
+
   /* ---------- form ---------- */
   function openForm(id) {
     if (typeof global.setModal !== 'function') return;
@@ -680,9 +765,13 @@
     var body = '<form id="drForm"><div class="dr-form">'
       + '<label class="dr-f"><span>วันที่ * · Date</span><input type="date" name="date" required value="' + esc(cur.date || isoLocal()) + '"></label>'
       + '<label class="dr-f"><span>เวลา · Time</span><input type="time" name="time" value="' + esc(cur.time || nowTime()) + '"></label>'
-      + '<label class="dr-f full"><span>ชื่อลูกค้า * · Customer</span><input type="text" name="customer" required placeholder="เช่น บริษัท สยามคลีน เซอร์วิส จำกัด" value="' + esc(cur.customer || '') + '"></label>'
+      + '<label class="dr-f full"><span>ชื่อลูกค้า * · Customer</span><input type="text" name="customer" id="drCust" autocomplete="off" required placeholder="พิมพ์ชื่อลูกค้า — ระบบจะแนะนำรายชื่อที่เคยบันทึก" value="' + esc(cur.customer || '') + '"></label>'
+      + '<div class="dr-hits" id="drHits" hidden></div>'
       + '<label class="dr-f full"><span>เลข QT / อ้างอิง (ถ้ามี) · QT / Reference (optional)</span><input type="text" name="qt" maxlength="48" placeholder="กรอกเองได้ เช่น QT-2026-0123" value="' + esc(cur.qt || '') + '">'
       + '  <span class="dr-hint">บันทึกตามเอกสารจริงเท่านั้น — ระบบไม่สร้างให้เอง · manual entry only, the system never generates it</span></label>'
+      + '<label class="dr-f"><span>ผู้มีอำนาจตัดสินใจ — ชื่อ · Decision maker</span><input type="text" name="dmName" maxlength="120" placeholder="เช่น คุณสมชาย ผู้จัดการ" value="' + esc(cur.dmName || '') + '"></label>'
+      + '<label class="dr-f"><span>เบอร์โทรผู้ตัดสินใจ · DM phone</span><input type="tel" name="dmPhone" maxlength="30" placeholder="เช่น 081-234-5678" value="' + esc(cur.dmPhone || '') + '"></label>'
+      + '<label class="dr-f full"><span>อีเมลผู้ตัดสินใจ · DM email</span><input type="email" name="dmEmail" maxlength="120" placeholder="name@company.com" value="' + esc(cur.dmEmail || '') + '"></label>'
       + '<label class="dr-f"><span>รูปแบบการติดต่อ * · Channel</span><select name="channel">' + chOpts + '</select></label>'
       + '<label class="dr-f"><span>มูลค่าโครงการ (บาท) · Project Value (THB)</span><input type="number" name="value" min="0" step="1000" placeholder="0" value="' + (cur.value ? num(cur.value) : '') + '"></label>'
       + '<label class="dr-f full"><span>สรุป / ผลการดำเนินการ · Summary / Outcome</span><textarea name="summary" rows="3" placeholder="สรุปสิ่งที่คุย ผลลัพธ์ หรือขั้นตอนถัดไป (what was discussed / outcome / next step)">' + esc(cur.summary || '') + '</textarea></label>'
@@ -698,6 +787,7 @@
       body,
       [{ label: 'ยกเลิก · Cancel' }, { label: editing ? 'บันทึกการแก้ไข · Save' : 'บันทึก · Save', icon: 'fa-solid fa-check', action: 'dr-save', primary: true }],
       true);
+    if (!editing) setTimeout(wireCustomerAutofill, 90);
   }
 
   function saveForm() {
@@ -714,6 +804,9 @@
       nextDate: f.nextDate.value,
       nextTime: f.nextTime.value,
       nextNote: String(f.nextNote.value || '').trim(),
+      dmName: String((f.dmName && f.dmName.value) || '').trim(),
+      dmPhone: String((f.dmPhone && f.dmPhone.value) || '').trim(),
+      dmEmail: String((f.dmEmail && f.dmEmail.value) || '').trim(),
       saleId: String((f.saleId && f.saleId.value) || mySaleId() || ''),
       by: String(me().email || '')
     };
@@ -796,9 +889,9 @@
       if (state.sale && x.saleId !== state.sale) return false;
       return true;
     }).sort(function (a, b) { return String(b.date + (b.time || '')).localeCompare(String(a.date + (a.time || ''))); });
-    var head = ['รหัสอ้างอิง · Reference', 'เลข QT/อ้างอิง · QT/Ref', 'วันที่ · Date', 'เวลา · Time', 'ลูกค้า · Customer', 'ช่องทาง · Channel', 'สรุป/ผลการ · Summary', 'นัดครั้งต่อไป · Next Appointment', 'เวลานัด · Next Time', 'เรื่องที่นัด · Next Step', 'มูลค่าโครงการ · Project Value', 'ผู้รับผิดชอบ · Owner', 'ทีม · Team'];
+    var head = ['รหัสอ้างอิง · Reference', 'เลข QT/อ้างอิง · QT/Ref', 'วันที่ · Date', 'เวลา · Time', 'ลูกค้า · Customer', 'ผู้ตัดสินใจ · Decision Maker', 'เบอร์โทรผู้ตัดสินใจ · DM Phone', 'อีเมลผู้ตัดสินใจ · DM Email', 'ช่องทาง · Channel', 'สรุป/ผลการ · Summary', 'นัดครั้งต่อไป · Next Appointment', 'เวลานัด · Next Time', 'เรื่องที่นัด · Next Step', 'มูลค่าโครงการ · Project Value', 'ผู้รับผิดชอบ · Owner', 'ทีม · Team'];
     var rows = [head].concat(list.map(function (x) {
-      return [x.ref || '', x.qt || '', x.date, x.time || '', x.customer, ch(x.channel).name, x.summary || '', x.nextDate || '', x.nextTime || '', x.nextNote || '',
+      return [x.ref || '', x.qt || '', x.date, x.time || '', x.customer, x.dmName || '', x.dmPhone || '', x.dmEmail || '', ch(x.channel).name, x.summary || '', x.nextDate || '', x.nextTime || '', x.nextNote || '',
         num(x.value), saleOf(x.saleId).name, saleOf(x.saleId).team];
     }));
     var csv = rows.map(function (r) {
@@ -1006,6 +1099,14 @@
       + '.dr-note{display:flex;gap:10px;align-items:flex-start;background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:13px;color:#92400E;font-size:11.5px}'
       + '.dr-note b{display:block;margin-bottom:3px}'
       + '.dr-form{display:grid;grid-template-columns:1fr 1fr;gap:11px}'
+      + '.dr-hits{grid-column:1/-1;display:flex;flex-direction:column;gap:6px;border:1px solid #E5EAF0;border-radius:10px;padding:8px 9px;background:#F8FAFC}'
+      + '.dr-hits[hidden]{display:none}'
+      + '.dr-hits-t{font-size:10.5px;color:#667085;padding:0 2px}'
+      + '.dr-hit{border:1px solid #E8EEF6;background:#fff;border-radius:9px;padding:6px 10px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:1px;font:inherit;transition:.15s}'
+      + '.dr-hit:hover{border-color:#BFD3F5;background:#F5F9FF}'
+      + '.dr-hit b{font-size:11.5px;color:#0F2B46;font-weight:600}'
+      + '.dr-hit small{font-size:10px;color:#667085}'
+      + '.dr-dm{margin-top:4px;font-size:10px;color:#7C3AED;display:flex;align-items:center;gap:4px;flex-wrap:wrap;word-break:break-word}'
       + '.dr-f{display:flex;flex-direction:column;gap:5px;font-size:10px;color:#475467;min-width:0}'
       + '.dr-f.full{grid-column:1 / -1}'
       + '.dr-f input,.dr-f select,.dr-f textarea{width:100%;border:1px solid #DCE3EB;border-radius:8px;padding:8px 10px;font:inherit;font-size:12px;color:#0F2B46;background:#fff;outline:none}'

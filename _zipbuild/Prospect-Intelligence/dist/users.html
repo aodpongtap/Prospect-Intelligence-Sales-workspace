@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management · Prospect Intelligence AE workspace</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+<style>
+:root{--navy:#0F2B46;--blue:#2563EB;--green:#16A34A;--red:#DC2626;--bg:#F8FAFC;--ink:#182230;--muted:#667085;--line:#E5EAF0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Prompt",sans-serif;font-size:13px}
+.top{min-height:64px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 22px;flex-wrap:wrap}
+.brand{display:flex;gap:10px;align-items:center}.mark{width:34px;height:34px;border-radius:9px;background:var(--blue);display:grid;place-items:center}
+.brand strong{display:block;font-size:13px}.brand small{color:#9cb0c5;font-size:10px}
+.top a,.top button.link{color:#d8e2ee;background:none;border:0;font:inherit;font-size:12px;margin-left:14px;cursor:pointer;text-decoration:none}
+.top a:hover,.top button.link:hover{color:#fff}
+.wrap{max-width:1320px;margin:22px auto;padding:0 16px}
+h1{font-size:21px;font-weight:600;color:var(--navy);margin:0}.subtitle{color:var(--muted);margin:4px 0 14px;font-size:11.5px}
+.emp-todo{display:inline-flex;align-items:center;gap:4px;background:#FFF7ED;border:1px solid #FED7AA;color:#B45309;border-radius:99px;padding:1px 8px;font-size:10px}
+#empGap{display:none;margin:0 0 14px;background:#EFF6FF;border:1px solid #DBEAFE;color:#1E40AF;border-radius:9px;padding:9px 13px;font-size:11.5px;line-height:1.6}
+#empGap i{font-size:11px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(15,43,70,.07);padding:16px;margin-bottom:16px}
+.panel h3{margin:0 0 12px;font-size:14px;font-weight:500}
+.fg{display:grid;grid-template-columns:1.3fr 1fr .9fr .85fr 1.05fr auto;gap:9px;align-items:end}
+.fg2{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;align-items:end}
+.sep{display:flex;align-items:center;gap:7px;margin:14px 0 10px;font-size:11px;color:#475467;padding-top:11px;border-top:1px dashed var(--line)}
+.sep i{color:#2563EB;font-size:11px}
+.hint{font-size:10px;color:#98a2b3;margin-top:4px;line-height:1.4}
+.hint b{color:#0F2B46;font-weight:600}
+.emp-code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;background:#F2F4F7;color:#344054;border-radius:5px;padding:1px 6px;display:inline-block}
+.emp-st{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;border-radius:20px;padding:1px 7px;line-height:1.7}
+.st-probation{background:#fff7ed;color:#b45309}.st-regular{background:#ecfdf3;color:#15803d}.st-review{background:#fef2f2;color:#b91c1c}
+@media(max-width:900px){.fg2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+label{display:block;font-size:10px;color:#475467;margin-bottom:5px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12px;background:#fff}
+.btn{border:1px solid var(--line);background:#fff;color:#344054;border-radius:8px;padding:8px 11px;font:inherit;font-size:11px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.btn:hover{border-color:#b7c5d6}.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}.btn-danger{background:#fff1f2;border-color:#ffe4e6;color:var(--red)}
+.tablewrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:1000px;table-layout:fixed}
+th{font-size:10px;color:#667085;font-weight:500;background:#f8fafc;text-align:left;padding:11px 12px;white-space:nowrap;vertical-align:middle}
+td{padding:8px 12px;border-bottom:1px solid #eef1f5;font-size:12px;vertical-align:middle}
+tbody tr:hover{background:#fafcff}
+/* 7 คอลัมน์ — กว้างพออ่านได้ ไม่ตัดข้อความ */
+.c-user{width:20%}.c-lvteam{width:13%}.c-emp{width:19%}.c-link{width:13%}.c-tree{width:15%}.c-state{width:10%}.c-act{width:186px}
+td.c-user{white-space:normal}
+.u-cell{display:flex;align-items:center;gap:9px;min-width:0}
+.u-av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:600;flex:0 0 auto}
+.u-nm{display:flex;align-items:center;gap:4px;min-width:0;font-size:12px;color:#0F2B46;font-weight:500;line-height:1.35}
+.u-nm .name-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.u-em{font-size:10.5px;color:#98a2b3;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stack{display:grid;gap:4px;min-width:0}
+.stack select{width:100%;padding:4px 7px;font-size:11px}
+.mini{font-size:10px;color:#98a2b3;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tree-up{font-size:11px;color:#344054;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.c-name{white-space:normal}
+td.c-name .btn-pen{border:0;background:transparent;color:var(--blue);cursor:pointer;font-size:10px;padding:2px 3px;opacity:0;flex:0 0 auto}
+tbody tr:hover td.c-name .btn-pen,tbody tr:hover .u-nm .btn-pen{opacity:1}
+.btn-pen:hover{background:#eff6ff;border-radius:5px}
+.on,.off{display:inline-flex;align-items:center;gap:4px;font-size:11px}
+@media(max-width:760px){td.c-name .btn-pen,.u-nm .btn-pen{opacity:1}}
+td.c-act{white-space:nowrap}
+td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
+.btn-ic{width:28px;height:28px;padding:0;justify-content:center;border-radius:7px}
+.pill{display:inline-flex;align-items:center;justify-content:center;padding:2px 9px;border-radius:20px;font-size:10px;line-height:1.6;white-space:nowrap}
+.l-admin{background:#eff6ff;color:#1d4ed8}.l-editor{background:#ecfdf3;color:#15803d}.l-viewer{background:#f2f4f7;color:#475467}.l-core{background:#0F2B46;color:#fff}
+.pill-warn{background:#fff7ed;color:#b45309;border:1px solid #fed7aa;cursor:help}
+.on{color:var(--green)}.off{color:var(--red)}.acts{display:flex;gap:6px;flex-wrap:wrap}
+.fbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
+.fbar input,.fbar select{width:auto;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:11.5px;background:#fff}
+.fbar input{flex:1 1 220px;max-width:340px}
+.fbar select{flex:0 0 auto;min-width:150px}
+.msg{margin:0 0 12px;padding:9px 11px;border-radius:8px;font-size:12px;display:none}
+.msg.err{background:#fff1f2;border:1px solid #ffe4e6;color:#b91c1c;display:block}
+.msg.ok{background:#ecfdf3;border:1px solid #d1fae5;color:#15803d;display:block}
+.pwbox{background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:11px 13px;border-radius:9px;font-size:12px;line-height:1.7;margin-bottom:14px;display:none}
+.pwbox code{background:#fff;border:1px solid #fde68a;padding:2px 8px;border-radius:6px;font-size:13px;font-weight:600;letter-spacing:.5px}
+.legend{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.legend div{border:1px solid var(--line);border-radius:9px;padding:9px;font-size:11px;color:#475467;line-height:1.55}
+@media(max-width:760px){.fg{grid-template-columns:1fr}.legend{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">
+    <div class="mark"><i class="fa-solid fa-user-gear"></i></div>
+    <div><strong>User Management</strong><small>Prospect Intelligence AE workspace</small></div>
+  </div>
+  <div>
+    <span id="me" style="font-size:11px;color:#9cb0c5"></span>
+    <a href="index.html"><i class="fa-solid fa-arrow-left"></i> กลับ Dashboard</a>
+    <button class="link" id="lo"><i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <h1 style="margin:0">จัดการผู้ใช้งาน</h1>
+  <div class="subtitle" style="margin:6px 0 16px">เพิ่มอีเมล กำหนดสิทธิ์ ระบบจะสร้างรหัสผ่านให้ทันที (แสดงครั้งเดียว)</div>
+
+  <div class="msg" id="msg"></div>
+  <div class="pwbox" id="pwbox"></div>
+  <div id="empGap"></div>
+
+  <section class="panel" id="addPanel">
+    <h3>เพิ่มผู้ใช้ + สร้างรหัสผ่าน</h3>
+    <div class="fg">
+      <div><label for="email">อีเมล</label><input id="email" type="email" placeholder="name@gmail.com" autocomplete="off"></div>
+      <div><label for="name">ชื่อ (ไม่บังคับ)</label><input id="name" type="text" placeholder="ชื่อ-นามสกุล"></div>
+      <div><label for="level">ระดับสิทธิ์</label><select id="level">
+        <option value="admin">L1 · Admin</option>
+        <option value="bu">L2 · BU</option>
+        <option value="head">L3 · Head Team</option>
+        <option value="sup">L4 · Supervisor</option>
+          <option value="sale" selected>L5 · AE</option>
+        <option value="agent">L6 · ตัวแทน / MCN</option>
+      </select></div>
+      <div><label for="parent">ผู้ดูแลต้นสาย (Upline) *</label><select id="parent"><option value="">— เลือก —</option></select></div>
+      <div><label for="team">ทีม (BU)</label><select id="team"><option value="">— ไม่ระบุ —</option></select></div>
+      <div><button class="btn btn-primary" id="addBtn"><i class="fa-solid fa-user-plus"></i> เพิ่ม + สร้างรหัส</button></div>
+    </div>
+    <div class="sep"><i class="fa-solid fa-id-card"></i> ข้อมูลพนักงาน — ใช้แสดงในโปรไฟล์ / รายงาน</div>
+    <div class="fg2">
+      <div><label for="empCode">รหัสพนักงาน</label><input id="empCode" maxlength="20" placeholder="เช่น EMP-0142"></div>
+      <div><label for="startDate">เริ่มงานวันที่</label><input id="startDate" type="date"><div class="hint" id="tenureHint">– ยังไม่ระบุวันที่เริ่มงาน</div></div>
+      <div><label for="empStatus">สถานะพนักงาน</label><select id="empStatus">
+        <option value="">— ไม่ระบุ —</option>
+        <option value="probation">ทดลองงาน</option>
+        <option value="regular">ประจำ</option>
+        <option value="review">ช่วงพิจารณางานใหม่</option>
+      </select></div>
+      <div><label for="nickname">ชื่อเล่น</label><input id="nickname" maxlength="40" placeholder="เช่น ต๊ะ"></div>
+      <div><label for="phone">เบอร์โทรติดต่อ</label><input id="phone" inputmode="tel" maxlength="24" placeholder="08x-xxx-xxxx"></div>
+      <div><label for="lineId">ID Line</label><input id="lineId" maxlength="40" placeholder="เช่น tota.line"></div>
+      <div><label for="gmail">Gmail (ติดต่อ)</label><input id="gmail" type="email" maxlength="80" placeholder="name@gmail.com"></div>
+      <div class="hint" style="align-self:center">ข้อมูลเพิ่มเติมไม่บังคับ — แก้ไขภายหลังได้ที่ปุ่มโปรไฟล์ในตาราง</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3>รายชื่อผู้ใช้ (<span id="count">0</span>)</h3>
+    <div class="fbar">
+      <input id="fSearch" placeholder="ค้นหาชื่อ / อีเมล">
+      <select id="fLevel"><option value="">ทุกระดับ</option></select>
+      <select id="fParent"><option value="">ทุกผู้ดูแลสาย</option></select>
+      <button class="btn" id="fClear" type="button"><i class="fa-solid fa-filter-circle-xmark"></i> ล้างตัวกรอง</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th class="c-user">ผู้ใช้</th><th class="c-lvteam">ระดับ / ทีม (BU)</th><th class="c-emp">ข้อมูลพนักงาน</th><th class="c-link">AE ที่ผูก / บันทึก</th><th class="c-tree">สายงาน</th><th class="c-state">สถานะ / เข้าใช้ล่าสุด</th><th class="c-act"></th></tr></thead>
+        <tbody id="tb"><tr><td colspan="7" style="text-align:center;color:#98a2b3;padding:22px">กำลังโหลด...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3>ระดับสิทธิ์ 6 ระดับ</h3>
+    <div class="legend">
+      <div><span class="pill l-admin">L1 · Admin</span><br>เห็นทั้งเครือข่าย</div>
+      <div><span class="pill l-editor">L2 · BU</span><br>เห็นทุกทีมใต้ BU และเห็นทั้งเครือข่าย</div>
+      <div><span class="pill l-editor">L3 · Head Team</span><br>เห็นทั้งทีม</div>
+      <div><span class="pill l-viewer">L4 · Supervisor</span><br>เห็น AE+ตัวแทนใต้ทีม</div>
+      <div><span class="pill l-viewer">L5 · AE</span><br>เห็นตัวแทนใต้ตัวเอง</div>
+      <div><span class="pill l-viewer">L6 · ตัวแทน/MCN</span><br>เห็นเฉพาะงานตัวเอง</div>
+    </div>
+  </section>
+</div>
+
+<script>
+/* ==== inlined: assets/auth-sheets.js ==== */
+/**
+ * Prospect Intelligence Sales workspace — auth ผ่าน Google Sheets (JSONP API)
+ *
+ * ต้องมี Apps Script Web App ที่ deploy แล้ว (api=1) และตั้ง access เป็น
+ * "Anyone, even anonymous" เพื่อให้เว็บ HTML เรียกได้
+ *
+ * API_FALLBACK: ใช้ localStorage เมื่อเรียก API ไม่ได้ (ออฟไลน์/ยังไม่ deploy)
+ */
+(function (global) {
+  var API = 'https://script.google.com/macros/s/AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-/exec';
+  var SESSION_KEY = 'pi_session_v2';
+  var TTL_MS = 12 * 3600 * 1000;
+
+  function jsonp(params) {
+    return new Promise(function (resolve, reject) {
+      var cb = 'piCb_' + Math.random().toString(36).slice(2);
+      var script = document.createElement('script');
+      var timer = setTimeout(function () { done(); reject(new Error('เชื่อมต่อ Google Sheets ไม่ได้ (timeout)')); }, 25000);
+
+      function done() {
+        clearTimeout(timer);
+        try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
+      window[cb] = function (data) { done(); resolve(data); };
+      script.onerror = function () { done(); reject(new Error('เชื่อมต่อ Google Sheets ไม่ได้')); };
+
+      var qs = Object.keys(params)
+        .filter(function (k) { return params[k] !== undefined && params[k] !== null; })
+        .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); })
+        .join('&');
+
+      script.src = API + '?api=1&callback=' + cb + '&' + qs;
+      document.head.appendChild(script);
+    });
+  }
+
+  function call(action, extra) {
+    var params = { api: '1', action: action, _ts: Date.now() };
+    Object.keys(extra || {}).forEach(function (k) { params[k] = extra[k]; });
+    var qs = Object.keys(params)
+      .filter(function (k) { return params[k] !== undefined && params[k] !== null; })
+      .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); })
+      .join('&');
+
+    return fetch(API + '?' + qs, { method: 'GET', redirect: 'follow', cache: 'no-store' })
+      .then(function (r) { return r.text(); })
+      .then(function (txt) {
+        try { return JSON.parse(txt); }
+        catch (e) { throw new Error('รูปแบบข้อมูลจาก API ไม่ถูกต้อง'); }
+      })
+      .catch(function () {
+        throw new Error('เชื่อมต่อ Google Sheets ไม่ได้ กรุณาตรวจสอบสิทธิ์ที่ Apps Script');
+      });
+  }
+
+  /* ---------- session (เก็บในเครื่อง) ---------- */
+  function getSession() {
+    try {
+      var s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+      if (!s || Number(s.exp) < Date.now()) return null;
+      return s;
+    } catch (e) { return null; }
+  }
+  function setSession(s) {
+    s.exp = Date.now() + TTL_MS;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+  }
+  function clearSession() { localStorage.removeItem(SESSION_KEY); }
+  function token() { var s = getSession(); return s && s.token ? s.token : ''; }
+  /** ระดับที่ได้สิทธิ์เท่า Admin (L1 Admin + L2 BU) */
+  function isAdmin(s) { var l = s ? String(s.level).toLowerCase() : ''; return l === 'admin' || l === 'bu'; }
+
+  /* ---------- cache รายชื่อผู้ใช้ ---------- */
+  var cache = [];
+
+  function login(email, password) {
+    return call('login', { email: email, password: password }).then(function (r) {
+      if (!r || !r.ok) return { ok: false, error: (r && r.error) || 'เข้าสู่ระบบไม่สำเร็จ' };
+      setSession({ email: r.email, name: r.name || '', level: r.level, token: r.token, saleId: r.saleId || '', team: String(r.team || '').toUpperCase() });
+      if (window.PILog) {
+        try {
+          var prevMe = window.__ME__;
+          window.__ME__ = { email: r.email, name: r.name || '', level: r.level, saleId: r.saleId || '', team: String(r.team || '').toUpperCase() };
+          window.PILog.add('auth.login', r.email, 'เข้าสู่ระบบสำเร็จ · สิทธิ์ ' + String(r.level || '').toUpperCase());
+          window.__ME__ = prevMe;
+        } catch (e) {}
+      }
+      return { ok: true, user: { email: r.email, name: r.name, level: r.level, saleId: r.saleId || '', team: String(r.team || '').toUpperCase() } };
+    });
+  }
+
+  function loadUsers() {
+    return call('users', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดรายชื่อผู้ใช้ไม่สำเร็จ');
+      cache = r.users || [];
+      return cache;
+    });
+  }
+
+  /* ---------- ข้อมูลพนักงาน (รหัสพนักงาน / เริ่มงาน / ชื่อเล่น / ติดต่อ) ---------- */
+  var EMP_KEYS = ['empCode', 'startDate', 'empStatus', 'nickname', 'phone', 'lineId', 'gmail'];
+  function empParam(extra) {
+    if (!extra) return undefined;
+    var o = {};
+    for (var i = 0; i < EMP_KEYS.length; i++) {
+      var k = EMP_KEYS[i];
+      if (extra[k] !== undefined) o[k] = String(extra[k] == null ? '' : extra[k]).trim();
+    }
+    return JSON.stringify(o);
+  }
+
+  function addUser(email, name, level, parent, saleId, team, extra) {
+    var params = { token: token(), email: email, name: name, level: level, parent: parent || '' };
+    if (saleId !== undefined && saleId !== null) params.saleId = String(saleId).trim().toUpperCase();
+    if (team !== undefined && team !== null) params.team = String(team).trim().toUpperCase();
+    var ep = empParam(extra);
+    if (ep) params.extra = ep;
+    return call('add', params).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'เพิ่มผู้ใช้ไม่สำเร็จ');
+      cache = r.users || cache;
+      return { email: r.email, password: r.password };
+    });
+  }
+
+  function resetPassword(email) {
+    return call('reset', { token: token(), email: email }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'รีเซ็ตรหัสไม่สำเร็จ');
+      return { email: r.email, password: r.password };
+    });
+  }
+
+  function updateUser(email, level, status, parent, saleId, name, team, extra) {
+    var params = { token: token(), email: email, level: level, status: status, parent: parent || '' };
+    if (saleId !== undefined && saleId !== null) params.saleId = String(saleId).trim().toUpperCase();
+    if (name !== undefined && name !== null) params.name = String(name).trim();
+    if (team !== undefined && team !== null) params.team = String(team).trim().toUpperCase();
+    var ep2 = empParam(extra);
+    if (ep2) params.extra = ep2;
+    return call('update', params).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'อัปเดตไม่สำเร็จ');
+      cache = r.users || cache;
+      /* ถ้าแก้สิทธิ์ของตัวเอง → อัปเดต session ในเครื่องให้ตรงทันที */
+      if (params.level !== undefined && params.level !== null && String(params.level) !== '') {
+        var meLv = getSession();
+        if (meLv && String(meLv.email || '').toLowerCase() === String(email || '').toLowerCase()) {
+          meLv.level = String(params.level).toLowerCase();
+          meLv.isAdmin = meLv.level === 'admin' || meLv.level === 'bu';
+          setSession(meLv);
+        }
+        try {
+          if (window.__ME__ && String(window.__ME__.email || '').toLowerCase() === String(email || '').toLowerCase()) {
+            window.__ME__.level = String(params.level).toLowerCase();
+            window.__ME__.isAdmin = window.__ME__.level === 'admin' || window.__ME__.level === 'bu';
+          }
+        } catch (e) {}
+      }
+      if (params.saleId !== undefined) {
+        var me = getSession();
+        if (me && String(me.email || '').toLowerCase() === String(email || '').toLowerCase()) {
+          me.saleId = params.saleId;
+          setSession(me);
+        }
+        try { if (window.__ME__) window.__ME__.saleId = params.saleId; } catch (e) {}
+      }
+      if (params.name !== undefined) {
+        var me2 = getSession();
+        if (me2 && String(me2.email || '').toLowerCase() === String(email || '').toLowerCase()) {
+          me2.name = params.name;
+          setSession(me2);
+        }
+        try { if (window.__ME__) window.__ME__.name = params.name; } catch (e) {}
+      }
+      return { ok: true };
+    });
+  }
+
+  function removeUser(email) {
+    return call('remove', { token: token(), email: email }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ลบผู้ใช้ไม่สำเร็จ');
+      cache = r.users || cache;
+      return { ok: true };
+    });
+  }
+
+  /* ---------- deals (ดีลของแต่ละคน) ---------- */
+  function listDeals() {
+    return call('deals', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดดีลไม่สำเร็จ');
+      return r.deals || [];
+    });
+  }
+
+  function addDeal(d) {
+    return call('addDeal', {
+      token: token(), name: d.name, customer: d.customer, value: d.value,
+      stage: d.stage, probability: d.probability, close: d.close,
+      nextAction: d.nextAction, status: d.status
+    }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'บันทึกดีลไม่สำเร็จ');
+      return r;
+    });
+  }
+
+  function deleteDeal(id) {
+    return call('deleteDeal', { token: token(), id: id }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ลบดีลไม่สำเร็จ');
+      return r;
+    });
+  }
+
+  /* ---------- Deals v2: ซิงก์กับแท็บ `Deals` บน Google Sheet ---------- */
+  function listDealsV2() {
+    return call('dealsV2', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดดีลจากคลาวด์ไม่สำเร็จ');
+      return { deals: r.deals || [], deletedNos: r.deletedNos || [], count: r.count || 0 };
+    });
+  }
+  function saveDealV2(d) {
+    return call('saveDeal', { token: token(), deal: JSON.stringify(d || {}) }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'บันทึกดีลบนคลาวด์ไม่สำเร็จ');
+      return r;
+    });
+  }
+  function deleteDealV2(no) {
+    return call('delDeal', { token: token(), no: no }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ลบดีลบนคลาวด์ไม่สำเร็จ');
+      return r;
+    });
+  }
+  function dealLogs(no) {
+    return call('dealLogs', { token: token(), no: no }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดประวัติไม่สำเร็จ');
+      return r.logs || [];
+    });
+  }
+
+  /* ---------- Targets / DailyReports ---------- */
+  function listTargetsV2() {
+    return call('targetsV2', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดเป้าหมายไม่สำเร็จ');
+      return r.targets || [];
+    });
+  }
+  function saveTargetV2(team, year, month, amount) {
+    return call('saveTarget', { token: token(), team: team, year: year, month: month, amount: amount }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'บันทึกเป้าหมายไม่สำเร็จ');
+      return r.targets || [];
+    });
+  }
+  function listDailyV2() {
+    return call('dailyV2', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดบันทึกกิจกรรมไม่สำเร็จ');
+      return r.items || [];
+    });
+  }
+  function saveDailyV2(item) {
+    return call('saveDaily', { token: token(), item: JSON.stringify(item || {}) }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'บันทึกกิจกรรมบนคลาวด์ไม่สำเร็จ');
+      return r;
+    });
+  }
+  function deleteDailyV2(ref) {
+    return call('delDaily', { token: token(), ref: ref }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ลบบันทึกบนคลาวด์ไม่สำเร็จ');
+      return r;
+    });
+  }
+
+  /* ---------- Projects (Project Tracking) ---------- */
+  function listProjects() {
+    return call('projectsV2', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลดโครงการไม่สำเร็จ');
+      return r;
+    });
+  }
+  function saveProject(p) {
+    return call('saveProject', { token: token(), project: JSON.stringify(p || {}) }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'บันทึกโครงการบนคลาวด์ไม่สำเร็จ');
+      return r;
+    });
+  }
+  function deleteProject(no) {
+    return call('delProject', { token: token(), no: no }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ลบโครงการบนคลาวด์ไม่สำเร็จ');
+      return r;
+    });
+  }
+
+  /* ---------- Activity Log / Backup ---------- */
+  function listLogs(opts) {
+    var o = opts || {};
+    return call('logs', { token: token(), q: o.q || '', kind: o.kind || '', by: o.by || '', limit: o.limit || 300 }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'โหลด Logs ไม่สำเร็จ');
+      return r;
+    });
+  }
+  function backupInfo() {
+    return call('backupInfo', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'อ่านสถานะ backup ไม่สำเร็จ');
+      return r;
+    });
+  }
+  function backupNow(mode) {
+    return call('backupNow', { token: token(), mode: mode || '' }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'สำรองข้อมูลไม่สำเร็จ');
+      return r;
+    });
+  }
+  function installBackup() {
+    return call('installBackup', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ติดตั้ง trigger ไม่สำเร็จ');
+      return r;
+    });
+  }
+  function clearLogs() {
+    return call('logsClear', { token: token() }).then(function (r) {
+      if (!r || !r.ok) throw new Error((r && r.error) || 'ล้าง Log ไม่สำเร็จ');
+      return r;
+    });
+  }
+
+  global.PIAuth = {
+    coreAdmins: [
+      'aodputta@gmail.com'
+    ],
+    headSales: [
+      'sittharphon.1994@gmail.com',
+      'chanphaphat.k@gmail.com'
+    ],
+    defaultPassword: 'Tsr@2026',
+    api: API,
+    seed: function () { return loadUsers().catch(function () { return []; }); },
+    login: login,
+    logout: function () { clearSession(); return Promise.resolve({ ok: true }); },
+    session: getSession,
+    isAdmin: isAdmin,
+    listUsers: function () { return cache.slice(); },
+    refresh: loadUsers,
+    addUser: addUser,
+    resetPassword: resetPassword,
+    updateUser: updateUser,
+    removeUser: removeUser,
+    listDeals: listDeals,
+    addDeal: addDeal,
+    deleteDeal: deleteDeal,
+    listDealsV2: listDealsV2,
+    saveDealV2: saveDealV2,
+    deleteDealV2: deleteDealV2,
+    dealLogs: dealLogs,
+    listTargetsV2: listTargetsV2,
+    saveTargetV2: saveTargetV2,
+    listDailyV2: listDailyV2,
+    saveDailyV2: saveDailyV2,
+    deleteDailyV2: deleteDailyV2,
+    listLogs: listLogs,
+    listProjects: listProjects,
+    saveProject: saveProject,
+    deleteProject: deleteProject,
+    backupInfo: backupInfo,
+    backupNow: backupNow,
+    installBackup: installBackup,
+    clearLogs: clearLogs
+  };
+})(window);
+
+</script>
+<script src="assets/report-log.js?v=12"></script>
+<script>
+var me = PIAuth.session();
+if (!me) { location.replace('login.html'); }
+var __DENIED__ = !!(me && !PIAuth.isAdmin(me));
+if (__DENIED__) {
+  document.addEventListener('DOMContentLoaded', function () {
+    document.body.innerHTML = '<div style="max-width:520px;margin:80px auto;background:#fff;border:1px solid #E5EAF0;border-radius:12px;padding:26px;font-family:Prompt,sans-serif;text-align:center">' +
+      '<h2 style="color:#0F2B46;margin:0 0 10px">ไม่มีสิทธิ์เข้าถึง</h2>' +
+      '<p style="color:#667085;font-size:13px">หน้านี้สำหรับ Admin / BU เท่านั้น</p>' +
+      '<a href="index.html" style="color:#2563EB">กลับ Dashboard</a></div>';
+  });
+}
+
+function el(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function fmt(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  return isNaN(d.getTime()) ? '—' : d.toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' });
+}
+function showMsg(t, kind) {
+  var m = el('msg'); m.className = 'msg ' + (kind || 'ok'); m.textContent = t;
+  if (kind !== 'err') setTimeout(function () { m.className = 'msg'; }, 4000);
+}
+function showPw(email, pw) {
+  var b = el('pwbox');
+  b.style.display = 'block';
+  b.innerHTML = '<strong><i class="fa-solid fa-key"></i> รหัสผ่านสำหรับ ' + esc(email) + '</strong><br>' +
+    'รหัสใหม่: <code>' + esc(pw) + '</code><br>' +
+    '<span style="font-size:11px">คัดลอกส่งให้ผู้ใช้ทางช่องทางที่ปลอดภัย — ระบบจะไม่แสดงรหัสนี้ซ้ำ</span>';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function isCore(email) { return PIAuth.coreAdmins.indexOf(String(email).toLowerCase()) >= 0; }
+
+/* ---------- ข้อมูลพนักงาน: สถานะ / อายุงาน / เซลล์ในตาราง ---------- */
+var EMP_STATUS = [
+  ['probation', 'ทดลองงาน', 'st-probation', 'fa-hourglass-half'],
+  ['regular', 'ประจำ', 'st-regular', 'fa-circle-check'],
+  ['review', 'ช่วงพิจารณางานใหม่', 'st-review', 'fa-arrows-rotate']
+];
+function empStatusInfo(code) {
+  var c = String(code || '').toLowerCase();
+  for (var i = 0; i < EMP_STATUS.length; i++) if (EMP_STATUS[i][0] === c) {
+    return { code: EMP_STATUS[i][0], label: EMP_STATUS[i][1], cls: EMP_STATUS[i][2], icon: EMP_STATUS[i][3] };
+  }
+  return null;
+}
+/** อายุงานเทียบวันที่ปัจจุบัน → “X ปี Y เดือน Z วัน” */
+function tenureText(sd) {
+  if (!sd) return '';
+  var s = new Date(String(sd) + 'T00:00:00');
+  if (isNaN(s.getTime())) return '';
+  var now = new Date();
+  if (s > now) return 'ยังไม่เริ่มงาน';
+  var y = now.getFullYear() - s.getFullYear();
+  var m = now.getMonth() - s.getMonth();
+  var d = now.getDate() - s.getDate();
+  if (d < 0) {
+    m--;
+    d += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+  }
+  if (m < 0) { y--; m += 12; }
+  var parts = [];
+  if (y) parts.push(y + ' ปี');
+  if (m) parts.push(m + ' เดือน');
+  parts.push(d + ' วัน');
+  return parts.join(' ');
+}
+function empEmpty(u) {
+  return !(u.empCode || u.startDate || u.empStatus || u.nickname || u.phone || u.lineId || u.gmail);
+}
+function empCell(u) {
+  var st = empStatusInfo(u.empStatus);
+  var top = [];
+  if (u.empCode) top.push('<span class="emp-code">' + esc(u.empCode) + '</span>');
+  if (st) top.push('<span class="emp-st ' + st.cls + '"><i class="fa-solid ' + st.icon + '"></i> ' + esc(st.label) + '</span>');
+  var line1 = top.length ? top.join(' ') : '<span class="emp-todo"><i class="fa-regular fa-circle-exclamation"></i> ยังไม่กรอก</span>';
+  var ten = tenureText(u.startDate);
+  var line2 = u.startDate
+    ? '<div class="mini">อายุงาน <b style="color:#0F2B46">' + esc(ten) + '</b> · เริ่ม ' + esc(shortThai(u.startDate)) + '</div>'
+    : '<div class="mini">– ยังไม่ระบุวันเริ่มงาน</div>';
+  var ct = [];
+  if (u.nickname) ct.push('ชื่อเล่น ' + u.nickname);
+  if (u.phone) ct.push(u.phone);
+  if (u.lineId) ct.push('LINE ' + u.lineId);
+  if (u.gmail) ct.push(u.gmail);
+  var line3 = ct.length ? '<div class="mini" title="' + esc(ct.join(' · ')) + '">' + esc(ct.join(' · ')) + '</div>' : '';
+  return '<div class="stack">' + line1 + line2 + line3 + '</div>';
+}
+/** อ่านฟอร์มข้อมูลพนักงาน (ใช้ทั้งตอนสร้างและตอนแก้ไข) */
+function readEmpForm(ids) {
+  var o = {};
+  ids.forEach(function (k) { if (el(k)) o[k] = String(el(k).value || '').trim(); });
+  return o;
+}
+
+var LVLS = [
+  ['admin', 'L1 · Admin'], ['bu', 'L2 · BU'], ['head', 'L3 · Head Team'],
+  ['sup', 'L4 · Supervisor'], ['sale', 'L5 · AE'], ['agent', 'L6 · ตัวแทน/MCN']
+];
+function lvlLabel(code) {
+  for (var i = 0; i < LVLS.length; i++) if (LVLS[i][0] === code) return LVLS[i][1];
+  return code || '-';
+}
+function lvlN(code) {
+  for (var i = 0; i < LVLS.length; i++) if (LVLS[i][0] === code) return i + 1;
+  return LVLS.length;
+}
+
+/* รายชื่อทีม (BU) — รวม 3 แหล่ง: ทีมพื้นฐาน + ทีมที่สร้างใน Reports + ทีมที่เคยกำหนดให้ผู้ใช้ */
+var BASE_TEAMS = ['BU-DLAG', 'BU-SML'];
+function teamOptions() {
+  var out = [];
+  function add(v) { v = String(v || '').trim().toUpperCase(); if (v && out.indexOf(v) < 0) out.push(v); }
+  BASE_TEAMS.forEach(add);
+  try {
+    var a = JSON.parse(localStorage.getItem('pi_sr_teams_v1') || 'null');
+    if (Object.prototype.toString.call(a) === '[object Array]') a.forEach(function (t) { add(t && t.code); });
+  } catch (e) {}
+  (window.__USERS__ || []).forEach(function (u) { add(u.team); });
+  return out.sort();
+}
+
+function teamCell(u) {
+  var cur = String(u.team || '').toUpperCase();
+  var opts = teamOptions();
+  var html = '<select data-act="team" data-email="' + esc(u.email) + '" title="ทีม (BU) ที่สังกัด">'
+    + '<option value="">— ไม่ระบุ —</option>'
+    + opts.map(function (t) { return '<option value="' + esc(t) + '"' + (cur === t ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('')
+    + (cur && opts.indexOf(cur) < 0 ? '<option value="' + esc(cur) + '" selected>' + esc(cur) + '</option>' : '')
+    + '</select>';
+  return html;
+}
+
+/* ---------- รีวิว: บัญชีเซลล์ผูกกับรายชื่อเซลส์คนไหน (ใช้กติกาเดียวกับแอป) ---------- */
+function salesStore() {
+  try {
+    var a = JSON.parse(localStorage.getItem('pi_sr_sales_v1') || 'null');
+    if (Object.prototype.toString.call(a) === '[object Array]') return a;
+  } catch (e) {}
+  return [];
+}
+function normStr(v) { return String(v || '').replace(/[\s\u200B\u00A0]+/g, '').toLowerCase(); }
+function matchSale(u) {
+  var lvl = String(u.level || '').toLowerCase();
+  if (lvl !== 'sale' && lvl !== 'agent') return null;
+  var list = salesStore();
+  var nm = normStr(u.name);
+  if (nm) {
+    for (var i = 0; i < list.length; i++) {
+      if (normStr(list[i].name) === nm) return { sale: list[i], how: 'ชื่อตรงกัน' };
+    }
+    var near = list.filter(function (s) {
+      var sn = normStr(s.name);
+      return sn && (sn.indexOf(nm) >= 0 || nm.indexOf(sn) >= 0);
+    });
+    if (near.length === 1) return { sale: near[0], how: 'ชื่อใกล้เคียง' };
+  }
+  var tm = String(u.team || '').toUpperCase();
+  if (tm) {
+    var inTeam = list.filter(function (s) { return String(s.team || '').toUpperCase() === tm; });
+    if (inTeam.length === 1) return { sale: inTeam[0], how: 'ทีม ' + tm + ' มี AE คนเดียว' };
+    if (inTeam.length > 1) return { sale: null, why: 'ทีม ' + tm + ' มี ' + inTeam.length + ' คน — ตั้งชื่อบัญชีให้ตรงกับชื่อ AE' };
+  }
+  if (!list.length) return { sale: null, why: 'ยังไม่มีรายชื่อ AE ใน Reports' };
+  return { sale: null, why: 'ไม่พบชื่อที่ตรง — เพิ่มใน Reports หรือแก้ชื่อบัญชี' };
+}
+function saleLinkCell(u) {
+  var lvl = String(u.level || '').toLowerCase();
+  /* L6 ตัวแทน: แสดง AE ที่ดูแล (ผู้ดูแลสาย) แทนการจับคู่รายชื่อ AE */
+  if (lvl === 'agent') {
+    var up = null;
+    (window.__USERS__ || []).forEach(function (x) { if (String(x.email).toLowerCase() === String(u.parent || '').toLowerCase()) up = x; });
+    if (up) return '<span class="pill l-admin" title="ตัวแทนภายใต้ AE: ' + esc(up.email) + '"><i class="fa-solid fa-user-tie" style="margin-right:4px"></i>' + esc(up.name || up.email) + '</span>';
+    return '<span class="pill pill-warn" title="ยังไม่มี AE ผู้ดูแล">⚠ ยังไม่ผูก AE</span>';
+  }
+  var m = matchSale(u);
+  if (!m) return '<span style="color:#c2cbd8">—</span>';
+  if (m.sale) {
+    return '<span class="pill l-editor" title="ผูกด้วย: ' + esc(m.how) + '">'
+      + esc(m.sale.id) + ' · ' + esc(m.sale.name) + '</span>';
+  }
+  return '<span class="pill pill-warn" title="' + esc(m.why) + '">⚠ ยังไม่ผูก</span>';
+}
+
+/* ---------- รีวิว: บันทึกการพบลูกค้า (Daily Report) ของแต่ละบัญชี ---------- */
+var TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+function dailyStore() {
+  try {
+    var a = JSON.parse(localStorage.getItem('pi_daily_v1') || 'null');
+    if (Object.prototype.toString.call(a) === '[object Array]') return a;
+  } catch (e) {}
+  return [];
+}
+function shortThai(iso) {
+  var p = String(iso || '').split('-');
+  if (p.length < 3) return iso || '—';
+  return Number(p[2]) + ' ' + (TH_M[Number(p[1]) - 1] || '') + ' ' + String(Number(p[0]) + 543).slice(-2);
+}
+function dailyCell(u) {
+  var m = matchSale(u);
+  var mail = String(u.email || '').toLowerCase();
+  var list = dailyStore().filter(function (x) {
+    if (m && m.sale) return String(x.saleId || '') === String(m.sale.id);
+    return String(x.by || '').toLowerCase() === mail;
+  });
+  if (!list.length) return '<span style="color:#c2cbd8">—</span>';
+  var latest = list.slice().sort(function (a, b) {
+    return String(b.date + (b.time || '')).localeCompare(String(a.date + (a.time || '')));
+  })[0];
+  var monthCount = list.filter(function (x) { return String(x.date || '').slice(0, 7) === new Date().toISOString().slice(0, 7); }).length;
+  return '<span class="pill l-viewer" title="รวม ' + list.length + ' ครั้ง · เดือนนี้ ' + monthCount + ' ครั้ง">' + list.length + ' ครั้ง</span>'
+    + '<div style="font-size:9.5px;color:#98a2b3;margin-top:2px">ล่าสุด ' + esc(shortThai(latest.date)) + '</div>';
+}
+
+function render(users) {
+  if (__DENIED__ || !el('tb')) return;
+  /* เรียงตามสิทธิ์: Dev อยู่บนสุด → L1 → L2 → … */
+  var DEV_EMAIL = 'aodpongtaptsr@gmail.com';
+  users = (users || []).slice().sort(function (a, b) {
+    var da = String(a.email || '').toLowerCase() === DEV_EMAIL ? 0 : 1;
+    var db = String(b.email || '').toLowerCase() === DEV_EMAIL ? 0 : 1;
+    if (da !== db) return da - db;
+    var la = lvlN(a.level), lb = lvlN(b.level);
+    if (la !== lb) return la - lb;
+    return String(a.name || a.email || '').localeCompare(String(b.name || b.email || ''), 'th');
+  });
+  window.__USERS__ = users;
+  el('count').textContent = users.length;
+  /* สรุปความครบของข้อมูลพนักงาน */
+  (function () {
+    var box = document.getElementById('empGap');
+    if (!box) return;
+    var missing = users.filter(empEmpty);
+    if (!missing.length) {
+      box.style.display = 'none';
+      return;
+    }
+    box.style.display = 'block';
+    var names = missing.slice(0, 4).map(function (u) { return u.name || u.email; }).join(', ');
+    box.innerHTML = '<i class="fa-solid fa-circle-info"></i> ข้อมูลพนักงานยังไม่ครบ <b>' + missing.length + '/' + users.length +
+      '</b> บัญชี' + (missing.length > 4 ? ' (เช่น ' + esc(names) + ' …)' : ' (' + esc(names) + ')')
+      + ' — กดปุ่ม <i class="fa-solid fa-pen"></i> ท้ายแถวเพื่อเติมข้อมูล';
+  })();
+  var rows = users.map(function (u) {
+    var core = isCore(u.email);
+    var initial = String(String(u.name || '').trim() || String(u.email || '?')).slice(0, 1);
+    var levelCell = core
+      ? '<span class="pill l-core">L1 · Admin (หลัก)</span>'
+      : '<select data-act="level" data-email="' + esc(u.email) + '" style="padding:4px 6px;font-size:11px">' +
+        LVLS.map(function (p) {
+          return '<option value="' + p[0] + '"' + (u.level === p[0] ? ' selected' : '') + '>' + p[1] + '</option>';
+        }).join('') + '</select>';
+    var parentName = '-';
+    var parentEmail = u.parent || '';
+    (window.__USERS__ || []).forEach(function (x) {
+      if (x.email === u.parent) parentName = x.name || x.email;
+    });
+    if (u.parent && parentName === '-') parentName = u.parent;
+    var parentCell = '-';
+    if (parentEmail) {
+      parentCell = parentName && parentName !== parentEmail
+        ? '<span style="display:block">' + esc(parentName) + '</span><span style="display:block;color:#98a2b3;font-size:10.5px">' + esc(parentEmail) + '</span>'
+        : esc(parentEmail);
+    }
+
+    // จำนวนลูกข่าย: ตรง / ทั้งหมด (ทุกชั้น)
+    var direct = (window.__USERS__ || []).filter(function (x) { return x.parent === u.email; }).length;
+    var total = descOf(u.email).length;
+    var downCell = direct || total
+      ? '<span class="pill l-editor" title="ลูกข่ายตรง ' + direct + ' · ทั้งหมด ' + total + '">ลูกข่าย ' + direct + ' / ' + total + '</span>'
+      : '';
+
+    var statusCell = u.status === 'disabled'
+      ? '<span class="off"><i class="fa-solid fa-circle-xmark"></i> ปิด</span>'
+      : '<span class="on"><i class="fa-solid fa-circle-check"></i> ใช้งาน</span>';
+    var acts = '<div class="acts">' +
+      '<a class="btn btn-ic" href="index.html?page=team&focus=' + encodeURIComponent(u.email) + '" target="_blank" title="ดูสายงาน"><i class="fa-solid fa-sitemap"></i></a>' +
+      '<button class="btn btn-ic" data-act="profile" data-email="' + esc(u.email) + '" title="ข้อมูลพนักงาน (รหัส/เริ่มงาน/ติดต่อ)"><i class="fa-solid fa-id-card"></i></button>' +
+      (core ? '' : '<button class="btn btn-ic" data-act="move" data-email="' + esc(u.email) + '" title="ย้ายสายงาน (เปลี่ยนผู้ดูแล)"><i class="fa-solid fa-arrows-turn-to-dots"></i></button>') +
+      '<button class="btn btn-ic" data-act="reset" data-email="' + esc(u.email) + '" title="รีเซ็ตรหัสผ่าน"><i class="fa-solid fa-rotate"></i></button>' +
+      (core ? '' :
+        '<button class="btn btn-ic" data-act="toggle" data-email="' + esc(u.email) + '" data-status="' + (u.status === 'disabled' ? 'active' : 'disabled') + '" title="' + (u.status === 'disabled' ? 'เปิดใช้งาน' : 'ปิดการใช้งาน') + '">' +
+        (u.status === 'disabled' ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-power-off"></i>') + '</button>' +
+        '<button class="btn btn-ic btn-danger" data-act="del" data-email="' + esc(u.email) + '" title="ลบผู้ใช้"><i class="fa-solid fa-trash"></i></button>') +
+      '</div>';
+    return '<tr data-search="' + esc(((u.name || '') + ' ' + u.email + ' ' + (u.empCode || '') + ' ' + (u.nickname || '') + ' ' + (u.phone || '') + ' ' + (u.lineId || '')).toLowerCase()) + '" data-level="' + esc(u.level) + '" data-parent="' + esc(u.parent || '') + '">'
+      + '<td class="c-user"><div class="u-cell"><span class="u-av">' + esc(initial) + '</span><div style="min-width:0">'
+      + '  <div class="u-nm"><span class="name-txt" title="' + esc(u.name || u.email) + '">' + (esc(u.name || '') || '<span class="muted">ยังไม่ระบุชื่อ</span>') + '</span>'
+      + '  <button class="btn-pen" data-act="rename" data-email="' + esc(u.email) + '" title="แก้ไขชื่อ-นามสกุล"><i class="fa-solid fa-pen"></i></button></div>'
+      + '  <div class="u-em" title="' + esc(u.email) + '">' + esc(u.email) + '</div></div></div></td>'
+      + '<td class="c-lvteam"><div class="stack">' + levelCell + (core ? '<span class="pill l-core">ทุกทีม</span>' : teamCell(u)) + '</div></td>'
+      + '<td class="c-emp">' + empCell(u) + '</td>'
+      + '<td class="c-link"><div class="stack">' + saleLinkCell(u) + dailyCell(u) + '</div></td>'
+      + '<td class="c-tree"><div class="tree-up" title="' + esc(parentEmail ? parentName + ' · ' + parentEmail : 'ไม่มีผู้ดูแลสาย') + '">'
+      + (parentEmail ? '<span class="mini">ผู้ดูแล:</span> ' + esc(parentName) : '<span class="mini">— ไม่มีผู้ดูแลสาย</span>') + '</div>'
+      + (downCell ? '<div class="mini" style="margin-top:2px">' + downCell + '</div>' : '') + '</td>'
+      + '<td class="c-state">' + statusCell + '<div class="mini" style="margin-top:3px">' + (u.lastLogin ? fmt(u.lastLogin) : 'ยังไม่เคยเข้าใช้') + '</div></td>'
+      + '<td class="c-act">' + acts + '</td></tr>';
+  }).join('');
+  el('tb').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;color:#98a2b3;padding:22px">ยังไม่มีผู้ใช้</td></tr>';
+  fillTeamOptions();
+  refreshUplines();
+  buildFilterOptions();
+  applyFilters();
+}
+
+/** รายชื่อลูกข่ายทั้งหมด (ทุกชั้น) ของอีเมลที่กำหนด */
+function descOf(email) {
+  var out = [], queue = [email], guard = 0;
+  while (queue.length && guard++ < 3000) {
+    var cur = queue.shift();
+    (window.__USERS__ || []).forEach(function (u) {
+      if (u.parent === cur) { out.push(u.email); queue.push(u.email); }
+    });
+  }
+  return out;
+}
+
+function buildFilterOptions() {
+  var lv = el('fLevel'), pr = el('fParent');
+  if (lv) {
+    var cur = lv.value;
+    lv.innerHTML = '<option value="">ทุกระดับ</option>' + LVLS.map(function (p) {
+      return '<option value="' + p[0] + '"' + (cur === p[0] ? ' selected' : '') + '>' + p[1] + '</option>';
+    }).join('');
+  }
+  if (pr) {
+    var cur2 = pr.value;
+    pr.innerHTML = '<option value="">ทุกผู้ดูแลสาย</option>' + (window.__USERS__ || []).map(function (u) {
+      return '<option value="' + esc(u.email) + '"' + (cur2 === u.email ? ' selected' : '') + '>' + esc(u.name || u.email) + '</option>';
+    }).join('');
+  }
+}
+
+function applyFilters() {
+  var q = ((el('fSearch') || {}).value || '').toLowerCase();
+  var lv = (el('fLevel') || {}).value || '';
+  var pr = (el('fParent') || {}).value || '';
+  var shown = 0;
+  Array.prototype.forEach.call(document.querySelectorAll('#tb tr[data-level]'), function (tr) {
+    var ok = (!q || tr.dataset.search.indexOf(q) >= 0)
+      && (!lv || tr.dataset.level === lv)
+      && (!pr || tr.dataset.parent === pr);
+    tr.style.display = ok ? '' : 'none';
+    if (ok) shown++;
+  });
+  var c = el('count');
+  if (c) c.textContent = shown + ' / ' + (window.__USERS__ || []).length;
+}
+
+el('fSearch') && el('fSearch').addEventListener('input', applyFilters);
+el('fLevel') && el('fLevel').addEventListener('change', applyFilters);
+el('fParent') && el('fParent').addEventListener('change', applyFilters);
+el('fClear') && el('fClear').addEventListener('click', function () {
+  if (el('fSearch')) el('fSearch').value = '';
+  if (el('fLevel')) el('fLevel').value = '';
+  if (el('fParent')) el('fParent').value = '';
+  applyFilters();
+});
+
+/** รายชื่อผู้ดูแลต้นสาย: ระดับสูงกว่าระดับที่เลือก */
+function refreshUplines() {
+  var sel = el('level'), box = el('parent');
+  if (!sel || !box) return;
+  var myN = lvlN(sel.value);
+  var opts = (window.__USERS__ || []).filter(function (u) {
+    if (sel.value === 'admin') return lvlN(u.level) === 1;   /* L1 ไม่มีผู้ดูแลที่สูงกว่า — เลือก Admin ด้วยกันได้ */
+    return lvlN(u.level) < myN;
+  }).map(function (u) {
+    return '<option value="' + esc(u.email) + '">' + esc((u.name || u.email) + ' · ' + lvlLabel(u.level)) + '</option>';
+  });
+  box.innerHTML = (sel.value === 'admin' ? '<option value="">— ไม่ระบุ (Admin ระดับสูงสุด) —</option>' : '<option value="">— เลือก —</option>') + opts.join('');
+}
+
+function load() {
+  if (__DENIED__) return;
+  fillTeamOptions();
+  PIAuth.seed().then(function () {
+    var list = PIAuth.listUsers();
+    /* sync ระดับสิทธิ์ของตัวเองจากข้อมูลจริงบนเซิร์ฟเวอร์ (กัน session ค้างค่าเดิม) */
+    var mine = null;
+    for (var i = 0; i < list.length; i++) if (String(list[i].email).toLowerCase() === String(me.email).toLowerCase()) mine = list[i];
+    if (mine && mine.level && mine.level !== me.level) {
+      me.level = mine.level;
+      me.isAdmin = (mine.level === 'admin' || mine.level === 'bu');
+      try {
+        var raw = JSON.parse(localStorage.getItem('pi_session_v2') || '{}');
+        raw.level = mine.level; raw.isAdmin = me.isAdmin;
+        localStorage.setItem('pi_session_v2', JSON.stringify(raw));
+      } catch (e) {}
+      if (el('me')) el('me').textContent = me.email + ' · ' + String(me.level).toUpperCase();
+    }
+    render(list);
+  });
+}
+
+/** ตัวเลือกทีม (BU) ในฟอร์มสร้างผู้ใช้ */
+function fillTeamOptions() {
+  var sel = el('team');
+  if (!sel) return;
+  var cur = sel.value || '';
+  sel.innerHTML = '<option value="">— ไม่ระบุ —</option>' + teamOptions().map(function (t) {
+    return '<option value="' + esc(t) + '"' + (cur === t ? ' selected' : '') + '>' + esc(t) + '</option>';
+  }).join('');
+}
+
+el('addBtn').addEventListener('click', function () {
+  var email = el('email').value.trim();
+  if (!email || email.indexOf('@') < 0) return showMsg('กรอกอีเมลให้ถูกต้อง', 'err');
+
+  var newLevel = el('level').value;
+  var isAdminNew = newLevel === 'admin';
+  if (!isAdminNew && !el('parent').value) return showMsg('กรุณาเลือกผู้ดูแลต้นสาย (Upline)', 'err');
+
+  // ตรวจชั้นสิทธิ์ก่อนส่ง: ต้องสร้างได้เฉพาะระดับที่ต่ำกว่าตัวเอง (ยกเว้น Admin)
+  var myN = lvlN(me.level);
+  var newN = lvlN(newLevel);
+  if (myN !== 1 && newN <= myN) return showMsg('สร้างได้เฉพาะระดับที่ต่ำกว่าตัวเอง (L' + (myN + 1) + ' ลงไป)', 'err');
+  if (isAdminNew && myN !== 1) return showMsg('สร้างระดับ L1 · Admin ได้เฉพาะ Admin เท่านั้น', 'err');
+
+  var pv = el('parent').value, pn = 99, pFound = null;
+  (window.__USERS__ || []).forEach(function (u) { if (u.email === pv) { pn = lvlN(u.level); pFound = u; } });
+  if (pv && !pFound) return showMsg('ไม่พบผู้ดูแลต้นสายในระบบ', 'err');
+  if (pFound && !isAdminNew && pn >= newN) return showMsg('ผู้ดูแลต้นสายต้องอยู่ระดับสูงกว่าระดับที่เลือก', 'err');
+  if (pFound && isAdminNew && pn !== 1) return showMsg('ผู้ดูแลของ L1 · Admin ต้องเป็น Admin', 'err');
+
+  PIAuth.addUser(email, el('name').value.trim(), el('level').value, el('parent').value, undefined, el('team') ? el('team').value : '',
+    readEmpForm(['empCode', 'startDate', 'empStatus', 'nickname', 'phone', 'lineId', 'gmail'])).then(function (res) {
+    el('email').value = ''; el('name').value = '';
+    if (el('team')) el('team').value = '';
+    ['empCode', 'startDate', 'empStatus', 'nickname', 'phone', 'lineId', 'gmail'].forEach(function (k) { if (el(k)) el(k).value = ''; });
+    updateTenureHint();
+    render(PIAuth.listUsers());
+    showPw(res.email, res.password);
+    showMsg('เพิ่มผู้ใช้และสร้างรหัสผ่านแล้ว', 'ok');
+  }).catch(function (e) { showMsg(e.message || String(e), 'err'); });
+});
+
+/** แสดงอายุงานใต้ช่องวันที่เริ่มงานในฟอร์มสร้าง */
+function updateTenureHint() {
+  var box = el('tenureHint');
+  if (!box) return;
+  var d = el('startDate') ? el('startDate').value : '';
+  if (!d) { box.innerHTML = '– ยังไม่ระบุวันที่เริ่มงาน'; return; }
+  box.innerHTML = 'อายุงาน <b>' + esc(tenureText(d)) + '</b> (ถึงวันนี้)';
+}
+el('startDate') && el('startDate').addEventListener('change', updateTenureHint);
+el('startDate') && el('startDate').addEventListener('input', updateTenureHint);
+
+/** แก้ไขชื่อ-นามสกุลของผู้ใช้ */
+function renameUser(email) {
+  var u = null;
+  (window.__USERS__ || []).forEach(function (x) { if (x.email === email) u = x; });
+  if (!u) return;
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);display:grid;place-items:center;z-index:99;padding:16px';
+  wrap.innerHTML = '<div style="background:#fff;border-radius:14px;padding:20px;width:min(440px,100%);font-family:Prompt,sans-serif">'
+    + '<h3 style="margin:0 0 4px;color:#0F2B46;font-size:15px">แก้ไขชื่อผู้ใช้</h3>'
+    + '<div style="color:#667085;font-size:11.5px;margin-bottom:12px">' + esc(email) + ' · ' + lvlLabel(u.level) + '</div>'
+    + '<label style="font-size:11px;color:#475467">ชื่อ-นามสกุล</label>'
+    + '<input id="rnName" maxlength="60" placeholder="เช่น สมชาย ใจดี" value="' + esc(u.name || '') + '" style="width:100%;margin:5px 0 6px;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px;font-family:inherit;font-size:12px">'
+    + '<div style="font-size:10.5px;color:#98A2B3;margin:0 0 14px">ใช้แสดงใน Reports / Dashboard และใช้จับคู่กับรายชื่อ AE</div>'
+    + '<div style="display:flex;justify-content:flex-end;gap:8px">'
+    + '<button class="btn" id="rnCancel">ยกเลิก</button>'
+    + '<button class="btn btn-primary" id="rnOk"><i class="fa-solid fa-check"></i> บันทึก</button></div></div>';
+  document.body.appendChild(wrap);
+  var inp = document.getElementById('rnName');
+  setTimeout(function () { inp.focus(); inp.select(); }, 60);
+  function close() { if (wrap.parentNode) document.body.removeChild(wrap); document.removeEventListener('keydown', onEsc); }
+  function onEsc(e) { if (e.key === 'Escape') close(); }
+  wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
+  document.addEventListener('keydown', onEsc);
+  document.getElementById('rnCancel').addEventListener('click', close);
+  document.getElementById('rnOk').addEventListener('click', function () {
+    var nm = inp.value.trim();
+    if (!nm) { showMsg('กรอกชื่อก่อน', 'err'); inp.focus(); return; }
+    var old = u.name || '';
+    PIAuth.updateUser(email, '', '', '', undefined, nm).then(function () {
+      if (window.PILog) { try { window.PILog.add('user.edit', email, 'เปลี่ยนชื่อ: ' + (old || '—') + ' → ' + nm); } catch (e) {} }
+      close();
+      render(PIAuth.listUsers());
+      showMsg('บันทึกชื่อแล้ว', 'ok');
+    }).catch(function (e) { showMsg(e.message || String(e), 'err'); });
+  });
+  inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('rnOk').click(); } });
+}
+
+/** แก้ไขข้อมูลพนักงาน (รหัสพนักงาน / เริ่มงาน / สถานะพนักงาน / ชื่อเล่น / ติดต่อ) */
+function editProfile(email) {
+  var u = null;
+  (window.__USERS__ || []).forEach(function (x) { if (x.email === email) u = x; });
+  if (!u) return;
+  var IN = 'width:100%;padding:9px 10px;border:1px solid #E5EAF0;border-radius:8px;font-family:inherit;font-size:12px;box-sizing:border-box';
+  var LB = 'font-size:10.5px;color:#475467;display:block;margin-bottom:5px';
+  var ten = tenureText(u.startDate);
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);display:grid;place-items:center;z-index:99;padding:16px;overflow:auto';
+  wrap.innerHTML = '<div style="background:#fff;border-radius:14px;padding:20px;width:min(640px,100%);font-family:Prompt,sans-serif;max-height:92vh;overflow:auto">'
+    + '<h3 style="margin:0 0 4px;color:#0F2B46;font-size:15px"><i class="fa-solid fa-id-card" style="color:#2563EB;margin-right:6px"></i>ข้อมูลพนักงาน</h3>'
+    + '<div style="color:#667085;font-size:11.5px;margin-bottom:14px">' + esc(u.name || email) + ' · ' + esc(lvlLabel(u.level)) + ' · ' + esc(email) + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px">'
+    + '  <div><label style="' + LB + '">รหัสพนักงาน</label><input id="pfCode" maxlength="20" value="' + esc(u.empCode || '') + '" placeholder="เช่น EMP-0142" style="' + IN + '"></div>'
+    + '  <div><label style="' + LB + '">เริ่มงานวันที่</label><input id="pfStart" type="date" value="' + esc(u.startDate || '') + '" style="' + IN + '">'
+    + '    <div id="pfHint" style="font-size:10px;color:#98A2B3;margin-top:4px">' + (ten ? 'อายุงาน <b style="color:#0F2B46">' + esc(ten) + '</b>' : '– ยังไม่ระบุวันที่เริ่มงาน') + '</div></div>'
+    + '  <div><label style="' + LB + '">สถานะพนักงาน</label><select id="pfStatus" style="' + IN + '">'
+    + '    <option value="">— ไม่ระบุ —</option>'
+    + '    <option value="probation"' + (u.empStatus === 'probation' ? ' selected' : '') + '>ทดลองงาน</option>'
+    + '    <option value="regular"' + (u.empStatus === 'regular' ? ' selected' : '') + '>ประจำ</option>'
+    + '    <option value="review"' + (u.empStatus === 'review' ? ' selected' : '') + '>ช่วงพิจารณางานใหม่</option>'
+    + '  </select></div>'
+    + '  <div><label style="' + LB + '">ชื่อเล่น</label><input id="pfNick" maxlength="40" value="' + esc(u.nickname || '') + '" style="' + IN + '"></div>'
+    + '  <div><label style="' + LB + '">เบอร์โทรติดต่อ</label><input id="pfPhone" inputmode="tel" maxlength="24" value="' + esc(u.phone || '') + '" style="' + IN + '"></div>'
+    + '  <div><label style="' + LB + '">ID Line</label><input id="pfLine" maxlength="40" value="' + esc(u.lineId || '') + '" style="' + IN + '"></div>'
+    + '  <div style="grid-column:1/-1"><label style="' + LB + '">Gmail (ติดต่อ)</label><input id="pfGmail" type="email" maxlength="80" value="' + esc(u.gmail || '') + '" style="' + IN + '"></div>'
+    + '</div>'
+    + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">'
+    + '<button class="btn" id="pfCancel">ยกเลิก</button>'
+    + '<button class="btn btn-primary" id="pfOk"><i class="fa-solid fa-check"></i> บันทึก</button></div></div>';
+  document.body.appendChild(wrap);
+  function close() { if (wrap.parentNode) document.body.removeChild(wrap); document.removeEventListener('keydown', onEsc); }
+  function onEsc(e) { if (e.key === 'Escape') close(); }
+  function hint() {
+    var d = document.getElementById('pfStart').value;
+    var t = tenureText(d);
+    document.getElementById('pfHint').innerHTML = d ? 'อายุงาน <b style="color:#0F2B46">' + esc(t) + '</b>' : '– ยังไม่ระบุวันที่เริ่มงาน';
+  }
+  document.getElementById('pfStart').addEventListener('change', hint);
+  document.addEventListener('keydown', onEsc);
+  wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
+  document.getElementById('pfCancel').addEventListener('click', close);
+  document.getElementById('pfOk').addEventListener('click', function () {
+    var extra = {
+      empCode: document.getElementById('pfCode').value,
+      startDate: document.getElementById('pfStart').value,
+      empStatus: document.getElementById('pfStatus').value,
+      nickname: document.getElementById('pfNick').value,
+      phone: document.getElementById('pfPhone').value,
+      lineId: document.getElementById('pfLine').value,
+      gmail: document.getElementById('pfGmail').value
+    };
+    PIAuth.updateUser(email, '', '', '', undefined, undefined, undefined, extra).then(function () {
+      if (window.PILog) { try { window.PILog.add('user.edit', email, 'อัปเดตข้อมูลพนักงาน' + (extra.empCode ? ' · ' + extra.empCode : '')); } catch (e) {} }
+      close();
+      render(PIAuth.listUsers());
+      showMsg('บันทึกข้อมูลพนักงานแล้ว', 'ok');
+    }).catch(function (e) { showMsg(e.message || String(e), 'err'); });
+  });
+}
+
+/** ย้ายสายงาน: เลือกผู้ดูแลใหม่ได้เฉพาะที่อยู่สูงกว่า และไม่ใช่ตัวเอง/ลูกข่ายตัวเอง (กัน loop) */
+function moveParent(email) {
+  var target = null;
+  (window.__USERS__ || []).forEach(function (u) { if (u.email === email) target = u; });
+  if (!target) return;
+  var banned = descOf(email).concat([email]);
+  var cands = (window.__USERS__ || []).filter(function (u) {
+    return lvlN(u.level) < lvlN(target.level) && banned.indexOf(u.email) < 0;
+  });
+  if (!cands.length) return showMsg('ไม่มีผู้ใช้ระดับสูงกว่าที่สามารถเป็นผู้ดูแลได้', 'err');
+
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);display:grid;place-items:center;z-index:99;padding:16px';
+  wrap.innerHTML = '<div style="background:#fff;border-radius:14px;padding:20px;width:min(460px,100%);font-family:Prompt,sans-serif">'
+    + '<h3 style="margin:0 0 4px;color:#0F2B46;font-size:15px">ย้ายสายงาน</h3>'
+    + '<div style="color:#667085;font-size:11.5px;margin-bottom:12px">' + esc(target.name || email) + ' · ' + lvlLabel(target.level) + '</div>'
+    + '<label style="font-size:11px;color:#475467">ผู้ดูแลคนใหม่</label>'
+    + '<select id="mvSel" style="width:100%;margin:5px 0 14px;padding:9px;border:1px solid #E5EAF0;border-radius:8px">'
+    + cands.map(function (u) { return '<option value="' + esc(u.email) + '"' + (u.email === target.parent ? ' selected' : '') + '>' + esc((u.name || u.email) + ' · ' + lvlLabel(u.level)) + '</option>'; }).join('')
+    + '</select>'
+    + '<div style="display:flex;justify-content:flex-end;gap:8px">'
+    + '<button class="btn" id="mvCancel">ยกเลิก</button>'
+    + '<button class="btn btn-primary" id="mvOk">ย้ายสาย</button></div></div>';
+  document.body.appendChild(wrap);
+  wrap.addEventListener('click', function (e) { if (e.target === wrap) document.body.removeChild(wrap); });
+  document.getElementById('mvCancel').addEventListener('click', function () { document.body.removeChild(wrap); });
+  document.getElementById('mvOk').addEventListener('click', function () {
+    var np = document.getElementById('mvSel').value;
+    document.body.removeChild(wrap);
+    PIAuth.updateUser(email, '', '', np).then(function () {
+      render(PIAuth.listUsers()); showMsg('ย้ายสายงานแล้ว', 'ok');
+    }).catch(function (e) { showMsg(e.message || String(e), 'err'); });
+  });
+}
+
+el('level').addEventListener('change', refreshUplines);
+
+el('tb').addEventListener('change', function (e) {
+  var teamSel = e.target.closest('[data-act="team"]');
+  if (teamSel) {
+    var mail = teamSel.dataset.email;
+    PIAuth.updateUser(mail, '', '', '', undefined, undefined, teamSel.value).then(function () {
+      if (window.PILog) { try { window.PILog.add('user.edit', mail, teamSel.value ? 'กำหนดทีม ' + teamSel.value : 'ยกเลิกการกำหนดทีม'); } catch (err) {} }
+      render(PIAuth.listUsers());
+      showMsg(teamSel.value ? 'กำหนดทีม ' + teamSel.value + ' ให้ ' + mail + ' แล้ว' : 'ยกเลิกทีมของ ' + mail, 'ok');
+    }).catch(function (err) { showMsg(err.message || String(err), 'err'); load(); });
+    return;
+  }
+  var sel = e.target.closest('[data-act="level"]');
+  if (!sel) return;
+  PIAuth.updateUser(sel.dataset.email, sel.value, '').then(function () {
+    render(PIAuth.listUsers()); showMsg('อัปเดตสิทธิ์แล้ว', 'ok');
+  }).catch(function (err) { showMsg(err.message || String(err), 'err'); load(); });
+});
+
+el('tb').addEventListener('click', function (e) {
+  var btn = e.target.closest('[data-act]');
+  if (!btn || btn.tagName === 'SELECT') return;
+  var act = btn.dataset.act, email = btn.dataset.email;
+
+  if (act === 'move') { moveParent(email); return; }
+  if (act === 'rename') { renameUser(email); return; }
+  if (act === 'profile') { editProfile(email); return; }
+  if (act === 'reset') {
+    PIAuth.resetPassword(email).then(function (res) {
+      showPw(res.email, res.password); showMsg('รีเซ็ตรหัสผ่านแล้ว', 'ok');
+    }).catch(function (err) { showMsg(err.message || String(err), 'err'); });
+  }
+  if (act === 'toggle') {
+    PIAuth.updateUser(email, '', btn.dataset.status).then(function () {
+      render(PIAuth.listUsers()); showMsg('เปลี่ยนสถานะแล้ว', 'ok');
+    }).catch(function (err) { showMsg(err.message || String(err), 'err'); });
+  }
+  if (act === 'del') {
+    if (!confirm('ลบผู้ใช้ ' + email + ' ?')) return;
+    PIAuth.removeUser(email).then(function () {
+      if (window.PILog) { try { window.PILog.add('user.del', email, 'ลบผู้ใช้ออกจากระบบ'); } catch (e) {} }
+      render(PIAuth.listUsers()); showMsg('ลบผู้ใช้แล้ว', 'ok');
+    }).catch(function (err) { showMsg(err.message || String(err), 'err'); });
+  }
+});
+
+el('lo').addEventListener('click', function () {
+  PIAuth.logout();
+  location.replace('login.html');
+});
+
+if (me) el('me').textContent = me.email + ' · ' + String(me.level).toUpperCase();
+if (!__DENIED__) load();
+</script>
+</body>
+</html>

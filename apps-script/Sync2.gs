@@ -111,6 +111,9 @@ function dailyOf_(r) {
     nextNote: String(r.nextNote || ''),
     saleId: String(r.saleId || '').trim().toUpperCase(),
     by: String(r.by || '').toLowerCase(),
+    dmName: String(r.dmName || '').trim(),
+    dmPhone: String(r.dmPhone || '').trim(),
+    dmEmail: String(r.dmEmail || '').trim(),
     updatedAt: String(r.updatedAt || '')
   };
 }
@@ -174,6 +177,9 @@ function saveDailyApi_(token, p) {
     nextNote: String(p.nextNote || ''),
     saleId: String(p.saleId || s.saleId || '').trim().toUpperCase(),
     by: String(p.by || s.email || '').toLowerCase(),
+    dmName: String(p.dmName || '').trim().slice(0, 120),
+    dmPhone: String(p.dmPhone || '').trim().slice(0, 30),
+    dmEmail: String(p.dmEmail || '').trim().slice(0, 120),
     updatedAt: nowIso
   };
   if (hit) {
