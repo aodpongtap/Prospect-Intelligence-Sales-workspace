@@ -844,17 +844,17 @@
     /* แถบขอบเขตข้อมูล (ไม่ใช่ช่องกรอก) — แสดงเฉพาะเมื่อสิทธิ์ถูกล็อก */
     var scopeBar = '';
     if (mineSale) {
-      scopeBar = '<div class="sr-scope" title="คุณเห็นเฉพาะข้อมูลของตัวเอง">'
+      scopeBar = '<div class="sr-scopepill" title="คุณเห็นเฉพาะข้อมูลของตัวเอง">'
         + '<i class="fa-solid fa-lock"></i><span>ขอบเขตข้อมูล</span>'
         + '<b>' + esc(teamByCode(mineSale.team).name) + '</b>'
-        + '<span class="sr-scope-sep">·</span>'
+        + '<span class="sr-scopepill-sep">·</span>'
         + '<b>' + esc(mineSale.id + ' · ' + mineSale.name) + '</b>'
-        + '<span class="sr-scope-tag">เฉพาะของฉัน</span></div>';
+        + '<span class="sr-scopepill-tag">เฉพาะของฉัน</span></div>';
     } else if (lockedTeam) {
-      scopeBar = '<div class="sr-scope" title="คุณเห็นเฉพาะทีมที่ดูแล">'
+      scopeBar = '<div class="sr-scopepill" title="คุณเห็นเฉพาะทีมที่ดูแล">'
         + '<i class="fa-solid fa-lock"></i><span>ขอบเขตข้อมูล</span>'
         + '<b>' + esc(teamByCode(lockedTeam).name) + '</b>'
-        + '<span class="sr-scope-tag">ทีมที่คุณดูแล</span></div>';
+        + '<span class="sr-scopepill-tag">ทีมที่คุณดูแล</span></div>';
     }
 
     var aeSelect = '<div class="sr-fl"><label>AE</label><select data-sr-filter="sale">'
@@ -2957,13 +2957,13 @@
       + '.sr-lk-b{flex:0 0 auto;white-space:nowrap;font-size:9.5px;font-weight:400;color:#6366F1;background:#E0E7FF;'
       + 'border-radius:999px;padding:1px 6px}'
       /* แถบขอบเขตข้อมูล (สิทธิ์ถูกล็อก) */
-      + '.sr-scope{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-7px 0 15px;padding:6px 12px;'
+      + '.sr-scopepill{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-7px 0 15px;padding:6px 12px;'
       + 'border:1px solid #E8EEF6;background:#F7FAFF;border-radius:999px;font-size:10.5px;color:#667085;max-width:100%}'
-      + '.sr-scope i{font-size:9px;color:#2563EB}'
-      + '.sr-scope b{color:#0F2B46;font-weight:600;white-space:nowrap}'
-      + '.sr-scope-sep{color:#C3CCD9}'
-      + '.sr-scope-tag{background:#E0E7FF;color:#4338CA;border-radius:999px;padding:1px 8px;font-size:9.5px;white-space:nowrap}'
-      + '@media(max-width:640px){.sr-scope{width:100%;justify-content:center;text-align:center}}'
+      + '.sr-scopepill i{font-size:9px;color:#2563EB}'
+      + '.sr-scopepill b{color:#0F2B46;font-weight:600;white-space:nowrap}'
+      + '.sr-scopepill-sep{color:#C3CCD9}'
+      + '.sr-scopepill-tag{background:#E0E7FF;color:#4338CA;border-radius:999px;padding:1px 8px;font-size:9.5px;white-space:nowrap}'
+      + '@media(max-width:640px){.sr-scopepill{width:100%;justify-content:center;text-align:center}}'
       /* ตัวกรองแบบ 4 ช่อง (มุมมอง AE ที่ทีม/AE ถูกล็อก) */
       + '.sr-filters.sr-f4{grid-template-columns:repeat(2,minmax(0,1fr))}'
       + '@media(min-width:760px){.sr-filters.sr-f4{grid-template-columns:repeat(4,minmax(0,1fr))}}'
