@@ -17,706 +17,790 @@
 }
 </script>
 <style>
-/* ================= DESIGN TOKENS ================= */
+/* ============================================================
+   TSR STORE STUDIO — UI v4  (full rewrite, no legacy styles)
+   ============================================================ */
 :root{
-  --navy:#000033;
-  --navy-2:#0d1550;
-  --navy-3:#1f2b6b;
-  --navy-050:#f5f7fc;
-  --navy-100:#e9edf8;
-  --ink:#12141f;
-  --muted:#6b7186;
-  --muted-2:#9096a8;
-  --line:#e7e9f0;
-  --line-2:#d6dbe6;
-  --bg:#f2f3f7;
-  --card:#ffffff;
-  --gold:#b08d4b;
-  --gold-2:#c8a45c;
+  --ink:#0b1017;
+  --ink-2:#141b26;
+  --ink-3:#1e2836;
+  --bg:#f4f5f7;
+  --panel:#ffffff;
+  --panel-2:#fafbfc;
+  --panel-3:#f1f3f6;
+  --line:#e3e6eb;
+  --line-2:#cfd4dc;
+  --text:#0f172a;
+  --text-2:#475569;
+  --text-3:#7c8798;
+  --accent:#b8892b;
+  --accent-2:#8f6a1c;
+  --accent-bg:#fbf6ea;
+  --accent-line:#e8d5a6;
+  --info:#1f5fd0;
+  --info-bg:#eef3fd;
   --ok:#0f7b52;
-  --warn:#b4471f;
-  --danger:#b3261e;
-  --c-machine:#1e3a8a;
-  --c-system:#0f766e;
-  --c-structure:#a16207;
-  --c-accessory:#7c3aed;
-  --shadow-sm:0 1px 1px rgba(12,16,38,.04), 0 2px 6px rgba(12,16,38,.04);
-  --shadow:0 1px 2px rgba(12,16,38,.05), 0 10px 24px rgba(12,16,38,.06);
-  --shadow-lg:0 24px 60px rgba(10,15,40,.2);
-  --r:14px;
+  --ok-bg:#ecf7f1;
+  --warn:#b45309;
+  --warn-bg:#fdf6ec;
+  --bad:#b42318;
+  --bad-bg:#fdf1f0;
+  --r:6px;
+  --r-lg:8px;
+  --sh-1:0 1px 2px rgba(15,23,42,.06);
+  --sh-2:0 8px 20px -10px rgba(15,23,42,.22);
+  --sh-3:0 28px 64px -24px rgba(15,23,42,.38);
+  --font:"Sarabun","Segoe UI","Leelawadee UI",Tahoma,system-ui,sans-serif;
+  --font-num:"Inter","Sarabun",system-ui,sans-serif;
+  --bar-h:48px;
+  --tb-h:40px;
+  --w-side:252px;
+  --w-insp:316px;
 }
-*{box-sizing:border-box}
+*,*::before,*::after{box-sizing:border-box}
 html,body{height:100%}
 body{
-  margin:0;background:var(--bg);color:var(--ink);font-size:13.5px;line-height:1.5;
-  font-family:"Sarabun","Segoe UI","Leelawadee UI",Tahoma,system-ui,sans-serif;
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:var(--font);font-size:13px;line-height:1.5;
   -webkit-font-smoothing:antialiased;overflow:hidden;
 }
-h1,h2,h3,h4{margin:0;font-weight:700;letter-spacing:.01em}
+h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:0}
 p{margin:0}
-button,input,select{font-family:inherit;font-size:inherit;color:inherit}
-button{cursor:pointer}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+b,strong{font-weight:600}
+.num,.tabular{font-variant-numeric:tabular-nums}
+.hidden{display:none!important}
+.spacer{flex:1}
+/* scrollbars */
+*{scrollbar-width:thin;scrollbar-color:#c9d0da transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#c9d0da;border-radius:8px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#a9b2bf;background-clip:content-box}
 
-/* ================= APP SHELL ================= */
-.app{display:grid;grid-template-rows:auto 1fr auto;height:100vh;height:100dvh}
+/* ============================ APP SHELL ============================ */
+.app{display:grid;grid-template-rows:auto minmax(0,1fr) 28px;height:100vh;height:100dvh;background:var(--bg)}
+.mainArea{min-height:0;min-width:0;position:relative}
 
-/* ---- app bar ---- */
+/* ---- top bar ---- */
 .appbar{
-  display:flex;align-items:center;gap:14px;padding:9px 16px;background:#fff;
-  border-bottom:1px solid var(--line);box-shadow:0 1px 0 rgba(12,16,38,.03);z-index:20;flex-wrap:wrap;
+  display:flex;align-items:center;flex-wrap:nowrap;gap:0;height:var(--bar-h);padding:0 12px 0 0;
+  background:var(--ink);border-bottom:1px solid rgba(255,255,255,.07);
+  position:relative;z-index:40;
 }
-.brand{display:flex;align-items:center;gap:11px;min-width:0;padding-right:14px;border-right:1px solid var(--line)}
+.appbar::after{
+  content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;
+  background:linear-gradient(90deg,var(--accent) 0%,rgba(184,137,43,.25) 18%,rgba(255,255,255,.06) 40%,transparent 70%);
+}
+.brand{display:flex;align-items:center;gap:10px;height:100%;padding:0 16px;border-right:1px solid rgba(255,255,255,.08);min-width:0}
 .brandMark{
-  width:36px;height:36px;border-radius:10px;background:var(--navy);color:#fff;
-  display:grid;place-items:center;font-family:Inter,system-ui,sans-serif;font-weight:700;
-  font-size:12px;letter-spacing:.06em;box-shadow:0 4px 12px rgba(0,0,51,.22);flex:0 0 auto;
+  width:26px;height:26px;border-radius:5px;flex:0 0 auto;
+  display:grid;place-items:center;background:var(--accent);color:#0b1017;
+  font-family:var(--font-num);font-size:9px;font-weight:700;letter-spacing:.04em;
 }
-.brandText h1{font-size:15px;line-height:1.15;letter-spacing:-.005em}
-.brandText p{font-size:11px;color:var(--muted-2);margin-top:1px}
+.brandText{min-width:0}
+.brandText h1{font-size:12.5px;font-weight:600;color:#fff;line-height:1.15;white-space:nowrap}
+.brandText p{font-size:9.5px;color:rgba(255,255,255,.45);line-height:1.3;white-space:nowrap;letter-spacing:.02em}
 
-.segmented{display:flex;gap:3px;background:#f1f3f8;border:1px solid var(--line);padding:3px;border-radius:10px}
+.segmented{display:inline-flex;align-items:center;gap:2px;background:var(--panel-3);border-radius:var(--r);padding:2px}
 .seg{
-  border:0;background:transparent;padding:7px 15px;border-radius:8px;font-weight:600;
-  font-size:12.5px;color:var(--muted);transition:.16s;white-space:nowrap;
+  border:0;background:transparent;border-radius:4px;padding:5px 11px;
+  font-size:11.5px;font-weight:500;color:var(--text-2);white-space:nowrap;transition:background .14s,color .14s;
 }
-.seg:hover{color:var(--navy)}
-.seg.active{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(16,20,45,.14)}
+.seg:hover{color:var(--text)}
+.seg.active{background:var(--panel);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.10)}
 
+#pageSwitch{display:flex;align-items:stretch;gap:0;height:100%;background:transparent;padding:0 0 0 6px;border-radius:0}
+#pageSwitch .seg{
+  position:relative;height:100%;border-radius:0;padding:0 14px;
+  font-size:12.5px;color:rgba(255,255,255,.58);font-weight:500;
+}
+#pageSwitch .seg:hover{color:#fff;background:rgba(255,255,255,.05)}
+#pageSwitch .seg.active{background:transparent;color:#fff;font-weight:600;box-shadow:none}
+#pageSwitch .seg.active::after{
+  content:"";position:absolute;left:10px;right:10px;bottom:0;height:2px;background:var(--accent);border-radius:2px 2px 0 0;
+}
 .appbarStatus{
-  flex:1;min-width:110px;font-size:11.5px;color:var(--muted);padding:6px 11px;
-  border-radius:8px;background:var(--navy-050);border:1px solid var(--line);
+  margin-left:auto;flex:0 1 auto;min-width:74px;max-width:320px;padding:4px 10px;border-radius:4px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+  font-size:10.5px;color:rgba(255,255,255,.55);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.appbarStatus.ok{color:var(--ok);background:#eff8f4;border-color:#d3ebe0}
-.appbarStatus.warn{color:var(--warn);background:#fdf3ee;border-color:#f4ddcf}
-.appbarActions{display:flex;gap:6px;flex-wrap:wrap}
+.appbarStatus.ok{background:rgba(15,123,82,.18);border-color:rgba(52,211,153,.28);color:#6ee7b7}
+.appbarStatus.warn{background:rgba(180,83,9,.20);border-color:rgba(251,191,36,.30);color:#fbbf24}
+.topProj{display:flex;align-items:center;gap:8px;padding:0 12px;max-width:300px;overflow:hidden;margin-left:10px}
+.tpName{
+  font-size:11.5px;color:#cfd6e2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  border-left:1px solid rgba(255,255,255,.10);padding-left:12px;
+}
+.tpPhase{
+  font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;
+  color:var(--accent);background:rgba(184,137,43,.14);border:1px solid rgba(184,137,43,.30);
+  border-radius:3px;padding:2px 6px;
+}
+.appbarActions{display:flex;align-items:center;gap:5px;margin-left:14px}
+.appbarActions .btn{
+  height:28px;padding:0 10px;border-radius:5px;font-size:11.5px;font-weight:500;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#dbe2ec;box-shadow:none;
+}
+.appbarActions .btn:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.22);color:#fff}
+.appbarActions .btn.primary{background:#fff;border-color:#fff;color:var(--ink);font-weight:600}
+.appbarActions .btn.primary:hover{background:#e9edf3;border-color:#e9edf3;color:var(--ink)}
+.appbarActions .btn.gold{background:var(--accent);border-color:var(--accent);color:#fff}
+.appbarActions .btn.gold:hover{background:var(--accent-2);border-color:var(--accent-2)}
 
+/* ============================ BUTTONS ============================ */
 .btn{
-  border:1px solid var(--line-2);background:#fff;color:var(--navy);font-weight:600;
-  padding:8px 13px;border-radius:9px;font-size:12.5px;transition:border-color .16s, box-shadow .16s, background .16s, transform .16s;white-space:nowrap;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:30px;padding:0 12px;border-radius:var(--r);
+  border:1px solid var(--line-2);background:var(--panel);color:var(--text-2);
+  font-size:12px;font-weight:500;white-space:nowrap;
+  transition:background .14s,border-color .14s,color .14s;
 }
-.btn:hover{border-color:#aab3c9;box-shadow:0 4px 12px rgba(12,16,38,.08);background:#fcfdff}
-.btn:active{transform:translateY(1px);box-shadow:none}
-.btn:focus-visible{outline:2px solid #2f6bd8;outline-offset:2px}
-.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:0 4px 14px rgba(0,0,51,.18)}
-.btn.primary:hover{background:var(--navy-2);border-color:var(--navy-2);box-shadow:0 6px 18px rgba(0,0,51,.24)}
-.btn.gold{background:linear-gradient(180deg,var(--gold-2),var(--gold));border-color:#9c7c3d;color:#fff}
-.btn.gold:hover{filter:brightness(1.04)}
-.btn.ghost{background:#fff;border-color:var(--line-2);color:#3a4055}
-.btn.ghost:hover{background:#f7f8fc;color:var(--navy)}
-.btn.block{width:100%;justify-content:center;text-align:center}
-.btn.sm{padding:6px 10px;font-size:11.5px;border-radius:8px}
-.btn.danger{color:var(--danger);border-color:#f0cfcd;background:#fff}
-.btn.danger:hover{background:#fdf5f4;border-color:#e5bab6}
+.btn:hover{background:var(--panel-2);border-color:#b9c0cb;color:var(--text)}
+.btn:active{background:var(--panel-3)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.btn.primary:hover{background:var(--ink-2);border-color:var(--ink-2);color:#fff}
+.btn.gold{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.gold:hover{background:var(--accent-2);border-color:var(--accent-2);color:#fff}
+.btn.ghost{background:var(--panel);border-color:var(--line-2);color:var(--text-2)}
+.btn.ghost:hover{background:var(--panel-2);color:var(--text)}
+.btn.sm{height:26px;padding:0 9px;font-size:11px;border-radius:5px}
+.btn.block{width:100%}
+.btn.danger{color:var(--bad);border-color:#f3c9c5;background:var(--panel)}
+.btn.danger:hover{background:var(--bad-bg);border-color:#e9a9a3}
+.btn:focus-visible,.tbBtn:focus-visible,.seg:focus-visible,.stab:focus-visible,
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--info);outline-offset:1px}
+.link{border:0;background:none;padding:0;color:var(--info);font-size:11px;font-weight:500;cursor:pointer}
+.link:hover{text-decoration:underline}
 
-/* ---- body grid ---- */
-.mainArea{min-height:0;position:relative}
-.body{display:grid;grid-template-columns:252px 1fr 330px;min-height:0;background:var(--bg);height:100%}
+/* ============================ LAYOUT ============================ */
+.body{
+  display:grid;height:100%;min-height:0;
+  grid-template-columns:var(--w-side) minmax(0,1fr) var(--w-insp);
+  grid-template-rows:var(--tb-h) minmax(0,1fr);
+  background:var(--bg);
+}
+.body > .toolbar{grid-column:1/-1;grid-row:1}
+.sidebar{grid-column:1;grid-row:2}
+.workspace{grid-column:2;grid-row:2}
+.inspector{grid-column:3;grid-row:2}
 
-/* ================= SIDEBAR ================= */
+/* ---- context toolbar ---- */
+.toolbar{
+  display:flex;align-items:center;gap:6px;height:var(--tb-h);padding:0 10px;
+  background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;
+}
+.toolbar::-webkit-scrollbar{height:0}
+.tbGroup{display:flex;align-items:center;gap:2px;background:var(--panel-3);border-radius:var(--r);padding:2px}
+.tbBtn{
+  height:26px;padding:0 10px;border-radius:4px;border:0;background:transparent;
+  font-size:11.5px;font-weight:500;color:var(--text-2);white-space:nowrap;
+  display:inline-flex;align-items:center;gap:5px;transition:background .14s,color .14s;
+}
+.tbBtn:hover{background:rgba(15,23,42,.05);color:var(--text)}
+.tbBtn.active{background:var(--ink);color:#fff;font-weight:600}
+.tbBtn.active:hover{background:var(--ink)}
+.tbLayer{border:1px solid var(--line);background:var(--panel);height:26px;padding:0 9px}
+.tbLayer.on{border-color:var(--accent-line);background:var(--accent-bg);color:var(--accent-2)}
+.tbLayer .lamp{width:6px;height:6px;border-radius:50%;background:var(--line-2);flex:0 0 auto}
+.tbLayer.on .lamp{background:var(--accent)}
+.tbLayer b{font-family:var(--font-num);font-size:10px;font-weight:700;color:inherit}
+.tbSep{width:1px;height:18px;background:var(--line);margin:0 3px;flex:0 0 auto}
+.layerChip{
+  display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 8px;border-radius:4px;
+  border:1px solid transparent;background:transparent;font-size:11px;color:var(--line-2);
+  filter:grayscale(1);opacity:.6;transition:opacity .14s,filter .14s,background .14s;
+}
+.layerChip span{font-size:10.5px;font-weight:500}
+.layerChip:hover{background:rgba(15,23,42,.05)}
+.layerChip.active{opacity:1;filter:none;border-color:var(--line);background:var(--panel);color:var(--text-2)}
+.zoomCluster{display:flex;align-items:center;gap:1px;margin-left:auto;background:var(--panel-3);border-radius:var(--r);padding:2px}
+.zoomCluster button{
+  height:26px;min-width:30px;padding:0 6px;border-radius:4px;border:0;background:transparent;
+  font-size:10.5px;font-weight:500;color:var(--text-3);font-variant-numeric:tabular-nums;
+}
+.zoomCluster button:hover{background:rgba(15,23,42,.06);color:var(--text)}
+.zoomCluster button.active{background:var(--ink);color:#fff}
+.zoomCluster .sep{width:1px;height:16px;background:var(--line);margin:0 3px}
+#wkFit{font-size:11px;padding:0 9px;color:var(--text-2);font-weight:500}
+
+/* ============================ SIDEBAR ============================ */
 .sidebar{
-  background:#fff;border-right:1px solid var(--line);overflow-y:auto;padding:14px 12px 26px;
+  display:flex;flex-direction:column;min-height:0;overflow:hidden;
+  background:var(--panel);border-right:1px solid var(--line);
 }
-.sidebar::-webkit-scrollbar,.inspector::-webkit-scrollbar,.mBody::-webkit-scrollbar{width:10px}
-.sidebar::-webkit-scrollbar-thumb,.inspector::-webkit-scrollbar-thumb,.mBody::-webkit-scrollbar-thumb{
-  background:#dfe3ec;border-radius:9px;border:3px solid #fff;
+.panelHead{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  height:34px;padding:0 12px;border-bottom:1px solid var(--line);flex:0 0 auto;
 }
-.sideGroup{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #f1f3f8}
-.sideGroup:last-child{border-bottom:0;padding-bottom:0}
+.panelHead span{font-size:10px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;color:var(--text-3)}
+.panelHead em{font-style:normal;font-size:10.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
+#sideTabs{display:flex;gap:2px;padding:8px 10px;border-bottom:1px solid var(--line);flex:0 0 auto;background:var(--panel)}
+.stab{
+  flex:1;height:26px;border-radius:4px;border:1px solid transparent;background:transparent;
+  font-size:11px;font-weight:500;color:var(--text-3);white-space:nowrap;
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;transition:.14s;
+}
+.stab:hover{background:var(--panel-3);color:var(--text-2)}
+.stab.active{background:var(--ink);color:#fff;font-weight:600}
+.stab .cnt{
+  font-size:9px;font-weight:600;padding:0 4px;border-radius:3px;
+  background:rgba(15,23,42,.07);color:inherit;line-height:1.5;
+}
+.stab.active .cnt{background:rgba(255,255,255,.18)}
+.sideScroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.sideTab{display:none;padding:12px 12px 24px}
+.sideTab.active{display:block}
+.sideGroup{margin:0 0 14px}
+.sideGroup:last-child{margin-bottom:0}
 .sideTitle{
   display:flex;align-items:center;gap:6px;
-  font-size:9.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
-  color:var(--muted-2);margin:0 2px 8px;
+  font-size:9.5px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;
+  color:var(--text-3);margin:0 2px 7px;
 }
-.sideTitle::before{content:"";width:4px;height:4px;border-radius:50%;background:#c3c9d9;flex:0 0 auto}
-.toolGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.tool{
-  border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 8px;
-  font-size:12px;font-weight:600;color:var(--muted);transition:.16s;
-}
-.tool:hover{border-color:var(--line-2);background:#f8f9fd;color:var(--navy)}
-.tool.active{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:0 4px 12px rgba(0,0,51,.18)}
-.toolWide{width:100%;margin-top:6px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.toolWide .lamp{width:7px;height:7px;border-radius:50%;background:#cfd4e2}
-.toolWide.on{border-color:#d9c9a0;background:#fdfaf2;color:#6d5312}
-.toolWide.on .lamp{background:var(--gold)}
+.sideTitle::after{content:"";flex:1;height:1px;background:var(--line)}
 
 .assetBtn{
-  width:100%;display:flex;align-items:center;gap:9px;padding:7px 9px;margin-bottom:2px;
-  border:1px solid transparent;background:#fff;border-radius:9px;text-align:left;transition:.14s;
+  display:flex;align-items:center;gap:8px;width:100%;padding:6px 7px;margin-bottom:1px;
+  border:1px solid transparent;border-radius:5px;background:transparent;text-align:left;transition:.12s;
 }
-.assetBtn:hover{background:#f7f9fd;border-color:var(--line);box-shadow:0 1px 2px rgba(12,16,38,.04)}
-.assetBtn .swatch{width:20px;height:20px;border-radius:6px;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
-.assetBtn .aName{display:block;font-size:12px;font-weight:600;color:#2a2e3d;line-height:1.25}
-.assetBtn .aDim{display:block;font-size:10px;color:var(--muted-2);margin-top:1px;letter-spacing:.01em}
+.assetBtn:hover{background:var(--panel-3);border-color:var(--line)}
+.assetBtn .swatch{width:14px;height:14px;border-radius:3px;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(15,23,42,.10)}
+.assetBtn .aName{display:block;font-size:11.5px;font-weight:500;color:var(--text-2);line-height:1.25}
+.assetBtn .aDim{display:block;font-size:9.5px;color:var(--text-3);font-family:var(--font-num);letter-spacing:-.01em;margin-top:1px}
 .assetBtn .plus{
-  margin-left:auto;color:#aab3c9;font-weight:700;font-size:13px;width:19px;height:19px;
-  border:1px solid var(--line);border-radius:6px;display:grid;place-items:center;flex:0 0 auto;transition:.14s;
+  margin-left:auto;flex:0 0 auto;width:16px;height:16px;border-radius:3px;
+  display:grid;place-items:center;font-size:11px;font-weight:600;line-height:1;
+  color:var(--text-3);border:1px solid var(--line);background:var(--panel);
 }
-.assetBtn:hover .plus{color:#fff;background:var(--navy);border-color:var(--navy)}
+.assetBtn:hover .plus{background:var(--ink);border-color:var(--ink);color:#fff}
+.assetBtn:hover .aName{color:var(--text)}
 
-/* ================= WORKSPACE ================= */
-.workspace{position:relative;min-width:0;background:radial-gradient(120% 120% at 50% 0%,#f7f9fd 0%,#e9edf5 100%)}
+.mepLabel{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);margin:9px 2px 5px}
+.mepGrid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.mepBtn{
+  display:flex;align-items:center;gap:5px;height:28px;padding:0 7px;border-radius:5px;
+  border:1px solid var(--line);background:var(--panel);font-size:10.5px;font-weight:500;
+  color:var(--text-2);text-align:left;line-height:1.15;transition:.12s;
+}
+.mepBtn:hover{background:var(--panel-2);border-color:var(--line-2);color:var(--text)}
+.mepBtn.active{background:var(--ink);border-color:var(--ink);color:#fff}
+.mepBtn .mdot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.mepBtn.pipe .mdot{width:12px;height:0;border-radius:0;border-top:2px dashed currentColor;background:none!important}
+.mepHint{font-size:10px;color:var(--text-3);line-height:1.5;margin-top:8px;border-top:1px dashed var(--line);padding-top:7px}
+
+/* ---- fields ---- */
+.field{display:block;font-size:11px;font-weight:500;color:var(--text-2)}
+.field input,.field select{
+  display:block;width:100%;margin-top:4px;height:30px;padding:0 8px;
+  border:1px solid var(--line-2);border-radius:5px;background:var(--panel);
+  font-size:12px;font-weight:500;color:var(--text);outline:none;
+}
+.field input:focus,.field select:focus{border-color:var(--info);box-shadow:0 0 0 3px rgba(31,95,208,.12)}
+.qtyInput,.costInput{
+  height:24px;padding:0 6px;border:1px solid var(--line-2);border-radius:4px;
+  background:var(--panel);text-align:right;font-size:11px;font-weight:600;color:var(--text);
+  font-variant-numeric:tabular-nums;outline:none;
+}
+.qtyInput{width:62px}
+.costInput{width:92px}
+.qtyInput:focus,.costInput:focus{border-color:var(--info);box-shadow:0 0 0 3px rgba(31,95,208,.12)}
+.qtyCell{display:inline-flex;align-items:center;gap:3px;justify-content:flex-end}
+.qtyCell .qtyInput{width:60px}
+.resetBtn{
+  width:18px;height:18px;border-radius:3px;border:1px solid var(--line);
+  background:var(--panel);color:var(--text-3);font-size:9px;line-height:1;padding:0;
+}
+.resetBtn:hover{background:var(--panel-3);color:var(--text)}
+
+/* ============================ WORKSPACE ============================ */
+.workspace{position:relative;min-width:0;min-height:0;overflow:hidden;background:#eef0f3}
 #plan,#three3d{position:absolute;inset:0;width:100%;height:100%}
 #plan{display:block;touch-action:none}
-.hidden{display:none!important}
 .emptyHint{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;
-  color:#8d93a6;pointer-events:none;max-width:340px;
+  max-width:300px;pointer-events:none;color:var(--text-3);
 }
-.emptyHint b{display:block;font-size:14.5px;color:#3b415a;margin-bottom:6px}
-.emptyHint span{font-size:12.5px;line-height:1.7}
-.wkFloat{
-  position:absolute;left:16px;bottom:16px;display:flex;gap:6px;align-items:center;
-  background:rgba(255,255,255,.86);backdrop-filter:blur(8px);border:1px solid var(--line);
-  border-radius:11px;padding:6px 8px;box-shadow:var(--shadow-sm);z-index:5;
-}
-.wkTop{
-  position:absolute;left:16px;top:16px;display:flex;gap:8px;align-items:center;z-index:6;
-  background:rgba(255,255,255,.86);backdrop-filter:blur(8px);border:1px solid var(--line);
-  border-radius:12px;padding:5px;box-shadow:var(--shadow-sm);
-}
-.wkTop .segmented{background:#f1f3f8;border:0;padding:3px}
-.wkTop .seg{padding:6px 13px;font-size:12px}
-.wkSep{width:1px;height:20px;background:var(--line-2);margin:0 1px}
-.layerChip{
-  border:1px solid var(--line);background:#fff;border-radius:8px;width:28px;height:28px;
-  font-size:12px;line-height:1;display:grid;place-items:center;
-  opacity:.4;filter:grayscale(1);transition:.15s;
-}
-.layerChip.active{opacity:1;filter:none;border-color:var(--line-2);box-shadow:0 1px 3px rgba(12,16,38,.08)}
-.layerChip:hover{background:#f7f9fd}
+.emptyHint b{display:block;font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:5px}
+.emptyHint span{font-size:11.5px;line-height:1.7}
 
-/* MEP palette */
-.mepLabel{
-  font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
-  color:var(--muted-2);margin:7px 2px 5px;
-}
-.mepGrid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
-.mepBtn{
-  display:flex;align-items:center;gap:6px;padding:6px 7px;border:1px solid var(--line);
-  background:#fff;border-radius:8px;font-size:10.5px;font-weight:600;color:#3a4055;
-  text-align:left;transition:.14s;line-height:1.2;
-}
-.mepBtn:hover{border-color:var(--line-2);background:#f8f9fd}
-.mepBtn.active{border-color:var(--navy);background:var(--navy-050);color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
-.mepBtn .mdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
-.mepBtn.pipe .mdot{width:14px;height:0;border-radius:0;border-top:2px dashed currentColor;background:none!important}
-.mepHint{font-size:10px;color:var(--muted-2);line-height:1.45;margin-top:7px}
-.wkFloat button{
-  border:1px solid transparent;background:transparent;border-radius:7px;padding:5px 9px;
-  font-size:11.5px;font-weight:700;color:var(--muted);transition:.14s;
-}
-.wkFloat button:hover{background:#f1f3f9;color:var(--navy)}
-.wkFloat button.active{background:var(--navy);color:#fff}
-.wkFloat .sep{width:1px;height:18px;background:var(--line-2);margin:0 2px}
-
-/* ================= INSPECTOR ================= */
-.inspector{background:#fbfcfe;border-left:1px solid var(--line);overflow-y:auto;padding:14px 13px 28px}
-
-.heroCard{
-  background:linear-gradient(145deg,#000033 0%,#101a52 52%,#22307a 100%);
-  border-radius:14px;padding:16px 16px 15px;color:#fff;box-shadow:0 14px 30px rgba(0,0,51,.26);
-  position:relative;overflow:hidden;
-}
-.heroCard::before{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(255,255,255,.09),transparent 42%);pointer-events:none;
-}
-.heroCard::after{
-  content:"";position:absolute;right:-34px;top:-46px;width:128px;height:128px;border-radius:50%;
-  background:radial-gradient(circle,rgba(200,164,92,.45),transparent 68%);
-}
-.heroLabel{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:#b9bfe0;font-weight:700}
-.heroValue{font-size:26px;font-weight:700;margin-top:6px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
-.heroMeta{font-size:11px;color:#c3c8e4;margin-top:5px}
-.heroTag{
-  position:absolute;right:13px;top:13px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.22);
-  border-radius:999px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:.03em;
-}
-
-.inspSection{
-  margin-top:11px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;
-  box-shadow:0 1px 2px rgba(12,16,38,.03);
-}
-.inspTitle{
-  display:flex;align-items:center;justify-content:space-between;gap:6px;
-  font-size:9.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
-  color:var(--muted-2);margin-bottom:10px;
-}
-.inspTitle .link{
-  color:var(--navy-3);font-size:10.5px;font-weight:700;text-transform:none;letter-spacing:0;
-  cursor:pointer;border:0;background:none;padding:0;
-}
-.inspTitle .link:hover{text-decoration:underline}
-
-.pkgSeg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.pkgBtn{
-  border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 4px;
-  font-weight:700;font-size:12px;color:var(--muted);transition:.16s;line-height:1.15;
-}
-.pkgBtn small{display:block;font-size:9.5px;font-weight:600;color:var(--muted-2);margin-top:2px}
-.pkgBtn:hover{border-color:var(--line-2);background:#f8f9fd}
-.pkgBtn.active{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:0 6px 16px rgba(0,0,51,.22)}
-.pkgBtn.active small{color:#b9bfe0}
-.pkgMeta{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5}
-
-.catList{display:grid;gap:9px}
-.catRow{
-  display:grid;grid-template-columns:1fr auto;gap:1px 8px;align-items:baseline;
-}
-.catRow .cName{font-size:11.5px;font-weight:600;color:#3a4055;display:flex;align-items:center;gap:6px}
-.catRow .cName::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c,#c3c9d9);flex:0 0 auto}
-.catRow .cVal{font-size:12px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-.catBar{grid-column:1/-1;height:4px;border-radius:99px;background:#f0f2f8;overflow:hidden;margin-top:3px}
-.catBar i{display:block;height:100%;border-radius:99px;transition:width .35s ease}
-
-.selCard{border:1px solid var(--line);border-radius:12px;padding:12px}
-.selTop{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
-.selTop .swatch{width:26px;height:26px;border-radius:8px;flex:0 0 auto;margin-top:2px}
-.selTop b{font-size:13px;display:block;line-height:1.3}
-.selTop small{font-size:10.5px;color:var(--muted-2)}
-.kv{display:flex;justify-content:space-between;font-size:11.5px;padding:4px 0;border-top:1px dashed var(--line)}
-.kv span{color:var(--muted)}
-.kv b{color:var(--navy);font-weight:700;font-variant-numeric:tabular-nums}
-.selActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-top:10px}
-.selActions button{
-  border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 4px;
-  font-size:11px;font-weight:700;color:#3a4055;transition:.14s;
-}
-.selActions button:hover{background:#f6f8fd;border-color:var(--line-2)}
-.selActions button.danger{color:var(--danger);border-color:#f0cfcd}
-.selActions button.danger:hover{background:#fbebe9}
-
-.hintBox{
-  border:1px dashed var(--line-2);background:#fafbfe;border-radius:11px;padding:12px;
-  font-size:11.5px;color:var(--muted);line-height:1.6;text-align:center;
-}
-.warnBox{
-  border:1px solid #f2dcc9;background:#fdf7f1;border-radius:10px;padding:9px 11px;
-  font-size:11.5px;color:#8a4a1c;margin-top:9px;line-height:1.5;
-}
-.miniList{display:grid;gap:5px;margin-top:2px}
-.miniRow{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;padding:4px 0;border-bottom:1px dashed var(--line)}
-.miniRow:last-child{border-bottom:0}
-.miniRow .mName{color:#3a4055;font-weight:600}
-.miniRow .mQty{color:var(--navy);font-weight:700}
-.miniRow .mVal{color:var(--muted);font-variant-numeric:tabular-nums;min-width:74px;text-align:right}
-
-/* ================= STATUS BAR ================= */
-.statusbar{
-  display:flex;align-items:center;gap:10px;padding:6px 16px;background:#fff;
-  border-top:1px solid var(--line);font-size:11px;color:var(--muted-2);min-height:32px;flex-wrap:wrap;
-  font-variant-numeric:tabular-nums;
-}
-.statusbar b{color:var(--navy);font-weight:700}
-.statusbar .dotSep{width:3px;height:3px;border-radius:50%;background:#ccd2e0}
-.sbRight{margin-left:auto;display:flex;align-items:center;gap:5px}
-.zoomBtn{
-  border:1px solid var(--line);background:#fff;border-radius:7px;padding:3px 9px;
-  font-size:11.5px;font-weight:700;color:var(--muted);min-width:26px;
-}
-.zoomBtn:hover{background:#f6f8fd;color:var(--navy)}
-#sbZoom{min-width:44px;text-align:center;font-weight:700;color:var(--navy)}
-
-/* ================= SYSTEMS PAGE ================= */
-.sysPage{height:100%;display:flex;flex-direction:column;min-height:0;background:var(--bg)}
-.sysScroll{flex:1;min-height:0;overflow-y:auto;padding:20px 22px 20px}
-.sysHead{display:flex;align-items:flex-start;gap:16px;margin:0 auto 16px;max-width:1400px;flex-wrap:wrap}
-.sysHead h2{font-size:19px;color:var(--navy)}
-.sysHead p{font-size:12px;color:var(--muted);margin-top:3px;max-width:640px;line-height:1.55}
-.sysHeadActions{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.sysGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:1400px;margin:0 auto}
-.sysGrid .wide{grid-column:1/-1}
-.sysCard{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden}
-.sysCardHead{display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fff,#fbfcff)}
-.sysIcon{
-  width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:16px;flex:0 0 auto;
-  background:color-mix(in srgb,var(--c) 12%,#fff);border:1px solid color-mix(in srgb,var(--c) 28%,#fff);
-}
-.sysCardHead h3{font-size:13.5px;color:var(--navy)}
-.sysCardHead p{font-size:11px;color:var(--muted-2);line-height:1.45;margin-top:1px}
-.sysSub{margin-left:auto;text-align:right;white-space:nowrap}
-.sysSub span{display:block;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-2);font-weight:700}
-.sysSub b{font-size:15px;color:var(--navy);font-variant-numeric:tabular-nums}
-.sysTable{width:100%;border-collapse:collapse;font-size:12px}
-.sysTable th{
-  background:#f7f9fd;color:var(--muted);font-size:9.5px;font-weight:700;letter-spacing:.06em;
-  text-transform:uppercase;padding:7px 14px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap;
-}
-.sysTable td{padding:6px 14px;border-bottom:1px solid #f2f4f9;vertical-align:middle}
-.sysTable tr:last-child td{border-bottom:0}
-.sysTable tbody tr:hover td{background:#fbfcfe}
-.sysTable .dim{color:var(--muted-2);white-space:nowrap}
-.sysTable .num{text-align:right;font-variant-numeric:tabular-nums}
-.sysTable .strong{font-weight:700;color:var(--navy)}
-.sysTable tr.excl td{opacity:.5}
-.sCode{font-size:9px;color:#a8aebe;margin-left:6px;font-weight:700;letter-spacing:.02em}
-.divTag{
-  display:inline-block;margin-left:7px;font-size:9px;font-weight:700;color:#5c6784;
-  background:#eef1f9;border-radius:4px;padding:1px 5px;vertical-align:1px;white-space:nowrap;
-}
-.qtyCell{display:inline-flex;align-items:center;gap:4px;justify-content:flex-end}
-.qtyCell .qtyInput{width:66px;padding:4px 6px;font-size:11.5px}
-.resetBtn{
-  border:1px solid var(--line);background:#fff;border-radius:6px;width:21px;height:21px;
-  font-size:10px;color:var(--muted);line-height:1;padding:0;
-}
-.resetBtn:hover{color:var(--navy);border-color:var(--line-2);background:#f6f8fd}
-.sysNote{padding:8px 14px;background:#fdf7f1;border-top:1px solid #f3e4d5;font-size:11px;color:#8a4a1c}
-.sysTotals{
-  display:grid;grid-template-columns:repeat(3,1fr) 1.25fr;gap:10px;
-  padding:11px 22px;background:#fff;border-top:1px solid var(--line);
-  box-shadow:0 -8px 20px rgba(12,16,38,.05);
-}
-.sysTot{background:#fbfcfe;border:1px solid var(--line);border-radius:11px;padding:9px 13px}
-.sysTot span{display:block;font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted-2)}
-.sysTot b{font-size:16px;color:var(--navy);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-.sysTot.grand{background:linear-gradient(135deg,#000033,#1b2568);border:0;color:#fff;box-shadow:0 10px 22px rgba(0,0,51,.2)}
-.sysTot.grand span{color:#c3c8e4}
-.sysTot.grand b{color:#fff}
-@media(max-width:1024px){
-  .sysGrid{grid-template-columns:1fr}
-  .sysTotals{grid-template-columns:1fr 1fr}
-}
-
-/* ================= SOP PAGE ================= */
-.sopHead{display:flex;align-items:flex-start;gap:16px;max-width:1240px;margin:0 auto 14px;flex-wrap:wrap}
-.sopHead h2{font-size:19px;color:var(--navy)}
-.sopHead p{font-size:12px;color:var(--muted);margin-top:3px;max-width:760px;line-height:1.55}
-.sopLegend{margin-left:auto;display:flex;gap:5px;flex-wrap:wrap;align-items:center;justify-content:flex-end;max-width:460px}
-
-.roleBar{
-  display:flex;gap:5px;flex-wrap:wrap;max-width:1240px;margin:0 auto 14px;
-  padding:7px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-sm);
-}
-.roleBtn{
-  border:1px solid transparent;background:transparent;border-radius:8px;padding:7px 13px;
-  font-size:12px;font-weight:600;color:var(--muted);transition:.15s;display:flex;align-items:center;
-}
-.roleBtn:hover{background:#f6f8fd;color:var(--navy)}
-.roleBtn.active{background:var(--navy);color:#fff;box-shadow:0 4px 12px rgba(0,0,51,.18)}
-.roleBtn .rc{width:7px;height:7px;border-radius:50%;margin-right:6px;flex:0 0 auto}
-.roleBtn.active .rc{background:#fff!important}
-
-.sopStepper{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;max-width:1240px;margin:0 auto 14px}
-.stepNode{
-  position:relative;background:#fff;border:1px solid var(--line);border-radius:11px;
-  padding:8px 10px;text-align:left;transition:.16s;box-shadow:var(--shadow-sm);
-}
-.stepNode:hover{border-color:var(--navy-3);box-shadow:var(--shadow)}
-.stepNode::after{content:"";position:absolute;right:-9px;top:50%;width:9px;height:1px;background:var(--line-2)}
-.stepNode:last-child::after{display:none}
-.stepNode .num{
-  width:19px;height:19px;border-radius:6px;background:var(--navy);color:#fff;
-  font-size:10px;font-weight:700;display:grid;place-items:center;margin-bottom:5px;
-}
-.stepNode .sn{display:block;font-size:11px;font-weight:700;color:var(--navy);line-height:1.3}
-.stepNode .sd{display:block;font-size:9.5px;color:var(--muted-2);margin-top:2px}
-.stepNode.hasRole{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy) inset}
-
-.sopCards{display:block;max-width:1240px;margin:0 auto}
-.sopCard{
-  background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow-sm);
-  overflow:hidden;transition:.2s;margin-bottom:11px;
-}
-.sopCard.flash{box-shadow:0 0 0 2px var(--navy-3),0 12px 26px rgba(12,16,38,.1)}
-.sopCard.hasRole{border-color:#b9c3e0}
-.sopCard.dimCard{opacity:.6}
-.sopCardHead{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fff,#fbfcff)}
-.sopNum{
-  width:27px;height:27px;border-radius:8px;background:var(--navy);color:#fff;font-weight:700;
-  font-size:12.5px;display:grid;place-items:center;flex:0 0 auto;box-shadow:0 3px 8px rgba(0,0,51,.18);
-}
-.sopCardHead h3{font-size:14px;color:var(--navy);line-height:1.35;flex:1;min-width:0}
-.headMeta{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
-.ctrlTag{
-  font-size:9.5px;font-weight:700;color:#a3371c;background:#fdeee9;
-  border:1px solid #f6d6cb;border-radius:999px;padding:2px 9px;white-space:nowrap;
-}
-
-.sopSteps{padding:2px 0 6px}
-.sopStep{
-  display:grid;grid-template-columns:38px 1fr 186px;gap:12px;align-items:start;
-  padding:9px 16px;border-bottom:1px solid #f3f5fa;transition:.2s;
-}
-.sopStep:nth-child(odd){background:#fbfcff}
-.sopStep:hover{background:#f5f8fe}
-.sopStep:last-child{border-bottom:0}
-.snum{
-  font-family:Inter,system-ui,sans-serif;font-size:10.5px;font-weight:700;
-  color:#a2a8ba;letter-spacing:.02em;padding-top:2px;
-}
-.sopStep .st{font-size:13px;line-height:1.65;color:#2b3040}
-.sopStep .sroles{
-  display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-start;
-  padding:1px 0 1px 12px;border-left:1px solid #f0f2f8;min-height:20px;
-}
-.sopStep.dim{opacity:.32}
-
-.rBadge{
-  font-size:9.5px;font-weight:700;padding:1.5px 7px;border-radius:5px;white-space:nowrap;
-  border:1px solid;line-height:1.45;
-}
-.ctrlPill{
-  display:flex;gap:9px;align-items:flex-start;margin:2px 16px 14px;padding:9px 11px;border-radius:9px;
-  background:#fdf2ee;border:1px solid #f4d7cc;font-size:12px;color:#7d3320;line-height:1.6;
-}
-.cpTag{
-  flex:0 0 auto;font-size:9.5px;font-weight:700;color:#fff;background:#b4471f;
-  border-radius:5px;padding:1px 7px;margin-top:1px;
-}
-.docRow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:2px 14px 12px}
-.docLab{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-2)}
-.docChip{
-  border:1px solid var(--line-2);background:#fff;border-radius:6px;padding:3px 8px;
-  font-size:10.5px;font-weight:700;color:var(--navy-3);transition:.14s;
-}
-.docChip:hover{background:var(--navy-050);border-color:var(--navy-3);box-shadow:0 1px 3px rgba(12,16,38,.08)}
-
-.sopBottom{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:1240px;margin:16px auto 0}
-.sopBottom .card{margin:0}
-.ctrlGrid{display:grid;gap:8px}
-.ctrlCard{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border:1px solid #f0dcd4;background:#fdf8f6;border-radius:10px}
-.ctrlCard .cn{
-  font-size:10px;font-weight:700;color:#fff;background:#b4471f;border-radius:6px;
-  padding:2px 7px;flex:0 0 auto;
-}
-.ctrlCard p{font-size:11.5px;line-height:1.55;color:#5a3325}
-.ctrlCard small{display:block;font-size:9.5px;color:#a1756a;margin-top:2px}
-
-.fmPurpose{font-size:12.5px;color:#4a5063;line-height:1.6;margin-bottom:12px}
-.fmList{margin:0 0 12px;padding-left:18px;font-size:12px;line-height:1.7;color:#33384a}
-.fmList li{margin-bottom:2px}
-.fmSigners{display:flex;gap:5px;flex-wrap:wrap}
-#fmBody h4{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);margin:0 0 7px}
-.fmNote{margin-top:12px;font-size:11px;color:var(--muted);line-height:1.55;border-top:1px dashed var(--line);padding-top:9px}
-
-@media(max-width:1024px){
-  .sopStepper{display:flex;overflow-x:auto;gap:8px;padding-bottom:4px}
-  .stepNode{flex:0 0 152px}
-  .stepNode::after{display:none}
-  .sopStep{grid-template-columns:32px 1fr}
-  .sopStep .sroles{grid-column:2;border-left:0;padding-left:0;margin-top:2px}
-  .sopBottom{grid-template-columns:1fr}
-  .sopLegend{margin-left:0}
-}
-
-/* ================= P0 IMPROVEMENTS ================= */
-.chkRow{display:flex;align-items:center;gap:7px;padding:4.5px 0;border-bottom:1px dashed #f0f2f8;font-size:11.5px}
-.chkRow:last-of-type{border-bottom:0}
-.chkRow .ic{
-  width:15px;height:15px;border-radius:50%;display:grid;place-items:center;
-  font-size:9px;font-weight:700;flex:0 0 auto;
-}
-.chkRow.ok .ic{background:#e7f6ee;color:#0f7b52}
-.chkRow.bad .ic{background:#fdecec;color:#b3261e}
-.chkRow .lb{flex:1;color:#3a4055}
-.chkRow .vl{color:var(--muted-2);font-variant-numeric:tabular-nums;white-space:nowrap}
-.chkSum{margin-top:7px;font-size:10.5px;color:var(--muted-2)}
-.projGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.curTag{
-  font-size:9px;font-weight:700;color:#fff;background:var(--navy);border-radius:999px;
-  padding:2px 8px;white-space:nowrap;
-}
-.sbPhase{font-weight:700;color:var(--navy)}
 .sideToggle{
-  display:none;position:absolute;top:16px;right:16px;z-index:8;
-  border:1px solid var(--line);background:rgba(255,255,255,.94);backdrop-filter:blur(8px);
-  border-radius:9px;padding:7px 12px;font-size:11.5px;font-weight:700;color:var(--navy);
-  box-shadow:var(--shadow-sm);
+  display:none;position:absolute;left:10px;top:10px;z-index:12;height:28px;padding:0 10px;
+  border:1px solid var(--line-2);border-radius:5px;background:var(--panel);
+  font-size:11px;font-weight:500;color:var(--text-2);box-shadow:var(--sh-2);
 }
-.sideToggle.active{background:var(--navy);color:#fff;border-color:var(--navy)}
-
-@media(max-width:1024px){
-  .sideToggle{display:block}
-  .sidebar{
-    position:fixed;left:0;right:0;bottom:0;top:auto;max-height:74vh;z-index:45;
-    display:none;border-radius:16px 16px 0 0;overflow:auto;padding:14px 14px 26px;
-    border-top:1px solid var(--line);box-shadow:0 -20px 50px rgba(10,15,40,.28);
-  }
-  .sidebar.open{display:flex}
-  .projGrid{grid-template-columns:1fr}
-  .mepLegend{right:12px;bottom:60px}
+.sideToggle.active{background:var(--ink);border-color:var(--ink);color:#fff}
+.inspToggle{
+  display:none;position:absolute;right:10px;top:10px;z-index:12;align-items:center;gap:6px;
+  height:28px;padding:0 10px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);
+  font-size:11px;font-weight:500;color:var(--text-2);box-shadow:var(--sh-2);
 }
+.inspToggle:hover{background:var(--panel-2)}
+.inspToggle b{font-family:var(--font-num);font-size:10.5px;font-weight:700;color:var(--text)}
 
-/* MEP legend ---------------------------------------------------- */
-.mepLegend{position:absolute;right:16px;bottom:16px;z-index:7;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+/* MEP legend */
+.mepLegend{position:absolute;right:10px;bottom:10px;z-index:11;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
 .mlHead{
-  border:1px solid var(--line);background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
-  border-radius:9px;padding:6px 11px;font-size:11px;font-weight:700;color:var(--navy);
-  box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:7px;
+  display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px;
+  border:1px solid var(--line-2);border-radius:5px;background:var(--panel);
+  font-size:10.5px;font-weight:500;color:var(--text-2);box-shadow:var(--sh-1);
 }
-.mlHead span{color:#a2a8ba}
-.mlHead:hover{background:#fff}
+.mlHead span{color:var(--text-3);font-size:10px}
+.mlHead:hover{background:var(--panel-2)}
 .mlBody{
-  display:none;width:212px;background:#fff;border:1px solid var(--line);border-radius:11px;
-  box-shadow:var(--shadow);padding:9px 11px;
+  display:none;width:206px;padding:9px 10px;background:var(--panel);
+  border:1px solid var(--line-2);border-radius:6px;box-shadow:var(--sh-2);
 }
 .mepLegend.open .mlBody{display:block}
-.mlRow{display:flex;align-items:center;gap:8px;padding:2.5px 0;font-size:10.5px;color:#3a4055}
-.mlRow svg{width:18px;height:18px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.4;stroke-linecap:round}
+.mlTitle{font-size:9px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3);margin:6px 0 3px}
+.mlTitle:first-child{margin-top:0}
+.mlRow{display:flex;align-items:center;gap:7px;padding:2px 0;font-size:10px;color:var(--text-2)}
+.mlRow svg{width:15px;height:15px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:1.4;stroke-linecap:round}
 .mlRow.el{color:#b45309}
 .mlRow.wt{color:#0369a1}
 .mlRow.pp{color:#7c3aed}
-.mlRow span.lbl{color:#3a4055;font-weight:600}
-.mlTitle{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted-2);margin:6px 0 3px}
+.mlRow span.lbl{color:var(--text-2);font-weight:500}
 
-/* schedule foot */
-.schFoot{
-  display:flex;gap:16px;flex-wrap:wrap;align-items:center;
-  padding:9px 14px;border-top:1px solid var(--line);background:#fbfcfe;font-size:11.5px;color:var(--muted);
+/* ============================ INSPECTOR ============================ */
+.inspector{
+  display:flex;flex-direction:column;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  background:var(--panel);border-left:1px solid var(--line);
 }
-.schFoot b{color:var(--navy);font-variant-numeric:tabular-nums}
-.schFoot .k{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2);margin-right:4px}
+.inspMobileHead{
+  display:none;align-items:center;justify-content:space-between;gap:8px;flex:0 0 auto;
+  position:sticky;top:0;z-index:6;padding:0 12px;height:34px;
+  background:var(--panel);border-bottom:1px solid var(--line);
+}
+.inspMobileHead span{font-size:10px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;color:var(--text-3)}
+.inspMobileHead button{width:22px;height:22px;border-radius:4px;color:var(--text-3);font-size:13px;line-height:1}
+.inspMobileHead button:hover{background:var(--panel-3);color:var(--text)}
 
-/* ================= MODALS ================= */.modal{position:fixed;inset:0;background:rgba(6,10,30,.44);backdrop-filter:blur(3px);display:none;z-index:60;padding:22px}
+.heroCard{
+  flex:0 0 auto;padding:14px 14px 13px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,var(--panel-2),var(--panel));position:relative;
+}
+.heroCard::before{
+  content:"";position:absolute;left:14px;right:14px;top:0;height:2px;background:var(--accent);
+}
+.heroLabel{font-size:9.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--text-3)}
+.heroValue{
+  margin-top:4px;font-family:var(--font-num);font-size:25px;font-weight:600;
+  letter-spacing:-.03em;color:var(--text);line-height:1.12;
+}
+.heroMeta{margin-top:3px;font-size:10.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.heroTag{
+  position:absolute;right:14px;top:12px;padding:2px 6px;border-radius:3px;
+  background:var(--accent-bg);border:1px solid var(--accent-line);color:var(--accent-2);
+  font-family:var(--font-num);font-size:9.5px;font-weight:700;letter-spacing:.02em;
+}
+.inspSection{padding:12px 14px;border-bottom:1px solid var(--line)}
+.inspSection:last-child{border-bottom:0}
+.inspTitle{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  font-size:9.5px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;
+  color:var(--text-3);margin-bottom:9px;
+}
+.inspTitle .link{text-transform:none;letter-spacing:0}
+
+.pkgSeg{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+.pkgBtn{
+  height:38px;border:1px solid var(--line-2);border-radius:5px;background:var(--panel);
+  font-family:var(--font-num);font-size:11.5px;font-weight:600;color:var(--text-2);line-height:1.1;
+  transition:.14s;
+}
+.pkgBtn small{display:block;font-family:var(--font);font-size:8.5px;font-weight:500;color:var(--text-3);margin-top:2px}
+.pkgBtn:hover{border-color:#b9c0cb;background:var(--panel-2)}
+.pkgBtn.active{background:var(--ink);border-color:var(--ink);color:#fff}
+.pkgBtn.active small{color:rgba(255,255,255,.55)}
+.pkgMeta{font-size:10.5px;color:var(--text-3);line-height:1.5;margin-top:7px}
+
+.catList{display:grid;gap:7px}
+.catRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 8px;align-items:baseline}
+.catRow .cName{
+  display:flex;align-items:center;gap:6px;min-width:0;
+  font-size:11px;font-weight:500;color:var(--text-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.catRow .cName::before{content:"";width:5px;height:5px;border-radius:1px;background:var(--c,#cbd2dc);flex:0 0 auto}
+.catRow .cVal{
+  font-family:var(--font-num);font-size:11px;font-weight:600;color:var(--text);
+  font-variant-numeric:tabular-nums;
+}
+.cPct{font-style:normal;font-weight:500;font-size:9px;color:var(--text-3);margin-left:5px}
+.catBar{grid-column:1/-1;height:3px;background:var(--panel-3);border-radius:0;overflow:hidden;margin-top:4px}
+.catBar i{display:block;height:100%;transition:width .3s ease}
+
+.miniList{display:grid}
+.miniRow{
+  display:flex;align-items:baseline;justify-content:space-between;gap:6px;
+  padding:4px 0;border-bottom:1px solid var(--line);font-size:11px;
+}
+.miniRow:last-child{border-bottom:0;padding-bottom:0}
+.miniRow .mName{color:var(--text-2);font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.miniRow .mQty{color:var(--text-3);font-family:var(--font-num);font-size:10px;font-weight:600;margin-left:auto}
+.miniRow .mVal{color:var(--text);font-family:var(--font-num);font-size:10.5px;font-weight:600;min-width:64px;text-align:right}
+
+.selCard{border:1px solid var(--line);border-radius:6px;padding:10px;background:var(--panel-2)}
+.selTop{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px}
+.selTop .swatch{width:20px;height:20px;border-radius:4px;flex:0 0 auto;box-shadow:inset 0 0 0 1px rgba(15,23,42,.10)}
+.selTop b{display:block;font-size:12px;font-weight:600;color:var(--text);line-height:1.3}
+.selTop small{font-size:10px;color:var(--text-3)}
+.kv{display:flex;justify-content:space-between;gap:8px;font-size:11px;padding:4px 0;border-top:1px solid var(--line)}
+.kv span{color:var(--text-3)}
+.kv b{color:var(--text);font-family:var(--font-num);font-size:10.5px;font-weight:600}
+.selActions{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-top:9px}
+.selActions button{
+  height:25px;border:1px solid var(--line-2);border-radius:4px;background:var(--panel);
+  font-size:10.5px;font-weight:500;color:var(--text-2);
+}
+.selActions button:hover{background:var(--panel-3);color:var(--text)}
+.selActions button.danger{color:var(--bad);border-color:#f3c9c5}
+.selActions button.danger:hover{background:var(--bad-bg)}
+
+.hintBox{
+  border:1px dashed var(--line-2);border-radius:5px;padding:10px;
+  font-size:10.5px;color:var(--text-3);line-height:1.6;text-align:center;background:var(--panel-2);
+}
+.warnBox{
+  border:1px solid #f3ddb7;border-left:3px solid var(--warn);border-radius:4px;
+  padding:8px 10px;background:var(--warn-bg);color:#8a4b06;font-size:10.5px;line-height:1.55;margin-top:8px;
+}
+.chkRow{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--line);font-size:11px}
+.chkRow:last-of-type{border-bottom:0}
+.chkRow .ic{width:13px;height:13px;border-radius:3px;display:grid;place-items:center;font-size:8px;font-weight:700;flex:0 0 auto}
+.chkRow.ok .ic{background:var(--ok-bg);color:var(--ok)}
+.chkRow.bad .ic{background:var(--bad-bg);color:var(--bad)}
+.chkRow .lb{flex:1;color:var(--text-2);min-width:0}
+.chkRow .vl{color:var(--text-3);font-family:var(--font-num);font-size:10px;white-space:nowrap}
+.chkSum{margin-top:8px;font-size:10px;color:var(--text-3);font-weight:500}
+.projGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.curTag{font-family:var(--font-num);font-size:8.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:var(--accent);border-radius:3px;padding:1px 5px}
+
+/* ============================ STATUS BAR ============================ */
+.statusbar{
+  display:flex;align-items:center;gap:8px;height:28px;padding:0 12px;
+  background:var(--panel);border-top:1px solid var(--line);
+  font-size:10.5px;color:var(--text-3);font-variant-numeric:tabular-nums;overflow:hidden;
+}
+.statusbar b{color:var(--text-2);font-weight:600}
+.statusbar > span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbPhase{
+  font-family:var(--font-num);font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--accent-2);background:var(--accent-bg);border:1px solid var(--accent-line);
+  border-radius:3px;padding:1px 6px;flex:0 0 auto;
+}
+.dotSep{width:3px;height:3px;border-radius:50%;background:var(--line-2);flex:0 0 auto}
+.sbRight{margin-left:auto;display:flex;align-items:center;gap:4px;flex:0 0 auto}
+.zoomBtn{
+  width:20px;height:18px;border:1px solid var(--line);border-radius:3px;background:var(--panel);
+  color:var(--text-3);font-size:11px;line-height:1;padding:0;
+}
+.zoomBtn:hover{background:var(--panel-3);color:var(--text)}
+#sbZoom{min-width:34px;text-align:center;font-family:var(--font-num);font-size:10px;font-weight:600;color:var(--text-2)}
+
+/* ============================ SYSTEMS PAGE ============================ */
+.sysPage{display:flex;flex-direction:column;height:100%;min-height:0;background:var(--bg)}
+.sysScroll{flex:1;min-height:0;overflow-y:auto;padding:16px 18px 18px}
+.sysHead{display:flex;align-items:flex-start;gap:14px;max-width:1440px;margin:0 auto 14px;flex-wrap:wrap}
+.sysHead h2{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+.sysHead p{font-size:11px;color:var(--text-3);margin-top:3px;max-width:620px;line-height:1.55}
+.sysHeadActions{margin-left:auto;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.sysGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:1440px;margin:0 auto}
+.sysGrid .wide{grid-column:1/-1}
+.sysCard{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);
+  overflow:hidden;box-shadow:var(--sh-1);display:flex;flex-direction:column;min-width:0;
+}
+.sysCardHead{
+  display:flex;align-items:center;gap:9px;padding:9px 12px;
+  border-bottom:1px solid var(--line);background:var(--panel);
+}
+.sysIcon{
+  width:26px;height:26px;border-radius:5px;display:grid;place-items:center;font-size:13px;flex:0 0 auto;
+  background:var(--panel-3);border:1px solid var(--line);
+}
+.sysCardHead h3{font-size:12px;font-weight:600;color:var(--text)}
+.sysCardHead p{font-size:10px;color:var(--text-3);line-height:1.4;margin-top:1px}
+.sysSub{margin-left:auto;text-align:right;white-space:nowrap}
+.sysSub span{display:block;font-size:8.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)}
+.sysSub b{font-family:var(--font-num);font-size:13px;font-weight:600;color:var(--text)}
+.sysTable{width:100%;border-collapse:collapse;font-size:11px}
+.sysTable th{
+  background:var(--panel-2);color:var(--text-3);font-size:9px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;text-align:left;padding:6px 12px;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+.sysTable td{padding:5px 12px;border-bottom:1px solid var(--line);color:var(--text-2);vertical-align:middle}
+.sysTable tr:last-child td{border-bottom:0}
+.sysTable tbody tr:hover td{background:var(--panel-2)}
+.sysTable .num{text-align:right;font-family:var(--font-num);font-variant-numeric:tabular-nums}
+.sysTable .dim{color:var(--text-3);white-space:nowrap;font-size:10px}
+.sysTable .strong{font-family:var(--font-num);font-weight:600;color:var(--text)}
+.sysTable tr.excl td{opacity:.45}
+.sCode{font-family:var(--font-num);font-size:8.5px;color:var(--text-3);margin-left:5px;font-weight:600}
+.divTag{
+  display:inline-block;margin-left:6px;font-family:var(--font-num);font-size:8.5px;font-weight:600;
+  color:var(--text-3);background:var(--panel-3);border-radius:3px;padding:1px 4px;vertical-align:1px;white-space:nowrap;
+}
+.sysNote{padding:6px 12px;background:var(--warn-bg);border-top:1px solid #f3ddb7;font-size:10px;color:#8a4b06}
+.sysTotals{
+  display:grid;grid-template-columns:repeat(3,1fr) 1.2fr;gap:8px;
+  padding:9px 18px;background:var(--panel);border-top:1px solid var(--line);
+}
+.sysTot{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:6px 10px}
+.sysTot span{display:block;font-size:8.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)}
+.sysTot b{font-family:var(--font-num);font-size:13px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.sysTot.grand{background:var(--ink);border-color:var(--ink)}
+.sysTot.grand span{color:rgba(255,255,255,.5)}
+.sysTot.grand b{color:#fff}
+.schFoot{
+  display:flex;gap:14px;flex-wrap:wrap;align-items:center;
+  padding:7px 12px;border-top:1px solid var(--line);background:var(--panel-2);
+  font-size:10.5px;color:var(--text-2);
+}
+.schFoot b{color:var(--text);font-family:var(--font-num);font-weight:600}
+.schFoot .k{font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--text-3);margin-right:3px;font-weight:600}
+
+/* ============================ SOP PAGE ============================ */
+.sopHead{display:flex;align-items:flex-start;gap:14px;max-width:1280px;margin:0 auto 12px;flex-wrap:wrap}
+.sopHead h2{font-size:15px;font-weight:600;color:var(--text)}
+.sopHead p{font-size:11px;color:var(--text-3);margin-top:3px;max-width:720px;line-height:1.55}
+.sopLegend{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:440px;align-items:center}
+.roleBar{
+  display:flex;gap:3px;flex-wrap:wrap;max-width:1280px;margin:0 auto 12px;
+  padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-1);
+}
+.roleBtn{
+  display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:4px;border:0;
+  background:transparent;font-size:11px;font-weight:500;color:var(--text-3);
+}
+.roleBtn:hover{background:var(--panel-3);color:var(--text-2)}
+.roleBtn.active{background:var(--ink);color:#fff;font-weight:600}
+.roleBtn .rc{width:6px;height:6px;border-radius:50%;margin-right:5px;flex:0 0 auto}
+.roleBtn.active .rc{background:#fff!important}
+
+.sopStepper{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;max-width:1280px;margin:0 auto 12px}
+.stepNode{
+  position:relative;text-align:left;padding:7px 9px;border:1px solid var(--line);border-radius:5px;
+  background:var(--panel);transition:.14s;
+}
+.stepNode:hover{border-color:var(--line-2);background:var(--panel-2)}
+.stepNode::after{content:"";position:absolute;right:-6px;top:50%;width:6px;height:1px;background:var(--line-2)}
+.stepNode:last-child::after{display:none}
+.stepNode .num{
+  width:16px;height:16px;border-radius:3px;display:grid;place-items:center;margin-bottom:4px;
+  background:var(--panel-3);color:var(--text-3);font-family:var(--font-num);font-size:9px;font-weight:700;
+}
+.stepNode .sn{display:block;font-size:10.5px;font-weight:600;color:var(--text);line-height:1.3}
+.stepNode .sd{display:block;font-family:var(--font-num);font-size:9px;color:var(--text-3);margin-top:2px}
+.stepNode.hasRole{border-color:var(--accent-line);background:var(--accent-bg)}
+.stepNode.hasRole .num{background:var(--accent);color:#fff}
+
+.sopCards{display:block;max-width:1280px;margin:0 auto}
+.sopCard{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);
+  margin-bottom:8px;overflow:hidden;box-shadow:var(--sh-1);transition:box-shadow .16s,border-color .16s;
+}
+.sopCard.flash{border-color:var(--accent-line);box-shadow:0 0 0 2px var(--accent-bg),var(--sh-2)}
+.sopCard.hasRole{border-left:3px solid var(--accent)}
+.sopCard.dimCard{opacity:.55}
+.sopCardHead{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line)}
+.sopNum{
+  width:22px;height:22px;border-radius:4px;flex:0 0 auto;display:grid;place-items:center;
+  background:var(--panel-3);color:var(--text-2);font-family:var(--font-num);font-size:10.5px;font-weight:700;
+}
+.sopCard.hasRole .sopNum{background:var(--ink);color:#fff}
+.sopCardHead h3{flex:1;min-width:0;font-size:12.5px;font-weight:600;color:var(--text);line-height:1.35}
+.headMeta{margin-left:auto;display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.ctrlTag{
+  font-size:8.5px;font-weight:600;letter-spacing:.03em;padding:2px 6px;border-radius:3px;
+  background:var(--bad-bg);border:1px solid #f3c9c5;color:var(--bad);white-space:nowrap;
+}
+.sopSteps{padding:0}
+.sopStep{
+  display:grid;grid-template-columns:30px minmax(0,1fr) 168px;gap:10px;align-items:start;
+  padding:7px 12px;border-bottom:1px solid var(--line);
+}
+.sopStep:nth-child(even){background:var(--panel-2)}
+.sopStep:last-child{border-bottom:0}
+.sopStep:hover{background:var(--panel-3)}
+.snum{font-family:var(--font-num);font-size:9.5px;font-weight:600;color:var(--text-3);padding-top:2px}
+.sopStep .st{font-size:11.5px;line-height:1.65;color:var(--text-2)}
+.sopStep .sroles{display:flex;gap:3px;flex-wrap:wrap;padding-left:10px;border-left:1px solid var(--line);min-height:18px}
+.sopStep.dim{opacity:.3}
+.rBadge{font-size:8.5px;font-weight:600;padding:1px 5px;border-radius:3px;border:1px solid;line-height:1.5;white-space:nowrap}
+.ctrlPill{
+  display:flex;gap:8px;align-items:flex-start;margin:0 12px 10px;padding:7px 9px;
+  border-radius:4px;background:var(--warn-bg);border:1px solid #f3ddb7;
+  font-size:11px;color:#8a4b06;line-height:1.55;
+}
+.cpTag{
+  flex:0 0 auto;font-family:var(--font-num);font-size:8.5px;font-weight:700;
+  background:var(--warn);color:#fff;border-radius:2px;padding:1px 5px;margin-top:1px;
+}
+.docRow{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:0 12px 10px}
+.docLab{font-size:8.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)}
+.docChip{
+  height:22px;padding:0 7px;border-radius:3px;border:1px solid var(--line-2);background:var(--panel);
+  font-family:var(--font-num);font-size:9.5px;font-weight:600;color:var(--text-2);
+}
+.docChip:hover{background:var(--ink);border-color:var(--ink);color:#fff}
+
+.sopBottom{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:1280px;margin:12px auto 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px;box-shadow:var(--sh-1)}
+.card h3{font-size:9.5px;font-weight:600;letter-spacing:.10em;text-transform:uppercase;color:var(--text-3);margin-bottom:9px}
+.ctrlGrid{display:grid;gap:6px}
+.ctrlCard{display:flex;gap:8px;align-items:flex-start;padding:7px 9px;border:1px solid #f3ddb7;background:var(--warn-bg);border-radius:4px}
+.ctrlCard .cn{flex:0 0 auto;background:var(--warn);color:#fff;border-radius:2px;padding:1px 5px;font-family:var(--font-num);font-size:8.5px;font-weight:700}
+.ctrlCard p{font-size:10.5px;line-height:1.55;color:#8a4b06}
+.ctrlCard small{display:block;font-size:9px;color:#a86a2a;margin-top:2px}
+.tableWrap{overflow:auto;border-radius:5px}
+.grid{width:100%;border-collapse:collapse;font-size:11px}
+.grid th{
+  background:var(--panel-2);color:var(--text-3);font-size:9px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;text-align:left;padding:6px 9px;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+.grid td{padding:5px 9px;border-bottom:1px solid var(--line);color:var(--text-2)}
+.grid tr:last-child td{border-bottom:0}
+
+#fmBody h4{font-size:9.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3);margin:0 0 6px}
+.fmPurpose{font-size:11.5px;color:var(--text-2);line-height:1.6;margin-bottom:10px}
+.fmList{margin:0 0 10px;padding-left:16px;font-size:11.5px;line-height:1.7;color:var(--text-2)}
+.fmList li{margin-bottom:1px}
+.fmSigners{display:flex;gap:5px;flex-wrap:wrap}
+.fmNote{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line-2);font-size:10.5px;color:var(--text-3);line-height:1.55}
+
+/* ============================ MODALS ============================ */
+.modal{position:fixed;inset:0;z-index:80;display:none;padding:20px;background:rgba(11,16,23,.52)}
 .modal.open{display:flex;align-items:center;justify-content:center}
 .mCard{
-  background:#fff;border-radius:16px;width:min(980px,100%);max-height:92vh;display:flex;
-  flex-direction:column;overflow:hidden;box-shadow:var(--shadow-lg);border:1px solid #e2e6f0;
+  display:flex;flex-direction:column;width:min(980px,100%);max-height:92vh;overflow:hidden;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-3);
 }
-.mCard.wide{width:min(1180px,100%)}
+.mCard.wide{width:min(1200px,100%)}
 .mCard.narrow{width:min(560px,100%)}
-.mHead{display:flex;align-items:center;gap:12px;padding:15px 20px;border-bottom:1px solid var(--line);background:#fff}
-.mHead h2{font-size:15px;color:var(--navy);display:flex;align-items:center;gap:9px}
-.mHead h2::before{content:"";width:3px;height:15px;border-radius:2px;background:var(--navy);flex:0 0 auto}
-.mHead .mSub{font-size:11px;color:var(--muted-2);margin-left:auto;margin-right:6px;text-align:right}
-.mClose{border:0;background:transparent;color:var(--muted);font-size:16px;padding:3px 8px;border-radius:8px;line-height:1}
-.mClose:hover{background:#f2f4fa;color:var(--navy)}
-.mBody{padding:16px 20px 20px;overflow:auto;flex:1;background:#fbfcfe}
-.mFoot{display:flex;gap:8px;align-items:center;padding:12px 20px;border-top:1px solid var(--line);background:#fff;flex-wrap:wrap}
-.mFoot .spacer{flex:1}
+.mHead{
+  display:flex;align-items:center;gap:10px;flex:0 0 auto;height:50px;padding:0 16px;
+  border-bottom:1px solid var(--line);background:var(--panel);
+}
+.mHead h2{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--text)}
+.mHead h2::before{content:"";width:3px;height:14px;border-radius:1px;background:var(--accent);flex:0 0 auto}
+.mHead .mSub{margin-left:auto;text-align:right;font-size:10px;color:var(--text-3)}
+.mClose{width:26px;height:26px;border-radius:4px;color:var(--text-3);font-size:14px;line-height:1;display:grid;place-items:center}
+.mClose:hover{background:var(--panel-3);color:var(--text)}
+.mBody{flex:1;min-height:0;overflow:auto;padding:14px 16px 16px;background:var(--panel-2)}
+.mBody table thead th{position:sticky;top:0;z-index:3}
+.mBody .tbl:not(.cmp){min-width:700px}
+.boqTbl{min-width:880px}
+.mFoot{
+  display:flex;align-items:center;gap:7px;flex:0 0 auto;min-height:52px;padding:8px 16px;
+  border-top:1px solid var(--line);background:var(--panel);
+}
 
-/* tables in modals */
-.docStrip{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px}
-.docStrip label{display:block;font-size:9.5px;font-weight:700;color:var(--muted-2);letter-spacing:.06em;text-transform:uppercase}
+.docStrip{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:12px}
+.docStrip label{display:block;font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-3)}
 .docStrip input,.docStrip select{
-  width:100%;margin-top:3px;padding:6px 8px;border:1px solid var(--line-2);border-radius:7px;
-  font-size:12px;font-weight:700;color:var(--navy);outline:none;background:#fff;
+  width:100%;margin-top:3px;height:28px;padding:0 7px;border:1px solid var(--line-2);border-radius:4px;
+  background:var(--panel);font-family:var(--font-num);font-size:11px;font-weight:600;color:var(--text);outline:none;
 }
-.docStrip input:focus,.docStrip select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,0,51,.08)}
-@media(max-width:900px){.docStrip{grid-template-columns:repeat(3,1fr)}}
-tr.divHead td{
-  background:#eef1f9;color:var(--navy);font-weight:700;font-size:11.5px;
-  border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);
+.docStrip input:focus,.docStrip select:focus{border-color:var(--info);box-shadow:0 0 0 3px rgba(31,95,208,.12)}
+.hintBar{
+  display:flex;gap:8px;align-items:flex-start;margin-bottom:12px;padding:8px 10px;
+  border:1px solid #d6e2f7;border-left:3px solid var(--info);border-radius:4px;
+  background:var(--info-bg);font-size:10.5px;color:#26456f;line-height:1.6;
 }
-tr.divHead .divSum{font-variant-numeric:tabular-nums}
-.basisCell{font-size:11px;color:var(--muted-2);line-height:1.35}
-.boqTbl td{font-size:12px}
-.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;background:#fff;
-  border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.tbl th{
-  background:#f4f6fb;color:var(--navy);text-align:left;font-size:10.5px;font-weight:700;
-  letter-spacing:.06em;text-transform:uppercase;padding:9px 11px;border-bottom:1px solid var(--line-2);
-  white-space:nowrap;
-}
-.tbl th.num{text-align:right}
-.tbl td{padding:8px 11px;border-bottom:1px solid #eef0f6;vertical-align:middle}
-.tbl tbody tr:last-child td{border-bottom:0}
-.tbl tbody tr:hover td{background:#fafbfe}
-.tbl .num{text-align:right;font-variant-numeric:tabular-nums}
-.tbl .strong{font-weight:700;color:var(--navy)}
-.tbl .code{font-weight:700;color:var(--navy-3);white-space:nowrap;font-size:11.5px}
-.tbl tfoot td{background:var(--navy-050);font-weight:700;color:var(--navy);border-top:2px solid var(--navy);font-size:13px}
-.tbl .dim{color:var(--muted-2)}
-.tbl tr.zero td{color:var(--muted-2)}
-.chipCat{
-  display:inline-block;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:700;
-  background:var(--chipbg,#eef0f7);color:var(--chipfg,#3a4055);border:1px solid var(--chipbd,#e3e7f0);
-  white-space:nowrap;
-}
-.tagAuto{
-  display:inline-block;font-size:9px;font-weight:600;color:#a8aebe;background:transparent;
-  padding:0 0 0 5px;margin-left:2px;vertical-align:1px;white-space:nowrap;
-}
-.qtyInput{
-  width:78px;padding:5px 7px;border:1px solid var(--line-2);border-radius:7px;text-align:right;
-  font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;background:#fff;outline:none;
-}
-.qtyInput:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,0,51,.1)}
-.costInput{
-  width:104px;padding:5px 7px;border:1px solid var(--line-2);border-radius:7px;text-align:right;
-  font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;background:#fff;outline:none;
-}
-.costInput:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,0,51,.1)}
-.iconDel{
-  border:1px solid #f0cfcd;background:#fff;color:var(--danger);width:26px;height:26px;border-radius:7px;
-  font-size:11px;line-height:1;
-}
-.iconDel:hover{background:#fbebe9}
+.hintBar b{color:#123a6b}
 
-/* stat cards */
-.statGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.statGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px}
 .stat{
-  background:#fff;border:1px solid var(--line);border-radius:11px;padding:11px 13px;
-  border-top:3px solid var(--sc,#000033);box-shadow:var(--shadow-sm);
+  background:var(--panel);border:1px solid var(--line);border-top:2px solid var(--sc,var(--ink));
+  border-radius:4px;padding:8px 10px;
 }
-.stat .sLab{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted-2)}
-.stat .sVal{font-size:16px;font-weight:700;color:var(--navy);margin-top:3px;font-variant-numeric:tabular-nums}
+.stat .sLab{font-size:9px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-3)}
+.stat .sVal{font-family:var(--font-num);font-size:14px;font-weight:600;color:var(--text);margin-top:2px;font-variant-numeric:tabular-nums}
 .grandBar{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;
-  background:linear-gradient(135deg,#000033,#1b2568);color:#fff;border-radius:12px;padding:13px 16px;
-  box-shadow:0 10px 24px rgba(0,0,51,.2);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;
+  padding:10px 12px;border-radius:5px;background:var(--ink);
 }
-.grandBar .gLab{font-size:12px;color:#c3c8e4;font-weight:600}
-.grandBar .gVal{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
-
-/* add row */
-.addRow{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.grandBar .gLab{font-size:11px;font-weight:500;color:rgba(255,255,255,.55)}
+.grandBar .gVal{font-family:var(--font-num);font-size:18px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}
+.addRow{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap}
 .addRow select{
-  flex:1;min-width:240px;padding:8px 10px;border:1px solid var(--line-2);border-radius:8px;background:#fff;outline:none;
+  flex:1;min-width:220px;height:28px;padding:0 8px;border:1px solid var(--line-2);border-radius:4px;
+  background:var(--panel);font-size:11px;outline:none;
 }
-.addRow select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,0,51,.1)}
+.addRow select:focus{border-color:var(--info);box-shadow:0 0 0 3px rgba(31,95,208,.12)}
 
-/* comparison table */
 .cmp{table-layout:fixed}
 .cmp th:first-child,.cmp td:first-child{width:40%;text-align:left}
 .cmp th:not(:first-child){width:20%;text-align:center}
 .cmp td{text-align:center}
-.cmp td:first-child{font-weight:600;color:var(--navy)}
-.cmp tbody tr:last-child td{background:#f7f9fe;font-weight:700;color:var(--navy)}
-.yes{color:#0f7b52;font-weight:700}
-.no{color:#a83a3a;font-weight:600}
+.cmp td:first-child{font-weight:600;color:var(--text)}
+.cmp tbody tr:last-child td{background:var(--panel-2);font-weight:600;color:var(--text)}
+.yes{color:var(--ok);font-weight:600}
+.no{color:var(--bad);font-weight:600}
 
-/* layout modal */
-.layList{display:grid;gap:8px}
-.layItem{
-  display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;
-  padding:9px 12px;background:#fff;
+.layList{display:grid;gap:5px}
+.layItem{display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px solid var(--line);border-radius:4px;background:var(--panel)}
+.layItem .layName{font-size:11.5px;font-weight:600;color:var(--text)}
+.layItem .layMeta{font-family:var(--font-num);font-size:9.5px;color:var(--text-3);margin-top:1px}
+.layItem .layAct{margin-left:auto;display:flex;gap:5px}
+.presetGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.presetCard{border:1px solid var(--line);border-radius:5px;background:var(--panel);padding:10px;text-align:left;transition:.14s}
+.presetCard:hover{border-color:var(--ink);background:var(--panel-2)}
+.presetCard b{display:block;font-size:12px;font-weight:600;color:var(--text)}
+.presetCard small{display:block;font-size:10px;color:var(--text-3);margin-top:2px}
+
+/* ============================ TABLES ============================ */
+.tbl{width:100%;border-collapse:collapse;font-size:11px;background:var(--panel)}
+.tbl th{
+  background:var(--panel-2);color:var(--text-3);font-size:9px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);white-space:nowrap;
 }
-.layItem .layName{font-weight:700;font-size:12.5px;color:var(--navy)}
-.layItem .layMeta{font-size:11px;color:var(--muted-2);margin-top:1px}
-.layItem .layAct{margin-left:auto;display:flex;gap:6px}
-.presetGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.presetCard{
-  border:1px solid var(--line);border-radius:11px;background:#fff;padding:12px;text-align:left;transition:.16s;
+.tbl th.num{text-align:right}
+.tbl td{padding:5px 9px;border-bottom:1px solid var(--line);color:var(--text-2);vertical-align:middle}
+.tbl tbody tr:last-child td{border-bottom:0}
+.tbl tbody tr:hover td{background:var(--panel-2)}
+.tbl .num{text-align:right;font-family:var(--font-num);font-variant-numeric:tabular-nums}
+.tbl .strong{font-family:var(--font-num);font-weight:600;color:var(--text)}
+.tbl .code{font-family:var(--font-num);font-size:10px;font-weight:600;color:var(--text-2);white-space:nowrap}
+.tbl .dim{color:var(--text-3);font-family:var(--font-num);font-size:10px}
+.tbl tfoot td{
+  background:var(--panel-2);font-family:var(--font-num);font-size:12px;font-weight:600;color:var(--text);
+  border-top:2px solid var(--ink);border-bottom:0;
 }
-.presetCard:hover{border-color:var(--navy-3);box-shadow:var(--shadow);transform:translateY(-1px)}
-.presetCard b{display:block;font-size:13px;color:var(--navy)}
-.presetCard small{display:block;font-size:10.5px;color:var(--muted-2);margin-top:2px}
-.field{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:10px}
-.field input,.field select{
-  display:block;width:100%;margin-top:5px;padding:8px 10px;border:1px solid var(--line-2);
-  border-radius:8px;font-size:13px;font-weight:600;color:var(--ink);outline:none;background:#fff;
+.tbl tr.zero td{color:var(--text-3);opacity:.65}
+tr.divHead td{
+  background:var(--panel-3);color:var(--text);font-size:10px;font-weight:600;letter-spacing:.02em;
+  border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);
 }
-.field input:focus,.field select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,0,51,.1)}
-.hintBar{
-  display:flex;gap:9px;background:#f7f9fe;border:1px dashed var(--line-2);border-radius:10px;
-  padding:10px 13px;font-size:11.5px;color:#4c5266;margin-bottom:13px;line-height:1.6;
+tr.divHead .divSum{font-family:var(--font-num);font-variant-numeric:tabular-nums}
+.boqTbl td{font-size:11px}
+.basisCell,.basis{font-size:9.5px;color:var(--text-3);line-height:1.35}
+.chipCat{
+  display:inline-block;padding:1px 5px;border-radius:3px;font-size:8.5px;font-weight:600;
+  background:var(--chipbg,var(--panel-3));color:var(--chipfg,var(--text-2));
+  border:1px solid var(--chipbd,var(--line));white-space:nowrap;
 }
-.hintBar b{color:var(--navy)}
+.tagAuto{display:inline-block;padding-left:4px;font-size:8.5px;font-weight:500;color:var(--text-3);white-space:nowrap}
+.iconDel{
+  width:20px;height:20px;border-radius:3px;border:1px solid #f3c9c5;background:var(--panel);
+  color:var(--bad);font-size:9px;line-height:1;padding:0;
+}
+.iconDel:hover{background:var(--bad-bg)}
 
 /* toast */
 .toast{
-  position:fixed;left:50%;bottom:76px;transform:translate(-50%,12px);background:var(--navy);color:#fff;
-  padding:10px 18px;border-radius:10px;font-size:12.5px;box-shadow:0 16px 40px rgba(0,0,51,.35);
-  opacity:0;pointer-events:none;transition:.24s;z-index:90;max-width:82vw;text-align:center;
+  position:fixed;left:50%;bottom:44px;transform:translate(-50%,8px);z-index:120;
+  padding:8px 14px;border-radius:4px;background:var(--ink);color:#fff;
+  font-size:11.5px;box-shadow:var(--sh-3);opacity:0;pointer-events:none;transition:.2s;max-width:80vw;text-align:center;
 }
 .toast.show{opacity:1;transform:translate(-50%,0)}
-.toast.err{background:#7d1f1a}
+.toast.err{background:var(--bad)}
 
-/* ================= PRINT ================= */
+/* ============================ PRINT ============================ */
 .printOnly{display:none}
 @media print{
   @page{size:A4 landscape;margin:9mm}
@@ -726,92 +810,463 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
   .ps{color:#111}
   .psPage{page-break-after:always}
   .psPage.last{page-break-after:auto}
-  .psHead{
-    display:flex;align-items:center;gap:10px;border-bottom:2.5px solid #000033;
-    padding-bottom:6px;margin-bottom:8px;
-  }
+  .psHead{display:flex;align-items:center;gap:10px;border-bottom:2.5px solid #0b1017;padding-bottom:6px;margin-bottom:8px}
   .psBrand{
-    width:38px;height:38px;border-radius:7px;background:#000033;color:#fff;
-    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;letter-spacing:.05em;
+    width:38px;height:38px;border-radius:5px;background:#0b1017;color:#fff;display:flex;
+    align-items:center;justify-content:center;font-weight:700;font-size:12px;letter-spacing:.05em;
     -webkit-print-color-adjust:exact;print-color-adjust:exact;
   }
-  .psTitle h1{font-size:14.5px;color:#000033;margin:0}
+  .psTitle h1{font-size:14.5px;color:#0b1017;margin:0}
   .psTitle p{font-size:8px;color:#666;letter-spacing:.06em;margin:1px 0 0}
-  .psDoc{margin-left:auto;text-align:right;border:1px solid #9aa2b6;padding:4px 9px;border-radius:4px}
+  .psDoc{margin-left:auto;text-align:right;border:1px solid #9aa2b6;padding:4px 9px;border-radius:3px}
   .psDoc span{display:block;font-size:7px;color:#777;letter-spacing:.08em}
-  .psDoc b{display:block;font-size:10.5px;color:#000033;font-family:Inter,system-ui,sans-serif}
-  .ps h2{font-size:11px;color:#000033;margin:10px 0 4px;border-bottom:1.2px solid #000033;padding-bottom:2px}
+  .psDoc b{display:block;font-size:10.5px;color:#0b1017;font-family:var(--font-num)}
+  .ps h2{font-size:11px;color:#0b1017;margin:10px 0 4px;border-bottom:1.2px solid #0b1017;padding-bottom:2px}
   .ps table{width:100%;border-collapse:collapse;font-size:9px;table-layout:fixed}
   .ps th,.ps td{border:1px solid #9aa2b6;padding:3.5px 5px;vertical-align:top;word-wrap:break-word;overflow-wrap:break-word}
-  .ps th{background:#eef0f7;-webkit-print-color-adjust:exact;print-color-adjust:exact;text-align:left;font-weight:700}
+  .ps th{background:#eef0f4;-webkit-print-color-adjust:exact;print-color-adjust:exact;text-align:left;font-weight:700}
   .ps td.num,.ps th.num{text-align:right;font-variant-numeric:tabular-nums}
-  .ps tfoot td{font-weight:700;background:#f4f6fb;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .ps tr.div td{
-    background:#e9edf8;font-weight:700;color:#000033;
-    -webkit-print-color-adjust:exact;print-color-adjust:exact;
-  }
+  .ps tfoot td{font-weight:700;background:#f4f5f7;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .ps tr.div td{background:#e9edf3;font-weight:700;color:#0b1017;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .ps td.basis{font-size:8px;color:#666}
-  .ps .planImg{display:block;margin:5px auto;max-height:74mm;max-width:100%;object-fit:contain;border:1px solid #9aa2b6;border-radius:3px}
-  .psInfo th{width:16%;background:#f4f6fb;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .ps .planImg{display:block;margin:5px auto;max-height:74mm;max-width:100%;object-fit:contain;border:1px solid #9aa2b6;border-radius:2px}
+  .psInfo th{width:16%;background:#f4f5f7;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .psInfo td{width:34%}
   .psFoot{font-size:8px;color:#666;margin-top:5px}
   .psSign{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
-  .signBox{border:1px solid #9aa2b6;border-radius:4px;padding:7px 9px;min-height:26mm}
+  .signBox{border:1px solid #9aa2b6;border-radius:3px;padding:7px 9px;min-height:26mm}
   .signBox span{font-size:8px;color:#666;display:block}
   .signLine{height:12mm;border-bottom:1px dotted #888;margin-bottom:3px}
-  .signBox b{font-size:9px;color:#000033;display:block;font-weight:600}
+  .signBox b{font-size:9px;color:#0b1017;display:block;font-weight:600}
   .signBox small{font-size:8px;color:#777}
   .psBoq thead{display:table-header-group}
   .psBoq tr{page-break-inside:avoid}
   .psTB{
     display:grid;grid-template-columns:1.5fr 1.5fr 1.2fr 1fr .8fr .5fr .8fr;
-    border:1px solid #7f8798;margin-top:9px;font-size:7.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact;
+    border:1px solid #7f8798;margin-top:9px;font-size:7.5px;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
   }
   .psTB .tbCell{border-left:1px solid #7f8798;padding:3px 5px}
-  .psTB .tbCell:first-child{border-left:0;background:#eef0f7}
+  .psTB .tbCell:first-child{border-left:0;background:#eef0f4}
   .psTB span{display:block;color:#666;font-size:6.5px;letter-spacing:.05em}
-  .psTB b{display:block;color:#000033;font-size:8px;font-weight:700}
+  .psTB b{display:block;color:#0b1017;font-size:8px;font-weight:700}
   .psTB .tbBrand b{font-size:9px;letter-spacing:.06em}
 }
 
-/* ================= RESPONSIVE ================= */@media(max-width:1240px){
-  .body{grid-template-columns:224px 1fr 300px}
+/* ============================ RESPONSIVE ============================ */
+@media(max-width:1280px){
+  .sysGrid{grid-template-columns:1fr}
+  .sysTotals{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:1180px){
+  :root{--w-side:236px;--w-insp:300px}
   .appbarStatus{display:none}
+  .appbar{flex-wrap:wrap;height:auto;padding:6px 10px 7px;gap:6px}
+  .brand{height:34px;padding:0 12px 0 0;gap:8px}
+  .brandMark{width:22px;height:22px;font-size:8.5px}
+  .brandText h1{font-size:12px}
+  .brandText p{display:none}
+  #pageSwitch{order:1;flex:1 1 auto;height:34px;margin:0;padding:0;overflow-x:auto}
+  #pageSwitch .seg{height:34px;font-size:11.5px;padding:0 11px}
+  .topProj{order:3;flex:0 0 auto;margin:0;padding:0 8px 0 0;max-width:220px}
+  .tpName{font-size:11px}
+  .appbarActions{order:4;flex:1 1 auto;margin:0;overflow-x:auto;flex-wrap:nowrap;gap:4px}
+  .appbarActions::-webkit-scrollbar{height:0}
+  .zoomCluster [data-zoom]{display:none}
+  .zoomCluster [data-zoom].active{display:inline-flex}
 }
-@media(max-width:1024px){
-  body{overflow:auto}
-  .app{height:auto;min-height:100vh}
-  .mainArea{min-width:0}
-  .body{grid-template-columns:1fr;grid-auto-rows:auto;min-width:0;height:auto}
-  .sidebar{
-    border-right:0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:16px;
-    overflow:visible;padding:12px;min-width:0;
+@media(max-width:1100px){
+  .body{grid-template-columns:var(--w-side) minmax(0,1fr);overflow:hidden}
+  .workspace,.inspector,.toolbar,.sidebar{min-width:0}
+  .inspector{
+    grid-column:2;grid-row:2;justify-self:end;width:328px;height:100%;z-index:25;
+    transform:translateX(101%);transition:transform .2s ease;box-shadow:var(--sh-3);
   }
-  .sideGroup{min-width:168px;flex:1 1 168px;margin-bottom:0}
-  .workspace{height:62vh;min-height:400px;min-width:0}
-  .inspector{border-left:0;border-top:1px solid var(--line)}
-  .statGrid{grid-template-columns:repeat(2,1fr)}
-  .presetGrid{grid-template-columns:1fr}
+  .inspector.open{transform:none}
+  .inspToggle{display:inline-flex}
+  .inspMobileHead{display:flex}
+  .sopStepper{grid-template-columns:repeat(4,1fr)}
+  .sopStep{grid-template-columns:26px minmax(0,1fr)}
+  .sopStep .sroles{grid-column:2;border-left:0;padding-left:0;margin-top:2px}
+  .sopBottom{grid-template-columns:1fr}
 }
-
-/* ===== mobile palette drawer (ต้องอยู่ท้ายไฟล์เพื่อ override) ===== */
-@media(max-width:1024px){
+@media(max-width:720px){
+  :root{--w-side:100%}
+  body{overflow-x:hidden}
+  .brand{display:none}
+  .appbar{padding:6px 8px 7px}
+  #pageSwitch{flex:1 1 100%}
+  .topProj{max-width:150px}
+  .app{height:100dvh;min-height:0;grid-template-rows:auto minmax(0,1fr) auto}
+  .body{
+    grid-template-columns:minmax(0,1fr);grid-template-rows:var(--tb-h) minmax(0,1fr);
+    height:100%;overflow:hidden;
+  }
+  .toolbar{grid-column:1;grid-row:1}
+  .workspace{grid-column:1;grid-row:2;height:auto;min-height:0}
   .sidebar{
-    position:fixed;left:0;right:0;bottom:0;top:auto;max-height:74vh;z-index:45;
-    display:none;flex-direction:column;flex-wrap:nowrap;gap:0;
-    border-radius:16px 16px 0 0;overflow:auto;padding:14px 14px 26px;
-    border-top:1px solid var(--line);border-right:0;
-    box-shadow:0 -20px 50px rgba(10,15,40,.28);
+    display:none;position:fixed;left:0;right:0;bottom:0;top:auto;max-height:76vh;z-index:60;
+    border-radius:10px 10px 0 0;border-right:0;border-top:1px solid var(--line);box-shadow:var(--sh-3);
   }
   .sidebar.open{display:flex}
-  .sideToggle{display:block}
-  .sideGroup{flex:none;min-width:0;margin-bottom:14px;padding-bottom:12px}
+  .sideToggle{display:inline-flex}
+  .inspector{grid-column:1;grid-row:2;width:100%;max-width:100%}
+  .statusbar{height:28px;min-height:0;flex-wrap:nowrap;overflow:hidden}
+  #sbItems{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #sbWarn,.sbRight{display:none}
+  .statGrid{grid-template-columns:repeat(2,1fr)}
+  .docStrip{grid-template-columns:repeat(3,1fr)}
+  .presetGrid{grid-template-columns:1fr}
+  .sysScroll{padding:12px}
+  .modal{padding:8px}
+  .mCard{max-height:94vh}
 }
+@media(max-width:520px){
+  .statGrid{grid-template-columns:1fr}
+  .docStrip{grid-template-columns:repeat(2,1fr)}
+  .mHead .mSub{display:none}
+  #sbArea,#sbWarn,.statusbar .dotSep{display:none}
+}
+
+/* ======================================================================
+   v5 — DARK INDUSTRIAL SHELL (rail navigation · dark chrome · light sheet)
+   ====================================================================== */
+:root{
+  --ink:#1b1b1e;
+  --ink-2:#232327;
+  --ink-3:#2b2b30;
+  --bg:#26262a;
+  --panel:#313136;
+  --panel-2:#3a3a40;
+  --panel-3:#45454c;
+  --line:#4a4a52;
+  --line-2:#5c5c66;
+  --text:#e8e8ec;
+  --text-2:#b8b8c0;
+  --text-3:#8d8d97;
+  --accent:#4da3ff;
+  --accent-2:#2c86e0;
+  --accent-bg:#1b3350;
+  --accent-line:#2f5c8a;
+  --on-acc:#04101d;
+  --info:#4da3ff;
+  --info-bg:#1b3350;
+  --ok:#4ade80;
+  --ok-bg:#12331f;
+  --warn:#f5c542;
+  --warn-bg:#3a3117;
+  --bad:#ff7b6b;
+  --bad-bg:#3a1c19;
+  --sh-1:0 1px 2px rgba(0,0,0,.45);
+  --sh-2:0 10px 26px rgba(0,0,0,.55);
+  --sh-3:0 30px 70px rgba(0,0,0,.7);
+}
+.app{
+  display:grid;grid-template-columns:56px minmax(0,1fr);
+  grid-template-rows:auto minmax(0,1fr) 28px;
+  grid-template-areas:"rail bar" "rail main" "rail status";
+  height:100vh;height:100dvh;background:var(--bg);
+}
+.rail{grid-area:rail}
+.appbar{grid-area:bar;background:var(--ink)}
+.mainArea{grid-area:main}
+.statusbar{grid-area:status}
+
+/* rail */
+#pageSwitch.rail{
+  display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0;
+  height:100%;margin:0;border-radius:0;overflow:visible;
+  background:var(--ink);border-right:1px solid rgba(255,255,255,.06);
+}
+#pageSwitch.rail .seg{
+  width:44px;height:50px;padding:0;border:0;border-radius:7px;box-shadow:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  background:transparent;color:rgba(255,255,255,.48);font-size:9px;font-weight:500;position:relative;
+}
+#pageSwitch.rail .seg svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#pageSwitch.rail .seg span{line-height:1;letter-spacing:.02em}
+#pageSwitch.rail .seg:hover{background:rgba(255,255,255,.07);color:#fff}
+#pageSwitch.rail .seg.active{background:rgba(77,163,255,.16);color:var(--accent)}
+#pageSwitch.rail .seg.active::before{
+  content:"";position:absolute;left:-6px;top:11px;bottom:11px;width:2.5px;
+  border-radius:0 3px 3px 0;background:var(--accent);
+}
+#pageSwitch.rail .seg.active::after{content:none}
+
+/* dark mat behind the drawing sheet */
+.workspace{
+  background:#1f1f22;
+  background-image:radial-gradient(circle at 50% 0%,#2c2c31 0%,#1f1f22 70%);
+}
+.workspace .emptyHint b{color:var(--text-2)}
+.workspace .emptyHint span{color:var(--text-3)}
+
+/* active / emphasis states on dark */
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-acc);font-weight:600}
+.btn.primary:hover{background:#6cb4ff;border-color:#6cb4ff;color:var(--on-acc)}
+.btn.gold{background:var(--accent);border-color:var(--accent);color:var(--on-acc)}
+.btn.gold:hover{background:#6cb4ff;border-color:#6cb4ff;color:var(--on-acc)}
+.tbBtn.active,.stab.active,.zoomCluster button.active,.roleBtn.active,
+.mepBtn.active,.pkgBtn.active,.docChip:hover{
+  background:var(--accent);border-color:var(--accent);color:var(--on-acc);
+}
+.tbBtn.active:hover,.stab.active:hover,.mepBtn.active:hover,.pkgBtn.active:hover{background:#6cb4ff;border-color:#6cb4ff;color:var(--on-acc)}
+.stab.active .cnt{background:rgba(0,0,0,.20);color:var(--on-acc)}
+.pkgBtn.active small{color:rgba(4,16,29,.65)}
+.roleBtn.active .rc{background:var(--on-acc)!important}
+.sopNum{background:var(--panel-3);color:var(--text-2)}
+.sopCard.hasRole .sopNum{background:var(--accent);color:var(--on-acc)}
+.grandBar{background:var(--panel-3);border:1px solid var(--line-2);border-left:3px solid var(--accent)}
+.grandBar .gLab{color:var(--text-3)}
+.grandBar .gVal{color:var(--text)}
+.sysTot.grand{background:var(--panel-3);border:1px solid var(--line-2);border-left:3px solid var(--accent)}
+.sysTot.grand span{color:var(--text-3)}
+.sysTot.grand b{color:var(--text)}
+.toast{background:var(--panel-3);border:1px solid var(--line-2);color:var(--text)}
+.toast.err{background:#3a1a16;border-color:#5b2a24;color:#ffd9d3}
+.tbl tfoot td{border-top:2px solid var(--line-2)}
+.modal{background:rgba(0,0,0,.68)}
+.presetCard:hover{border-color:var(--accent);background:var(--panel-2)}
+.mepLegend .mlRow.el{color:#f5b544}
+.mepLegend .mlRow.wt{color:#5b9bff}
+.mepLegend .mlRow.pp{color:#b18cff}
+.ctrlCard p,.ctrlPill,.sysNote,.warnBox{color:#f0c48a}
+.ctrlCard small{color:#c79a62}
+.hintBar{color:#b7cdf0;border-color:#1e2f4a}
+.hintBar b{color:#dbe8ff}
+::-webkit-scrollbar-thumb{background:#39434f;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#4b5867;background-clip:content-box}
+*{scrollbar-color:#39434f transparent}
+.ver{
+  font-family:var(--font-num);font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--accent);border:1px solid var(--accent-line);background:var(--accent-bg);
+  border-radius:2px;padding:0 4px;line-height:1.6;flex:0 0 auto;
+}
+@media(max-width:720px){
+  .app{
+    grid-template-columns:48px minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr) auto;
+  }
+  #pageSwitch.rail .seg{width:38px;height:44px;font-size:8px}
+  #pageSwitch.rail .seg svg{width:15px;height:15px}
+  #pageSwitch.rail .seg.active::before{left:-5px;top:9px;bottom:9px}
+}
+
+/* v5 — table layering & surfaces */
+.mBody{background:var(--bg)}
+.tbl{background:var(--panel)}
+.tbl th,.sysTable th,.grid th{background:var(--panel-3);color:var(--text-2)}
+.tbl tbody tr:hover td,.sysTable tbody tr:hover td,.grid tbody tr:hover td{background:rgba(255,255,255,.035)}
+tr.divHead td{background:#1e2632;color:var(--text);border-color:var(--line-2)}
+.tbl tfoot td{background:var(--panel-3);color:var(--text)}
+.sysCardHead{background:var(--panel)}
+.sysTot{background:var(--panel-2)}
+.stat{background:var(--panel)}
+.chipCat{background:var(--panel-3)!important;color:var(--text-2)!important;border-color:var(--line-2)!important}
+.selCard,.hintBox{background:var(--panel-2)}
+.pkgBtn{background:var(--panel)}
+.presetCard{background:var(--panel)}
+.layItem{background:var(--panel)}
+.mepBtn,.assetBtn .plus,.layerChip.active,.docChip,.mlHead,.resetBtn,.iconDel,.qtyInput,.costInput{background:var(--panel)}
+.addRow select,.field input,.field select,.docStrip input,.docStrip select{background:var(--panel);color:var(--text)}
+.btn.ghost{background:var(--panel);color:var(--text-2)}
+.btn.ghost:hover{background:var(--panel-2);color:var(--text)}
+.btn{background:var(--panel);color:var(--text-2)}
+.btn:hover{background:var(--panel-2);border-color:var(--line-2);color:var(--text)}
+
+/* ======================================================================
+   v6 — AutoCAD-style structure: ribbon + command line + drafting toggles
+   ====================================================================== */
+:root{--tb-h:100px}
+.body{grid-template-rows:var(--tb-h) minmax(0,1fr) 30px}
+.ribbon{
+  grid-column:1/-1;grid-row:1;display:flex;flex-direction:column;min-width:0;
+  background:var(--panel);border-bottom:1px solid var(--line);
+}
+.rbTabs{
+  display:flex;align-items:flex-end;gap:1px;height:26px;padding:0 8px;flex:0 0 auto;
+  background:var(--ink);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;
+}
+.rbTabs::-webkit-scrollbar{height:0}
+.rbTab{
+  height:26px;padding:0 14px;border:0;border-bottom:2px solid transparent;
+  background:transparent;color:var(--text-3);font-size:11.5px;font-weight:500;white-space:nowrap;
+}
+.rbTab:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.rbTab.active{color:#fff;background:var(--panel);border-bottom-color:var(--accent);font-weight:600}
+.rbBody{flex:1;min-height:0;display:flex;align-items:stretch;padding:5px 8px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+.rbPanel{display:none;align-items:stretch;min-width:0}
+.rbPanel.active{display:flex}
+.rbGroup{display:flex;flex-direction:column;justify-content:space-between;gap:4px;padding:0 8px;min-width:0}
+.rbRow{display:flex;align-items:center;gap:4px;flex-wrap:nowrap}
+.rbStack{display:flex;flex-direction:column;gap:2px}
+.rbTitle{
+  font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);
+  text-align:center;white-space:nowrap;border-top:1px solid var(--line);padding-top:2px;
+}
+.rbSep{width:1px;background:var(--line);margin:2px 2px}
+.rbBtn{
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-height:38px;min-width:48px;padding:3px 8px;border:1px solid transparent;border-radius:4px;
+  background:transparent;color:var(--text-2);font-size:9.5px;font-weight:500;line-height:1.15;white-space:nowrap;
+}
+.rbBtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.rbBtn:hover{background:rgba(255,255,255,.07);border-color:var(--line);color:var(--text)}
+.rbBtn.active{background:var(--accent);border-color:var(--accent);color:var(--on-acc);font-weight:600}
+.rbBtn.big{min-height:40px}
+.rbBtn .lamp{width:7px;height:7px;border-radius:50%;background:var(--line-2)}
+.rbBtn.on .lamp{background:var(--accent)}
+.rbBtn.on{border-color:var(--accent-line);background:var(--accent-bg);color:#cfe6ff}
+.rbBtn b{font-family:var(--font-num);font-size:10px;font-weight:700}
+.layerChip{
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;height:18px;padding:0 6px;
+  border:1px solid var(--line);border-radius:3px;background:var(--panel-2);
+  font-size:9px;color:var(--line-2);filter:grayscale(1);opacity:.55;
+}
+.layerChip:hover{opacity:.8}
+.layerChip.active{opacity:1;filter:none;color:var(--text-2);border-color:var(--line-2);background:var(--panel-3)}
+#viewSwitch{background:var(--panel-2);padding:2px;border:1px solid var(--line);gap:2px}
+#viewSwitch .seg{height:22px;font-size:10px;padding:0 9px;border-radius:3px;color:var(--text-3)}
+#viewSwitch .seg.active{background:var(--accent);color:var(--on-acc);box-shadow:none}
+.zoomCluster{background:transparent;padding:0;gap:2px}
+.zoomCluster button{
+  height:22px;min-width:26px;padding:0 5px;font-size:9.5px;border:1px solid var(--line);
+  background:var(--panel-2);color:var(--text-3);border-radius:3px;
+}
+.zoomCluster button:hover{background:var(--panel-3);color:var(--text)}
+.zoomCluster button.active{background:var(--accent);border-color:var(--accent);color:var(--on-acc)}
+.zoomCluster .sep{display:none}
+#wkFit{font-size:9.5px;padding:0 7px;color:var(--text-2)}
+
+/* command line */
+.cmdbar{
+  grid-column:1/-1;grid-row:3;display:flex;align-items:center;gap:8px;padding:0 10px;
+  background:var(--ink);border-top:1px solid var(--line);
+  font-size:11px;color:var(--text-3);min-width:0;
+}
+.cmdPrompt{
+  flex:0 0 auto;font-family:var(--font-num);font-size:9px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--accent);
+}
+.cmdLog{
+  flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:var(--text-2);transition:color .2s;
+}
+.cmdLog.flash{color:#fff}
+.cmdEntry{display:flex;align-items:center;gap:4px;flex:0 0 270px}
+.cmdEntry input{
+  width:100%;height:22px;padding:0 8px;border:1px solid var(--line);border-radius:3px;
+  background:var(--panel);color:var(--text);font-family:var(--font-num);font-size:11px;outline:none;
+}
+.cmdEntry input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(77,163,255,.18)}
+.cmdEntry input::placeholder{color:var(--text-3)}
+.cmdEntry button{
+  width:22px;height:22px;flex:0 0 auto;border:1px solid var(--line);border-radius:3px;
+  background:var(--panel-2);color:var(--text-2);font-size:11px;line-height:1;
+}
+.cmdEntry button:hover{background:var(--accent);border-color:var(--accent);color:var(--on-acc)}
+
+/* drafting toggles */
+.draftToggles{display:flex;align-items:center;gap:3px;margin-left:auto;flex:0 0 auto}
+/* 3D view bar */
+.view3dBar{
+  position:absolute;left:12px;top:12px;z-index:12;display:flex;align-items:center;gap:3px;
+  padding:4px;border:1px solid var(--line);border-radius:5px;
+  background:rgba(28,31,36,.92);backdrop-filter:blur(6px);box-shadow:var(--sh-2);
+}
+.view3dBar .v3lab{
+  padding:0 6px;font-size:8.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3);
+}
+.view3dBar button{
+  height:22px;padding:0 9px;border:1px solid var(--line);border-radius:3px;
+  background:var(--panel-2);color:var(--text-3);
+  font-family:var(--font-num);font-size:10px;font-weight:600;
+}
+.view3dBar button:hover{background:var(--panel-3);color:var(--text)}
+.view3dBar button.active{background:var(--accent);border-color:var(--accent);color:var(--on-acc)}
+.view3dBar .v3sep{width:1px;height:16px;background:var(--line);margin:0 3px}
+
+/* help modal */
+.helpCols{display:grid;grid-template-columns:1fr 1fr;gap:16px}.helpSec{margin-bottom:16px;min-width:0}
+.helpSec h3{
+  font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3);
+  margin:0 0 7px;padding-bottom:5px;border-bottom:1px solid var(--line);
+}
+.helpSec ol,.helpSec ul{margin:0;padding-left:17px;font-size:11.5px;line-height:1.85;color:var(--text-2)}
+.helpSec li{margin-bottom:2px}
+.helpSec b{color:var(--text);font-weight:600}
+kbd{
+  display:inline-block;min-width:18px;padding:1px 5px;border:1px solid var(--line-2);border-bottom-width:2px;
+  border-radius:3px;background:var(--panel-3);font-family:var(--font-num);font-size:10px;
+  font-weight:600;color:var(--text);text-align:center;line-height:1.5;
+}
+@media(max-width:820px){.helpCols{grid-template-columns:1fr}}
+
+/* guided demo */
+.demoCard{
+  position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:95;
+  width:min(440px,calc(100% - 24px));padding:12px 14px;
+  background:var(--ink);border:1px solid var(--accent-line);border-radius:8px;
+  box-shadow:var(--sh-3);color:#e7ecf5;
+}
+.demoCard.hidden{display:none}
+.demoCard .dHead{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.demoCard .dStep{
+  font-family:var(--font-num);font-size:9px;font-weight:700;letter-spacing:.06em;
+  background:var(--accent);color:var(--on-acc);border-radius:3px;padding:1px 6px;
+}
+.demoCard .dHead b{font-size:12.5px;font-weight:600;color:#fff}
+.demoCard p{margin:0 0 9px;font-size:11.5px;line-height:1.65;color:#b9c4d4}
+.demoCard .dFoot{display:flex;align-items:center;gap:6px}
+.demoCard .btn.ghost{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#dbe2ec}
+.demoCard .btn.ghost:hover{background:rgba(255,255,255,.16);color:#fff}.dtg{
+  height:18px;padding:0 6px;border:1px solid transparent;border-radius:3px;
+  font-family:var(--font-num);font-size:8.5px;font-weight:700;letter-spacing:.06em;
+  color:var(--text-3);background:transparent;
+}
+.dtg:hover{background:var(--panel-3);color:var(--text-2)}
+.dtg.active{background:var(--accent-bg);border-color:var(--accent-line);color:#9fd0ff}
+.sbRight{margin-left:8px}
+
+@media(max-width:1024px){
+  :root{--tb-h:94px}
+  .rbTab{padding:0 10px;font-size:11px}
+  .rbGroup{padding:0 6px}
+  .cmdEntry{flex:0 0 180px}
+}
+@media(max-width:720px){
+  :root{--tb-h:74px}
+  .rbBody{padding:4px 6px}
+  .rbTitle{display:none}
+  .rbBtn{min-height:32px;min-width:44px;font-size:9px}
+  .rbBtn.big{min-height:32px}
+  .cmdbar{gap:6px;padding:0 6px}
+  .cmdPrompt{display:none}
+  .cmdEntry{flex:0 0 132px}
+  .draftToggles{display:none}
+}
+
 </style>
 </head>
 <body>
 
 <div class="app">
+
+  <!-- ================= NAV RAIL ================= -->
+  <nav class="rail" id="pageSwitch">
+    <button class="seg active" data-page="studio" title="ออกแบบผัง &amp; BOQ">
+      <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 9.5h17M9.5 9.5v11"/></svg>
+      <span>ผัง</span>
+    </button>
+    <button class="seg" data-page="systems" title="งานระบบ &amp; ก่อสร้าง">
+      <svg viewBox="0 0 24 24"><path d="M13 2.5 4.5 13.5h6L11 21.5l8.5-11h-6z"/></svg>
+      <span>ระบบ</span>
+    </button>
+    <button class="seg" data-page="sop" title="Flow งานมาตรฐาน (SOP)">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h11M4 18h7"/><circle cx="19" cy="12" r="1.6"/><circle cx="14" cy="18" r="1.6"/></svg>
+      <span>SOP</span>
+    </button>
+  </nav>
 
   <!-- ================= APP BAR ================= -->
   <header class="appbar">
@@ -819,17 +1274,16 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
       <div class="brandMark">TSR</div>
       <div class="brandText">
         <h1>Store Studio</h1>
-        <p>ออกแบบผัง &amp; ประมาณการต้นทุนมาตรฐาน</p>
+        <p>Shopfit Layout &amp; Cost Estimator</p>
       </div>
     </div>
 
-    <div class="segmented" id="pageSwitch">
-      <button class="seg active" data-page="studio">ออกแบบผัง</button>
-      <button class="seg" data-page="systems">งานระบบ &amp; ก่อสร้าง</button>
-      <button class="seg" data-page="sop">Flow งาน (SOP)</button>
-    </div>
-
     <div class="appbarStatus" id="statusText">พร้อมใช้งาน</div>
+
+    <div class="topProj">
+      <span class="tpName" id="topProj">ยังไม่ระบุชื่อโครงการ</span>
+      <span class="tpPhase" id="topPhase">Phase 1</span>
+    </div>
 
     <div class="appbarActions">
       <button class="btn ghost" id="btnLayouts">ผังงาน</button>
@@ -837,6 +1291,7 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
       <button class="btn ghost" id="btnSummary">สรุปแพ็กเกจ</button>
       <button class="btn primary" id="btnBoq">BOQ &amp; ต้นทุน</button>
       <button class="btn gold" id="btnPrint">พิมพ์</button>
+      <button class="btn ghost" id="btnHelp" title="คู่มือการใช้งาน">คู่มือ</button>
     </div>
   </header>
 
@@ -844,55 +1299,212 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
   <div class="mainArea">
   <div class="body" id="pageStudio">
 
-    <!-- ---------- SIDEBAR ---------- -->
-    <aside class="sidebar">
-      <div class="sideGroup">
-        <div class="sideTitle">เครื่องมือ</div>
-        <div class="toolGrid">
-          <button class="tool active" data-mode="select">เลือก / ย้าย</button>
-          <button class="tool" data-mode="wall">วาดผนัง</button>
-        </div>
-        <button class="tool toolWide" id="btnLayer">
-          <span>วางซ้อนชั้น</span><span style="display:flex;align-items:center;gap:6px"><span class="lamp"></span><span id="layerLbl">L1</span></span>
-        </button>
+    <!-- ---------- RIBBON ---------- -->
+    <div class="ribbon" id="studioBar">
+      <div class="rbTabs">
+        <button class="rbTab active" data-rb="home">หน้าแรก</button>
+        <button class="rbTab" data-rb="system">งานระบบ</button>
+        <button class="rbTab" data-rb="doc">เอกสาร &amp; พิมพ์</button>
       </div>
 
-      <div class="sideGroup">
-        <div class="sideTitle">เครื่องจักร</div>
-        <div id="assetsMachine"></div>
-      </div>
-
-      <div class="sideGroup">
-        <div class="sideTitle">อุปกรณ์เสริม</div>
-        <div id="assetsAccessory"></div>
-      </div>
-
-      <div class="sideGroup">
-        <div class="sideTitle">ป้าย &amp; สื่อสาร</div>
-        <div id="assetsSign"></div>
-      </div>
-
-      <div class="sideGroup">
-        <div class="sideTitle">งานระบบบนผัง (MEP)</div>
-        <div class="mepLabel">ไฟฟ้า</div>
-        <div class="mepGrid" id="mepElec"></div>
-        <div class="mepLabel">น้ำ / สุขาภิบาล</div>
-        <div class="mepGrid" id="mepWater"></div>
-        <div class="mepLabel">เส้นท่อ (ลากในผัง)</div>
-        <div class="mepGrid" id="mepPipes"></div>
-        <div class="mepHint">เลือกสัญลักษณ์แล้วคลิกในผังเพื่อวางหลายจุด · ปริมาณจะถูกถอดเข้าฐานข้อมูล BOQ อัตโนมัติ</div>
-      </div>
-
-      <div class="sideGroup">
-        <div class="sideTitle">พื้นที่ร้าน</div>
-        <div class="field" style="margin-bottom:8px">กว้าง × ลึก (ซม.)
-          <div style="display:flex;gap:6px;align-items:center;margin-top:5px">
-            <input id="inpW" type="number" min="200" max="3000" step="10" value="600" style="margin:0;width:100%">
-            <span style="color:#9aa1b4">×</span>
-            <input id="inpD" type="number" min="200" max="3000" step="10" value="380" style="margin:0;width:100%">
+      <div class="rbBody">
+        <!-- TAB: หน้าแรก -->
+        <div class="rbPanel active" data-rb="home">
+          <div class="rbGroup">
+            <div class="rbRow">
+              <button class="rbBtn big active" data-mode="select">
+                <svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.6L10 19z"/></svg><span>เลือก / ย้าย</span>
+              </button>
+              <button class="rbBtn big" data-mode="wall">
+                <svg viewBox="0 0 24 24"><path d="M3 20V4h18v16z"/><path d="M3 12h18"/></svg><span>วาดผนัง</span>
+              </button>
+            </div>
+            <div class="rbTitle">วาด / แก้ไข</div>
+          </div>
+          <span class="rbSep"></span>
+          <div class="rbGroup">
+            <div class="rbRow">
+              <button class="rbBtn" id="btnLayer" title="สลับชั้นวางซ้อน L1 / L2">
+                <span class="lamp"></span><b id="layerLbl">L1</b>
+              </button>
+              <div class="rbStack">
+                <button class="layerChip active" data-layer="elec" title="ชั้นงานไฟฟ้า">⚡ ไฟ</button>
+                <button class="layerChip active" data-layer="water" title="ชั้นงานสุขาภิบาล">💧 น้ำ</button>
+              </div>
+            </div>
+            <div class="rbTitle">ชั้นงาน (Layers)</div>
+          </div>
+          <span class="rbSep"></span>
+          <div class="rbGroup">
+            <div class="rbRow">
+              <div class="segmented" id="viewSwitch">
+                <button class="seg active" data-view="2d">2D</button>
+                <button class="seg" data-view="3d">3D</button>
+              </div>
+              <button class="layerChip active" data-layer="power" title="แสดง/ซ่อนสายป้อนและรหัสวงจร">🔌 วงจร</button>
+            </div>
+            <div class="rbTitle">มุมมอง</div>
+          </div>
+          <span class="rbSep"></span>
+          <div class="rbGroup">
+            <div class="rbRow">
+              <div class="zoomCluster" id="wkFloat">
+                <button data-zoom="20">20%</button>
+                <button data-zoom="40">40%</button>
+                <button data-zoom="60">60%</button>
+                <button data-zoom="80">80%</button>
+                <button data-zoom="100" class="active">100%</button>
+                <button data-zoom="120">120%</button>
+                <span class="sep"></span>
+                <button id="wkFit">พอดีจอ</button>
+              </div>
+            </div>
+            <div class="rbTitle">ซูม</div>
           </div>
         </div>
-        <button class="btn sm" id="btnApplyArea" style="width:100%">ปรับขนาดพื้นที่</button>
+
+        <!-- TAB: งานระบบ -->
+        <div class="rbPanel" data-rb="system">
+          <div class="rbGroup">
+            <div class="rbRow">
+              <button class="rbBtn" data-mep="mdb">MDB</button>
+              <button class="rbBtn" data-mep="light">โคม LED</button>
+              <button class="rbBtn" data-mep="outlet">เต้ารับ</button>
+              <button class="rbBtn" data-mep="ground">สายดิน</button>
+            </div>
+            <div class="rbTitle">ไฟฟ้า</div>
+          </div>
+          <span class="rbSep"></span>
+          <div class="rbGroup">
+            <div class="rbRow">
+              <button class="rbBtn" data-mep="waterpoint">จุดจ่ายน้ำ</button>
+              <button class="rbBtn" data-mep="drain">จุดระบาย</button>
+              <button class="rbBtn" data-mep="psupply">ท่อน้ำดี</button>
+              <button class="rbBtn" data-mep="pdrain">ท่อระบาย</button>
+            </div>
+            <div class="rbTitle">น้ำ / สุขาภิบาล</div>
+          </div>
+          <span class="rbSep"></span>
+          <div class="rbGroup">
+            <div class="rbRow">
+              <button class="rbBtn" data-add="tank">ถังน้ำ</button>
+              <button class="rbBtn" data-add="pump">ปั๊มน้ำ</button>
+              <button class="rbBtn" data-add="service">ห้องเซอร์วิส</button>
+            </div>
+            <div class="rbTitle">โซนบริการ (BOH)</div>
+          </div>
+          <span class="rbSep"></span>
+          <div class="rbGroup">
+            <div class="rbRow">
+              <button class="rbBtn" data-add="counter">เคาน์เตอร์</button>
+              <button class="rbBtn" data-add="cabinet">ตู้บิ้วอิน</button>
+              <button class="rbBtn" data-add="column">เสา</button>
+            </div>
+            <div class="rbTitle">บิ้วอิน &amp; โครงสร้าง</div>
+          </div>
+          <span class="rbSep"></span>
+          <div class="rbGroup">
+            <div class="rbRow">
+              <button class="rbBtn" data-goto="systems">ตารางโหลด &amp; ท่อ</button>
+              <button class="rbBtn" data-goto="sop">SOP / FM</button>
+            </div>
+            <div class="rbTitle">เอกสารระบบ</div>
+          </div>
+        </div>
+
+        <!-- TAB: เอกสาร -->
+        <div class="rbPanel" data-rb="doc">
+          <div class="rbGroup">
+            <div class="rbRow">
+              <button class="rbBtn" id="rbBoq">BOQ &amp; ต้นทุน</button>
+              <button class="rbBtn" id="rbPrint">พิมพ์ BOQ</button>
+              <button class="rbBtn" id="rbPrintSpec2">สเปคลูกค้า</button>
+            </div>
+            <div class="rbTitle">เอกสารโครงการ</div>
+          </div>
+          <span class="rbSep"></span>
+          <div class="rbGroup">
+            <div class="rbRow">
+              <button class="rbBtn" id="rbMaster">ต้นทุนกลาง</button>
+              <button class="rbBtn" id="rbSummary">สรุปแพ็กเกจ</button>
+              <button class="rbBtn" id="rbLayouts">ผังงาน</button>
+            </div>
+            <div class="rbTitle">ฐานข้อมูล</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- SIDEBAR ---------- -->
+    <aside class="sidebar">
+      <div class="panelHead"><span>คลังอุปกรณ์</span><em id="sideCount">—</em></div>
+      <div id="sideTabs">
+        <button class="stab active" data-stab="assets">อุปกรณ์</button>
+        <button class="stab" data-stab="mep">งานระบบ</button>
+        <button class="stab" data-stab="area">พื้นที่</button>
+      </div>
+
+      <div class="sideScroll">
+        <!-- TAB: อุปกรณ์ -->
+        <div class="sideTab active" data-stab="assets">
+          <div class="sideGroup">
+            <div class="sideTitle">เครื่องจักร</div>
+            <div id="assetsMachine"></div>
+          </div>
+
+        <div class="sideGroup">
+            <div class="sideTitle">โซนบริการ &amp; ระบบ</div>
+            <div id="assetsService"></div>
+          </div>
+
+        <div class="sideGroup">
+            <div class="sideTitle">โครงสร้าง</div>
+            <div id="assetsStructure"></div>
+          </div>
+
+        <div class="sideGroup">
+            <div class="sideTitle">บิ้วอิน</div>
+            <div id="assetsBuiltin"></div>
+          </div>
+
+          <div class="sideGroup">
+            <div class="sideTitle">อุปกรณ์เสริม</div>
+            <div id="assetsAccessory"></div>
+          </div>
+
+          <div class="sideGroup">
+            <div class="sideTitle">ป้าย &amp; สื่อสาร</div>
+            <div id="assetsSign"></div>
+          </div>
+        </div>
+
+        <!-- TAB: งานระบบ (MEP) -->
+        <div class="sideTab" data-stab="mep">
+          <div class="sideGroup">
+            <div class="mepLabel">ไฟฟ้า</div>
+            <div class="mepGrid" id="mepElec"></div>
+            <div class="mepLabel">น้ำ / สุขาภิบาล</div>
+            <div class="mepGrid" id="mepWater"></div>
+            <div class="mepLabel">เส้นท่อ (ลากในผัง)</div>
+            <div class="mepGrid" id="mepPipes"></div>
+            <div class="mepHint">เลือกสัญลักษณ์แล้วคลิกในผังเพื่อวางหลายจุด · ปริมาณถูกถอดเข้า BOQ อัตโนมัติ</div>
+          </div>
+        </div>
+
+        <!-- TAB: พื้นที่ -->
+        <div class="sideTab" data-stab="area">
+          <div class="sideGroup">
+            <div class="sideTitle">ขนาดพื้นที่ร้าน</div>
+            <div class="field" style="margin-bottom:8px">กว้าง × ลึก (ซม.)
+              <div style="display:flex;gap:6px;align-items:center;margin-top:5px">
+                <input id="inpW" type="number" min="200" max="3000" step="10" value="600" style="margin:0;width:100%">
+                <span style="color:#7c8798">×</span>
+                <input id="inpD" type="number" min="200" max="3000" step="10" value="380" style="margin:0;width:100%">
+              </div>
+            </div>
+            <button class="btn sm" id="btnApplyArea" style="width:100%">ปรับขนาดพื้นที่</button>
+          </div>
+        </div>
       </div>
     </aside>
 
@@ -901,29 +1513,17 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
       <canvas id="plan"></canvas>
       <div id="three3d" class="hidden"></div>
 
-      <div class="wkTop">
-        <div class="segmented" id="viewSwitch">          <button class="seg active" data-view="2d">ผัง 2 มิติ</button>
-          <button class="seg" data-view="3d">ภาพ 3 มิติ</button>
-        </div>
-        <span class="wkSep"></span>
-        <button class="layerChip active" data-layer="elec" title="แสดง/ซ่อนชั้นงานไฟฟ้า">⚡</button>
-        <button class="layerChip active" data-layer="water" title="แสดง/ซ่อนชั้นงานสุขาภิบาล">💧</button>
-        <button class="layerChip active" data-layer="power" title="แสดง/ซ่อนสายป้อนและรหัสวงจร">🔌</button>
-      </div>
-
       <div class="emptyHint" id="emptyHint">        <b>เริ่มต้นออกแบบผังร้าน</b>
-        <span>เลือกอุปกรณ์จากแถบด้านซ้ายเพื่อวางลงผัง<br>หรือเลือกแพ็กเกจแล้วกด "ใช้ผังแนะนำ" ที่แผงด้านขวา</span>
+        <span>เลือกอุปกรณ์จากคลังด้านซ้ายเพื่อวางลงผัง<br>หรือเลือกแพ็กเกจแล้วกด "ใช้ผังแนะนำ" ที่แผงด้านขวา</span>
       </div>
 
-      <div class="wkFloat" id="wkFloat">
-        <button data-zoom="20">20%</button>
-        <button data-zoom="40">40%</button>
-        <button data-zoom="60">60%</button>
-        <button data-zoom="80">80%</button>
-        <button data-zoom="100" class="active">100%</button>
-        <button data-zoom="120">120%</button>
-        <span class="sep"></span>
-        <button id="wkFit">พอดีจอ</button>
+      <div class="view3dBar hidden" id="view3dBar">
+        <span class="v3lab">มุมมอง</span>
+        <button data-cam="iso" class="active">ISO</button>
+        <button data-cam="top">ด้านบน</button>
+        <button data-cam="front">ด้านหน้า</button>
+        <span class="v3sep"></span>
+        <button id="vwWire">Wireframe</button>
       </div>
 
       <div class="mepLegend" id="mepLegend">
@@ -931,11 +1531,23 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
         <div class="mlBody" id="mlBody"></div>
       </div>
 
-      <button class="sideToggle" id="sideToggle">▤ อุปกรณ์</button>
+      <button class="sideToggle" id="sideToggle">☰ คลังอุปกรณ์</button>
+      <button class="inspToggle" id="inspToggle">สรุปต้นทุน <b id="inspToggleVal">฿0</b></button>
+
+      <div class="demoCard hidden" id="demoCard">
+        <div class="dHead"><span class="dStep" id="dStep">1/8</span><b id="dTitle">—</b></div>
+        <p id="dBody">—</p>
+        <div class="dFoot">
+          <button class="btn ghost sm" id="dExit">จบสาธิต</button>
+          <span class="spacer"></span>
+          <button class="btn primary sm" id="dNext">ถัดไป ▸</button>
+        </div>
+      </div>
     </main>
 
     <!-- ---------- INSPECTOR ---------- -->
     <aside class="inspector" id="inspector">
+      <div class="inspMobileHead"><span>สรุปต้นทุน &amp; คุณสมบัติ</span><button id="inspClose" aria-label="ปิด">✕</button></div>
       <div class="heroCard">
         <span class="heroTag" id="heroPkg">Package M</span>
         <div class="heroLabel">ต้นทุนรวมโครงการ</div>
@@ -981,6 +1593,16 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
         <button class="btn block" id="btnPreset">ใช้ผังแนะนำของแพ็กเกจนี้</button>
       </div>
     </aside>
+
+    <!-- ---------- COMMAND LINE ---------- -->
+    <div class="cmdbar" id="cmdBar">
+      <span class="cmdPrompt">คำสั่ง</span>
+      <span class="cmdLog" id="cmdLog">พร้อมใช้งาน — พิมพ์ GRID / ORTHO / OSNAP / ZOOM / WALL / BOQ</span>
+      <div class="cmdEntry">
+        <input id="cmdInput" autocomplete="off" spellcheck="false" placeholder="พิมพ์คำสั่ง…">
+        <button id="cmdRun" title="เรียกใช้">↵</button>
+      </div>
+    </div>
   </div>
 
   <!-- ================= SYSTEMS PAGE ================= -->
@@ -1047,6 +1669,7 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
 
   <!-- ================= STATUS BAR ================= -->
   <footer class="statusbar">
+    <span class="ver">v6</span>
     <span id="sbPhase" class="sbPhase">Phase 1</span>
     <span class="dotSep"></span>
     <span id="sbArea">พื้นที่ 600 × 380 ซม.</span>
@@ -1054,6 +1677,13 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
     <span id="sbItems">0 รายการ</span>
     <span class="dotSep"></span>
     <span id="sbWarn">ไม่พบรายการซ้อนทับ</span>
+    <div class="draftToggles" id="draftToggles">
+      <button class="dtg" id="tgSnap" title="Snap 10 ซม.">SNAP</button>
+      <button class="dtg active" id="tgGrid" title="แสดง/ซ่อน GRID">GRID</button>
+      <button class="dtg" id="tgOrtho" title="ล็อกแนวตั้ง/นอน">ORTHO</button>
+      <button class="dtg active" id="tgOsnap" title="Snap ขอบวัตถุ">OSNAP</button>
+      <button class="dtg active" id="tgCross" title="Crosshair เต็มจอ">CROSS</button>
+    </div>
     <div class="sbRight">
       <span>ซูม</span>
       <button class="zoomBtn" id="zoomOut">−</button>
@@ -1061,6 +1691,100 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
       <button class="zoomBtn" id="zoomIn">+</button>
     </div>
   </footer>
+</div>
+
+<!-- ================= MODAL: HELP ================= -->
+<div class="modal" id="modalHelp">
+  <div class="mCard wide">
+    <div class="mHead">
+      <h2>คู่มือการใช้งาน — Store Studio</h2>
+      <span class="mSub">Ctrl+F5 หากหน้าจอไม่เปลี่ยนหลังอัปเดต · build v6</span>
+      <button class="mClose" data-close>✕</button>
+    </div>
+    <div class="mBody">
+      <div class="hintBar">
+        <span>ⓘ</span>
+        <div>ทำตาม 5 ขั้นด้านล่างเพื่อได้ BOQ ที่ถูกต้อง: <b>ตั้งชื่อโครงการ → เลือกแพ็กเกจ → วางอุปกรณ์/ผนัง → เติมงานระบบ (MEP) → ตรวจ BOQ แล้วพิมพ์</b> ทุกตัวเลขที่ถอดจากผังจะอัปเดตทันที</div>
+      </div>
+
+      <div class="helpCols">
+        <div class="helpSec">
+          <h3>1) เริ่มต้นใน 5 ขั้น</h3>
+          <ol>
+            <li>กด <b>ผังงาน</b> → กรอกชื่อโครงการ/ลูกค้า/พื้นที่ และเลือก <b>Phase</b></li>
+            <li>เลือกแพ็กเกจ <b>S / M / L</b> ที่แผงขวา แล้วกด <b>ใช้ผังแนะนำของแพ็กเกจนี้</b></li>
+            <li>เพิ่มของจาก <b>คลังอุปกรณ์</b> (แท็บ อุปกรณ์ / งานระบบ / พื้นที่) หรือลากวาด <b>ผนัง</b></li>
+            <li>วางสัญลักษณ์ไฟ/น้ำ (แท็บ งานระบบ) แล้วลาก <b>เส้นท่อ</b> เพื่อให้ระบบถอดปริมาณ</li>
+            <li>เปิด <b>BOQ &amp; ต้นทุน</b> ตรวจที่มาของปริมาณ แล้วกด <b>พิมพ์ BOQ</b></li>
+          </ol>
+        </div>
+        <div class="helpSec">
+          <h3>2) พื้นที่ทำงาน</h3>
+          <ul>
+            <li><b>Ribbon 3 แท็บ</b> — หน้าแรก (วาด/ชั้น/มุมมอง/ซูม) · งานระบบ (สัญลักษณ์ MEP + โซนบริการ/บิ้วอิน) · เอกสาร&amp;พิมพ์</li>
+            <li><b>แถบซ้าย</b> — คลังอุปกรณ์ 6 หมวด (เครื่องจักร · โซนบริการ&amp;ระบบ · โครงสร้าง · บิ้วอิน · อุปกรณ์เสริม · ป้าย)</li>
+            <li><b>แผงขวา</b> — ต้นทุนรวม, แพ็กเกจ, สัดส่วนตามหมวด, รายการในผัง, เช็กลิสต์, รายละเอียดที่เลือก</li>
+            <li><b>Command line</b> ด้านล่าง — พิมพ์คำสั่ง (ดูตาราง) · <b>Status bar</b> — PHASE, พื้นที่, SNAP/GRID/ORTHO/OSNAP/CROSS, ซูม</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="helpSec">
+        <h3>3) คีย์ลัด</h3>
+        <table class="tbl">
+          <thead><tr><th style="width:160px">ปุ่ม</th><th>การทำงาน</th><th style="width:160px">ปุ่ม</th><th>การทำงาน</th></tr></thead>
+          <tbody>
+            <tr><td><kbd>F3</kbd></td><td>OSNAP (ดูดขอบวัตถุ/พื้นที่)</td><td><kbd>F7</kbd></td><td>GRID (ตาราง 10 ซม.)</td></tr>
+            <tr><td><kbd>F8</kbd></td><td>ORTHO (ล็อกแนวนอน/แนวตั้ง)</td><td><kbd>F9</kbd></td><td>SNAP (ขั้น 10 ซม.)</td></tr>
+            <tr><td><kbd>Esc</kbd></td><td>ยกเลิกเครื่องมือ/การลาก</td><td><kbd>Del</kbd></td><td>ลบวัตถุที่เลือก (รวมผนัง)</td></tr>
+            <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>ย้อนกลับ</td><td><kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>ทำซ้ำ</td></tr>
+            <tr><td><kbd>Space</kbd>+ลาก</td><td>เลื่อนผัง (Pan)</td><td>ล้อเมาส์</td><td>ซูมเข้า/ออก</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="helpSec">
+        <h3>4) คำสั่งใน Command Line</h3>
+        <table class="tbl">
+          <thead><tr><th style="width:150px">คำสั่ง</th><th>ผลลัพธ์</th><th style="width:150px">คำสั่ง</th><th>ผลลัพธ์</th></tr></thead>
+          <tbody>
+            <tr><td><b>GRID / SNAP / ORTHO / OSNAP / CROSS</b></td><td>เปิด-ปิดโหมดช่วยวาด</td><td><b>ZOOM</b></td><td>กลับไป 100%</td></tr>
+            <tr><td><b>WALL / SELECT</b></td><td>สลับโหมดวาดผนัง / เลือก</td><td><b>MEP</b></td><td>เปิดคลังงานระบบ</td></tr>
+            <tr><td><b>BOQ · MASTER · SUMMARY · LAYOUTS</b></td><td>เปิดหน้าต่างงานเอกสาร</td><td><b>PRINT / SPEC</b></td><td>พิมพ์ BOQ / พิมพ์สเปคลูกค้า</td></tr>
+            <tr><td><b>SYSTEMS / SOP / STUDIO</b></td><td>สลับหน้า</td><td><b>ROTATE / DEL / UNDO / REDO</b></td><td>หมุน · ลบ · ย้อนกลับ · ทำซ้ำ</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="helpCols">
+        <div class="helpSec">
+          <h3>5) ปรับขนาด / จัดวาง</h3>
+          <ul>
+            <li>เลือกวัตถุ → ลาก <b>จุดจับมุมสีขาว</b> เพื่อย่อ/ขยาย (ขนาดแสดงใต้กล่อง)</li>
+            <li><b>ห้องเซอร์วิส</b> สร้างผนังรอบห้องให้อัตโนมัติ (เว้นช่องประตู 90 ซม.) — ผนังจะขยับตามเมื่อย่อ/ขยาย/ย้าย และถูกลบพร้อมห้อง</li>
+            <li>ผนังที่สร้างจากห้อง <b>ไม่ถูกคิดซ้ำ</b> กับราคาห้อง (ST-005)</li>
+            <li>ปุ่ม <b>สลับชั้น L1/L2</b> ที่ ribbon สำหรับวางซ้อน (ชั้น 2 มี hatch)</li>
+          </ul>
+        </div>
+        <div class="helpSec">
+          <h3>6) เอกสาร &amp; ตรวจงาน</h3>
+          <ul>
+            <li><b>BOQ &amp; ต้นทุน</b> — คอลัมน์ “ที่มาของปริมาณ” บอกว่าเลขมาจากผัง/MEP/พื้นที่</li>
+            <li><b>ต้นทุนกลาง</b> — แก้วัสดุ/ค่าแรง แล้วทุกแพ็กเกจอัปเดตทันที</li>
+            <li><b>งานระบบ &amp; ก่อสร้าง</b> — ตารางโหลดไฟ/ท่อ แก้ตัวเลขเองได้รายช่อง</li>
+            <li><b>พิมพ์</b> — BOQ 3 หน้า + title block · <b>พิมพ์สเปค (ลูกค้า)</b> ไม่มีตัวเลขต้นทุน</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="mFoot">
+      <span style="font-size:11px;color:var(--text-3)">ไฟล์เดียวจบ: tsr-store-studio/index.html — บันทึกอัตโนมัติในเบราว์เซอร์ (localStorage)</span>
+      <span class="spacer"></span>
+      <button class="btn danger" id="btnResetAll">ล้างข้อมูลทั้งหมด</button>
+      <button class="btn primary" id="btnDemo">▶ สาธิตการใช้งาน</button>
+      <button class="btn ghost" data-close>ปิด</button>
+    </div>
+  </div>
 </div>
 
 <!-- ================= MODAL: BOQ ================= -->
@@ -1128,7 +1852,7 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
       </div>
     </div>
     <div class="mFoot">
-      <span style="font-size:11.5px;color:#8d93a6" id="boqFootNote"></span>
+      <span style="font-size:11.5px;color:var(--text-3)" id="boqFootNote"></span>
       <span class="spacer"></span>
       <button class="btn ghost" data-close>ปิด</button>
       <button class="btn ghost" id="btnPrintSpec">พิมพ์สเปค (ลูกค้า)</button>
@@ -1162,7 +1886,7 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
         </thead>
         <tbody id="masterBody"></tbody>
       </table>
-      <p style="font-size:11px;color:#8d93a6;margin-top:10px">
+      <p style="font-size:11px;color:var(--text-3);margin-top:10px">
         อัตราต่อหน่วย = วัสดุ × (1 + เผื่อสูญเสีย %) + ค่าแรง + ค่าเครื่องทุ่นแรง · หน่วย "คู่" หมายถึงชุดเครื่องซักผ้าและเครื่องอบผ้า
       </p>
     </div>
@@ -1186,9 +1910,9 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
         <thead>
           <tr>
             <th>รายการ</th>
-            <th>Package S<small style="display:block;font-weight:500;text-transform:none;letter-spacing:0;color:#8d93a6">รุ่นเริ่มต้น</small></th>
-            <th>Package M<small style="display:block;font-weight:500;text-transform:none;letter-spacing:0;color:#8d93a6">รุ่นมาตรฐาน</small></th>
-            <th>Package L<small style="display:block;font-weight:500;text-transform:none;letter-spacing:0;color:#8d93a6">Turnkey</small></th>
+            <th>Package S<small style="display:block;font-weight:500;text-transform:none;letter-spacing:0;color:var(--text-3)">รุ่นเริ่มต้น</small></th>
+            <th>Package M<small style="display:block;font-weight:500;text-transform:none;letter-spacing:0;color:var(--text-3)">รุ่นมาตรฐาน</small></th>
+            <th>Package L<small style="display:block;font-weight:500;text-transform:none;letter-spacing:0;color:var(--text-3)">Turnkey</small></th>
           </tr>
         </thead>
         <tbody>
@@ -1204,7 +1928,7 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
         </tbody>
       </table>
 
-      <h3 style="font-size:12.5px;color:#000033;margin:18px 0 8px">เงื่อนไขการรับประกันมาตรฐาน</h3>
+      <h3 style="font-size:12.5px;color:var(--text);margin:18px 0 8px">เงื่อนไขการรับประกันมาตรฐาน</h3>
       <table class="tbl">
         <thead><tr><th>รายการ</th><th class="num" style="width:180px">ระยะเวลารับประกัน</th></tr></thead>
         <tbody>
@@ -1213,7 +1937,7 @@ tr.divHead .divSum{font-variant-numeric:tabular-nums}
           <tr><td>กล่องหยอดเหรียญ</td><td class="num">1 ปี</td></tr>
         </tbody>
       </table>
-      <p style="font-size:11px;color:#8d93a6;margin-top:10px">
+      <p style="font-size:11px;color:var(--text-3);margin-top:10px">
         เงื่อนไขการรับประกันมีผลกับทุกแพ็กเกจ โดยนับจากวันที่ส่งมอบงาน — เอกสารนี้แสดงเฉพาะต้นทุนมาตรฐาน
       </p>
     </div>
@@ -1324,9 +2048,30 @@ const ASSETS = {
 
   cctv:    { name: 'กล้องวงจรปิด',         short: 'CCTV',      code: 'AC-003', w: 14, d: 14, h: 26, color: '#334155', group: 'sign', wall: true, mount: 210, kw: 0.02, brk: 10, cable: '2×1.5 mm²' },
   sign:    { name: 'ป้ายร้าน',             short: 'ป้ายร้าน',  code: 'AC-004', w: 120, d: 6, h: 45, color: '#e11d48', group: 'sign', wall: true, mount: 215, kw: 0.05, brk: 10, cable: '2×1.5 mm²' },
-  poster:  { name: 'ป้ายวิธีใช้งาน',        short: 'วิธีใช้',    code: 'AC-007', w: 60, d: 4, h: 90, color: '#16a34a', group: 'sign', wall: true, mount: 145, kw: 0 }
+  poster:  { name: 'ป้ายวิธีใช้งาน',        short: 'วิธีใช้',    code: 'AC-007', w: 60, d: 4, h: 90, color: '#16a34a', group: 'sign', wall: true, mount: 145, kw: 0 },
+  lightbox:{ name: 'กล่องไฟป้าย (Lightbox)', short: 'Lightbox', code: 'BI-006', w: 100, d: 12, h: 60, color: '#fb7185', group: 'sign', wall: true, mount: 200, kw: 0.12, brk: 10, cable: '2×1.5 mm²' },
+
+  /* --- โซนบริการ / ระบบ (Back of House) --- */
+  tank:    { name: 'ถังพักน้ำสแตนเลส 1,000 ลิตร', short: 'ถังน้ำ',   code: 'WT-010', w: 110, d: 110, h: 160, color: '#0369a1', group: 'service' },
+  pump:    { name: 'ปั๊มน้ำ 0.5 HP',              short: 'ปั๊มน้ำ',  code: 'WT-011', w: 60,  d: 40,  h: 80,  color: '#0284c7', group: 'service', kw: 0.37, brk: 16, cable: '2×2.5 mm²' },
+  service: { name: 'ห้องเซอร์วิส / BOH',          short: 'ห้องเซอร์วิส', code: 'ST-005', w: 150, d: 150, h: 250, color: '#0f766e', group: 'service', zone: true, kw: 0.5, brk: 16, cable: '2×2.5 mm²' },
+
+  /* --- โครงสร้าง --- */
+  column:  { name: 'เสาคอนกรีตเสริมเหล็ก 20×20',  short: 'เสา',      code: 'ST-006', w: 20,  d: 20,  h: 280, color: '#78716c', group: 'structure' },
+  door:    { name: 'ประตูหลังร้าน / ห้องเซอร์วิส', short: 'ประตู',    code: 'ST-007', w: 90,  d: 10,  h: 210, color: '#a16207', group: 'structure' },
+
+  /* --- บิ้วอิน --- */
+  counter: { name: 'เคาน์เตอร์บิ้วอินรับส่งผ้า',   short: 'เคาน์เตอร์', code: 'BI-001', w: 180, d: 60, h: 90,  color: '#b45309', group: 'builtin' },
+  sink:    { name: 'เคาน์เตอร์ล้างมือ + อ่าง',      short: 'อ่างล้างมือ', code: 'BI-002', w: 120, d: 55, h: 90,  color: '#0891b2', group: 'builtin' },
+  cabinet: { name: 'ตู้บิ้วอินเก็บของ 220 ซม.',     short: 'ตู้บิ้วอิน', code: 'BI-003', w: 120, d: 45, h: 220, color: '#9a3412', group: 'builtin' },
+  bench:   { name: 'ม้านั่งบิ้วอิน',               short: 'ม้านั่ง',   code: 'BI-004', w: 150, d: 45, h: 45,  color: '#a16207', group: 'builtin' },
+  wsheet:  { name: 'ชั้นวางผนังบิ้วอิน',            short: 'ชั้นบิ้วอิน', code: 'BI-005', w: 120, d: 30, h: 180, color: '#92400e', group: 'builtin' }
 };
-const GROUP_LABEL = { machine: 'เครื่องจักร', accessory: 'อุปกรณ์เสริม', sign: 'ป้าย & สื่อสาร' };
+const GROUP_LABEL = {
+  machine: 'เครื่องจักร', service: 'โซนบริการ & ระบบ', structure: 'โครงสร้าง',
+  builtin: 'บิ้วอิน', accessory: 'อุปกรณ์เสริม', sign: 'ป้าย & สื่อสาร'
+};
+const GROUP_ORDER = ['machine', 'service', 'structure', 'builtin', 'accessory', 'sign'];
 
 /* ------------------------------ MEP (งานระบบบนผัง) ------------------------------ */
 const MEP = {
@@ -1342,8 +2087,8 @@ const MEP = {
 };
 const MEP_COLOR = { elec: '#b45309', water: '#0369a1' };
 const PIPES = {
-  supply: { name: 'ท่อน้ำดี',      code: 'WT-005', color: '#0284c7' },
-  drain:  { name: 'ท่อระบายน้ำ',   code: 'WT-009', color: '#7c3aed' }
+  psupply: { name: 'ท่อน้ำดี',      code: 'WT-005', color: '#0284c7' },
+  pdrain:  { name: 'ท่อระบายน้ำ',   code: 'WT-009', color: '#7c3aed' }
 };
 
 /* ------------------------------ MASTER COSTS ------------------------------ */
@@ -1376,12 +2121,17 @@ const MASTER = [
   { code: 'WT-007', div: 'D4', cat: 'SYSTEM',    name: 'ท่อระบายอากาศ (Vent Pipe)',                  unit: 'จุด',   mat: 1800,  lab: 900,   equip: 400,  waste: 8 },
   { code: 'WT-008', div: 'D4', cat: 'SYSTEM',    name: 'เครื่องกรองน้ำ / กรองตะกอน',                 unit: 'ชุด',   mat: 4200,  lab: 1200,  equip: 300,  waste: 0 },
   { code: 'WT-009', div: 'D4', cat: 'SYSTEM',    name: 'ท่อระบายน้ำ PVC 2 นิ้ว (เฉลี่ยต่อเมตร)',      unit: 'เมตร',  mat: 180,   lab: 110,   equip: 220,  waste: 8 },
+  { code: 'WT-010', div: 'D4', cat: 'SYSTEM',    name: 'งานติดตั้งถังพักน้ำ + ฐานรองรับ',              unit: 'งาน',   mat: 3500,  lab: 2500,  equip: 800,  waste: 5 },
+  { code: 'WT-011', div: 'D4', cat: 'SYSTEM',    name: 'งานติดตั้งปั๊มน้ำ + ฐานรองรับ',                unit: 'งาน',   mat: 2800,  lab: 2200,  equip: 600,  waste: 5 },
 
   /* D5 : งานโครงสร้างและสถาปัตย์ */
   { code: 'ST-001', div: 'D5', cat: 'STRUCTURE', name: 'งานปรับปรุงพื้นและปูผิวสำเร็จ',              unit: 'ตร.ม.', mat: 850,   lab: 420,   equip: 300,  waste: 5 },
   { code: 'ST-002', div: 'D5', cat: 'STRUCTURE', name: 'งานผนังเบา (โครงเคร่าและแผ่นยิปซัม)',        unit: 'ตร.ม.', mat: 620,   lab: 380,   equip: 350,  waste: 7 },
   { code: 'ST-003', div: 'D5', cat: 'STRUCTURE', name: 'งานฝ้าเพดานพร้อมชุดไฟแสงสว่าง',             unit: 'ตร.ม.', mat: 480,   lab: 300,   equip: 400,  waste: 5 },
   { code: 'ST-004', div: 'D5', cat: 'STRUCTURE', name: 'งานทาสีและเก็บงานผิวสำเร็จ',                unit: 'ตร.ม.', mat: 120,   lab: 130,   equip: 100,  waste: 10 },
+  { code: 'ST-005', div: 'D5', cat: 'STRUCTURE', name: 'ห้องเซอร์วิสสำเร็จรูป (ผนังเบา+ประตู+ระบบเบื้องต้น)', unit: 'ห้อง', mat: 38000, lab: 14000, equip: 3000, waste: 3 },
+  { code: 'ST-006', div: 'D5', cat: 'STRUCTURE', name: 'เสาคอนกรีตเสริมเหล็ก 20×20 ซม.',              unit: 'ต้น',   mat: 3200,  lab: 1100,  equip: 300,  waste: 5 },
+  { code: 'ST-007', div: 'D5', cat: 'STRUCTURE', name: 'ประตูหลังร้าน / ห้องเซอร์วิส พร้อมติดตั้ง',    unit: 'บาน',   mat: 6800,  lab: 1800,  equip: 300,  waste: 0 },
 
   /* D6 : งานตกแต่งและอุปกรณ์เสริม */
   { code: 'AC-001', div: 'D6', cat: 'ACCESSORY', name: 'เครื่องแลกเหรียญอัตโนมัติ',                  unit: 'เครื่อง', mat: 32000, lab: 2000, equip: 500, waste: 0 },
@@ -1390,7 +2140,15 @@ const MASTER = [
   { code: 'AC-004', div: 'D6', cat: 'ACCESSORY', name: 'ป้ายร้าน (ป้ายชื่อร้าน / ป้ายหน้าร้าน)',       unit: 'ชุด',   mat: 9500,  lab: 2500,  equip: 800,  waste: 0 },
   { code: 'AC-005', div: 'D6', cat: 'ACCESSORY', name: 'ชุดโต๊ะพับพร้อมเก้าอี้',                     unit: 'ชุด',   mat: 6800,  lab: 500,   equip: 0,    waste: 0 },
   { code: 'AC-006', div: 'D6', cat: 'ACCESSORY', name: 'ชั้นวางของและตะกร้ารับส่งผ้า',               unit: 'ชุด',   mat: 11000, lab: 1000,  equip: 300,  waste: 0 },
-  { code: 'AC-007', div: 'D6', cat: 'ACCESSORY', name: 'ป้ายวิธีใช้งาน (How to use)',                unit: 'ชุด',   mat: 3500,  lab: 800,   equip: 300,  waste: 0 }
+  { code: 'AC-007', div: 'D6', cat: 'ACCESSORY', name: 'ป้ายวิธีใช้งาน (How to use)',                unit: 'ชุด',   mat: 3500,  lab: 800,   equip: 300,  waste: 0 },
+
+  /* D6 : งานบิ้วอิน (Built-in) */
+  { code: 'BI-001', div: 'D6', cat: 'ACCESSORY', name: 'เคาน์เตอร์บิ้วอินรับส่งผ้า (โครงไม้+MDF+ท็อป)', unit: 'ตัว', mat: 14500, lab: 4500, equip: 800, waste: 5 },
+  { code: 'BI-002', div: 'D6', cat: 'ACCESSORY', name: 'เคาน์เตอร์ล้างมือพร้อมอ่างและก๊อกน้ำ',        unit: 'ชุด', mat: 12500, lab: 4000, equip: 800, waste: 5 },
+  { code: 'BI-003', div: 'D6', cat: 'ACCESSORY', name: 'ตู้บิ้วอินเก็บของ (สูง 220 ซม.)',               unit: 'ตัว', mat: 11800, lab: 3800, equip: 600, waste: 5 },
+  { code: 'BI-004', div: 'D6', cat: 'ACCESSORY', name: 'ม้านั่งบิ้วอินพร้อมเบาะ',                      unit: 'ตัว', mat: 5200,  lab: 1500, equip: 200, waste: 3 },
+  { code: 'BI-005', div: 'D6', cat: 'ACCESSORY', name: 'ชั้นวางผนังบิ้วอิน',                          unit: 'ตัว', mat: 7600,  lab: 2400, equip: 400, waste: 5 },
+  { code: 'BI-006', div: 'D6', cat: 'ACCESSORY', name: 'กล่องไฟป้าย (Lightbox) พร้อมติดตั้ง',          unit: 'ชุด', mat: 8800,  lab: 2200, equip: 500, waste: 0 }
 ];
 
 /* หมวดงานตามมาตรฐาน BOQ */
@@ -1406,10 +2164,12 @@ const DIV_ORDER = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6'];
 
 /* ------------------------------ PACKAGES ------------------------------ */
 const PKG_SYSTEM = ['EL-001', 'EL-002', 'EL-003', 'EL-004', 'EL-005', 'EL-006',
-                    'WT-001', 'WT-002', 'WT-003', 'WT-004', 'WT-005', 'WT-006', 'WT-007', 'WT-008', 'WT-009'];
+                    'WT-001', 'WT-002', 'WT-003', 'WT-004', 'WT-005', 'WT-006', 'WT-007', 'WT-008', 'WT-009', 'WT-010', 'WT-011'];
 const PKG_PRELIM = ['PR-001', 'PR-002'];
 const PKG_ACC_STD = ['AC-001', 'AC-002', 'AC-003', 'AC-004', 'AC-007'];
 const PKG_MACHINE = ['MC-001', 'MC-002', 'MC-003'];
+const PKG_ZONE = ['ST-005', 'ST-006', 'ST-007'];
+const PKG_BUILTIN = ['BI-001', 'BI-002', 'BI-003', 'BI-004', 'BI-005', 'BI-006'];
 const PKGS = {
   S: {
     label: 'Package S', tag: 'รุ่นเริ่มต้น', short: 'เริ่มต้น',
@@ -1419,14 +2179,14 @@ const PKGS = {
   },
   M: {
     label: 'Package M', tag: 'รุ่นมาตรฐาน', short: 'มาตรฐาน',
-    note: 'รวมงานปรับปรุงพื้น · ไม่รวมผนังเบา',
-    include: PKG_PRELIM.concat(PKG_MACHINE, ['ST-001'], PKG_SYSTEM, PKG_ACC_STD, ['AC-005']),
+    note: 'รวมงานปรับปรุงพื้น · ห้องเซอร์วิส · ไม่รวมผนังเบา',
+    include: PKG_PRELIM.concat(PKG_MACHINE, ['ST-001', 'ST-005', 'ST-007'], PKG_SYSTEM, PKG_ACC_STD, ['AC-005']),
     area: { w: 620, d: 380 }
   },
   L: {
     label: 'Package L', tag: 'Turnkey', short: 'Turnkey',
-    note: 'รวมงานพื้น ผนังเบา และอุปกรณ์เสริมครบวงจร',
-    include: PKG_PRELIM.concat(PKG_MACHINE, ['ST-001', 'ST-002', 'ST-003', 'ST-004'], PKG_SYSTEM, PKG_ACC_STD, ['AC-005', 'AC-006']),
+    note: 'รวมงานพื้น ผนังเบา โครงสร้าง และบิ้วอินครบวงจร',
+    include: PKG_PRELIM.concat(PKG_MACHINE, ['ST-001', 'ST-002', 'ST-003', 'ST-004'], PKG_ZONE, PKG_SYSTEM, PKG_ACC_STD, PKG_BUILTIN, ['AC-005', 'AC-006']),
     area: { w: 820, d: 470 }
   }
 };
@@ -1435,7 +2195,7 @@ const PKGS = {
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const snapV = v => Math.round(v / SNAP) * SNAP;
+const snapV = v => (state.snap === false ? v : Math.round(v / SNAP) * SNAP);
 const normRot = r => (((Math.round(r / 90) * 90) % 360) + 360) % 360;
 const nf0 = new Intl.NumberFormat('th-TH', { maximumFractionDigits: 0 });
 const nf1 = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
@@ -1465,7 +2225,8 @@ const nextId = () => 'o' + (uid++);
 function freshState() {
   return {
     view: '2d', mode: 'select', layer: 1, pkg: 'M',
-    area: { w: 620, d: 380 }, zoom: 100,
+    area: { w: 620, d: 380 }, zoom: 100, panX: 0, panY: 0,
+    grid: true, ortho: false, osnap: true, cross: true, snap: true,
     objects: [], walls: [], selectedId: null,
     mep: [], pipes: [], layers: { elec: true, water: true, power: true }, mepTool: null,
     project: { name: '', client: '', site: '', contact: '' },
@@ -1508,7 +2269,8 @@ const assetTypesOfCode = code => Object.keys(ASSETS).filter(t => ASSETS[t].code 
 /* ------------------------------ GEOMETRY ------------------------------ */
 function effSize(o) {
   const a = ASSETS[o.type] || ASSETS.gian13;
-  return (normRot(o.rot) % 180 === 0) ? { w: a.w, d: a.d } : { w: a.d, d: a.w };
+  const w = o.w || a.w, d = o.d || a.d;
+  return (normRot(o.rot) % 180 === 0) ? { w, d } : { w: d, d: w };
 }
 function bbox(o) {
   const s = effSize(o);
@@ -1544,8 +2306,33 @@ const frontVec = rot => [[0, 1], [-1, 0], [0, -1], [1, 0]][(normRot(rot) / 90) %
 
 function floorAreaM2() { return (state.area.w * state.area.d) / 10000; }
 function wallAreaM2() {
-  const len = state.walls.reduce((s, w) => s + Math.hypot(w.x2 - w.x1, w.y2 - w.y1), 0);
+  const len = state.walls.reduce((s, w) => s + (w.room ? 0 : Math.hypot(w.x2 - w.x1, w.y2 - w.y1)), 0);
   return (len * WALL_H_CM) / 10000;
+}
+
+/* ---- ผนังรอบห้อง (ผนังที่ผูกกับโซน ไม่คิดซ้ำกับราคาห้อง) ---- */
+const MIN_RESIZE = 24;
+function buildRoomWalls(o) {
+  const s = effSize(o);
+  const x1 = o.x - s.w / 2, y1 = o.y - s.d / 2, x2 = o.x + s.w / 2, y2 = o.y + s.d / 2;
+  state.walls = state.walls.filter(w => w.room !== o.id);
+  const ids = [];
+  const add = (ax, ay, bx, by) => {
+    if (Math.hypot(bx - ax, by - ay) < 5) return;
+    const wid = nextId(); ids.push(wid);
+    state.walls.push({ id: wid, x1: ax, y1: ay, x2: bx, y2: by, room: o.id });
+  };
+  add(x1, y1, x2, y1);
+  add(x2, y1, x2, y2);
+  /* ด้านล่างเว้นช่องประตู 90 ซม. */
+  const gap = Math.min(90, s.w * 0.5);
+  add(x1, y2, o.x - gap / 2, y2);
+  add(o.x + gap / 2, y2, x2, y2);
+  add(x1, y1, x1, y2);
+  o.wallIds = ids;
+}
+function syncRoomWalls(o) {
+  if (o && o.wallIds && o.wallIds.length) buildRoomWalls(o);
 }
 
 /* ------------------------------ COST ENGINE ------------------------------ */
@@ -1618,14 +2405,19 @@ function pipeLenM(type) {
 function mepQty(code) {
   const n = state.mep.filter(m => MEP[m.type] && MEP[m.type].code === code).length;
   if (n > 0) return n;
-  if (code === 'WT-005') { const L = pipeLenM('supply'); return L > 0 ? Math.round(L * 10) / 10 : null; }
-  if (code === 'WT-009') { const L = pipeLenM('drain'); return L > 0 ? Math.round(L * 10) / 10 : null; }
+  if (code === 'WT-005') { const L = pipeLenM('psupply'); return L > 0 ? Math.round(L * 10) / 10 : null; }
+  if (code === 'WT-009') { const L = pipeLenM('pdrain'); return L > 0 ? Math.round(L * 10) / 10 : null; }
   return null;
 }
 
 function autoQty(code) {
   const types = assetTypesOfCode(code);
-  if (types.length) return state.objects.filter(o => types.includes(o.type)).length;
+  if (types.length) {
+    const placed = state.objects.filter(o => types.includes(o.type)).length;
+    if (placed > 0) return placed;
+    const q2 = sysQty(code);          /* ไม่มีของวางบนผัง → ใช้สัญลักษณ์ MEP แทน */
+    return q2 != null ? q2 : 0;
+  }
   const q = sysQty(code);
   if (q != null) return q;
   if (code.indexOf('PR-') === 0) return 1;   /* งานเตรียมการ = เหมารวม 1 งาน */
@@ -1665,7 +2457,10 @@ function basisOf(code) {
   const types = assetTypesOfCode(code);
   if (types.length) {
     const n = state.objects.filter(o => types.includes(o.type)).length;
-    return 'ผัง: ' + n + ' จุด';
+    if (n > 0) return 'วางในผัง ' + n + ' ชิ้น';
+    const mq = mepQty(code);
+    if (mq != null) return 'แบบ MEP: ' + fmt1(mq) + ' จุด';
+    return 'ยังไม่วางในผัง';
   }
   const idx = SYS_FIELD[code];
   if (idx) {
@@ -1718,8 +2513,20 @@ const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); retu
 function serialize() {
   return {
     v: 1, name: state.name, pkg: state.pkg, area: { ...state.area }, zoom: state.zoom,
-    objects: state.objects.map(o => ({ type: o.type, x: o.x, y: o.y, rot: o.rot, layer: o.layer })),
-    walls: state.walls.map(w => ({ x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2 })),
+    objects: state.objects.map(o => {
+      const out = { type: o.type, x: o.x, y: o.y, rot: o.rot, layer: o.layer };
+      if (o.w) out.w = o.w;
+      if (o.d) out.d = o.d;
+      return out;
+    }),
+    walls: state.walls.map(w => {
+      const out = { x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2 };
+      if (w.room) {
+        const idx = state.objects.findIndex(o => o.id === w.room);
+        if (idx >= 0) out.room = idx;   /* อ้างแบบ index เพื่อ remap id หลังโหลด */
+      }
+      return out;
+    }),
     mep: state.mep.map(m => ({ type: m.type, x: m.x, y: m.y })),
     pipes: state.pipes.map(p => ({ type: p.type, pts: p.pts.map(q => ({ x: q.x, y: q.y })) })),
     layers: { ...state.layers },
@@ -1753,6 +2560,7 @@ function undo() {
   HIST.lock = true;
   applyData(JSON.parse(HIST.stack[HIST.i]));
   HIST.lock = false;
+  scheduleSave();
   status('ย้อนกลับ 1 ขั้นตอน (เหลือ ' + HIST.i + ' ขั้น)', 'ok');
 }
 function redo() {
@@ -1761,6 +2569,7 @@ function redo() {
   HIST.lock = true;
   applyData(JSON.parse(HIST.stack[HIST.i]));
   HIST.lock = false;
+  scheduleSave();
   status('ทำซ้ำ 1 ขั้นตอน (' + HIST.i + '/' + (HIST.stack.length - 1) + ')', 'ok');
 }
 function duplicateSelected() {
@@ -1813,20 +2622,33 @@ function applyData(data) {
   }
   state.objects = (Array.isArray(data.objects) ? data.objects : [])
     .filter(o => o && ASSETS[o.type])
-    .map(o => ({
-      id: nextId(), type: o.type,
-      x: clamp(Number(o.x) || 0, 0, state.area.w),
-      y: clamp(Number(o.y) || 0, 0, state.area.d),
-      rot: normRot(Number(o.rot) || 0),
-      layer: Number(o.layer) === 2 ? 2 : 1
-    }));
+    .map(o => {
+      const out = {
+        id: nextId(), type: o.type,
+        x: clamp(Number(o.x) || 0, 0, state.area.w),
+        y: clamp(Number(o.y) || 0, 0, state.area.d),
+        rot: normRot(Number(o.rot) || 0),
+        layer: Number(o.layer) === 2 ? 2 : 1
+      };
+      if (Number(o.w) >= 20) out.w = Number(o.w);
+      if (Number(o.d) >= 20) out.d = Number(o.d);
+      return out;
+    });
   state.walls = (Array.isArray(data.walls) ? data.walls : [])
     .filter(w => w && isFinite(w.x1) && isFinite(w.y1) && isFinite(w.x2) && isFinite(w.y2))
-    .map(w => ({
-      id: nextId(),
-      x1: clamp(Number(w.x1), 0, state.area.w), y1: clamp(Number(w.y1), 0, state.area.d),
-      x2: clamp(Number(w.x2), 0, state.area.w), y2: clamp(Number(w.y2), 0, state.area.d)
-    }));
+    .map(w => {
+      const out = {
+        id: nextId(),
+        x1: clamp(Number(w.x1), 0, state.area.w), y1: clamp(Number(w.y1), 0, state.area.d),
+        x2: clamp(Number(w.x2), 0, state.area.w), y2: clamp(Number(w.y2), 0, state.area.d)
+      };
+      if (Number.isInteger(w.room) && state.objects[w.room]) {
+        const host = state.objects[w.room];
+        out.room = host.id;
+        (host.wallIds = host.wallIds || []).push(out.id);
+      }
+      return out;
+    });
   state.mep = (Array.isArray(data.mep) ? data.mep : [])
     .filter(m => m && MEP[m.type])
     .map(m => ({
@@ -1834,7 +2656,12 @@ function applyData(data) {
       x: clamp(Number(m.x) || 0, 0, state.area.w), y: clamp(Number(m.y) || 0, 0, state.area.d)
     }));
   state.pipes = (Array.isArray(data.pipes) ? data.pipes : [])
-    .filter(p => p && PIPES[p.type] && Array.isArray(p.pts) && p.pts.length > 1)
+    .map(p => {
+      if (!p) return null;
+      const t = p.type === 'supply' ? 'psupply' : p.type === 'drain' ? 'pdrain' : p.type;
+      return PIPES[t] && Array.isArray(p.pts) && p.pts.length > 1 ? { ...p, type: t } : null;
+    })
+    .filter(Boolean)
     .map(p => ({
       id: 'p' + (uid++), type: p.type,
       pts: p.pts.map(q => ({ x: clamp(Number(q.x) || 0, 0, state.area.w), y: clamp(Number(q.y) || 0, 0, state.area.d) }))
@@ -1873,7 +2700,15 @@ function toast(msg, type) {
   toastTimer = setTimeout(() => { el.className = 'toast'; }, 2600);
 }
 let statusTimer = 0;
+function cmdLog(msg) {
+  const el = $('#cmdLog');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 500);
+}
 function status(msg, tone) {
+  cmdLog(msg);
   const el = $('#statusText');
   el.textContent = msg;
   el.className = 'appbarStatus' + (tone ? ' ' + tone : '');
@@ -1972,12 +2807,12 @@ function drawOneObject(o, ov) {
   const bad = ov.has(o.id);
 
   /* body */
-  ctx.fillStyle = colorMix(a.color, o.layer === 2 ? 0.32 : 0.19);
+  ctx.fillStyle = colorMix(a.color, a.zone ? 0.10 : (o.layer === 2 ? 0.32 : 0.19));
   ctx.fillRect(x1, y1, w, h);
   if (o.layer === 2) { ctx.fillStyle = hatchPattern(); ctx.fillRect(x1, y1, w, h); }
 
   ctx.save();
-  if (o.layer === 2) ctx.setLineDash([5, 3]);
+  if (o.layer === 2 || a.zone) ctx.setLineDash(a.zone ? [7, 4] : [5, 3]);
   ctx.strokeStyle = bad ? '#c62828' : (sel ? '#0b2a6b' : colorMix(a.color, .92));
   ctx.lineWidth = (bad || sel) ? 2.4 : 1.3;
   ctx.strokeRect(x1, y1, w, h);
@@ -2268,27 +3103,34 @@ function draw() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
 
-  const pad = 52;
+  const M = Math.max(9, Math.min(18, Math.min(W, H) * 0.028));
+  const pad = M + 44;
   const fit = Math.min((W - pad * 2) / state.area.w, (H - pad * 2) / state.area.d);
   view.scale = Math.max(0.02, fit * (state.zoom / 100));
-  view.ox = (W - state.area.w * view.scale) / 2;
-  view.oy = (H - state.area.d * view.scale) / 2;
+  view.ox = (W - state.area.w * view.scale) / 2 + (state.panX || 0);
+  view.oy = (H - state.area.d * view.scale) / 2 + (state.panY || 0);
 
   const [ax, ay] = worldToScreen(0, 0);
   const aw = state.area.w * view.scale, ah = state.area.d * view.scale;
 
+  /* ---- drawing sheet + frame ---- */
+  const fx = ax - M, fy = ay - M, fw = aw + M * 2, fh = ah + M * 2;
   ctx.save();
-  ctx.shadowColor = 'rgba(16,20,45,.16)';
-  ctx.shadowBlur = 30; ctx.shadowOffsetY = 10;
-  ctx.fillStyle = '#fff';
+  ctx.shadowColor = 'rgba(0,0,0,.55)';
+  ctx.shadowBlur = 28; ctx.shadowOffsetY = 9;
+  ctx.fillStyle = '#ffffff';
   ctx.beginPath();
-  ctx.roundRect ? ctx.roundRect(ax, ay, aw, ah, 4) : ctx.rect(ax, ay, aw, ah);
+  ctx.roundRect ? ctx.roundRect(fx, fy, fw, fh, 2) : ctx.rect(fx, fy, fw, fh);
   ctx.fill();
   ctx.restore();
+  ctx.strokeStyle = '#c6ccd8'; ctx.lineWidth = 1;
+  ctx.strokeRect(fx + 5.5, fy + 5.5, fw - 11, fh - 11);
+  ctx.strokeStyle = '#8d97a7'; ctx.lineWidth = 1.4;
+  ctx.strokeRect(fx + 0.7, fy + 0.7, fw - 1.4, fh - 1.4);
 
   ctx.save();
   ctx.beginPath(); ctx.rect(ax, ay, aw, ah); ctx.clip();
-  drawGrid(ax, ay, aw, ah);
+  if (state.grid !== false) drawGrid(ax, ay, aw, ah);
   drawWalls();
   const ov = overlapIds();
   const sorted = state.objects.slice().sort((p, q) => p.layer - q.layer);
@@ -2299,27 +3141,145 @@ function draw() {
   drawScaleBar(ax, ay, aw, ah);
   ctx.restore();
 
-  ctx.strokeStyle = '#b9c0d0';
-  ctx.lineWidth = 1.6;
-  ctx.strokeRect(ax, ay, aw, ah);
+  ctx.strokeStyle = 'rgba(120,132,150,.55)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(ax + 0.5, ay + 0.5, aw, ah);
 
-  ctx.save();
-  ctx.fillStyle = '#6d7386';
-  ctx.font = '700 11.5px Sarabun, system-ui, sans-serif';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-  ctx.fillText(state.area.w + ' ซม.', ax + aw / 2, ay - 9);
-  ctx.translate(ax - 11, ay + ah / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillText(state.area.d + ' ซม.', 0, 0);
-  ctx.restore();
+  drawDims(fx, fy, fw, fh, ax, ay, aw, ah);
+  drawNorth(fx, fy, fw);
+  drawGrips();
+  drawCrosshair();
 
   $('#emptyHint').style.display = (state.objects.length === 0 && state.walls.length === 0) ? 'block' : 'none';
+}
+
+/* ---- drafting annotations ---- */
+function drawDims(fx, fy, fw, fh, ax, ay, aw, ah) {
+  const OFF = 15;
+  ctx.save();
+  ctx.strokeStyle = '#8b95a6';
+  ctx.fillStyle = '#5b6473';
+  ctx.lineWidth = 1;
+  ctx.font = '600 10px Inter, Sarabun, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const tick = (x, y, dx, dy) => {
+    ctx.beginPath();
+    ctx.moveTo(x - dx, y - dy);
+    ctx.lineTo(x + dx, y + dy);
+    ctx.stroke();
+  };
+  const tag = (text, cx, cy) => {
+    const w = ctx.measureText(text).width + 8;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(cx - w / 2, cy - 7, w, 14);
+    ctx.fillStyle = '#5b6473';
+    ctx.fillText(text, cx, cy);
+  };
+  /* horizontal */
+  const y = fy - OFF;
+  ctx.beginPath();
+  ctx.moveTo(fx, fy - 3); ctx.lineTo(fx, y - 4);
+  ctx.moveTo(fx + fw, fy - 3); ctx.lineTo(fx + fw, y - 4);
+  ctx.moveTo(fx, y); ctx.lineTo(fx + fw, y);
+  ctx.stroke();
+  tick(fx, y, 0, 3); tick(fx + fw, y, 0, 3);
+  tag(state.area.w + ' ซม.', fx + fw / 2, y);
+  /* vertical */
+  const x = fx - OFF;
+  ctx.beginPath();
+  ctx.moveTo(fx - 3, fy); ctx.lineTo(x - 4, fy);
+  ctx.moveTo(fx - 3, fy + fh); ctx.lineTo(x - 4, fy + fh);
+  ctx.moveTo(x, fy); ctx.lineTo(x, fy + fh);
+  ctx.stroke();
+  tick(x, fy, 3, 0); tick(x, fy + fh, 3, 0);
+  ctx.translate(x, fy + fh / 2);
+  ctx.rotate(-Math.PI / 2);
+  tag(state.area.d + ' ซม.', 0, 0);
+  ctx.restore();
+}
+
+function drawNorth(fx, fy, fw) {
+  const cx = fx + fw - 24, cy = fy + 24;
+  ctx.save();
+  ctx.strokeStyle = '#9aa4b4'; ctx.fillStyle = '#5b6473'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, 10, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - 8);
+  ctx.lineTo(cx + 3, cy + 4);
+  ctx.lineTo(cx, cy + 1.4);
+  ctx.lineTo(cx - 3, cy + 4);
+  ctx.closePath(); ctx.fill();
+  ctx.font = '700 7px Inter, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillText('N', cx, cy - 12);
+  ctx.restore();
+}
+
+function drawGrips() {
+  const o = state.objects.find(x => x.id === state.selectedId);
+  const selMep = state.mep.find(m => m.id === state.selectedId);
+  ctx.save();
+  if (o) {
+    const b = bbox(o);
+    const [x1, y1] = worldToScreen(b.x1, b.y1);
+    const [x2, y2] = worldToScreen(b.x2, b.y2);
+    ctx.setLineDash([5, 4]);
+    ctx.strokeStyle = '#2f8cff'; ctx.lineWidth = 1.4;
+    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+    ctx.setLineDash([]);
+    const resizable = normRot(o.rot) % 180 === 0;
+    if (resizable) {
+      /* จุดจับมุม — ลากเพื่อปรับขนาด */
+      ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#2f8cff'; ctx.lineWidth = 1.6;
+      for (const [gx, gy] of [[x1, y1], [x2, y1], [x1, y2], [x2, y2]]) {
+        ctx.beginPath(); ctx.rect(gx - 4, gy - 4, 8, 8); ctx.fill(); ctx.stroke();
+      }
+      const s = effSize(o);
+      if (x2 - x1 > 60) {
+        ctx.font = '700 9.5px Inter, Sarabun, sans-serif';
+        ctx.fillStyle = '#2f6bd8';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText(Math.round(s.w) + '×' + Math.round(s.d), (x1 + x2) / 2, y2 + 6);
+      }
+    } else {
+      ctx.fillStyle = '#2f8cff'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2;
+      for (const [gx, gy] of [[x1, y1], [x2, y1], [x1, y2], [x2, y2]]) {
+        ctx.beginPath(); ctx.rect(gx - 3, gy - 3, 6, 6); ctx.fill(); ctx.stroke();
+      }
+    }
+  } else if (selMep) {
+    const [sx, sy] = worldToScreen(selMep.x, selMep.y);
+    ctx.strokeStyle = '#2f8cff'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.arc(sx, sy, 11, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#2f8cff'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.rect(sx - 3, sy - 3, 6, 6); ctx.fill(); ctx.stroke();
+  }
+  ctx.restore();
 }
 
 /* ------------------------------ 2D INTERACTION ------------------------------ */
 let dragging = null;
 let wallDraft = null;
 let pipeDraft = null;
+let hoverPt = null;
+let rafPending = false;
+
+function drawCrosshair() {
+  if (!state.cross || state.view !== '2d' || !hoverPt || !canvasEl.__w) return;
+  const W = canvasEl.__w, H = canvasEl.__h;
+  const x = Math.round(hoverPt.x) + 0.5, y = Math.round(hoverPt.y) + 0.5;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(96,175,255,.45)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, y); ctx.lineTo(W, y);
+  ctx.moveTo(x, 0); ctx.lineTo(x, H);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(96,175,255,.95)';
+  ctx.strokeRect(x - 6, y - 6, 12, 12);
+  ctx.restore();
+}
 
 const canvasPoint = e => {
   const r = canvasEl.getBoundingClientRect();
@@ -2407,6 +3367,33 @@ canvasEl.addEventListener('pointerdown', e => {
   const sp = canvasPoint(e);
   const p = screenToWorld(sp.x, sp.y);
 
+  /* pan: ปุ่มกลาง หรือ Space ค้าง */
+  if (e.button === 1 || spaceDown) {
+    dragging = { type: 'pan', sx: sp.x, sy: sp.y, px: state.panX || 0, py: state.panY || 0 };
+    canvasEl.style.cursor = 'grabbing';
+    e.preventDefault();
+    return;
+  }
+
+  /* resize: จับมุมวัตถุที่เลือกอยู่ */
+  const selObj = state.objects.find(o => o.id === state.selectedId);
+  if (selObj && normRot(selObj.rot) % 180 === 0) {
+    const b = bbox(selObj);
+    const corners = [[b.x1, b.y1], [b.x2, b.y1], [b.x1, b.y2], [b.x2, b.y2]];
+    for (let i = 0; i < 4; i++) {
+      const [sx2, sy2] = worldToScreen(corners[i][0], corners[i][1]);
+      if (Math.hypot(sp.x - sx2, sp.y - sy2) <= 9) {
+        dragging = {
+          type: 'resize', id: selObj.id, corner: i,
+          fx: corners[i][0] === b.x1 ? b.x2 : b.x1,
+          fy: corners[i][1] === b.y1 ? b.y2 : b.y1
+        };
+        canvasEl.style.cursor = (i === 0 || i === 3) ? 'nwse-resize' : 'nesw-resize';
+        return;
+      }
+    }
+  }
+
   if (state.mode === 'mep') {
     const tool = state.mepTool;
     const x = clamp(snapV(p.x), 0, state.area.w);
@@ -2455,14 +3442,44 @@ canvasEl.addEventListener('pointermove', e => {
   if (state.view !== '2d') return;
   const sp = canvasPoint(e);
   const p = screenToWorld(sp.x, sp.y);
+  hoverPt = sp;
+  if (state.cross && !dragging && !rafPending) {
+    rafPending = true;
+    requestAnimationFrame(() => { rafPending = false; draw(); });
+  }
 
+  if (dragging && dragging.type === 'pan') {
+    state.panX = dragging.px + (sp.x - dragging.sx);
+    state.panY = dragging.py + (sp.y - dragging.sy);
+    draw();
+    return;
+  }
+  if (dragging && dragging.type === 'resize') {
+    const o = state.objects.find(x => x.id === dragging.id);
+    if (o) {
+      const nx = clamp(snapV(p.x), 0, state.area.w);
+      const ny = clamp(snapV(p.y), 0, state.area.d);
+      const w = Math.max(MIN_RESIZE, Math.abs(nx - dragging.fx));
+      const d = Math.max(MIN_RESIZE, Math.abs(ny - dragging.fy));
+      o.w = Math.round(w);
+      o.d = Math.round(d);
+      o.x = Math.round((nx + dragging.fx) / 2);
+      o.y = Math.round((ny + dragging.fy) / 2);
+      clampInside(o);
+      syncRoomWalls(o);
+      draw();
+      renderInspector();
+      updateStatusBar();
+    }
+    return;
+  }
   if (dragging && dragging.type === 'object') {
     const o = state.objects.find(x => x.id === dragging.id);
     if (o) {
       o.x = clamp(snapV(p.x + dragging.dx), 0, state.area.w);
       o.y = clamp(snapV(p.y + dragging.dy), 0, state.area.d);
       clampInside(o);
-      snapToEdges(o);
+      if (state.osnap !== false) snapToEdges(o);
       clampInside(o);
       dragging.moved = true;
       draw();
@@ -2473,20 +3490,77 @@ canvasEl.addEventListener('pointermove', e => {
   if (dragging && dragging.type === 'wall' && wallDraft) {
     let ex = clamp(snapV(p.x), 0, state.area.w);
     let ey = clamp(snapV(p.y), 0, state.area.d);
-    if (Math.abs(ex - wallDraft.x1) < 12) ex = wallDraft.x1;
-    if (Math.abs(ey - wallDraft.y1) < 12) ey = wallDraft.y1;
+    if (state.ortho) {
+      if (Math.abs(ex - wallDraft.x1) >= Math.abs(ey - wallDraft.y1)) ey = wallDraft.y1;
+      else ex = wallDraft.x1;
+    } else {
+      if (Math.abs(ex - wallDraft.x1) < 12) ex = wallDraft.x1;
+      if (Math.abs(ey - wallDraft.y1) < 12) ey = wallDraft.y1;
+    }
     wallDraft.x2 = ex; wallDraft.y2 = ey;
     draw();
     return;
   }
   if (dragging && dragging.type === 'pipe' && pipeDraft) {
-    pipeDraft.x2 = clamp(snapV(p.x), 0, state.area.w);
-    pipeDraft.y2 = clamp(snapV(p.y), 0, state.area.d);
+    let ex = clamp(snapV(p.x), 0, state.area.w);
+    let ey = clamp(snapV(p.y), 0, state.area.d);
+    if (state.ortho) {
+      if (Math.abs(ex - pipeDraft.x1) >= Math.abs(ey - pipeDraft.y1)) ey = pipeDraft.y1;
+      else ex = pipeDraft.x1;
+    }
+    pipeDraft.x2 = ex; pipeDraft.y2 = ey;
     draw();
     return;
   }
-  if (state.mode === 'mep') { canvasEl.style.cursor = 'copy'; return; }
-  canvasEl.style.cursor = state.mode === 'wall' ? 'crosshair' : (pickMep(p) || pickObject(p) ? 'move' : 'default');
+  if (state.mode === 'mep') { canvasEl.style.cursor = state.cross ? 'none' : 'copy'; return; }
+  const so = state.objects.find(o => o.id === state.selectedId);
+  if (so && normRot(so.rot) % 180 === 0) {
+    const b = bbox(so);
+    const corners = [[b.x1, b.y1], [b.x2, b.y1], [b.x1, b.y2], [b.x2, b.y2]];
+    for (let i = 0; i < 4; i++) {
+      const [gx, gy] = worldToScreen(corners[i][0], corners[i][1]);
+      if (Math.hypot(sp.x - gx, sp.y - gy) <= 9) {
+        canvasEl.style.cursor = (i === 0 || i === 3) ? 'nwse-resize' : 'nesw-resize';
+        return;
+      }
+    }
+  }
+  canvasEl.style.cursor = state.cross
+    ? 'none'
+    : (state.mode === 'wall' ? 'crosshair' : (pickMep(p) || pickObject(p) ? 'move' : 'default'));
+});
+
+canvasEl.addEventListener('pointerleave', () => {
+  if (!hoverPt) return;
+  hoverPt = null;
+  if (state.view === '2d') draw();
+});
+
+canvasEl.addEventListener('wheel', e => {
+  if (state.view !== '2d') return;
+  e.preventDefault();
+  const dir = e.deltaY < 0 ? 1 : -1;
+  const next = Math.round(state.zoom * (dir > 0 ? 1.12 : 1 / 1.12));
+  state.zoom = clamp(next, 20, 400);
+  draw();
+  updateStatusBar();
+}, { passive: false });
+canvasEl.addEventListener('contextmenu', e => e.preventDefault());
+
+let spaceDown = false;
+document.addEventListener('keydown', e => {
+  const tag = (e.target.tagName || '').toLowerCase();
+  const typing = tag === 'input' || tag === 'select' || tag === 'textarea';
+  if (e.code === 'Space' && !typing) { spaceDown = true; canvasEl.style.cursor = 'grab'; }
+  if (typing) return;
+  /* หมายเหตุ: Undo/Redo/Delete/ Esc ลูกูกจัดการในตัวรับหลักที่ wire() แล้ว (กันทำงานซ้ำ) */
+  if (e.key === 'F3') { e.preventDefault(); setDraft('osnap'); return; }
+  if (e.key === 'F7') { e.preventDefault(); setDraft('grid'); return; }
+  if (e.key === 'F8') { e.preventDefault(); setDraft('ortho'); return; }
+  if (e.key === 'F9') { e.preventDefault(); setDraft('snap'); return; }
+});
+document.addEventListener('keyup', e => {
+  if (e.code === 'Space') { spaceDown = false; if (!dragging) canvasEl.style.cursor = state.cross ? 'none' : 'default'; }
 });
 
 canvasEl.addEventListener('pointerup', e => {
@@ -2520,6 +3594,13 @@ canvasEl.addEventListener('pointerup', e => {
     renderAll();
     return;
   }
+  if (dragging && dragging.type === 'resize') {
+    const o = state.objects.find(x => x.id === dragging.id);
+    dragging = null;
+    if (o) { syncRoomWalls(o); commit(); }
+    renderAll();
+    return;
+  }
   if (dragging && dragging.type === 'mep') {
     const moved = dragging.moved;
     dragging = null;
@@ -2528,6 +3609,8 @@ canvasEl.addEventListener('pointerup', e => {
     return;
   }
   if (dragging && dragging.type === 'object' && dragging.moved) {
+    const o = state.objects.find(x => x.id === dragging.id);
+    if (o) syncRoomWalls(o);
     dragging = null;
     renderAll(); commit();
     return;
@@ -2560,41 +3643,89 @@ async function ensureThree() {
   }
 }
 
+function skyTexture(THREE) {
+  const cv = document.createElement('canvas');
+  cv.width = 4; cv.height = 256;
+  const g = cv.getContext('2d');
+  const grd = g.createLinearGradient(0, 0, 0, 256);
+  grd.addColorStop(0, '#33393f');
+  grd.addColorStop(0.55, '#23272c');
+  grd.addColorStop(1, '#15181b');
+  g.fillStyle = grd; g.fillRect(0, 0, 4, 256);
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+function floorTexture(THREE) {
+  const cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 512;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#f6f8fb'; g.fillRect(0, 0, 512, 512);
+  g.strokeStyle = '#dde3ec'; g.lineWidth = 2;
+  for (let i = 0; i <= 512; i += 64) {
+    g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 512); g.stroke();
+    g.beginPath(); g.moveTo(0, i); g.lineTo(512, i); g.stroke();
+  }
+  g.strokeStyle = '#cbd4e0'; g.lineWidth = 4;
+  g.strokeRect(0, 0, 512, 512);
+  const t = new THREE.CanvasTexture(cv);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+function edgesOf(THREE, geo, color, opacity) {
+  const e = new THREE.LineSegments(
+    new THREE.EdgesGeometry(geo, 25),
+    new THREE.LineBasicMaterial({ color, transparent: true, opacity })
+  );
+  return e;
+}
+
 function initThree() {
   const THREE = T.THREE;
   const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.06;
   threeHost.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xe8ecf4);
-  scene.fog = new THREE.Fog(0xe8ecf4, 34, 95);
+  scene.background = skyTexture(THREE);
+  scene.fog = new THREE.Fog(0x171a1e, 46, 120);
 
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 400);
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 500);
   camera.position.set(7, 8, 9);
 
   const controls = new T.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
-  controls.dampingFactor = 0.085;
-  controls.maxPolarAngle = Math.PI / 2 - 0.04;
-  controls.minDistance = 1.5;
-  controls.maxDistance = 90;
+  controls.dampingFactor = 0.08;
+  controls.rotateSpeed = 0.85;
+  controls.zoomSpeed = 0.9;
+  controls.maxPolarAngle = Math.PI / 2 - 0.02;
+  controls.minPolarAngle = 0.08;
+  controls.minDistance = 1.2;
+  controls.maxDistance = 110;
 
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xbfc7d6, 1.25));
-  const key = new THREE.DirectionalLight(0xffffff, 2.1);
-  key.position.set(9, 16, 8);
+  scene.add(new THREE.HemisphereLight(0xdce9ff, 0x2a2d33, 0.95));
+  const key = new THREE.DirectionalLight(0xfff6e8, 2.4);
+  key.position.set(10, 17, 9);
   key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048);
-  key.shadow.camera.near = 1; key.shadow.camera.far = 70;
-  key.shadow.camera.left = -24; key.shadow.camera.right = 24;
-  key.shadow.camera.top = 24; key.shadow.camera.bottom = -24;
-  key.shadow.bias = -0.0006;
+  key.shadow.camera.near = 1; key.shadow.camera.far = 80;
+  key.shadow.camera.left = -26; key.shadow.camera.right = 26;
+  key.shadow.camera.top = 26; key.shadow.camera.bottom = -26;
+  key.shadow.bias = -0.0005;
   scene.add(key);
-  const fill = new THREE.DirectionalLight(0xffffff, 0.6);
-  fill.position.set(-10, 9, -10);
+  const fill = new THREE.DirectionalLight(0xbfd4ff, 0.55);
+  fill.position.set(-11, 8, -9);
   scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xffffff, 0.35);
+  rim.position.set(-4, 5, 12);
+  scene.add(rim);
 
   const rig = new THREE.Group();
   scene.add(rig);
@@ -2636,13 +3767,13 @@ function labelSprite(text) {
     const cv = document.createElement('canvas');
     cv.width = 256; cv.height = 72;
     const g = cv.getContext('2d');
-    g.fillStyle = 'rgba(255,255,255,.94)';
-    g.strokeStyle = 'rgba(0,0,51,.16)';
+    g.fillStyle = 'rgba(18,22,28,.86)';
+    g.strokeStyle = 'rgba(255,255,255,.22)';
     g.lineWidth = 3;
     g.beginPath();
-    if (g.roundRect) g.roundRect(8, 12, 240, 48, 14); else g.rect(8, 12, 240, 48);
+    if (g.roundRect) g.roundRect(8, 12, 240, 48, 10); else g.rect(8, 12, 240, 48);
     g.fill(); g.stroke();
-    g.fillStyle = '#0b1440';
+    g.fillStyle = '#ffffff';
     g.font = '700 27px Sarabun, system-ui, sans-serif';
     g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillText(text, 128, 37);
@@ -2667,36 +3798,42 @@ function buildThree() {
   const toX = cm => cm / 100 - aw / 2;
   const toZ = cm => cm / 100 - ad / 2;
 
+  /* ---- floor + plinth ---- */
+  const tex = floorTexture(THREE);
+  tex.repeat.set(Math.max(1, aw / 2), Math.max(1, ad / 2));
   const floor = new THREE.Mesh(
-    new THREE.BoxGeometry(aw, 0.12, ad),
-    new THREE.MeshStandardMaterial({ color: 0xfbfcff, roughness: 0.95, metalness: 0 })
+    new THREE.BoxGeometry(aw, 0.1, ad),
+    new THREE.MeshStandardMaterial({ map: tex, roughness: 0.92, metalness: 0.02 })
   );
-  floor.position.y = -0.06;
+  floor.position.y = -0.05;
   floor.receiveShadow = true;
   rig.add(floor);
 
-  const pts = [];
-  for (let x = 0; x <= state.area.w; x += 50) pts.push(toX(x), 0.008, toZ(0), toX(x), 0.008, toZ(state.area.d));
-  for (let z = 0; z <= state.area.d; z += 50) pts.push(toX(0), 0.008, toZ(z), toX(state.area.w), 0.008, toZ(z));
-  const gg = new THREE.BufferGeometry();
-  gg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  rig.add(new THREE.LineSegments(gg, new THREE.LineBasicMaterial({ color: 0xc3cbdd, transparent: true, opacity: .85 })));
+  const plinth = new THREE.Mesh(
+    new THREE.BoxGeometry(aw + 0.16, 0.1, ad + 0.16),
+    new THREE.MeshStandardMaterial({ color: 0x2a2e34, roughness: 0.95, metalness: 0 })
+  );
+  plinth.position.y = -0.14;
+  plinth.receiveShadow = true;
+  rig.add(plinth);
 
   for (const w of state.walls) {
     const dx = (w.x2 - w.x1) / 100, dz = (w.y2 - w.y1) / 100;
     const len = Math.hypot(dx, dz);
     if (len < 0.05) continue;
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(len, WALL_H_CM / 100, 0.1),
-      new THREE.MeshStandardMaterial({
-        color: 0xdfe6f1, roughness: 0.9, metalness: 0,
-        transparent: true, opacity: 0.34, side: THREE.DoubleSide
-      })
-    );
+    const geo = new THREE.BoxGeometry(len, WALL_H_CM / 100, 0.1);
+    const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+      color: 0xeef2f8, roughness: 0.82, metalness: 0.02,
+      transparent: true, opacity: 0.5, side: THREE.DoubleSide
+    }));
     mesh.position.set(toX((w.x1 + w.x2) / 2), WALL_H_CM / 200, toZ((w.y1 + w.y2) / 2));
     mesh.rotation.y = -Math.atan2(dz, dx);
     mesh.castShadow = true; mesh.receiveShadow = true;
     rig.add(mesh);
+
+    const we = edgesOf(THREE, geo, 0x9aabc2, 0.6);
+    we.position.copy(mesh.position); we.rotation.copy(mesh.rotation);
+    rig.add(we);
   }
 
   for (const o of state.objects) {
@@ -2706,13 +3843,17 @@ function buildThree() {
     const y0 = baseHeightCm(o) / 100;
     const cx = toX(o.x), cz = toZ(o.y);
 
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(ww, hh, dd),
-      new THREE.MeshStandardMaterial({ color: new THREE.Color(a.color), roughness: .52, metalness: .18 })
-    );
+    const geo = new THREE.BoxGeometry(ww, hh, dd);
+    const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+      color: new THREE.Color(a.color), roughness: .42, metalness: .16
+    }));
     mesh.position.set(cx, y0 + hh / 2, cz);
     mesh.castShadow = true; mesh.receiveShadow = true;
     rig.add(mesh);
+
+    const oe = edgesOf(THREE, geo, 0x1a2433, 0.32);
+    oe.position.copy(mesh.position);
+    rig.add(oe);
 
     /* front panel */
     const fv = frontVec(o.rot);
@@ -2739,14 +3880,39 @@ function buildThree() {
   const key = state.area.w + 'x' + state.area.d;
   if (T.areaKey !== key) {
     T.areaKey = key;
-    const rad = Math.hypot(aw, ad) / 2;
-    const dist = (rad / Math.sin((42 * Math.PI / 180) / 2)) * 1.12;
-    const dir = new THREE.Vector3(0.58, 0.78, 0.72).normalize();
-    const target = new THREE.Vector3(0, Math.min(1.1, WALL_H_CM / 300), 0);
-    T.controls.target.copy(target);
-    T.camera.position.copy(dir.multiplyScalar(dist).add(target));
-    T.controls.update();
+    setCam('iso', true);
   }
+}
+
+let wire3d = false;
+function setCam(mode, silent) {
+  if (!T.ready) return;
+  const THREE = T.THREE;
+  const aw = state.area.w / 100, ad = state.area.d / 100;
+  const R = 0.5 * Math.hypot(aw, ad, (WALL_H_CM / 100) * 1.25);
+  const vFov = (T.camera.fov * Math.PI) / 180;
+  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * Math.max(0.7, T.camera.aspect));
+  const fovMin = Math.min(vFov, hFov);
+  const dist = (R / Math.sin(fovMin / 2)) * 1.34;
+  const distTop = ((0.5 * Math.hypot(aw, ad) + 0.3) / Math.sin(fovMin / 2)) * 1.06;
+  const target = new THREE.Vector3(0, Math.min(1.1, WALL_H_CM / 300), 0);
+  const dir = mode === 'top' ? new THREE.Vector3(0, 1, 0.001)
+    : mode === 'front' ? new THREE.Vector3(0, 0.42, 1)
+    : new THREE.Vector3(0.62, 0.58, 0.78);
+  dir.normalize();
+  T.controls.target.copy(target);
+  T.camera.position.copy(target.clone().add(dir.multiplyScalar(mode === 'top' ? distTop : dist)));
+  T.controls.update();
+  $$('#view3dBar [data-cam]').forEach(b => b.classList.toggle('active', b.dataset.cam === mode));
+  if (!silent) status('มุมมอง 3D: ' + (mode === 'top' ? 'ด้านบน (Top)' : mode === 'front' ? 'ด้านหน้า (Front)' : 'ไอโซเมตริก (ISO)'));
+}
+function toggleWire3d() {
+  if (!T.ready) return;
+  wire3d = !wire3d;
+  T.rig.traverse(n => { if (n.isMesh && n.material) n.material.wireframe = wire3d; });
+  const b = $('#vwWire');
+  if (b) b.classList.toggle('active', wire3d);
+  status('โครงลวด (Wireframe) ' + (wire3d ? 'ON' : 'OFF'));
 }
 
 async function switchView(v) {
@@ -2760,6 +3926,8 @@ async function switchView(v) {
   $$('#viewSwitch .seg').forEach(b => b.classList.toggle('active', b.dataset.view === v));
   canvasEl.classList.toggle('hidden', v === '3d');
   threeHost.classList.toggle('hidden', v !== '3d');
+  const v3bar = $('#view3dBar');
+  if (v3bar) v3bar.classList.toggle('hidden', v !== '3d');
   if (v === '3d') { resizeThree(); buildThree(); animateLoop(); }
   else { resizeCanvas(); draw(); }
   renderAll();
@@ -2769,10 +3937,15 @@ async function switchView(v) {
    UI RENDER
    ========================================================================== */
 function renderSidebar() {
-  const groups = { machine: '#assetsMachine', accessory: '#assetsAccessory', sign: '#assetsSign' };
-  const html = { machine: '', accessory: '', sign: '' };
+  const map = {
+    machine: '#assetsMachine', service: '#assetsService', structure: '#assetsStructure',
+    builtin: '#assetsBuiltin', accessory: '#assetsAccessory', sign: '#assetsSign'
+  };
+  const html = {};
+  GROUP_ORDER.forEach(g => { html[g] = ''; });
   for (const key of Object.keys(ASSETS)) {
     const a = ASSETS[key];
+    if (html[a.group] == null) continue;
     html[a.group] +=
       '<button class="assetBtn" data-add="' + key + '" title="' + esc(a.name) + ' · ' + a.w + '×' + a.d + '×' + a.h + ' ซม.">' +
         '<span class="swatch" style="background:' + a.color + '"></span>' +
@@ -2781,7 +3954,12 @@ function renderSidebar() {
         '<span class="plus">+</span>' +
       '</button>';
   }
-  for (const k in groups) $(groups[k]).innerHTML = html[k];
+  GROUP_ORDER.forEach(g => {
+    const host = $(map[g]);
+    if (host) host.innerHTML = html[g];
+  });
+  const cnt = $('#sideCount');
+  if (cnt) cnt.textContent = Object.keys(ASSETS).length + ' รายการ';
   renderMepTools();
   renderLegend();
   updateLayerChips();
@@ -2827,7 +4005,7 @@ function updateLayerChips() {
 }
 
 function setMepTool(key) {
-  const cfg = PIPES[key] || MEP[key];
+  const cfg = MEP[key] || PIPES[key];
   if (!cfg) return;
   state.mepTool = key;
   state.mode = 'mep';
@@ -2847,17 +4025,19 @@ function renderInspector() {
 
   $('#heroPkg').textContent = def.label;
   $('#inspTotal').textContent = thb(t.grand);
+  const tv = $('#inspToggleVal');
+  if (tv) tv.textContent = thb(t.grand);
   $('#inspMeta').textContent = fmt1(areaM2) + ' ตร.ม. · ' + (areaM2 > 0 ? fmt(t.grand / areaM2) : '0') + ' บาท/ตร.ม.';
   $('#pkgMeta').textContent = def.tag + ' · ' + def.note;
 
-  /* category bars */
-  const max = Math.max(1, ...CAT_KEYS.map(k => t[k] || 0));
+  /* category bars — สัดส่วนเทียบยอดรวม */
+  const catTotal = Math.max(1, CAT_KEYS.reduce((a, k) => a + (t[k] || 0), 0));
   $('#inspCats').innerHTML = CAT_KEYS.map(k => {
     const v = t[k] || 0;
-    const pct = Math.round((v / max) * 100);
+    const pct = Math.round((v / catTotal) * 100);
     return '<div class="catRow">' +
       '<span class="cName" style="--c:' + CATS[k].color + '">' + CATS[k].name + '</span>' +
-      '<span class="cVal">' + thb(v) + '</span>' +
+      '<span class="cVal">' + thb(v) + '<em class="cPct">' + pct + '%</em></span>' +
       '<span class="catBar"><i style="width:' + pct + '%;background:' + CATS[k].color + '"></i></span>' +
       '</div>';
   }).join('');
@@ -2980,6 +4160,11 @@ function renderInspector() {
 }
 
 function updateStatusBar() {
+  syncDraft();
+  const tp = $('#topProj');
+  if (tp) tp.textContent = state.project.name || state.name || 'ยังไม่ระบุชื่อโครงการ';
+  const tph = $('#topPhase');
+  if (tph) tph.textContent = 'Phase ' + state.phase;
   if (page === 'sop') {
     $('#sbArea').textContent = 'SOP v2.0 · 7 Phases · 5 จุดควบคุม';
     $('#sbItems').textContent = 'กรองบทบาท: ' + (sopRole === 'ALL' ? 'ทั้งหมด' : SOP_ROLES[sopRole].full);
@@ -3020,6 +4205,11 @@ function syncSidebar() {
   $$('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === state.mode));
   canvasEl.style.cursor = state.mode === 'mep' ? 'copy' : (state.mode === 'wall' ? 'crosshair' : 'default');
   renderMepTools();
+}
+
+function setSideTab(k) {
+  $$('#sideTabs .stab').forEach(b => b.classList.toggle('active', b.dataset.stab === k));
+  $$('.sideTab').forEach(g => g.classList.toggle('active', g.dataset.stab === k));
 }
 
 function renderAll() {
@@ -3090,8 +4280,8 @@ function elecSchedule() {
 function pipeSchedule() {
   const machines = state.objects.filter(o => (ASSETS[o.type].water || 0) > 0);
   const mc = machineCount();
-  const supplyLen = pipeLenM('supply') || (mc * 3 + 8);
-  const drainLen = pipeLenM('drain') || (mc * 2 + 5);
+  const supplyLen = pipeLenM('psupply') || (mc * 3 + 8);
+  const drainLen = pipeLenM('pdrain') || (mc * 2 + 5);
   const rows = [
     { item: 'ท่อน้ำดี PVC 1"', size: '1"', qty: fmt1(supplyLen), unit: 'ม.', note: 'แรงดันใช้งาน 1.5–2.0 bar' },
     { item: 'ท่อระบายน้ำ PVC 2"', size: '2"', qty: fmt1(drainLen), unit: 'ม.', note: 'ลาดเอียง 1:100 ไปบ่อพัก' },
@@ -3113,7 +4303,7 @@ function renderSchedules() {
         '<td class="num">' + r.qty + '</td><td class="num">' + fmt2(r.kw) + '</td>' +
         '<td class="num">' + fmt1(r.amp) + '</td><td class="num">' + r.brk + ' A</td>' +
         '<td class="dim">' + esc(r.cable) + '</td></tr>').join('')
-    : '<tr><td colspan="7" style="text-align:center;color:#8d93a6;padding:16px">ยังไม่มีโหลดไฟฟ้า — วางเครื่องจักรหรือสัญลักษณ์ในผัง</td></tr>';
+    : '<tr><td colspan="7" style="text-align:center;color:var(--text-3);padding:16px">ยังไม่มีโหลดไฟฟ้า — วางเครื่องจักรหรือสัญลักษณ์ในผัง</td></tr>';
 
   $('#sysCardLoad').innerHTML =
     '<div class="sysCardHead">' +
@@ -3642,7 +4832,7 @@ function openBoq() {
       '<td class="num">' + action + '</td>' +
       '</tr>';
   }
-  $('#boqBody').innerHTML = html || '<tr><td colspan="9" style="text-align:center;color:#8d93a6;padding:22px">ไม่มีรายการในแพ็กเกจนี้</td></tr>';
+  $('#boqBody').innerHTML = html || '<tr><td colspan="9" style="text-align:center;color:var(--text-3);padding:22px">ไม่มีรายการในแพ็กเกจนี้</td></tr>';
   $('#boqGrand').textContent = fmt(t.grand);
 
   /* ---- สรุปตามหมวดงาน ---- */
@@ -3754,6 +4944,7 @@ function addObject(type) {
 
   const o = { id: nextId(), type, x: pos.x, y: pos.y, rot: 0, layer: state.layer };
   state.objects.push(o);
+  if (a.zone) buildRoomWalls(o);
   state.selectedId = o.id;
   renderAll(); commit();
   const inc = PKGS[state.pkg].include.includes(a.code);
@@ -3773,7 +4964,11 @@ function deleteSelected() {
   if (!id) { status('กรุณาเลือกอุปกรณ์หรือผนังก่อนลบ', 'warn'); return; }
   const oi = state.objects.findIndex(x => x.id === id);
   if (oi >= 0) {
-    const nm = ASSETS[state.objects[oi].type].name;
+    const obj = state.objects[oi];
+    const nm = ASSETS[obj.type].name;
+    if (obj.wallIds && obj.wallIds.length) {
+      state.walls = state.walls.filter(w => obj.wallIds.indexOf(w.id) < 0);
+    }
     state.objects.splice(oi, 1);
     state.selectedId = null;
     renderAll(); commit();
@@ -4256,16 +5451,210 @@ function importXlsx(e) {
 }
 
 /* ------------------------------ EVENTS ------------------------------ */
+function setMode(m) {
+  state.mode = m;
+  syncSidebar();
+  status(m === 'wall' ? 'โหมดวาดผนัง — ลากบนผังเพื่อสร้างผนังกั้นโซน'
+    : m === 'mep' ? 'โหมดวางสัญลักษณ์งานระบบ'
+    : 'โหมดเลือก / ย้ายอุปกรณ์');
+}
+
+const DRAFT_KEYS = { tgSnap: 'snap', tgGrid: 'grid', tgOrtho: 'ortho', tgOsnap: 'osnap', tgCross: 'cross' };
+function syncDraft() {
+  for (const id in DRAFT_KEYS) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', !!state[DRAFT_KEYS[id]]);
+  }
+}
+function setDraft(k) {
+  state[k] = !state[k];
+  syncDraft();
+  if (k !== 'ortho' && k !== 'snap' && k !== 'osnap') draw();
+  if (k === 'cross' && !state.cross) { hoverPt = null; draw(); }
+  status(k.toUpperCase() + ' ' + (state[k] ? 'ON' : 'OFF'));
+}
+
+/* ------------------------------ RESET ------------------------------ */
+function resetAll(skipConfirm) {
+  if (!skipConfirm && !confirm('ล้างข้อมูลทั้งหมด (ผัง · งานระบบ · ต้นทุนที่แก้ · ผังที่บันทึก) แล้วเริ่มใหม่?')) return false;
+  try { localStorage.removeItem(LS_CURRENT); localStorage.removeItem(LS_LAYOUTS); } catch (e) { /* noop */ }
+  state = freshState();
+  HIST.stack = []; HIST.i = -1; HIST.lock = false;
+  rebuildMasterIndex();
+  closeModals();
+  setPage('studio');
+  syncSidebar();
+  renderSidebar();
+  updateLayerChips();
+  syncDraft();
+  renderAll();
+  commit();
+  toast('ล้างข้อมูลและเริ่มต้นใหม่แล้ว');
+  status('เริ่มต้นใหม่ — ข้อมูลเดิมถูกล้างทั้งหมด');
+  return true;
+}
+
+/* ------------------------------ GUIDED DEMO ------------------------------ */
+const DEMO_STEPS = [
+  { t: 'ภาพรวมหน้าจอ', b: 'ริบบอน (คำสั่ง) ด้านบน · คลังอุปกรณ์ ซ้าย · แผ่นแบบ กลาง · แผงต้นทุน ขวา · command line ล่างสุด' },
+  { t: '1) ตั้งชื่อโครงการ', b: 'กด “ผังงาน” เพื่อใส่ชื่อโครงการ/ลูกค้า/Phase และกำหนดขนาดพื้นที่ร้าน', run: () => openLayouts() },
+  { t: '2) เลือกแพ็กเกจ + ผังแนะนำ', b: 'แพ็กเกจ L = Turnkey มีพื้น ผนังเบา บิ้วอินครบ — กด “ใช้ผังแนะนำ” เพื่อเริ่มเร็ว', run: () => { closeModals(); const b = document.querySelector('[data-pkg="L"]'); if (b) b.click(); loadPreset('L'); } },
+  { t: '3) วางอุปกรณ์', b: 'เพิ่มเครื่อง/เฟอร์นิเจอร์ได้จากคลังซ้าย · เลือกแล้วลาก “จุดจับมุมขาว” เพื่อปรับขนาด', run: () => { closeModals(); addObject('titan17'); } },
+  { t: '4) โซนบริการ (BOH)', b: 'วางห้องเซอร์วิส → ระบบสร้างผนังรอบห้องให้อัตโนมัติ พร้อมเว้นช่องประตู 90 ซม.', run: () => addObject('service') },
+  { t: '5) งานระบบ', b: 'วางสัญลักษณ์ไฟ/น้ำ จากนั้นลากเส้นท่อ — ปริมาณจะถูกถอดเข้า BOQ ทันที', run: () => { for (let i = 0; i < 3; i++) state.mep.push({ id: 'e' + (uid++), type: 'light', x: 120 + i * 90, y: 330 }); commit(); renderAll(); status('สาธิต: วางโคม LED 3 จุด'); } },
+  { t: '6) BOQ & ต้นทุน', b: 'ทุกอย่างถูกถอดเป็น BOQ พร้อมคอลัมน์ “ที่มาของปริมาณ” ตรวจสอบได้ทุกบรรทัด', run: () => openBoq() },
+  { t: '7) พิมพ์ / ส่งมอบ', b: 'พิมพ์ BOQ (3 หน้า + title block) หรือพิมพ์สเปคให้ลูกค้า (ไม่มีตัวเลขต้นทุน)', run: () => closeModals() }
+];
+const DEMO = { on: false, i: 0, snap: null };
+
+function demoRender() {
+  const s = DEMO_STEPS[DEMO.i];
+  $('#dStep').textContent = (DEMO.i + 1) + '/' + DEMO_STEPS.length;
+  $('#dTitle').textContent = s.t;
+  $('#dBody').textContent = s.b;
+  $('#dNext').textContent = DEMO.i === DEMO_STEPS.length - 1 ? 'เสร็จสิ้น ✓' : 'ถัดไป ▸';
+}
+function demoRun(i) {
+  const s = DEMO_STEPS[i];
+  if (!s) return;
+  try { if (s.run) s.run(); } catch (e) { /* ข้ามขั้นที่ผิดพลาด */ }
+}
+function demoStart() {
+  if (DEMO.on) return;
+  closeModals();
+  DEMO.on = true; DEMO.i = 0;
+  DEMO.snap = JSON.stringify(serialize());
+  if (state.view !== '2d') switchView('2d');
+  setPage('studio');
+  $('#demoCard').classList.remove('hidden');
+  demoRender();
+  status('โหมดสาธิต — กด “ถัดไป” เพื่อดูทีละขั้นตอน (กด Esc เพื่อจบ)');
+}
+function demoNext() {
+  if (!DEMO.on) return;
+  if (DEMO.i >= DEMO_STEPS.length - 1) { demoEnd(); return; }
+  DEMO.i++;
+  demoRun(DEMO.i);
+  demoRender();
+}
+function demoEnd() {
+  if (!DEMO.on) return;
+  DEMO.on = false;
+  $('#demoCard').classList.add('hidden');
+  closeModals();
+  if (DEMO.snap) {
+    try {
+      HIST.lock = true;
+      applyData(JSON.parse(DEMO.snap));
+      HIST.lock = false;
+      scheduleSave();
+      syncSidebar(); renderAll();
+    } catch (e) { /* noop */ }
+    DEMO.snap = null;
+  }
+  toast('จบการสาธิต — คืนค่าผังเดิมแล้ว');
+}
+
+function runCmd(raw) {  const cmd = String(raw || '').trim().toLowerCase();
+  if (!cmd) return;
+  cmdLog('› ' + raw.trim());
+  const map = {
+    grid: () => setDraft('grid'), snap: () => setDraft('snap'),
+    ortho: () => setDraft('ortho'), osnap: () => setDraft('osnap'), cross: () => setDraft('cross'),
+    zoom: () => { state.zoom = 100; renderAll(); status('ZOOM → 100%'); },
+    wall: () => setMode('wall'), line: () => setMode('wall'), select: () => setMode('select'),
+    mep: () => { setSideTab('mep'); status('เปิดคลังงานระบบ'); },
+    boq: () => openBoq(), master: () => openMaster(), summary: () => openSummary(),
+    layouts: () => openLayouts(), spec: () => printSpec(),
+    print: () => $('#btnPrint').click(),
+    systems: () => setPage('systems'), sop: () => setPage('sop'), studio: () => setPage('studio'),
+    rotate: () => rotateSelected(), del: () => deleteSelected(), delete: () => deleteSelected(),
+    undo: () => undo(), redo: () => redo(),
+    reset: () => resetAll(), new: () => resetAll(),
+    demo: () => demoStart(),
+    help: () => openModal('#modalHelp')
+  };
+  const fn = map[cmd];
+  if (fn) fn();
+  else status('ไม่รู้จักคำสั่ง “' + cmd + '” — พิมพ์ HELP เพื่อดูรายการ', 'warn');
+}
+
 function wire() {
   /* view */
   $$('#viewSwitch .seg').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
 
+  /* sidebar tabs */
+  const sideTabs = $('#sideTabs');
+  if (sideTabs) sideTabs.addEventListener('click', e => {
+    const b = e.target.closest('.stab');
+    if (b) setSideTab(b.dataset.stab);
+  });
+
+  /* ribbon tabs + quick commands */
+  const rb = $('#studioBar');
+  if (rb) {
+    rb.addEventListener('click', e => {
+      const t = e.target.closest('.rbTab');
+      if (t) {
+        $$('#studioBar .rbTab').forEach(b => b.classList.toggle('active', b === t));
+        $$('#studioBar .rbPanel').forEach(p => p.classList.toggle('active', p.dataset.rb === t.dataset.rb));
+        return;
+      }
+      const m = e.target.closest('[data-mep]');
+      if (m) { setMepTool(m.dataset.mep); return; }
+      const ad = e.target.closest('[data-add]');
+      if (ad) { addObject(ad.dataset.add); return; }
+      const g = e.target.closest('[data-goto]');
+      if (g) { setPage(g.dataset.goto); return; }
+    });
+  }
+  const linkBtn = (a, b) => { const x = $(a), y = $(b); if (x && y) x.addEventListener('click', () => y.click()); };
+  linkBtn('#rbBoq', '#btnBoq');
+  linkBtn('#rbPrint', '#btnPrint');
+  linkBtn('#rbMaster', '#btnMaster');
+  linkBtn('#rbSummary', '#btnSummary');
+  linkBtn('#rbLayouts', '#btnLayouts');
+  const rbSpec = $('#rbPrintSpec2');
+  if (rbSpec) rbSpec.addEventListener('click', printSpec);
+
+  /* command line */
+  const cmdInput = $('#cmdInput');
+  if (cmdInput) {
+    cmdInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { runCmd(cmdInput.value); cmdInput.value = ''; }
+      else if (e.key === 'Escape') { cmdInput.value = ''; cmdInput.blur(); }
+    });
+  }
+  const cmdRun = $('#cmdRun');
+  if (cmdRun) cmdRun.addEventListener('click', () => { runCmd(cmdInput.value); cmdInput.value = ''; cmdInput.focus(); });
+
+  /* drafting toggles */
+  for (const id in DRAFT_KEYS) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', () => setDraft(DRAFT_KEYS[id]));
+  }
+
+  /* 3D view bar */
+  const v3 = $('#view3dBar');
+  if (v3) v3.addEventListener('click', e => {
+    const c = e.target.closest('[data-cam]');
+    if (c) { setCam(c.dataset.cam); return; }
+    if (e.target.closest('#vwWire')) toggleWire3d();
+  });
+
+  /* inspector slide-over (จอแคบ) */
+  const inspToggle = $('#inspToggle');
+  const inspClose = $('#inspClose');
+  const inspEl = $('#inspector');
+  if (inspToggle) inspToggle.addEventListener('click', () => inspEl.classList.toggle('open'));
+  if (inspClose) inspClose.addEventListener('click', () => inspEl.classList.remove('open'));
+  const wsEl = $('#workspace');
+  if (wsEl) wsEl.addEventListener('pointerdown', e => {
+    if (inspEl.classList.contains('open') && !e.target.closest('#inspToggle')) inspEl.classList.remove('open');
+  }, true);
+
   /* mode */
-  $$('[data-mode]').forEach(b => b.addEventListener('click', () => {
-    state.mode = b.dataset.mode;
-    syncSidebar();
-    status(state.mode === 'wall' ? 'โหมดวาดผนัง — ลากบนผังเพื่อสร้างผนังกั้นโซน' : 'โหมดเลือก / ย้ายอุปกรณ์');
-  }));
+  $$('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 
   /* assets */
   $('#assetsMachine').addEventListener('click', e => { const b = e.target.closest('[data-add]'); if (b) addObject(b.dataset.add); });
@@ -4317,7 +5706,7 @@ function wire() {
   $('#wkFloat').addEventListener('click', e => {
     const b = e.target.closest('[data-zoom]');
     if (b) { state.zoom = Number(b.dataset.zoom); renderAll(); }
-    if (e.target.id === 'wkFit') { state.zoom = 100; renderAll(); }
+    if (e.target.id === 'wkFit') { state.zoom = 100; state.panX = 0; state.panY = 0; renderAll(); }
   });
   $('#zoomIn').addEventListener('click', () => {
     const steps = [20, 40, 60, 80, 100, 120];
@@ -4348,6 +5737,17 @@ function wire() {
   $('#btnMaster').addEventListener('click', openMaster);
   $('#btnSummary').addEventListener('click', openSummary);
   $('#btnLayouts').addEventListener('click', openLayouts);
+  const bh = $('#btnHelp');
+  if (bh) bh.addEventListener('click', () => openModal('#modalHelp'));
+  const br = $('#btnResetAll');
+  if (br) br.addEventListener('click', () => { if (resetAll()) { /* หน้าเว็บจะกลับสู่สถานะเริ่มต้น */ } });
+  const bd = $('#btnDemo');
+  if (bd) bd.addEventListener('click', demoStart);
+  const dNext = $('#dNext');
+  if (dNext) dNext.addEventListener('click', demoNext);
+  const dExit = $('#dExit');
+  if (dExit) dExit.addEventListener('click', demoEnd);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && DEMO.on) demoEnd(); });
   $('#btnPrint').addEventListener('click', doPrint);
   $('#btnPrintBoq').addEventListener('click', doPrint);
   const bps = $('#btnPrintSpec');
@@ -4602,14 +6002,14 @@ function wire() {
     const typing = tag === 'input' || tag === 'select' || tag === 'textarea';
     if (e.key === 'Escape') {
       closeModals();
-      if (state.mode === 'mep') {
+      wallDraft = null; pipeDraft = null; dragging = null;
+      state.mepTool = null;
+      if (state.mode === 'mep' || state.mode === 'wall') {
         state.mode = 'select';
-        state.mepTool = null;
-        pipeDraft = null;
         syncSidebar();
-        draw();
-        status('ออกจากโหมดวางงานระบบแล้ว');
+        status('ออกจากโหมดวางแล้ว');
       }
+      draw();
       return;
     }
     if (typing) return;
