@@ -154,6 +154,7 @@ function saveDealV2(token, payload) {
   if (!map.no) throw new Error('แท็บ Deals ยังไม่มีคอลัมน์ no — กรุณารัน setupDataSheets()');
 
   var no = String(p.no || '').trim();
+  if (p.isNew === true) no = '';   /* ดีลใหม่: ให้เซิร์ฟเวอร์ออกเลขเองเสมอ — กันเลขซ้ำเมื่อข้อมูลในเครื่องล้าสมัย/หลายเครื่องพร้อมกัน */
   var row = 0;
   var existing = null;
   var prevStatus = null;

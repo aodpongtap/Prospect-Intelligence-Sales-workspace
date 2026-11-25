@@ -174,7 +174,7 @@
       /* อัปเดตการ์ดสรุป */
       var cards = document.querySelectorAll('.al-card b');
       if (cards && cards.length >= 6 && st.counts) {
-        cards[0].textContent = st.counts.total || 0;
+        cards[0].textContent = (typeof st.counts.filtered === 'number') ? st.counts.filtered : (st.counts.total || 0);
         cards[1].textContent = st.counts.deal || 0;
         cards[2].textContent = st.counts.daily || 0;
         cards[3].textContent = st.counts.project || 0;

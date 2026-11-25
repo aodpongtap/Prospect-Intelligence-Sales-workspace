@@ -516,20 +516,26 @@
       else done();
     } catch (e) {}
   }
-  /** บันทึกดีลขึ้นคลาวด์ (ล้มเหลว → เข้าคิว) */
-  function cloudSave(d) {
+  /** บันทึกดีลขึ้นคลาวด์ (ล้มเหลว → เข้าคิว) · isNew = ดีลใหม่ → ให้เซิร์ฟเวอร์ออกเลขดีลเอง */
+  function cloudSave(d, isNew) {
     if (!cloudReady() || !global.PIAuth.saveDealV2) return;
+    var payload = d;
+    if (isNew) {
+      payload = {};
+      Object.keys(d).forEach(function (k) { payload[k] = d[k]; });
+      payload.isNew = true;
+    }
     try {
-      global.PIAuth.saveDealV2(d).then(function (res) {
+      global.PIAuth.saveDealV2(payload).then(function (res) {
         /* เซิร์ฟเวอร์อาจให้เลขใหม่เมื่อเลขซ้ำข้ามเครื่อง */
         if (res && res.no && res.no !== d.no) {
           d.no = res.no;
           saveDeals();
-          if (typeof global.toast === 'function') global.toast('เลขดีลซ้ำกับเครื่องอื่น — ระบบออกเลขใหม่ ' + res.no);
+          if (typeof global.toast === 'function') global.toast('ระบบออกเลขดีลให้ใหม่ ' + res.no);
         }
         flushQueue();
       }).catch(function () {
-        enqueue({ op: 'save', deal: d, ts: Date.now() });
+        enqueue({ op: 'save', deal: payload, ts: Date.now() });
         if (typeof global.toast === 'function') global.toast('บันทึกในเครื่องแล้ว — จะซิงก์คลาวด์เมื่อออนไลน์');
       });
     } catch (e) {}
@@ -675,7 +681,7 @@
     if (d.status === 4 && !d.docNo) throw new Error('สถานะ “ปิดงานแล้ว” ต้องระบุเลขอินวอย / เลขที่สัญญา / เลขที่ SO');
     DEALS.push(d);
     saveDeals();
-    cloudSave(d);
+    cloudSave(d, true);
     if (global.PILog) global.PILog.add('deal.add', d.no + ' · ' + d.customer, d.job + ' · ' + money(d.amount) + ' · ' + st(d.status).label);
     return d;
   }

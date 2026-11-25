@@ -529,7 +529,7 @@ function listLogsApi_(token, q, kind, by, limit) {
   var kd = String(kind || '').trim().toLowerCase();
   var uid = String(by || '').trim().toLowerCase();
 
-  var out = rows.map(function (r) {
+  var all = rows.map(function (r) {
     return {
       ts: String(r.ts || ''),
       action: String(r.action || ''),
@@ -538,7 +538,18 @@ function listLogsApi_(token, q, kind, by, limit) {
       by: String(r.by || '').toLowerCase()
     };
   }).filter(function (l) {
-    if (!l.ts && !l.action) return false;
+    return !!(l.ts || l.action);
+  });
+
+  /* สรุปจำนวนตามประเภท — นับจากข้อมูลทั้งหมด (ไม่ขึ้นกับตัวกรอง) */
+  var counts = { total: all.length };
+  all.forEach(function (l) {
+    var k = String(l.action || 'other').split('.')[0] || 'other';
+    if (k === 'task') k = 'project';        /* งานย่อยนับรวมในหมวดโครงการ */
+    counts[k] = (counts[k] || 0) + 1;
+  });
+
+  var out = all.filter(function (l) {
     if (kd) {
       if (kd === 'task') { if (l.action.indexOf('task.') !== 0) return false; }
       else {
@@ -553,12 +564,7 @@ function listLogsApi_(token, q, kind, by, limit) {
   out.sort(function (a, b) { return String(b.ts).localeCompare(String(a.ts)); });
   var lim = Math.min(Math.max(Number(limit) || 300, 1), 2000);
   var sliced = out.slice(0, lim);
+  counts.filtered = out.length;
 
-  var counts = { total: out.length };
-  out.forEach(function (l) {
-    var k = String(l.action || 'other').split('.')[0] || 'other';
-    if (k === 'task') k = 'project';        /* งานย่อยนับรวมในหมวดโครงการ */
-    counts[k] = (counts[k] || 0) + 1;
-  });
   return { ok: true, logs: sliced, counts: counts, actions: LOG_ACTIONS };
 }
