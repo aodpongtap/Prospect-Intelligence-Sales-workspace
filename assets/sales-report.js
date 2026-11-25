@@ -840,40 +840,52 @@
     var lockedTeam = viewerTeam();
     var scF = scopeOf();
     var mineSale = scF.type === 'sale' ? sale(scF.saleId) : null;
-    /* AE (L5): ทีมล็อกเป็น BU ของตัวเอง + ตัวกรอง AE แสดงเฉพาะตัวเอง */
-    var teamField = mineSale
-      ? '<div class="sr-fl"><label>ทีม (BU)</label><div class="sr-locked" title="' + esc(teamByCode(mineSale.team).name) + ' ของฉัน"><i class="fa-solid fa-user-lock"></i><span class="sr-lk-t">'
-        + esc(teamByCode(mineSale.team).name) + '</span><span class="sr-lk-b">ของฉัน</span></div></div>'
-      : (lockedTeam
-        ? '<div class="sr-fl"><label>ทีม (BU)</label><div class="sr-locked" title="' + esc(teamByCode(lockedTeam).name) + ' · ทีมที่คุณดูแล"><i class="fa-solid fa-lock"></i><span class="sr-lk-t">'
-          + esc(teamByCode(lockedTeam).name) + '</span><span class="sr-lk-b">ทีมที่ดูแล</span></div></div>'
-        : '<div class="sr-fl"><label>ทีม (BU)</label><select data-sr-filter="team">' + teamOpts + '</select></div>');
-    var aeField = mineSale
-      ? '<div class="sr-fl"><label>AE</label><div class="sr-locked" title="' + esc(mineSale.id + ' · ' + mineSale.name) + ' ของฉัน"><i class="fa-solid fa-user"></i><span class="sr-lk-t">'
-        + esc(mineSale.id + ' · ' + mineSale.name) + '</span><span class="sr-lk-b">ของฉัน</span></div></div>'
-      : ('<div class="sr-fl"><label>AE</label><select data-sr-filter="sale">'
-        + (scF.type === 'team'
-          ? ('<option value="">ทุกคนในทีม</option>' + SALES.filter(function (s) { return s.team === scF.team; }).map(function (s) {
-              return opt(s.id, s.name, state.sale);
-            }).join(''))
-          : saleOpts)
-        + '</select></div>');
+
+    /* แถบขอบเขตข้อมูล (ไม่ใช่ช่องกรอก) — แสดงเฉพาะเมื่อสิทธิ์ถูกล็อก */
+    var scopeBar = '';
+    if (mineSale) {
+      scopeBar = '<div class="sr-scope" title="คุณเห็นเฉพาะข้อมูลของตัวเอง">'
+        + '<i class="fa-solid fa-lock"></i><span>ขอบเขตข้อมูล</span>'
+        + '<b>' + esc(teamByCode(mineSale.team).name) + '</b>'
+        + '<span class="sr-scope-sep">·</span>'
+        + '<b>' + esc(mineSale.id + ' · ' + mineSale.name) + '</b>'
+        + '<span class="sr-scope-tag">เฉพาะของฉัน</span></div>';
+    } else if (lockedTeam) {
+      scopeBar = '<div class="sr-scope" title="คุณเห็นเฉพาะทีมที่ดูแล">'
+        + '<i class="fa-solid fa-lock"></i><span>ขอบเขตข้อมูล</span>'
+        + '<b>' + esc(teamByCode(lockedTeam).name) + '</b>'
+        + '<span class="sr-scope-tag">ทีมที่คุณดูแล</span></div>';
+    }
+
+    var aeSelect = '<div class="sr-fl"><label>AE</label><select data-sr-filter="sale">'
+      + (scF.type === 'team'
+        ? ('<option value="">ทุกคนในทีม</option>' + SALES.filter(function (s) { return s.team === scF.team; }).map(function (s) {
+            return opt(s.id, s.name, state.sale);
+          }).join(''))
+        : saleOpts)
+      + '</select></div>';
     var prodOpts = '<option value="">ทุกสินค้า</option>' + PRODUCTS.map(function (p) { return opt(p.code, p.name, state.product); }).join('');
     var payOpts = '<option value="">ทุกรูปแบบ</option>' + PAYMENTS.map(function (p) { return opt(p.code, p.name, state.payment); }).join('');
 
+    var flds = [];
+    flds.push('<div class="sr-fl"><label>ปี</label><select data-sr-filter="year">' + yearOpts + '</select></div>');
+    flds.push('<div class="sr-fl"><label>เดือนที่คาดว่าจะปิด</label><select data-sr-filter="month">' + monthOpts + '</select></div>');
+    if (!mineSale) {
+      if (!lockedTeam) flds.push('<div class="sr-fl"><label>ทีม (BU)</label><select data-sr-filter="team">' + teamOpts + '</select></div>');
+      flds.push(aeSelect);
+    }
+    flds.push('<div class="sr-fl"><label>สินค้า</label><select data-sr-filter="product">' + prodOpts + '</select></div>');
+    flds.push('<div class="sr-fl"><label>รูปแบบการซื้อ</label><select data-sr-filter="payment">' + payOpts + '</select></div>');
+
     return ''
-      + '<div class="sr-filters" id="srFilters">'
-      + '  <div class="sr-fl"><label>ปี</label><select data-sr-filter="year">' + yearOpts + '</select></div>'
-      + '  <div class="sr-fl"><label>เดือนที่คาดว่าจะปิด</label><select data-sr-filter="month">' + monthOpts + '</select></div>'
-      + teamField
-      + aeField
-      + '  <div class="sr-fl"><label>สินค้า</label><select data-sr-filter="product">' + prodOpts + '</select></div>'
-      + '  <div class="sr-fl"><label>รูปแบบการซื้อ</label><select data-sr-filter="payment">' + payOpts + '</select></div>'
+      + '<div class="sr-filters' + (flds.length === 4 ? ' sr-f4' : '') + '" id="srFilters">'
+      + flds.join('')
       + '  <div class="sr-fbtn">'
       + '    <button class="sr-btn" data-sr-reset title="ล้างตัวกรอง"><i class="fa-solid fa-rotate-left"></i> ล้างตัวกรอง</button>'
       + '    <button class="sr-btn dark" data-sr-export title="ส่งออก CSV"><i class="fa-solid fa-download"></i> Export CSV</button>'
       + '  </div>'
-      + '</div>';
+      + '</div>'
+      + scopeBar;
   }
 
   function renderKpis(k) {
@@ -2944,6 +2956,17 @@
       + '.sr-lk-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}'
       + '.sr-lk-b{flex:0 0 auto;white-space:nowrap;font-size:9.5px;font-weight:400;color:#6366F1;background:#E0E7FF;'
       + 'border-radius:999px;padding:1px 6px}'
+      /* แถบขอบเขตข้อมูล (สิทธิ์ถูกล็อก) */
+      + '.sr-scope{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-7px 0 15px;padding:6px 12px;'
+      + 'border:1px solid #E8EEF6;background:#F7FAFF;border-radius:999px;font-size:10.5px;color:#667085;max-width:100%}'
+      + '.sr-scope i{font-size:9px;color:#2563EB}'
+      + '.sr-scope b{color:#0F2B46;font-weight:600;white-space:nowrap}'
+      + '.sr-scope-sep{color:#C3CCD9}'
+      + '.sr-scope-tag{background:#E0E7FF;color:#4338CA;border-radius:999px;padding:1px 8px;font-size:9.5px;white-space:nowrap}'
+      + '@media(max-width:640px){.sr-scope{width:100%;justify-content:center;text-align:center}}'
+      /* ตัวกรองแบบ 4 ช่อง (มุมมอง AE ที่ทีม/AE ถูกล็อก) */
+      + '.sr-filters.sr-f4{grid-template-columns:repeat(2,minmax(0,1fr))}'
+      + '@media(min-width:760px){.sr-filters.sr-f4{grid-template-columns:repeat(4,minmax(0,1fr))}}'
       + '.sr-fbtn{display:flex;align-items:flex-end;gap:8px;grid-column:1/-1;justify-content:flex-end}'
       + '@media(min-width:900px){.sr-filters{padding-right:252px}'
       + '.sr-fbtn{position:absolute;right:14px;bottom:12px;grid-column:auto}}'
