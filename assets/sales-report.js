@@ -13,7 +13,16 @@
   'use strict';
 
   /* ============================ 1) CONFIG ============================ */
-  var YEARS = [2026, 2027];
+  /** ลิสต์ปี (ค.ศ.) ที่แสดงในตัวกรอง/ฟอร์มดีล — สร้างจากข้อมูลจริง + ปีปัจจุบัน ±รอบ */
+  function yearsList() {
+    var set = {};
+    var now = new Date().getFullYear();
+    [now - 1, now, now + 1, now + 2].forEach(function (y) { set[y] = 1; });
+    try { DEALS.forEach(function (d) { var y = Number(d.year); if (y) set[y] = 1; }); } catch (e) {}
+    try { Object.keys(TARGETS || {}).forEach(function (k) { var y = Number(k); if (y) set[y] = 1; }); } catch (e2) {}
+    try { if (state && state.year) set[Number(state.year)] = 1; } catch (e3) {}
+    return Object.keys(set).map(Number).sort(function (a, b) { return a - b; });
+  }
 
   var TH_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
     'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -821,7 +830,7 @@
 
   function renderFilters(k) {
     function opt(v, t, cur) { return '<option value="' + esc(v) + '"' + (String(cur) === String(v) ? ' selected' : '') + '>' + esc(t) + '</option>'; }
-    var yearOpts = YEARS.map(function (y) { return opt(y, String(y + 543) + ' (' + y + ')', state.year); }).join('');
+    var yearOpts = yearsList().map(function (y) { return opt(y, String(y + 543) + ' (' + y + ')', state.year); }).join('');
     var monthOpts = '<option value=""' + (state.month ? '' : ' selected') + '>ทุกเดือน</option>' +
       TH_MONTHS.map(function (m, i) { return opt(i + 1, String(i + 1).padStart(2, '0') + '.' + m, state.month); }).join('');
     var saleOpts = '<option value="">ทุกคน</option>' + SALES.map(function (s) {
@@ -1784,7 +1793,7 @@
       + '</div>';
 
     function opt(v, tx, cur) { return '<option value="' + esc(v) + '"' + (String(cur) === String(v) ? ' selected' : '') + '>' + esc(tx) + '</option>'; }
-    var yearOpts = YEARS.map(function (y) { return opt(y, 'ปี ' + (y + 543), state.year); }).join('');
+    var yearOpts = yearsList().map(function (y) { return opt(y, 'ปี ' + (y + 543), state.year); }).join('');
     var monthOpts = '<option value=""' + (state.month ? '' : ' selected') + '>ทุกเดือน</option>' +
       TH_MONTHS.map(function (mth, i) { return opt(i + 1, String(i + 1).padStart(2, '0') + '.' + mth, state.month); }).join('');
     var teamOpts = '<option value="">ทุกทีม</option>' + TEAMS.map(function (t) { return opt(t.code, t.name, state.team); }).join('');
@@ -2111,7 +2120,7 @@
     var prodOpts = PRODUCTS.map(function (p) { return '<option value="' + p.code + '"' + (cur.product === p.code ? ' selected' : '') + '>' + esc(p.name) + '</option>'; }).join('');
     var payOpts = PAYMENTS.map(function (p) { return '<option value="' + p.code + '"' + (cur.payment === p.code ? ' selected' : '') + '>' + esc(p.name) + '</option>'; }).join('');
     var curYear = Number(cur.year || state.year);
-    var yearOpts = YEARS.map(function (y) { return '<option value="' + y + '"' + (y === curYear ? ' selected' : '') + '>' + (y + 543) + '</option>'; }).join('');
+    var yearOpts = yearsList().map(function (y) { return '<option value="' + y + '"' + (y === curYear ? ' selected' : '') + '>' + (y + 543) + '</option>'; }).join('');
     var curMonth = Number(cur.month || state.month || new Date().getMonth() + 1);
     var monthOpts = TH_MONTHS.map(function (m, i) {
       return '<option value="' + (i + 1) + '"' + ((i + 1) === curMonth ? ' selected' : '') + '>' + m + '</option>';
