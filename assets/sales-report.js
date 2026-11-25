@@ -1478,7 +1478,7 @@
   function trendSubtitle() {
     var m = trendMode();
     if (m === 'day') return 'รายวันของเดือนที่เลือก';
-    if (m === 'year') return 'รายปี (เทียบเป้ารวม 12 เดือน)';
+    if (m === 'year') return 'รายปี รวม 12 เดือน';
     return 'รายเดือนของปีที่เลือก';
   }
   function daysInMonth(y, m) { return new Date(Number(y) || 2026, Number(m) || 1, 0).getDate(); }
