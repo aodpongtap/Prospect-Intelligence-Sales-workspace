@@ -795,7 +795,7 @@
   }
 
   /* ============================ 4) VIEW ============================ */
-  var state = { year: 2026, month: 11, team: '', sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1, perfTeam: '', dashPerf: 'team', view: 'report', summaryView: 'cards' };
+  var state = { year: 2026, month: 11, team: '', sale: '', product: '', payment: '', q: '', sortKey: 'no', sortDir: 1, perfTeam: '', dashPerf: 'team', dashTrend: '', view: 'report', summaryView: 'cards' };
   var ui = { targets: false };
   var __editNo = '';    // เลขดีลที่กำลังแก้ไข
   var __openNo = '';    // เลขดีลที่เปิดดูอยู่
@@ -1300,7 +1300,8 @@
   }
 
   /** เป้ารวมของเดือน (คำนวณแบบเดียวกับ kpis(): AE ใช้เป้า/คน × จำนวนคนในความดูแล) */
-  function dashTargetOfMonth(month) {
+  function dashTargetOfMonth(month, year) {
+    var yr = Number(year) || state.year;
     var sc = scopeOf();
     var teams = TEAMS.filter(function (t) {
       if (state.team && t.code !== state.team) return false;
@@ -1310,11 +1311,18 @@
       return true;
     });
     if (!teams.length) return 0;
-    var total = teams.reduce(function (a, t) { return a + targetOf(t.code, state.year, month); }, 0);
+    var total = teams.reduce(function (a, t) { return a + targetOf(t.code, yr, month); }, 0);
     var teamSize = SALES.filter(function (r) { return r.team === teams[0].code; }).length || 1;
     if (sc.type === 'sale') return total / teamSize * (mySaleIds(sc).length || 1);
     if (state.sale) return total / teamSize;
     return total;
+  }
+
+  /** เป้ารวมทั้งปี (12 เดือน ของปีที่กำหนด) */
+  function dashTargetOfYear(year) {
+    var t = 0;
+    for (var m = 1; m <= 12; m++) t += dashTargetOfMonth(m, year);
+    return t;
   }
 
   function dashRefreshMin() {
@@ -1456,41 +1464,116 @@
       + '</section>';
   }
 
-  /** อนุกรมแนวโน้ม: เลือกเดือน → รายสัปดาห์ (W1–W4), ทั้งปี → รายเดือน */
+  /* ---------- Sales Trend & Forecast: เลือกดูได้ รายวัน / รายเดือน / รายปี ---------- */
+  var TREND_MODES = [
+    { key: 'day', label: 'รายวัน', icon: 'fa-calendar-day' },
+    { key: 'month', label: 'รายเดือน', icon: 'fa-calendar-days' },
+    { key: 'year', label: 'รายปี', icon: 'fa-calendar' }
+  ];
+  function trendMode() {
+    var m = String(state.dashTrend || '');
+    if (m === 'day' || m === 'month' || m === 'year') return m;
+    return state.month ? 'day' : 'month';
+  }
+  function trendSubtitle() {
+    var m = trendMode();
+    if (m === 'day') return 'รายวันของเดือนที่เลือก';
+    if (m === 'year') return 'รายปี (เทียบเป้ารวม 12 เดือน)';
+    return 'รายเดือนของปีที่เลือก';
+  }
+  function daysInMonth(y, m) { return new Date(Number(y) || 2026, Number(m) || 1, 0).getDate(); }
+  function dayOfDeal(d) {
+    var p = String(d.quoteDate || d.createdAt || '').slice(0, 10).split('-');
+    var v = Number(p[2]);
+    if (!v) v = Number(String(d.createdAt || '').slice(8, 10)) || 1;
+    return v;
+  }
+  /* ดีลในขอบเขตสิทธิ์ + filter ทีม/AE/สินค้า/การซื้อ (ไม่กรองปี–เดือน) — ใช้กับการดูแนวโน้มรายปี */
+  function dealsForTrend() {
+    return DEALS.filter(function (d) {
+      if (!inScope(d)) return false;
+      if (state.team && sale(d.saleId).team !== state.team) return false;
+      if (state.sale && d.saleId !== state.sale) return false;
+      if (state.product && d.product !== state.product) return false;
+      if (state.payment && d.payment !== state.payment) return false;
+      return true;
+    });
+  }
+
+  /** อนุกรมแนวโน้ม — day: รายวันของเดือน · month: 12 เดือนของปี · year: รายปี */
   function dashTrend(k) {
+    var mode = trendMode();
     var labels = [], actual = [], forecast = [], target = [];
-    if (state.month) {
-      var b = { 1: [0, 0], 2: [0, 0], 3: [0, 0], 4: [0, 0] };
-      k.list.forEach(function (d) {
-        var p = String(d.quoteDate || d.createdAt || '').slice(0, 10).split('-');
-        var day = Number(p[2]) || 1;
-        var w = day <= 7 ? 1 : (day <= 14 ? 2 : (day <= 21 ? 3 : 4));
-        b[w][0] += secOfDeal(d);
-        b[w][1] += fcOfDeal(d);
-      });
-      var tg = dashTargetOfMonth(state.month) / 4;
-      for (var i = 1; i <= 4; i++) {
-        labels.push('W' + i);
-        actual.push(Math.round(b[i][0]));
-        forecast.push(Math.round(b[i][1]));
-        target.push(Math.round(tg));
+
+    if (mode === 'day') {
+      /* รายวัน — ในเดือนที่เลือก (ถ้าเลือกทั้งปี ใช้เดือนล่าสุดที่มีข้อมูล) */
+      var y = state.year;
+      var mo = state.month;
+      if (!mo) {
+        var latest = 0;
+        k.list.forEach(function (d) { var m2 = Number(d.month) || 0; if (m2 > latest) latest = m2; });
+        mo = latest || (new Date().getMonth() + 1);
       }
-    } else {
-      var m = [];
-      for (var j = 0; j < 12; j++) m.push([0, 0]);
+      var nd = daysInMonth(y, mo);
+      var ba = [], bf = [];
+      for (var i = 1; i <= nd; i++) { ba.push(0); bf.push(0); }
       k.list.forEach(function (d) {
-        var mi = (Number(d.month) || 1) - 1;
-        m[mi][0] += secOfDeal(d);
-        m[mi][1] += fcOfDeal(d);
+        if (Number(d.month) !== mo) return;
+        var day = dayOfDeal(d);
+        if (day < 1 || day > nd) return;
+        ba[day - 1] += secOfDeal(d);
+        bf[day - 1] += fcOfDeal(d);
       });
-      for (var mm = 1; mm <= 12; mm++) {
-        labels.push(TH_MONTHS[mm - 1].slice(0, 3));
-        actual.push(Math.round(m[mm - 1][0]));
-        forecast.push(Math.round(m[mm - 1][1]));
-        target.push(Math.round(dashTargetOfMonth(mm)));
+      var tgDay = dashTargetOfMonth(mo, y) / nd;
+      for (var dd = 1; dd <= nd; dd++) {
+        labels.push(String(dd));
+        actual.push(Math.round(ba[dd - 1]));
+        forecast.push(Math.round(bf[dd - 1]));
+        target.push(Math.round(tgDay));
       }
+      return { labels: labels, actual: actual, forecast: forecast, target: target, mode: mode, month: mo };
     }
-    return { labels: labels, actual: actual, forecast: forecast, target: target };
+
+    if (mode === 'year') {
+      /* รายปี — รวมทุกปีที่มีข้อมูล (สูงสุด 6 ปีล่าสุด) */
+      var list2 = dealsForTrend();
+      var yset = {};
+      list2.forEach(function (d) { var yy = Number(d.year) || 0; if (yy) yset[yy] = 1; });
+      yset[state.year] = 1;
+      var years = Object.keys(yset).map(Number).sort(function (a, b) { return a - b; });
+      if (years.length > 6) years = years.slice(years.length - 6);
+      var ya = {}, yf = {};
+      years.forEach(function (yy2) { ya[yy2] = 0; yf[yy2] = 0; });
+      list2.forEach(function (d) {
+        var key = Number(d.year);
+        if (!(key in ya)) return;
+        ya[key] += secOfDeal(d);
+        yf[key] += fcOfDeal(d);
+      });
+      years.forEach(function (yy3) {
+        labels.push(String(yy3 + 543));
+        actual.push(Math.round(ya[yy3]));
+        forecast.push(Math.round(yf[yy3]));
+        target.push(Math.round(dashTargetOfYear(yy3)));
+      });
+      return { labels: labels, actual: actual, forecast: forecast, target: target, mode: mode };
+    }
+
+    /* รายเดือน — 12 เดือนของปีที่เลือก */
+    var m = [];
+    for (var j = 0; j < 12; j++) m.push([0, 0]);
+    k.list.forEach(function (d) {
+      var mi = (Number(d.month) || 1) - 1;
+      m[mi][0] += secOfDeal(d);
+      m[mi][1] += fcOfDeal(d);
+    });
+    for (var mm = 1; mm <= 12; mm++) {
+      labels.push(TH_MONTHS[mm - 1].slice(0, 3));
+      actual.push(Math.round(m[mm - 1][0]));
+      forecast.push(Math.round(m[mm - 1][1]));
+      target.push(Math.round(dashTargetOfMonth(mm)));
+    }
+    return { labels: labels, actual: actual, forecast: forecast, target: target, mode: mode };
   }
 
   function renderDashboard() {
@@ -1763,7 +1846,13 @@
       + '  </section>'
       + '  <section class="sr-panel sr-span-all">'
       + '    <div class="sr-ph"><div><h3>Sales Trend &amp; Forecast</h3>'
-      + '      <div class="sr-s2">' + (state.month ? 'รายสัปดาห์ของเดือนที่เลือก' : 'รายเดือนของปีที่เลือก') + ' · เทียบเป้า</div></div></div>'
+      + '      <div class="sr-s2">' + esc(trendSubtitle()) + ' · เทียบเป้า</div></div>'
+      + '      <div class="sr-seg sr-seg-trend">'
+      + TREND_MODES.map(function (tm) {
+        return '<button class="sr-segbtn' + (trendMode() === tm.key ? ' on' : '') + '" data-sr-dashtrend="' + tm.key + '">'
+          + '<i class="fa-solid ' + tm.icon + '"></i> ' + esc(tm.label) + '</button>';
+      }).join('')
+      + '      </div></div>'
       + '    <div class="sr-chartbox sm"><canvas id="srDashTrend"></canvas></div>'
       + '  </section>'
       + '</div>'
@@ -1872,7 +1961,7 @@
             {
               label: 'Actual (ปิด + รอส่ง)', data: td.actual, borderColor: '#2563EB',
               backgroundColor: 'rgba(37,99,235,.09)', fill: true, tension: .35,
-              pointRadius: 3, pointBackgroundColor: '#2563EB', borderWidth: 2
+              pointRadius: td.mode === 'day' ? 2 : 3, pointBackgroundColor: '#2563EB', borderWidth: 2
             },
             {
               label: 'Forecast', data: td.forecast, borderColor: '#0EA5E9',
@@ -2740,6 +2829,13 @@
     var dpBtn = t.closest('[data-sr-dashperf]');
     if (dpBtn) {
       state.dashPerf = dpBtn.getAttribute('data-sr-dashperf') === 'rep' ? 'rep' : 'team';
+      if (typeof global.render === 'function') global.render();
+      return;
+    }
+    var dtBtn = t.closest('[data-sr-dashtrend]');
+    if (dtBtn) {
+      var dm = dtBtn.getAttribute('data-sr-dashtrend');
+      state.dashTrend = (dm === 'day' || dm === 'year') ? dm : 'month';
       if (typeof global.render === 'function') global.render();
       return;
     }

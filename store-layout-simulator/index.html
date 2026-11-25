@@ -1,0 +1,1804 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Commercial Store Layout &amp; Project Cost Simulator</title>
+<style>
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;overflow:hidden;background:#0b1220;color:#e2e8f0;font-size:13px;
+  font-family:"Segoe UI","Leelawadee UI","Noto Sans Thai",Tahoma,system-ui,-apple-system,sans-serif;
+}
+button,input,select{font-family:inherit;font-size:12.5px}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+/* ================= ROW 1 : black header ================= */
+#topbar{background:#000;display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid #1f2937;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:.02em;color:#fff;white-space:nowrap}
+.brand .mark{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,#38bdf8,#2563eb);display:grid;place-items:center;font-size:14px;color:#04121f}
+.viewSwitch{display:flex;gap:5px;background:#111827;padding:4px;border-radius:13px;border:1px solid #1f2937}
+.viewBtn{background:transparent;border:0;color:#94a3b8;font-weight:800;font-size:13px;padding:9px 18px;border-radius:10px;cursor:pointer;transition:.15s;white-space:nowrap}
+.viewBtn:hover{color:#fff;background:#1f2937}
+.viewBtn.active{background:linear-gradient(180deg,#38bdf8,#0ea5e9);color:#04121f;box-shadow:0 2px 12px rgba(14,165,233,.4)}
+.status{flex:1;min-width:150px;text-align:center;font-size:12.5px;color:#8b9cb3;padding:7px 12px;border-radius:9px;border:1px dashed #24303f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status.ok{color:#6ee7a8;border-color:#14532d;background:#052e16;border-style:solid}
+.status.error{color:#fca5a5;border-color:#7f1d1d;background:#2b0b0b;border-style:solid}
+.status.info{color:#93c5fd;border-color:#1e3a8a;background:#0b1e3d;border-style:solid}
+
+/* ================= shared ================= */
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:7px 14px}
+.navy{background:#103258;border-bottom:1px solid #0a2340;color:#dbeafe}
+.group{display:flex;align-items:center;gap:7px}
+.group.right{margin-left:auto}
+.glabel{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:#8fb3d9;font-weight:700;white-space:nowrap}
+.times{color:#8fb3d9;font-weight:700}
+.btn{
+  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);color:#e8f1fb;
+  padding:6px 11px;border-radius:8px;cursor:pointer;font-weight:600;white-space:nowrap;transition:.13s
+}
+.btn:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.35)}
+.btn:active{transform:translateY(1px)}
+.btn.green{background:#16a34a;border-color:#15803d;color:#fff;font-weight:800}
+.btn.green:hover{background:#18b352}
+.btn.accent{background:linear-gradient(180deg,#fbbf24,#f59e0b);border-color:#d97706;color:#1a1200;font-weight:800}
+.btn.accent:hover{filter:brightness(1.07)}
+.btn.danger{background:rgba(220,38,38,.22);border-color:rgba(248,113,113,.5);color:#fecaca}
+.btn.danger:hover{background:rgba(220,38,38,.38)}
+.btn.on{background:#fff;color:#0b2a4a;border-color:#fff;font-weight:800}
+.btn kbd{
+  font-family:inherit;font-size:9.5px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.25);
+  border-radius:4px;padding:1px 4px;margin-left:4px;color:#cfe4fb
+}
+.btn.on kbd{background:rgba(11,42,74,.12);border-color:rgba(11,42,74,.25);color:#0b2a4a}
+.txt,.num,.sel{
+  background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.2);color:#eaf3ff;
+  padding:6px 9px;border-radius:8px;outline:none
+}
+.txt{width:150px}
+.num{width:66px;text-align:right}
+.sel{max-width:230px;cursor:pointer}
+.sel option{background:#0f2942;color:#eaf3ff}
+.txt:focus,.num:focus,.sel:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.25)}
+.zoomGroup{gap:3px}
+.zbtn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);color:#c7dcf3;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:11.5px;font-weight:700}
+.zbtn:hover{background:rgba(255,255,255,.18)}
+.zbtn.active{background:#38bdf8;border-color:#0ea5e9;color:#04202f}
+
+/* ================= ROW 3 : palette ================= */
+#bar3{gap:10px 16px;padding:8px 14px}
+.modeSwitch{display:flex;gap:3px;background:rgba(0,0,0,.3);padding:3px;border-radius:9px;border:1px solid rgba(255,255,255,.14)}
+.modeBtn{background:transparent;border:0;color:#a9c6e4;padding:6px 14px;border-radius:7px;cursor:pointer;font-weight:800}
+.modeBtn.active{background:#fff;color:#0b2a4a}
+.pg{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pgLabel{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#7ea9d4;font-weight:800;padding-right:2px}
+.pgLabel.posters{color:#f0b37e}
+.sep{width:1px;height:22px;background:rgba(255,255,255,.18)}
+.pill{
+  background:#fff;color:#0b2a4a;border:1px solid #dbe6f2;border-radius:999px;
+  padding:5px 13px;font-weight:800;font-size:11.8px;cursor:pointer;white-space:nowrap;
+  box-shadow:0 1px 3px rgba(0,0,0,.28);transition:.13s
+}
+.pill:hover{background:#e8f4ff;transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.32)}
+.pill:active{transform:translateY(0)}
+.pill.poster{background:#fff7ed;border-color:#fcd9b6;color:#7c2d12}
+
+/* ================= stage ================= */
+#stage{position:relative;flex:1;min-height:0;background:#0b1220}
+#plan,#three3d{position:absolute;inset:0;width:100%;height:100%}
+#plan{display:block;touch-action:none}
+#three3d canvas{display:block}
+.hidden{display:none!important}
+#emptyHint{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;
+  color:#64748b;pointer-events:none;line-height:1.7
+}
+#emptyHint b{display:block;font-size:15px;color:#334155;margin-bottom:4px}
+
+/* ================= modals ================= */
+.backdrop{position:fixed;inset:0;background:rgba(2,6,16,.72);backdrop-filter:blur(3px);display:none;z-index:50;padding:24px}
+.backdrop.open{display:flex;align-items:center;justify-content:center}
+.modal{
+  background:#0e1a2b;border:1px solid #23384f;border-radius:16px;width:min(1040px,100%);
+  max-height:92vh;display:flex;flex-direction:column;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden
+}
+.modal.wide{width:min(1180px,100%)}
+.mHead{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid #1d2f44;background:#0b1626}
+.mHead h2{margin:0;font-size:15px;letter-spacing:.01em;color:#fff}
+.mHead .sub{font-size:11.5px;color:#7e93ab;margin-left:auto;margin-right:8px}
+.x{background:transparent;border:0;color:#8fa6bf;font-size:18px;cursor:pointer;padding:2px 8px;border-radius:8px}
+.x:hover{background:#1d2f44;color:#fff}
+.mBody{padding:16px 18px;overflow:auto;flex:1}
+.mFoot{display:flex;align-items:center;gap:9px;padding:12px 18px;border-top:1px solid #1d2f44;background:#0b1626;flex-wrap:wrap}
+.mFoot .spacer{flex:1}
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.tbl th{text-align:left;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:#7e93ab;padding:7px 8px;border-bottom:1px solid #22364c;font-weight:800}
+.tbl td{padding:7px 8px;border-bottom:1px solid #16273a;vertical-align:middle}
+.tbl tr:hover td{background:#132335}
+.tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+.tbl .empty{text-align:center;color:#64748b;padding:22px}
+.tbl tfoot td{border-top:2px solid #22364c;font-weight:800;color:#fff}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.pin{width:96px;background:#0a1523;border:1px solid #2a4059;color:#dbeafe;border-radius:6px;padding:4px 7px;text-align:right;outline:none}
+.pin:focus{border-color:#38bdf8}
+.card{background:#0b1626;border:1px solid #1d2f44;border-radius:12px;padding:14px 16px}
+.card h3{margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8fb3d9}
+.summaryGrid{display:grid;grid-template-columns:1.15fr 1fr;gap:14px}
+.summaryGrid .full{grid-column:1/-1}
+@media(max-width:900px){.summaryGrid{grid-template-columns:1fr}}
+.flabel{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;font-size:11.5px;color:#9db4cb;font-weight:700}
+.hin{background:#0a1523;border:1px solid #2a4059;color:#eaf3ff;border-radius:8px;padding:8px 10px;text-align:right;font-size:13px;font-weight:700;outline:none}
+.hin:focus{border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.2)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:700px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:#0b1626;border:1px solid #1d2f44;border-radius:12px;padding:12px 14px}
+.kpi .kLab{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#7e93ab;font-weight:800;margin-bottom:6px}
+.kpi .kVal{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi .kNote{font-size:10.5px;color:#64748b;margin-top:5px;line-height:1.4}
+.pos{color:#4ade80}
+.neg{color:#f87171}
+.neu{color:#93c5fd}
+.sumLine{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed #1d2f44;font-size:12.5px;color:#9db4cb}
+.sumLine b{color:#fff;font-size:13.5px;font-variant-numeric:tabular-nums}
+.sumLine:last-child{border-bottom:0}
+
+/* ================= print ================= */
+#printSheet{display:none}
+@media print{
+  @page{size:A4 portrait;margin:14mm}
+  body{background:#fff;color:#000;overflow:visible}
+  #app,.backdrop{display:none!important}
+  #printSheet{display:block!important}
+  .ps{color:#111;font-size:12px}
+  .ps h1{font-size:17px;margin:0 0 4px}
+  .ps h2{font-size:13px;margin:18px 0 6px;border-bottom:2px solid #333;padding-bottom:3px}
+  .ps .psMeta{color:#444;margin:0 0 6px;font-size:11px}
+  .ps table{width:100%;border-collapse:collapse;font-size:11px}
+  .ps th,.ps td{border:1px solid #999;padding:4px 6px;text-align:left}
+  .ps th{background:#eee}
+  .ps td.num,.ps th.num{text-align:right}
+  .ps tfoot td{font-weight:700;background:#f6f6f6}
+}
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============ ROW 1 ============ -->
+  <header id="topbar">
+    <div class="brand"><span class="mark">▦</span> STORE LAYOUT &amp; COST SIMULATOR</div>
+    <div class="viewSwitch">
+      <button class="viewBtn active" data-view="2d">2D Plan</button>
+      <button class="viewBtn" data-view="3d">3D View</button>
+    </div>
+    <div id="status" class="status">พร้อมใช้งาน — เลือกอุปกรณ์จากแถบด้านล่างเพื่อวางลงผัง</div>
+    <button id="btnSummary" class="btn accent">📊 Financial &amp; BOQ Summary</button>
+  </header>
+
+  <!-- ============ ROW 2 ============ -->
+  <div class="row navy" id="bar2">
+    <div class="group">
+      <span class="glabel">Layout</span>
+      <input id="layoutName" class="txt" placeholder="ชื่อไฟล์ผัง" autocomplete="off">
+      <button id="btnSave" class="btn green">Save</button>
+      <select id="selLoad" class="sel"><option value="">Load layout...</option></select>
+    </div>
+    <div class="group"><button id="btnList" class="btn">☰ List</button></div>
+    <div class="sep"></div>
+    <div class="group">
+      <span class="glabel">Area (cm)</span>
+      <input id="areaW" class="num" type="number" min="100" max="3000" step="10" value="500">
+      <span class="times">×</span>
+      <input id="areaD" class="num" type="number" min="100" max="3000" step="10" value="300">
+      <button id="btnApply" class="btn">Apply</button>
+    </div>
+    <div class="sep"></div>
+    <div class="group zoomGroup" id="zoomGroup">
+      <span class="glabel">Zoom</span>
+      <button class="zbtn" data-zoom="20">20%</button>
+      <button class="zbtn" data-zoom="40">40%</button>
+      <button class="zbtn" data-zoom="60">60%</button>
+      <button class="zbtn" data-zoom="80">80%</button>
+      <button class="zbtn active" data-zoom="100">100%</button>
+      <button class="zbtn" data-zoom="120">120%</button>
+    </div>
+    <div class="group right">
+      <button id="btnRotate" class="btn">⟳ Rotate<kbd>R</kbd></button>
+      <button id="btnDelete" class="btn danger">🗑 Delete<kbd>Del</kbd></button>
+      <button id="btnStack" class="btn">⇅ Stack L1</button>
+    </div>
+  </div>
+
+  <!-- ============ ROW 3 ============ -->
+  <div class="row navy" id="bar3">
+    <div class="modeSwitch">
+      <button class="modeBtn active" data-mode="select">Select</button>
+      <button class="modeBtn" data-mode="wall">Wall</button>
+    </div>
+    <div class="pg">
+      <span class="pgLabel">เครื่องซัก-อบ</span>
+      <button class="pill" data-add="washer13" title="60 × 65 × 105 cm · 89,000 THB">+ Washer 13kg</button>
+      <button class="pill" data-add="washer17" title="70 × 75 × 115 cm · 129,000 THB">+ Washer 17kg</button>
+      <button class="pill" data-add="dryer13" title="60 × 70 × 110 cm · 79,000 THB">+ Dryer 13kg</button>
+      <button class="pill" data-add="dryer17" title="70 × 75 × 120 cm · 109,000 THB">+ Dryer 17kg</button>
+    </div>
+    <div class="sep"></div>
+    <div class="pg">
+      <span class="pgLabel">ตู้จำหน่าย &amp; บริการ</span>
+      <button class="pill" data-add="water" title="90 × 70 × 190 cm · 65,000 THB">+ Water vending</button>
+      <button class="pill" data-add="coffee" title="80 × 70 × 185 cm · 59,000 THB">+ Coffee</button>
+      <button class="pill" data-add="vending" title="100 × 80 × 190 cm · 75,000 THB">+ Vending</button>
+    </div>
+    <div class="sep"></div>
+    <div class="pg">
+      <span class="pgLabel">ตกแต่ง &amp; ป้าย</span>
+      <button class="pill" data-add="tablechair" title="150 × 120 × 75 cm · 8,900 THB">+ Table chair</button>
+      <button class="pill" data-add="backdrop" title="240 × 15 × 200 cm · 28,000 THB">+ Back drop</button>
+      <button class="pill" data-add="tv" title="120 × 8 × 70 cm (ติดผนัง) · 19,900 THB">+ TV</button>
+    </div>
+    <div class="pg">
+      <span class="pgLabel posters">POSTERS</span>
+      <button class="pill poster" data-add="posterRule" title="60 × 4 × 90 cm (ติดผนัง) · 1,500 THB">+ RULE</button>
+      <button class="pill poster" data-add="posterPrice" title="60 × 4 × 90 cm (ติดผนัง) · 1,500 THB">+ PRICE</button>
+      <button class="pill poster" data-add="posterHowto" title="60 × 4 × 90 cm (ติดผนัง) · 1,500 THB">+ HOWTO</button>
+    </div>
+  </div>
+
+  <!-- ============ WORKSPACE ============ -->
+  <main id="stage">
+    <canvas id="plan"></canvas>
+    <div id="three3d" class="hidden"></div>
+    <div id="emptyHint">
+      <b>ยังไม่มีอุปกรณ์ในผัง</b>
+      คลิกปุ่ม "+ Washer 13kg" ฯลฯ ด้านบนเพื่อวางอุปกรณ์<br>
+      หรือเลือกผังตัวอย่างจากเมนู <b style="display:inline">Load layout...</b>
+    </div>
+  </main>
+</div>
+
+<!-- ============ MODAL : LIST / BOQ ============ -->
+<div class="backdrop" id="modalList">
+  <div class="modal">
+    <div class="mHead">
+      <h2>☰ Equipment List (BOQ)</h2>
+      <span class="sub" id="listSub"></span>
+      <button class="x" data-close>✕</button>
+    </div>
+    <div class="mBody">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>อุปกรณ์</th>
+            <th class="num" style="width:70px">จำนวน</th>
+            <th class="num" style="width:130px">ราคา/หน่วย (THB)</th>
+            <th class="num" style="width:130px">รวม (THB)</th>
+          </tr>
+        </thead>
+        <tbody id="listBoq"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3">รวมค่าเครื่องจักรทั้งหมด</td>
+            <td class="num" data-eqtotal>0</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <h3 style="margin:20px 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8fb3d9">รายการอุปกรณ์ในผัง</h3>
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th style="width:44px">#</th>
+            <th>อุปกรณ์</th>
+            <th style="width:120px">ขนาด (ก×ล×ส)</th>
+            <th class="num" style="width:120px">ตำแหน่ง X,Y</th>
+            <th class="num" style="width:60px">ชั้น</th>
+            <th class="num" style="width:110px">ราคา</th>
+            <th class="num" style="width:60px"></th>
+          </tr>
+        </thead>
+        <tbody id="listInstances"></tbody>
+      </table>
+    </div>
+    <div class="mFoot">
+      <button id="btnExportJson" class="btn">⬇ Export .json</button>
+      <label class="btn" style="display:inline-block">⬆ Import .json
+        <input type="file" id="fileImport" accept=".json,application/json" hidden>
+      </label>
+      <span class="spacer"></span>
+      <button class="btn" data-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL : SUMMARY ============ -->
+<div class="backdrop" id="modalSummary">
+  <div class="modal wide">
+    <div class="mHead">
+      <h2>📊 Financial &amp; BOQ Summary</h2>
+      <span class="sub" id="sumSub"></span>
+      <button class="x" data-close>✕</button>
+    </div>
+    <div class="mBody">
+      <div class="summaryGrid">
+        <section class="card">
+          <h3>Equipment BOQ</h3>
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>อุปกรณ์</th>
+                <th class="num" style="width:56px">จำนวน</th>
+                <th class="num" style="width:120px">ราคา/หน่วย</th>
+                <th class="num" style="width:120px">รวม</th>
+              </tr>
+            </thead>
+            <tbody id="sumBoq"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3">รวมค่าเครื่องจักร (A)</td>
+                <td class="num" data-eqtotal>0</td>
+              </tr>
+            </tfoot>
+          </table>
+        </section>
+
+        <section class="card">
+          <h3>Project Variables</h3>
+          <label class="flabel">ราคาเสนอขายลูกค้า (Quote)
+            <input class="hin" id="finQuote" type="number" min="0" step="10000">
+          </label>
+          <label class="flabel">งบงานก่อสร้าง / ตกแต่ง (Construction Budget)
+            <input class="hin" id="finConst" type="number" min="0" step="10000">
+          </label>
+          <label class="flabel">ยอดจ่ายงวดงานไปแล้ว (Paid Tranches)
+            <input class="hin" id="finPaid" type="number" min="0" step="10000">
+          </label>
+          <label class="flabel">เงินมัดจำพื้นที่ (Deposit)
+            <input class="hin" id="finDep" type="number" min="0" step="10000">
+          </label>
+          <div class="sumLine"><span>ต้นทุนรวมโครงการ (A + B)</span><b id="fCost">-</b></div>
+          <div class="sumLine"><span>กระแสเงินรับแล้ว (มัดจำ + งวดงาน)</span><b id="fCash">-</b></div>
+          <div class="sumLine"><span>ยอดค้างรับจากลูกค้า</span><b id="fOuts">-</b></div>
+        </section>
+
+        <section class="card full">
+          <h3>Key Results</h3>
+          <div class="kpis">
+            <div class="kpi">
+              <div class="kLab">กำไรขั้นต้น (Gross Profit)</div>
+              <div class="kVal pos" id="kpiGp">-</div>
+              <div class="kNote">Quote − ต้นทุนรวมโครงการ</div>
+            </div>
+            <div class="kpi">
+              <div class="kLab">อัตรากำไร (Margin)</div>
+              <div class="kVal neu" id="kpiMargin">-</div>
+              <div class="kNote">Gross Profit ÷ Quote</div>
+            </div>
+            <div class="kpi">
+              <div class="kLab">งบก่อสร้างคงเหลือ</div>
+              <div class="kVal neu" id="kpiConstRemain">-</div>
+              <div class="kNote">Construction Budget − งวดที่จ่ายแล้ว</div>
+            </div>
+            <div class="kpi">
+              <div class="kLab">ส่วนต่างงบประมาณที่ต้องควบคุม</div>
+              <div class="kVal neu" id="kpiGap">-</div>
+              <div class="kNote">เงินรับแล้ว − ต้นทุนรวม (ลบ = ต้องสำรองเพิ่ม)</div>
+            </div>
+            <div class="kpi">
+              <div class="kLab">ยอดค้างรับ</div>
+              <div class="kVal neu" id="kpiOuts">-</div>
+              <div class="kNote">Quote − เงินรับแล้ว</div>
+            </div>
+            <div class="kpi">
+              <div class="kLab">จำนวนอุปกรณ์</div>
+              <div class="kVal neu" id="kpiQty">-</div>
+              <div class="kNote">รายการในผังทั้งหมด</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <div class="mFoot">
+      <button id="btnCsv" class="btn">⬇ Export CSV / Excel</button>
+      <button id="btnPrint" class="btn">🖨 Print / PDF</button>
+      <span class="spacer"></span>
+      <button class="btn" data-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="printSheet"></div>
+
+<script type="module">
+/* ============================================================
+   Commercial Store Layout & Project Cost Simulator — single file
+   ============================================================ */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+/* ---------------------------- CATALOG ---------------------------- */
+const CATALOG = {
+  washer13:    { name: 'Washer 13kg',   short: 'W13',   w: 60,  d: 65,  h: 105, price: 89000,  color: '#2563eb', wall: false },
+  washer17:    { name: 'Washer 17kg',   short: 'W17',   w: 70,  d: 75,  h: 115, price: 129000, color: '#1d4ed8', wall: false },
+  dryer13:     { name: 'Dryer 13kg',    short: 'D13',   w: 60,  d: 70,  h: 110, price: 79000,  color: '#f97316', wall: false },
+  dryer17:     { name: 'Dryer 17kg',    short: 'D17',   w: 70,  d: 75,  h: 120, price: 109000, color: '#ea580c', wall: false },
+  water:       { name: 'Water vending', short: 'WV',    w: 90,  d: 70,  h: 190, price: 65000,  color: '#06b6d4', wall: false },
+  coffee:      { name: 'Coffee',        short: 'CF',    w: 80,  d: 70,  h: 185, price: 59000,  color: '#a855f7', wall: false },
+  vending:     { name: 'Vending',       short: 'VD',    w: 100, d: 80,  h: 190, price: 75000,  color: '#14b8a6', wall: false },
+  tablechair:  { name: 'Table chair',   short: 'TC',    w: 150, d: 120, h: 75,  price: 8900,   color: '#84cc16', wall: false },
+  backdrop:    { name: 'Back drop',     short: 'BD',    w: 240, d: 15,  h: 200, price: 28000,  color: '#78716c', wall: false },
+  tv:          { name: 'TV',            short: 'TV',    w: 120, d: 8,   h: 70,  price: 19900,  color: '#334155', wall: true  },
+  posterRule:  { name: 'Poster RULE',   short: 'RULE',  w: 60,  d: 4,   h: 90,  price: 1500,   color: '#ef4444', wall: true  },
+  posterPrice: { name: 'Poster PRICE',  short: 'PRICE', w: 60,  d: 4,   h: 90,  price: 1500,   color: '#eab308', wall: true  },
+  posterHowto: { name: 'Poster HOWTO',  short: 'HOWTO', w: 60,  d: 4,   h: 90,  price: 1500,   color: '#22c55e', wall: true  }
+};
+const ORDER = Object.keys(CATALOG);
+const WALL_H_CM = 260;
+const GRID_CM = 10;
+const SNAP = 10;
+
+/* ---------------------------- UTILS ---------------------------- */
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const snapV = v => Math.round(v / SNAP) * SNAP;
+const normRot = r => (((Math.round(r / 90) * 90) % 360) + 360) % 360;
+const fmt = n => (Math.round(n)).toLocaleString('en-US');
+const thb = n => '฿' + fmt(n);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function rgba(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+function defaultPrices() { const p = {}; for (const k of ORDER) p[k] = CATALOG[k].price; return p; }
+
+/* ---------------------------- STATE ---------------------------- */
+let uid = 1;
+const nextId = () => 'o' + (uid++);
+
+function freshState() {
+  return {
+    view: '2d',
+    mode: 'select',
+    activeLayer: 1,
+    area: { w: 500, d: 300 },
+    zoom: 100,
+    prices: defaultPrices(),
+    objects: [],
+    walls: [],
+    selectedId: null,
+    layoutName: '',
+    finance: { quote: 2200000, construction: 450000, paid: 150000, deposit: 100000 }
+  };
+}
+let state = freshState();
+
+/* ---------------------------- GEOMETRY ---------------------------- */
+function effSize(o) {
+  const c = CATALOG[o.type] || CATALOG.washer13;
+  return (normRot(o.rot) % 180 === 0) ? { w: c.w, d: c.d } : { w: c.d, d: c.w };
+}
+function bbox(o) {
+  const s = effSize(o);
+  return { x1: o.x - s.w / 2, y1: o.y - s.d / 2, x2: o.x + s.w / 2, y2: o.y + s.d / 2 };
+}
+function rectsOverlap(a, b, tol = 0) {
+  return a.x1 < b.x2 - tol && b.x1 < a.x2 - tol && a.y1 < b.y2 - tol && b.y1 < a.y2 - tol;
+}
+function overlapIds() {
+  const set = new Set();
+  const objs = state.objects;
+  for (let i = 0; i < objs.length; i++) {
+    for (let j = i + 1; j < objs.length; j++) {
+      const A = objs[i], B = objs[j];
+      if (A.layer !== B.layer) continue;
+      if (rectsOverlap(bbox(A), bbox(B), 1)) { set.add(A.id); set.add(B.id); }
+    }
+  }
+  return set;
+}
+function baseHeights() {
+  const map = new Map();
+  const l1 = state.objects.filter(o => o.layer === 1);
+  for (const o of state.objects) {
+    const c = CATALOG[o.type];
+    let y0 = 0;
+    if (o.layer === 2) {
+      const b = bbox(o);
+      for (const a of l1) { if (rectsOverlap(b, bbox(a), 1)) y0 = Math.max(y0, CATALOG[a.type].h); }
+    }
+    if (c.wall) y0 = Math.max(y0, 150);
+    map.set(o.id, y0);
+  }
+  return map;
+}
+const frontVec = rot => [[0, 1], [-1, 0], [0, -1], [1, 0]][(normRot(rot) / 90) % 4];
+
+/* ---------------------------- DOM ---------------------------- */
+const canvasEl = $('#plan');
+const ctx = canvasEl.getContext('2d');
+const threeHost = $('#three3d');
+const stage = $('#stage');
+
+/* ---------------------------- STORAGE ---------------------------- */
+const LS_LAYOUTS = 'cslps.layouts.v1';
+const LS_CURRENT = 'cslps.current.v1';
+function lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+
+function serialize() {
+  return {
+    v: 1,
+    name: state.layoutName,
+    area: { w: state.area.w, d: state.area.d },
+    objects: state.objects.map(o => ({ type: o.type, x: o.x, y: o.y, rot: o.rot, layer: o.layer })),
+    walls: state.walls.map(w => ({ x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2 })),
+    prices: { ...state.prices },
+    finance: { ...state.finance }
+  };
+}
+let saveTimer = 0;
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveCurrent, 400);
+}
+function saveCurrent() {
+  saveTimer = 0;
+  lsSet(LS_CURRENT, serialize());
+}
+
+function applyLayout(L, opts = {}) {
+  if (!L || typeof L !== 'object') return false;
+  const aw = clamp(Number(L.area && L.area.w) || 500, 100, 3000);
+  const ad = clamp(Number(L.area && L.area.d) || 300, 100, 3000);
+  state.area = { w: aw, d: ad };
+  state.prices = { ...defaultPrices(), ...(L.prices || {}) };
+  if (L.finance) state.finance = { ...freshState().finance, ...L.finance };
+  state.objects = (Array.isArray(L.objects) ? L.objects : [])
+    .filter(o => o && CATALOG[o.type])
+    .map(o => ({
+      id: nextId(), type: o.type,
+      x: clamp(Number(o.x) || 0, 0, aw), y: clamp(Number(o.y) || 0, 0, ad),
+      rot: normRot(Number(o.rot) || 0),
+      layer: (Number(o.layer) === 2 ? 2 : 1)
+    }));
+  state.walls = (Array.isArray(L.walls) ? L.walls : [])
+    .filter(w => w && isFinite(w.x1) && isFinite(w.y1) && isFinite(w.x2) && isFinite(w.y2))
+    .map(w => ({
+      id: nextId(),
+      x1: clamp(Number(w.x1), 0, aw), y1: clamp(Number(w.y1), 0, ad),
+      x2: clamp(Number(w.x2), 0, aw), y2: clamp(Number(w.y2), 0, ad)
+    }));
+  state.selectedId = null;
+  state.layoutName = L.name || opts.name || '';
+  syncInputs();
+  render();
+  return true;
+}
+
+/* ---------------------------- BOQ / FINANCE ---------------------------- */
+const priceOf = t => { const v = Number(state.prices[t]); return isFinite(v) && v >= 0 ? v : CATALOG[t].price; };
+
+function boqRows() {
+  const m = new Map();
+  for (const o of state.objects) m.set(o.type, (m.get(o.type) || 0) + 1);
+  return Array.from(m.entries())
+    .map(([type, qty]) => ({ type, qty, unit: priceOf(type), total: qty * priceOf(type) }))
+    .sort((a, b) => ORDER.indexOf(a.type) - ORDER.indexOf(b.type));
+}
+function equipmentTotal() { return state.objects.reduce((s, o) => s + priceOf(o.type), 0); }
+
+function computeFinance() {
+  const A = equipmentTotal();
+  const D = Number(state.finance.quote) || 0;
+  const B = Number(state.finance.construction) || 0;
+  const paid = Number(state.finance.paid) || 0;
+  const dep = Number(state.finance.deposit) || 0;
+  const cost = A + B;
+  const gp = D - cost;
+  const margin = D > 0 ? (gp / D) * 100 : 0;
+  const constRemain = B - paid;
+  const cash = dep + paid;
+  const gap = cash - cost;
+  const outstanding = D - cash;
+  return { A, B, D, paid, dep, cost, gp, margin, constRemain, cash, gap, outstanding };
+}
+
+/* ---------------------------- 2D VIEW ---------------------------- */
+const view = { scale: 1, ox: 0, oy: 0 };
+const worldToScreen = (x, y) => [view.ox + x * view.scale, view.oy + y * view.scale];
+const screenToWorld = (sx, sy) => ({ x: (sx - view.ox) / view.scale, y: (sy - view.oy) / view.scale });
+
+function resizeCanvas() {
+  const r = canvasEl.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvasEl.__w = Math.max(1, Math.round(r.width));
+  canvasEl.__h = Math.max(1, Math.round(r.height));
+  canvasEl.__dpr = dpr;
+  canvasEl.width = Math.round(canvasEl.__w * dpr);
+  canvasEl.height = Math.round(canvasEl.__h * dpr);
+}
+
+function fitText(text, maxW, base) {
+  let size = base;
+  ctx.font = '800 ' + size + 'px "Segoe UI", system-ui, sans-serif';
+  while (ctx.measureText(text).width > maxW && size > 6) {
+    size--;
+    ctx.font = '800 ' + size + 'px "Segoe UI", system-ui, sans-serif';
+  }
+  return ctx.measureText(text).width <= maxW;
+}
+
+function drawGrid(ax, ay, aw, ah) {
+  const s = view.scale;
+  if (s * GRID_CM < 3.2) return;
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= state.area.w + 0.01; x += GRID_CM) {
+    const major = x % 100 === 0, mid = x % 50 === 0;
+    ctx.strokeStyle = major ? '#c6d2e0' : mid ? '#e0e7ef' : '#f1f5f9';
+    const sx = Math.round(ax + x * s) + 0.5;
+    ctx.beginPath(); ctx.moveTo(sx, ay); ctx.lineTo(sx, ay + ah); ctx.stroke();
+  }
+  for (let y = 0; y <= state.area.d + 0.01; y += GRID_CM) {
+    const major = y % 100 === 0, mid = y % 50 === 0;
+    ctx.strokeStyle = major ? '#c6d2e0' : mid ? '#e0e7ef' : '#f1f5f9';
+    const sy = Math.round(ay + y * s) + 0.5;
+    ctx.beginPath(); ctx.moveTo(ax, sy); ctx.lineTo(ax + aw, sy); ctx.stroke();
+  }
+}
+
+function drawWalls() {
+  for (const w of state.walls) {
+    const [x1, y1] = worldToScreen(w.x1, w.y1);
+    const [x2, y2] = worldToScreen(w.x2, w.y2);
+    ctx.save();
+    ctx.lineCap = 'butt';
+    ctx.lineWidth = Math.max(2.5, 10 * view.scale);
+    ctx.strokeStyle = state.selectedId === w.id ? '#0284c7' : '#3f4d5f';
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function chip(text, x, y, bg, fg) {
+  ctx.save();
+  ctx.font = '800 9px "Segoe UI", system-ui, sans-serif';
+  const w = Math.max(15, ctx.measureText(text).width + 7);
+  ctx.fillStyle = bg || 'rgba(15,23,42,.82)';
+  ctx.fillRect(x, y, w, 12);
+  ctx.fillStyle = fg || '#fff';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, x + 3.5, y + 6.5);
+  ctx.restore();
+}
+
+let hatchPattern = null;
+function getHatch() {
+  if (hatchPattern) return hatchPattern;
+  const pc = document.createElement('canvas');
+  pc.width = 8; pc.height = 8;
+  const g = pc.getContext('2d');
+  g.strokeStyle = 'rgba(15,23,42,.3)';
+  g.lineWidth = 1.2;
+  g.beginPath(); g.moveTo(0, 8); g.lineTo(8, 0); g.stroke();
+  hatchPattern = ctx.createPattern(pc, 'repeat');
+  return hatchPattern;
+}
+
+function drawObjects() {
+  const ov = overlapIds();
+  const list = state.objects.slice().sort((a, b) => a.layer - b.layer);
+  for (const o of list) drawOneObject(o, ov);
+}
+
+function drawOneObject(o, ov) {
+  {
+    const c = CATALOG[o.type] || CATALOG.washer13;
+    const s = effSize(o);
+    const [x1, y1] = worldToScreen(o.x - s.w / 2, o.y - s.d / 2);
+    const w = s.w * view.scale, h = s.d * view.scale;
+    if (w < 1 || h < 1) return;
+    const sel = o.id === state.selectedId;
+    const bad = ov.has(o.id);
+
+    ctx.fillStyle = rgba(c.color, o.layer === 2 ? 0.32 : 0.16);
+    ctx.fillRect(x1, y1, w, h);
+    if (o.layer === 2) { ctx.fillStyle = getHatch(); ctx.fillRect(x1, y1, w, h); }
+
+    ctx.save();
+    if (o.layer === 2) ctx.setLineDash([5, 3]);
+    ctx.strokeStyle = bad ? '#dc2626' : (sel ? '#0284c7' : rgba(c.color, 0.95));
+    ctx.lineWidth = (bad || sel) ? 2.6 : 1.4;
+    ctx.strokeRect(x1, y1, w, h);
+    ctx.restore();
+
+    /* label */
+    if (w > 24 && h > 14) {
+      const label = c.short;
+      if (fitText(label, w - 8, Math.min(13, Math.max(7, h * 0.42)))) {
+        ctx.fillStyle = '#0f172a';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(label, x1 + w / 2, y1 + h / 2);
+      }
+    }
+
+    /* front direction marker */
+    const fv = frontVec(o.rot);
+    let fxw = o.x, fyw = o.y;
+    if (fv[0] !== 0) fxw = o.x + fv[0] * s.w / 2; else fyw = o.y + fv[1] * s.d / 2;
+    const [cx, cy] = worldToScreen(fxw, fyw);
+    const [ex, ey] = fv[0] !== 0 ? [0, 1] : [1, 0];
+    const edgeLen = (fv[0] !== 0 ? s.d : s.w) * 0.55;
+    const [p1x, p1y] = worldToScreen(fxw - ex * edgeLen / 2, fyw - ey * edgeLen / 2);
+    const [p2x, p2y] = worldToScreen(fxw + ex * edgeLen / 2, fyw + ey * edgeLen / 2);
+    ctx.save();
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 2.4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(p1x, p1y); ctx.lineTo(p2x, p2y); ctx.stroke();
+    /* small outward arrow */
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + fv[0] * 7 - ex * 4, cy + fv[1] * 7 - ey * 4);
+    ctx.lineTo(cx + fv[0] * 7 + ex * 4, cy + fv[1] * 7 + ey * 4);
+    ctx.closePath();
+    ctx.fillStyle = '#f59e0b'; ctx.fill();
+    ctx.restore();
+
+    if (o.layer === 2) chip('L2', x1 + 3, y1 + 3, 'rgba(37,99,235,.9)');
+    if (bad) chip('ซ้อนทับ', x1 + w - 44, y1 + 3, 'rgba(220,38,38,.92)');
+
+    if (sel) {
+      ctx.save();
+      ctx.fillStyle = '#fff'; ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 1.5;
+      const pts = [[x1, y1], [x1 + w, y1], [x1, y1 + h], [x1 + w, y1 + h]];
+      for (const [px, py] of pts) ctx.fillRect(px - 3.5, py - 3.5, 7, 7), ctx.strokeRect(px - 3.5, py - 3.5, 7, 7);
+      ctx.restore();
+    }
+  }
+}
+
+function drawDraft() {
+  if (!wallDraft) return;
+  const [x1, y1] = worldToScreen(wallDraft.x1, wallDraft.y1);
+  const [x2, y2] = worldToScreen(wallDraft.x2, wallDraft.y2);
+  ctx.save();
+  ctx.setLineDash([7, 5]);
+  ctx.lineWidth = Math.max(3, 10 * view.scale);
+  ctx.strokeStyle = 'rgba(2,132,199,.75)';
+  ctx.lineCap = 'butt';
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#0284c7';
+  ctx.beginPath(); ctx.arc(x1, y1, 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x2, y2, 3.5, 0, Math.PI * 2); ctx.fill();
+  const len = Math.round(Math.hypot(wallDraft.x2 - wallDraft.x1, wallDraft.y2 - wallDraft.y1));
+  if (len > 0) {
+    ctx.fillStyle = 'rgba(15,23,42,.86)';
+    ctx.font = '800 11px "Segoe UI", system-ui, sans-serif';
+    const t = len + ' cm';
+    const tw = ctx.measureText(t).width + 12;
+    ctx.fillRect((x1 + x2) / 2 - tw / 2, (y1 + y2) / 2 - 20, tw, 17);
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(t, (x1 + x2) / 2, (y1 + y2) / 2 - 11.5);
+  }
+  ctx.restore();
+}
+
+function draw() {
+  if (state.view !== '2d') return;
+  const W = canvasEl.__w || 0, H = canvasEl.__h || 0;
+  if (!W || !H) return;
+  ctx.setTransform(canvasEl.__dpr || 1, 0, 0, canvasEl.__dpr || 1, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#e9eef5';
+  ctx.fillRect(0, 0, W, H);
+
+  const pad = 46;
+  const fit = Math.min((W - pad * 2) / state.area.w, (H - pad * 2) / state.area.d);
+  view.scale = Math.max(0.02, fit * (state.zoom / 100));
+  view.ox = (W - state.area.w * view.scale) / 2;
+  view.oy = (H - state.area.d * view.scale) / 2;
+
+  const [ax, ay] = worldToScreen(0, 0);
+  const aw = state.area.w * view.scale, ah = state.area.d * view.scale;
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(15,23,42,.22)';
+  ctx.shadowBlur = 26; ctx.shadowOffsetY = 9;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(ax, ay, aw, ah);
+  ctx.restore();
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(ax, ay, aw, ah); ctx.clip();
+  drawGrid(ax, ay, aw, ah);
+  drawWalls();
+  drawObjects();
+  drawDraft();
+  ctx.restore();
+
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(ax, ay, aw, ah);
+
+  /* dimension labels */
+  ctx.save();
+  ctx.fillStyle = '#475569';
+  ctx.font = '800 12px "Segoe UI", system-ui, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillText(state.area.w + ' cm', ax + aw / 2, ay - 9);
+  ctx.translate(ax - 10, ay + ah / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(state.area.d + ' cm', 0, 0);
+  ctx.restore();
+
+  $('#emptyHint').style.display = (state.objects.length === 0 && state.walls.length === 0) ? 'block' : 'none';
+}
+
+/* ---------------------------- HIT TESTING ---------------------------- */
+function canvasPoint(e) {
+  const r = canvasEl.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+function pickObject(p) {
+  const list = state.objects.slice().sort((a, b) => a.layer - b.layer);
+  for (let i = list.length - 1; i >= 0; i--) {
+    const o = list[i], b = bbox(o);
+    if (p.x >= b.x1 && p.x <= b.x2 && p.y >= b.y1 && p.y <= b.y2) return o;
+  }
+  return null;
+}
+function distPointSeg(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const l2 = dx * dx + dy * dy;
+  let t = l2 ? ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2 : 0;
+  t = clamp(t, 0, 1);
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+function pickWall(p) {
+  const tol = 10 / view.scale;
+  for (let i = state.walls.length - 1; i >= 0; i--) {
+    const w = state.walls[i];
+    if (distPointSeg(p, { x: w.x1, y: w.y1 }, { x: w.x2, y: w.y2 }) <= tol) return w;
+  }
+  return null;
+}
+
+/* ---------------------------- 2D INTERACTION ---------------------------- */
+let dragging = null;
+let wallDraft = null;
+
+function clampInside(o) {
+  const s = effSize(o);
+  o.x = clamp(o.x, s.w / 2, Math.max(s.w / 2, state.area.w - s.w / 2));
+  o.y = clamp(o.y, s.d / 2, Math.max(s.d / 2, state.area.d - s.d / 2));
+}
+
+canvasEl.addEventListener('pointerdown', e => {
+  if (state.view !== '2d') return;
+  canvasEl.setPointerCapture(e.pointerId);
+  const sp = canvasPoint(e);
+  const p = screenToWorld(sp.x, sp.y);
+
+  if (state.mode === 'wall') {
+    const x = clamp(snapV(p.x), 0, state.area.w);
+    const y = clamp(snapV(p.y), 0, state.area.d);
+    wallDraft = { x1: x, y1: y, x2: x, y2: y };
+    dragging = { type: 'wall' };
+    draw();
+    return;
+  }
+
+  const o = pickObject(p);
+  if (o) {
+    state.selectedId = o.id;
+    dragging = { type: 'object', id: o.id, dx: o.x - p.x, dy: o.y - p.y };
+    render();
+  } else {
+    const w = pickWall(p);
+    state.selectedId = w ? w.id : null;
+    render();
+  }
+});
+
+canvasEl.addEventListener('pointermove', e => {
+  if (state.view !== '2d') return;
+  const sp = canvasPoint(e);
+  const p = screenToWorld(sp.x, sp.y);
+
+  if (dragging && dragging.type === 'object') {
+    const o = state.objects.find(x => x.id === dragging.id);
+    if (o) {
+      o.x = clamp(snapV(p.x + dragging.dx), 0, state.area.w);
+      o.y = clamp(snapV(p.y + dragging.dy), 0, state.area.d);
+      clampInside(o);
+      draw();
+    }
+    return;
+  }
+  if (dragging && dragging.type === 'wall' && wallDraft) {
+    let ex = clamp(snapV(p.x), 0, state.area.w);
+    let ey = clamp(snapV(p.y), 0, state.area.d);
+    /* axis snap */
+    if (Math.abs(ex - wallDraft.x1) < 12) ex = wallDraft.x1;
+    if (Math.abs(ey - wallDraft.y1) < 12) ey = wallDraft.y1;
+    wallDraft.x2 = ex; wallDraft.y2 = ey;
+    draw();
+    return;
+  }
+  canvasEl.style.cursor = state.mode === 'wall' ? 'crosshair' : (pickObject(p) ? 'move' : 'default');
+});
+
+canvasEl.addEventListener('pointerup', e => {
+  if (state.view !== '2d') return;
+  try { canvasEl.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+
+  if (dragging && dragging.type === 'wall' && wallDraft) {
+    const len = Math.hypot(wallDraft.x2 - wallDraft.x1, wallDraft.y2 - wallDraft.y1);
+    if (len >= 20) {
+      state.walls.push({ id: nextId(), ...wallDraft });
+      setStatus('เพิ่มผนังกั้นโซนความยาว ' + Math.round(len) + ' cm', 'ok');
+      scheduleSave();
+    }
+    wallDraft = null;
+    dragging = null;
+    render();
+    return;
+  }
+  if (dragging && dragging.type === 'object') {
+    dragging = null;
+    render();
+    scheduleSave();
+    return;
+  }
+  dragging = null;
+});
+
+/* ---------------------------- OBJECT ACTIONS ---------------------------- */
+function findSpot(type, layer) {
+  const c = CATALOG[type];
+  const w = Math.min(c.w, state.area.w), d = Math.min(c.d, state.area.d);
+  const others = state.objects.filter(o => o.layer === layer).map(bbox);
+  for (let y = 10 + d / 2; y <= state.area.d - d / 2 + 0.1; y += SNAP) {
+    for (let x = 10 + w / 2; x <= state.area.w - w / 2 + 0.1; x += SNAP) {
+      const r = { x1: x - w / 2, y1: y - d / 2, x2: x + w / 2, y2: y + d / 2 };
+      if (!others.some(b => rectsOverlap(r, b, 1))) return { x, y };
+    }
+  }
+  return { x: state.area.w / 2, y: state.area.d / 2 };
+}
+
+function addObject(type) {
+  if (!CATALOG[type]) return;
+  const spot = findSpot(type, state.activeLayer);
+  const o = { id: nextId(), type, x: spot.x, y: spot.y, rot: 0, layer: state.activeLayer };
+  state.objects.push(o);
+  state.selectedId = o.id;
+  render();
+  scheduleSave();
+  setStatus('เพิ่ม ' + CATALOG[type].name + ' ที่ชั้น L' + o.layer + ' แล้ว', 'ok');
+}
+
+function rotateSelected() {
+  const o = state.objects.find(x => x.id === state.selectedId);
+  if (!o) { setStatus('กรุณาเลือกอุปกรณ์ก่อนกด Rotate', 'info'); return; }
+  o.rot = normRot(o.rot + 90);
+  clampInside(o);
+  render();
+  scheduleSave();
+  setStatus('หมุน ' + CATALOG[o.type].name + ' เป็น ' + o.rot + '°', 'ok');
+}
+
+function deleteSelected() {
+  const id = state.selectedId;
+  if (!id) { setStatus('กรุณาเลือกอุปกรณ์หรือผนังก่อนกด Delete', 'info'); return; }
+  const oi = state.objects.findIndex(x => x.id === id);
+  if (oi >= 0) {
+    const name = CATALOG[state.objects[oi].type].name;
+    state.objects.splice(oi, 1);
+    state.selectedId = null;
+    render(); scheduleSave();
+    setStatus('ลบ ' + name + ' ออกจากผังแล้ว', 'ok');
+    return;
+  }
+  const wi = state.walls.findIndex(x => x.id === id);
+  if (wi >= 0) {
+    state.walls.splice(wi, 1);
+    state.selectedId = null;
+    render(); scheduleSave();
+    setStatus('ลบผนังกั้นโซนแล้ว', 'ok');
+    return;
+  }
+}
+
+function toggleLayer() {
+  state.activeLayer = state.activeLayer === 1 ? 2 : 1;
+  const o = state.objects.find(x => x.id === state.selectedId);
+  if (o) {
+    o.layer = state.activeLayer;
+    setStatus('ย้าย ' + CATALOG[o.type].name + ' ไปชั้น L' + o.layer + (o.layer === 2 ? ' (วางซ้อน)' : ''), 'ok');
+    scheduleSave();
+  } else {
+    setStatus('โหมดวางอุปกรณ์ใหม่: ชั้น L' + state.activeLayer + (state.activeLayer === 2 ? ' (ซ้อนชั้น)' : ''), 'info');
+  }
+  render();
+}
+
+/* ---------------------------- 3D ---------------------------- */
+const T = { ready: false, loading: null, THREE: null, OrbitControls: null, renderer: null, scene: null, camera: null, controls: null, rig: null, raf: 0, areaKey: '' };
+const labelTexCache = new Map();
+
+async function ensureThree() {
+  if (T.ready) return true;
+  if (!T.loading) {
+    T.loading = (async () => {
+      const THREE = await import('three');
+      const mod = await import('three/addons/controls/OrbitControls.js');
+      T.THREE = THREE;
+      T.OrbitControls = mod.OrbitControls;
+      initThree();
+      T.ready = true;
+      return true;
+    })();
+  }
+  try {
+    return await T.loading;
+  } catch (err) {
+    T.loading = null;
+    console.error(err);
+    setStatus('⚠ โหลด Three.js จาก CDN ไม่สำเร็จ — ต้องต่ออินเทอร์เน็ต (โหมด 2D ยังใช้งานได้)', 'error');
+    return false;
+  }
+}
+
+function initThree() {
+  const THREE = T.THREE;
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  threeHost.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b1220);
+  scene.fog = new THREE.Fog(0x0b1220, 30, 90);
+
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
+  camera.position.set(8, 8, 10);
+
+  const controls = new T.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.maxPolarAngle = Math.PI / 2 - 0.03;
+  controls.minDistance = 1.2;
+  controls.maxDistance = 90;
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x334155, 1.15));
+  const key = new THREE.DirectionalLight(0xffffff, 2.4);
+  key.position.set(9, 15, 7);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.near = 1;
+  key.shadow.camera.far = 70;
+  key.shadow.camera.left = -22;
+  key.shadow.camera.right = 22;
+  key.shadow.camera.top = 22;
+  key.shadow.camera.bottom = -22;
+  key.shadow.bias = -0.0007;
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.55);
+  fill.position.set(-10, 9, -9);
+  scene.add(fill);
+
+  const rig = new THREE.Group();
+  scene.add(rig);
+
+  T.renderer = renderer;
+  T.scene = scene;
+  T.camera = camera;
+  T.controls = controls;
+  T.rig = rig;
+
+  resizeThree();
+  animateLoop();
+}
+
+function resizeThree() {
+  if (!T.ready) return;
+  const r = threeHost.getBoundingClientRect();
+  const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+  T.renderer.setSize(w, h, false);
+  T.camera.aspect = w / h;
+  T.camera.updateProjectionMatrix();
+}
+
+function animateLoop() {
+  if (T.raf) cancelAnimationFrame(T.raf);
+  const tick = () => {
+    T.raf = requestAnimationFrame(tick);
+    if (!T.ready || state.view !== '3d') return;
+    T.controls.update();
+    T.renderer.render(T.scene, T.camera);
+  };
+  T.raf = requestAnimationFrame(tick);
+}
+
+function disposeDeep(obj) {
+  obj.traverse(n => {
+    if (n.geometry) n.geometry.dispose();
+    if (n.material) {
+      const arr = Array.isArray(n.material) ? n.material : [n.material];
+      for (const m of arr) m.dispose();
+    }
+  });
+}
+
+function labelSprite(text) {
+  const THREE = T.THREE;
+  if (!labelTexCache.has(text)) {
+    const cv = document.createElement('canvas');
+    cv.width = 256; cv.height = 72;
+    const g = cv.getContext('2d');
+    g.fillStyle = 'rgba(9,16,28,.85)';
+    g.beginPath();
+    if (g.roundRect) g.roundRect(8, 12, 240, 48, 14); else g.rect(8, 12, 240, 48);
+    g.fill();
+    g.fillStyle = '#eaf4ff';
+    g.font = '800 28px "Segoe UI", system-ui, sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, 128, 37);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    labelTexCache.set(text, tex);
+  }
+  const mat = new THREE.SpriteMaterial({ map: labelTexCache.get(text), transparent: true, depthWrite: false });
+  const sp = new THREE.Sprite(mat);
+  sp.scale.set(0.95, 0.27, 1);
+  sp.renderOrder = 10;
+  return sp;
+}
+
+function buildThree() {
+  if (!T.ready) return;
+  const THREE = T.THREE;
+  const rig = T.rig;
+  while (rig.children.length) {
+    const c = rig.children.pop();
+    disposeDeep(c);
+  }
+
+  const aw = state.area.w / 100;   /* width  -> X */
+  const ad = state.area.d / 100;   /* depth  -> Z */
+  const toX = cm => cm / 100 - aw / 2;
+  const toZ = cm => cm / 100 - ad / 2;
+
+  /* floor */
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(aw, ad),
+    new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.96, metalness: 0 })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  rig.add(floor);
+
+  /* grid overlay (every 50 cm) */
+  const pts = [];
+  for (let x = 0; x <= state.area.w; x += 50) {
+    pts.push(toX(x), 0.006, toZ(0), toX(x), 0.006, toZ(state.area.d));
+  }
+  for (let z = 0; z <= state.area.d; z += 50) {
+    pts.push(toX(0), 0.006, toZ(z), toX(state.area.w), 0.006, toZ(z));
+  }
+  const gg = new THREE.BufferGeometry();
+  gg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  rig.add(new THREE.LineSegments(gg, new THREE.LineBasicMaterial({ color: 0x9fb2c6, transparent: true, opacity: 0.55 })));
+
+  /* walls */
+  for (const w of state.walls) {
+    const dx = (w.x2 - w.x1) / 100, dz = (w.y2 - w.y1) / 100;
+    const len = Math.hypot(dx, dz);
+    if (len < 0.05) continue;
+    const t = 0.1;
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(len, WALL_H_CM / 100, t),
+      new THREE.MeshStandardMaterial({
+        color: 0xdde5ee, roughness: 0.88, metalness: 0,
+        transparent: true, opacity: 0.45, side: THREE.DoubleSide
+      })
+    );
+    mesh.position.set(toX((w.x1 + w.x2) / 2), WALL_H_CM / 200, toZ((w.y1 + w.y2) / 2));
+    mesh.rotation.y = -Math.atan2(dz, dx);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    rig.add(mesh);
+  }
+
+  /* machines & furniture */
+  const heights = baseHeights();
+  for (const o of state.objects) {
+    const c = CATALOG[o.type];
+    const s = effSize(o);
+    const ww = s.w / 100, dd = s.d / 100, hh = c.h / 100;
+    const y0 = (heights.get(o.id) || 0) / 100;
+    const cx = toX(o.x), cz = toZ(o.y);
+
+    const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(c.color), roughness: 0.55, metalness: 0.16 });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(ww, hh, dd), mat);
+    mesh.position.set(cx, y0 + hh / 2, cz);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    rig.add(mesh);
+
+    /* door / front panel */
+    const fv = frontVec(o.rot);
+    const panelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.35, metalness: 0.4 });
+    const pw = fv[0] !== 0 ? 0.02 : ww * 0.62;
+    const pd = fv[0] !== 0 ? dd * 0.62 : 0.02;
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(pw, hh * 0.34, pd), panelMat);
+    panel.position.set(
+      cx + (fv[0] !== 0 ? fv[0] * (ww / 2 + 0.012) : 0),
+      y0 + hh * 0.55,
+      cz + (fv[1] !== 0 ? fv[1] * (dd / 2 + 0.012) : 0)
+    );
+    panel.castShadow = false;
+    rig.add(panel);
+
+    /* label above */
+    if (c.h >= 75) {
+      const sp = labelSprite(c.short);
+      sp.position.set(cx, y0 + hh + 0.2, cz);
+      rig.add(sp);
+    }
+  }
+
+  /* camera framing when area changed */
+  const key = state.area.w + 'x' + state.area.d;
+  if (T.areaKey !== key) {
+    T.areaKey = key;
+    const r = Math.max(aw, ad);
+    T.camera.position.set(r * 0.5, r * 0.95, r * 0.85);
+    T.controls.target.set(0, 0.9, 0);
+    T.controls.update();
+  }
+}
+
+/* ---------------------------- STATUS / CHROME ---------------------------- */
+let statusTimer = 0;
+function setStatus(msg, tone) {
+  const el = $('#status');
+  el.textContent = msg;
+  el.className = 'status' + (tone ? ' ' + tone : '');
+  clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => {
+    el.textContent = 'พร้อมใช้งาน';
+    el.className = 'status';
+  }, 4800);
+}
+
+function updateChrome() {
+  const stackBtn = $('#btnStack');
+  stackBtn.textContent = '⇅ Stack L' + state.activeLayer;
+  stackBtn.classList.toggle('on', state.activeLayer === 2);
+  $$('.zbtn').forEach(b => b.classList.toggle('active', Number(b.dataset.zoom) === state.zoom));
+  $('#emptyHint').style.display = (state.view === '2d' && state.objects.length === 0 && state.walls.length === 0) ? 'block' : 'none';
+}
+
+function syncInputs() {
+  $('#areaW').value = state.area.w;
+  $('#areaD').value = state.area.d;
+  $('#layoutName').value = state.layoutName || '';
+  updateChrome();
+}
+
+function render() {
+  if (state.view === '2d') draw();
+  else if (T.ready) buildThree();
+  updateChrome();
+}
+
+/* ---------------------------- PRESETS ---------------------------- */
+const mk = (type, x, y, rot, layer) => ({ type, x, y, rot: rot || 0, layer: layer || 1 });
+
+function presetS() {
+  const o = [], w = [];
+  [75, 145, 215, 285].forEach(x => o.push(mk('washer13', x, 50)));
+  [75, 145, 215].forEach(x => o.push(mk('dryer13', x, 145)));
+  o.push(mk('water', 335, 150));
+  o.push(mk('coffee', 80, 250));
+  o.push(mk('tablechair', 245, 255));
+  o.push(mk('backdrop', 20, 170, 90));
+  o.push(mk('tv', 330, 12));
+  o.push(mk('posterRule', 120, 10));
+  o.push(mk('posterHowto', 200, 10, 0));
+  w.push({ x1: 0, y1: 0, x2: 420, y2: 0 }, { x1: 0, y1: 0, x2: 0, y2: 320 },
+    { x1: 420, y1: 0, x2: 420, y2: 320 },
+    { x1: 0, y1: 320, x2: 150, y2: 320 }, { x1: 250, y1: 320, x2: 420, y2: 320 });
+  return { name: 'Size S — 420×320', area: { w: 420, d: 320 }, objects: o, walls: w };
+}
+
+function presetM() {
+  const o = [], w = [];
+  [75, 145, 215, 285, 355].forEach(x => { o.push(mk('washer13', x, 50)); o.push(mk('dryer13', x, 145)); });
+  o.push(mk('water', 500, 60));
+  o.push(mk('vending', 540, 250));
+  o.push(mk('coffee', 120, 265));
+  o.push(mk('tablechair', 300, 270));
+  o.push(mk('backdrop', 20, 190, 90));
+  o.push(mk('tv', 330, 12));
+  o.push(mk('posterRule', 150, 10));
+  o.push(mk('posterHowto', 215, 10));
+  o.push(mk('posterPrice', 460, 10));
+  w.push({ x1: 0, y1: 0, x2: 620, y2: 0 }, { x1: 0, y1: 0, x2: 0, y2: 380 },
+    { x1: 620, y1: 0, x2: 620, y2: 380 },
+    { x1: 0, y1: 380, x2: 220, y2: 380 }, { x1: 340, y1: 380, x2: 620, y2: 380 });
+  return { name: 'Size M — 620×380', area: { w: 620, d: 380 }, objects: o, walls: w };
+}
+
+function presetL() {
+  const o = [], w = [];
+  [75, 145, 215, 285, 355, 425, 495].forEach(x => o.push(mk('washer13', x, 55)));
+  [75, 145, 215, 285, 355, 425].forEach(x => o.push(mk('dryer13', x, 150)));
+  o.push(mk('water', 600, 60));
+  o.push(mk('water', 720, 60));
+  o.push(mk('coffee', 640, 170));
+  /* stack demo: washer L1 + dryer L2 */
+  o.push(mk('washer13', 740, 185, 0, 1));
+  o.push(mk('dryer13', 740, 185, 0, 2));
+  o.push(mk('vending', 700, 330));
+  o.push(mk('tablechair', 150, 350));
+  o.push(mk('tablechair', 350, 350));
+  o.push(mk('tablechair', 520, 360));
+  o.push(mk('backdrop', 20, 235, 90));
+  o.push(mk('tv', 300, 12));
+  o.push(mk('posterRule', 120, 10));
+  o.push(mk('posterHowto', 185, 10));
+  o.push(mk('posterPrice', 620, 10));
+  w.push({ x1: 0, y1: 0, x2: 820, y2: 0 }, { x1: 0, y1: 0, x2: 0, y2: 470 },
+    { x1: 820, y1: 0, x2: 820, y2: 470 },
+    { x1: 0, y1: 470, x2: 300, y2: 470 }, { x1: 420, y1: 470, x2: 820, y2: 470 });
+  return { name: 'Size L — 820×470', area: { w: 820, d: 470 }, objects: o, walls: w };
+}
+
+const PRESETS = { presetS, presetM, presetL };
+
+function refreshLoadOptions() {
+  const sel = $('#selLoad');
+  const saved = lsGet(LS_LAYOUTS) || {};
+  let html = '<option value="">Load layout...</option>';
+  html += '<optgroup label="ผังตัวอย่างมาตรฐาน">';
+  html += '<option value="preset:presetS">Size S — 420 × 320 cm</option>';
+  html += '<option value="preset:presetM">Size M — 620 × 380 cm</option>';
+  html += '<option value="preset:presetL">Size L — 820 × 470 cm</option>';
+  html += '</optgroup>';
+  const names = Object.keys(saved);
+  if (names.length) {
+    html += '<optgroup label="ผังที่บันทึกไว้">';
+    for (const n of names) html += '<option value="saved:' + esc(n) + '">' + esc(n) + '</option>';
+    html += '</optgroup>';
+  }
+  sel.innerHTML = html;
+  sel.value = '';
+}
+
+/* ---------------------------- MODALS : BOQ TABLE ---------------------------- */
+function boqRowsHTML(editable, emptyText) {
+  const rows = boqRows();
+  if (!rows.length) return '<tr><td colspan="4" class="empty">' + emptyText + '</td></tr>';
+  return rows.map(r => {
+    const c = CATALOG[r.type];
+    const priceCell = editable
+      ? '<input class="pin" type="number" min="0" step="500" value="' + r.unit + '" data-price="' + r.type + '">'
+      : fmt(r.unit);
+    return '<tr>' +
+      '<td><span class="dot" style="background:' + c.color + '"></span>' + esc(c.name) + '</td>' +
+      '<td class="num">' + r.qty + '</td>' +
+      '<td class="num">' + priceCell + '</td>' +
+      '<td class="num" data-total="' + r.type + '">' + fmt(r.total) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function instancesHTML() {
+  if (!state.objects.length) return '<tr><td colspan="7" class="empty">ยังไม่มีอุปกรณ์ในผัง</td></tr>';
+  return state.objects.map((o, i) => {
+    const c = CATALOG[o.type];
+    return '<tr>' +
+      '<td class="num">' + (i + 1) + '</td>' +
+      '<td><span class="dot" style="background:' + c.color + '"></span>' + esc(c.name) + '</td>' +
+      '<td>' + c.w + ' × ' + c.d + ' × ' + c.h + ' cm</td>' +
+      '<td class="num">' + Math.round(o.x) + ', ' + Math.round(o.y) + '</td>' +
+      '<td class="num">L' + o.layer + '</td>' +
+      '<td class="num">' + fmt(priceOf(o.type)) + '</td>' +
+      '<td class="num"><button class="btn danger" style="padding:2px 8px" data-del="' + o.id + '">🗑</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function refreshSums() {
+  const eq = equipmentTotal();
+  $$('[data-eqtotal]').forEach(el => el.textContent = fmt(eq));
+  for (const r of boqRows()) {
+    $$('[data-total="' + r.type + '"]').forEach(el => el.textContent = fmt(r.total));
+  }
+  renderKPI();
+}
+
+/* ---------------------------- MODALS : SUMMARY ---------------------------- */
+function renderKPI() {
+  const f = computeFinance();
+  const set = (id, val, cls) => { const el = $(id); el.textContent = val; el.className = 'kVal ' + cls; };
+  set('#kpiGp', thb(f.gp), f.gp >= 0 ? 'pos' : 'neg');
+  set('#kpiMargin', f.margin.toFixed(1) + ' %', f.margin >= 0 ? 'pos' : 'neg');
+  set('#kpiConstRemain', thb(f.constRemain), f.constRemain >= 0 ? 'neu' : 'neg');
+  set('#kpiGap', thb(f.gap), f.gap >= 0 ? 'pos' : 'neg');
+  set('#kpiOuts', thb(f.outstanding), f.outstanding > 0 ? 'neu' : 'pos');
+  set('#kpiQty', state.objects.length + ' ชิ้น', 'neu');
+  $('#fCost').textContent = thb(f.cost);
+  $('#fCash').textContent = thb(f.cash);
+  $('#fOuts').textContent = thb(f.outstanding);
+}
+
+function openSummary() {
+  $('#sumBoq').innerHTML = boqRowsHTML(true, 'ยังไม่มีอุปกรณ์ในผัง');
+  $('#finQuote').value = state.finance.quote;
+  $('#finConst').value = state.finance.construction;
+  $('#finPaid').value = state.finance.paid;
+  $('#finDep').value = state.finance.deposit;
+  $('#sumSub').textContent = state.layoutName ? 'ผัง: ' + state.layoutName : '';
+  refreshSums();
+  openModal('#modalSummary');
+}
+
+function openList() {
+  $('#listBoq').innerHTML = boqRowsHTML(true, 'ยังไม่มีอุปกรณ์ในผัง');
+  $('#listInstances').innerHTML = instancesHTML();
+  $('#listSub').textContent = state.objects.length + ' รายการ · ' + (state.layoutName || 'ยังไม่ตั้งชื่อผัง');
+  refreshSums();
+  openModal('#modalList');
+}
+
+function openModal(sel) { $(sel).classList.add('open'); }
+
+/* ---------------------------- EXPORT / IMPORT ---------------------------- */
+function download(filename, content, mime) {
+  const blob = new Blob([content], { type: mime || 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+function exportJSON() {
+  const name = (state.layoutName || 'layout').replace(/[^\w\u0E00-\u0E7F\- ]+/g, '').trim() || 'layout';
+  download(name + '.json', JSON.stringify(serialize(), null, 2), 'application/json;charset=utf-8');
+  setStatus('ส่งออกไฟล์ .json สำเร็จ', 'ok');
+}
+
+function exportCSV() {
+  const f = computeFinance();
+  const rows = boqRows();
+  const L = [];
+  L.push('Commercial Store Layout & Project Cost Summary');
+  L.push('"Layout","' + (state.layoutName || '-') + '"');
+  L.push('"Area (cm)","' + state.area.w + ' x ' + state.area.d + '"');
+  L.push('"Generated","' + new Date().toLocaleString('th-TH') + '"');
+  L.push('');
+  L.push('"Equipment","Qty","Unit Price (THB)","Amount (THB)"');
+  rows.forEach(r => L.push('"' + CATALOG[r.type].name + '",' + r.qty + ',' + r.unit + ',' + r.total));
+  L.push('"EQUIPMENT TOTAL (A)","","",' + f.A);
+  L.push('');
+  L.push('"Item","Value (THB)"');
+  L.push('"Construction Budget (B)",' + f.B);
+  L.push('"Total Project Cost (A+B)",' + f.cost);
+  L.push('"Customer Quote",' + f.D);
+  L.push('"Deposit",' + f.dep);
+  L.push('"Paid Tranches",' + f.paid);
+  L.push('"Cash Received",' + f.cash);
+  L.push('"Gross Profit",' + f.gp);
+  L.push('"Margin (%)",' + f.margin.toFixed(2));
+  L.push('"Construction Remaining",' + f.constRemain);
+  L.push('"Budget Gap to Control",' + f.gap);
+  L.push('"Outstanding",' + f.outstanding);
+  download(((state.layoutName || 'layout').replace(/[^\w\u0E00-\u0E7F\- ]+/g, '').trim() || 'layout') + '-boq.csv',
+    '\uFEFF' + L.join('\r\n'), 'text/csv;charset=utf-8');
+  setStatus('ส่งออกรายงาน CSV สำเร็จ', 'ok');
+}
+
+function buildPrintSheet() {
+  const f = computeFinance();
+  const rows = boqRows();
+  let boq = '';
+  rows.forEach(r => {
+    boq += '<tr><td>' + esc(CATALOG[r.type].name) + '</td><td class="num">' + r.qty +
+      '</td><td class="num">' + fmt(r.unit) + '</td><td class="num">' + fmt(r.total) + '</td></tr>';
+  });
+  if (!rows.length) boq = '<tr><td colspan="4">— ไม่มีอุปกรณ์ —</td></tr>';
+  const fin = [
+    ['Construction Budget (B)', f.B],
+    ['Total Project Cost (A+B)', f.cost],
+    ['Customer Quote', f.D],
+    ['Deposit', f.dep],
+    ['Paid Tranches', f.paid],
+    ['Cash Received (Deposit + Paid)', f.cash],
+    ['Outstanding', f.outstanding],
+    ['Gross Profit', f.gp],
+    ['Margin', f.margin.toFixed(1) + ' %'],
+    ['Construction Remaining', f.constRemain],
+    ['Budget Gap to Control', f.gap]
+  ];
+  $('#printSheet').innerHTML =
+    '<div class="ps">' +
+    '<h1>Commercial Store Layout &amp; Project Cost Summary</h1>' +
+    '<p class="psMeta">Layout: <b>' + esc(state.layoutName || '-') + '</b> &nbsp;·&nbsp; Area: <b>' +
+    state.area.w + ' × ' + state.area.d + ' cm</b> &nbsp;·&nbsp; Date: ' + new Date().toLocaleString('th-TH') + '</p>' +
+    '<h2>Equipment BOQ</h2>' +
+    '<table><thead><tr><th>Equipment</th><th class="num">Qty</th><th class="num">Unit Price (THB)</th><th class="num">Amount (THB)</th></tr></thead><tbody>' +
+    boq + '</tbody><tfoot><tr><td colspan="3">EQUIPMENT TOTAL (A)</td><td class="num">' + fmt(f.A) + '</td></tr></tfoot></table>' +
+    '<h2>Financial Summary</h2>' +
+    '<table><thead><tr><th>Item</th><th class="num">Value (THB)</th></tr></thead><tbody>' +
+    fin.map(([k, v]) => '<tr><td>' + k + '</td><td class="num">' + (typeof v === 'number' ? fmt(v) : v) + '</td></tr>').join('') +
+    '</tbody></table></div>';
+}
+
+/* ---------------------------- VIEW SWITCH ---------------------------- */
+async function switchView(v) {
+  if (v === state.view) return;
+  const is3d = v === '3d';
+  if (is3d) {
+    setStatus('กำลังโหลด Three.js…', 'info');
+    const ok = await ensureThree();
+    if (!ok) return;
+  }
+  state.view = v;
+  $$('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  canvasEl.classList.toggle('hidden', is3d);
+  threeHost.classList.toggle('hidden', !is3d);
+  if (is3d) {
+    resizeThree();
+    buildThree();
+    animateLoop();
+    setStatus('โหมด 3D — ลากเพื่อหมุน, สกรอลล์เพื่อซูม, คลิกขวาเพื่อแพน', 'info');
+  } else {
+    resizeCanvas();
+    draw();
+    setStatus('โหมด 2D Plan', 'info');
+  }
+  updateChrome();
+}
+
+/* ---------------------------- UI WIRING ---------------------------- */
+function wire() {
+  /* view switch */
+  $$('[data-view]').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
+
+  /* mode switch */
+  $$('[data-mode]').forEach(b => b.addEventListener('click', () => {
+    state.mode = b.dataset.mode;
+    $$('[data-mode]').forEach(x => x.classList.toggle('active', x.dataset.mode === state.mode));
+    canvasEl.style.cursor = state.mode === 'wall' ? 'crosshair' : 'default';
+    setStatus(state.mode === 'wall' ? 'โหมดวาดผนัง — ลากบนผังเพื่อสร้างผนังกั้นโซน' : 'โหมดเลือก/ย้ายวัตถุ', 'info');
+  }));
+
+  /* palette */
+  $$('[data-add]').forEach(b => b.addEventListener('click', () => addObject(b.dataset.add)));
+
+  /* tools */
+  $('#btnRotate').addEventListener('click', rotateSelected);
+  $('#btnDelete').addEventListener('click', deleteSelected);
+  $('#btnStack').addEventListener('click', toggleLayer);
+
+  /* zoom */
+  $$('.zbtn').forEach(b => b.addEventListener('click', () => {
+    state.zoom = Number(b.dataset.zoom);
+    updateChrome();
+    draw();
+  }));
+
+  /* area */
+  $('#btnApply').addEventListener('click', () => {
+    const w = clamp(Math.round(Number($('#areaW').value) || 500), 100, 3000);
+    const d = clamp(Math.round(Number($('#areaD').value) || 300), 100, 3000);
+    state.area = { w, d };
+    state.objects.forEach(clampInside);
+    state.walls.forEach(wl => {
+      wl.x1 = clamp(wl.x1, 0, w); wl.x2 = clamp(wl.x2, 0, w);
+      wl.y1 = clamp(wl.y1, 0, d); wl.y2 = clamp(wl.y2, 0, d);
+    });
+    syncInputs(); render(); scheduleSave();
+    setStatus('ปรับขนาดพื้นที่ร้านเป็น ' + w + ' × ' + d + ' cm', 'ok');
+  });
+
+  /* save / load */
+  $('#btnSave').addEventListener('click', () => {
+    const name = ($('#layoutName').value || '').trim();
+    if (!name) {
+      setStatus('กรุณากรอกชื่อไฟล์ผังก่อนบันทึก', 'error');
+      $('#layoutName').focus();
+      return;
+    }
+    const all = lsGet(LS_LAYOUTS) || {};
+    state.layoutName = name;
+    all[name] = serialize();
+    if (lsSet(LS_LAYOUTS, all)) {
+      refreshLoadOptions();
+      saveCurrent();
+      setStatus('✓ บันทึกผังลงเครื่องสำเร็จ (' + name + ')', 'ok');
+    } else {
+      setStatus('บันทึกไม่สำเร็จ — พื้นที่เก็บข้อมูลของเบราว์เซอร์เต็มหรือถูกปิดกั้น', 'error');
+    }
+  });
+
+  $('#selLoad').addEventListener('change', e => {
+    const v = e.target.value;
+    e.target.value = '';
+    if (!v) return;
+    if (v.startsWith('preset:')) {
+      const fn = PRESETS[v.slice(7)];
+      if (fn) {
+        const L = fn();
+        L.prices = defaultPrices();
+        applyLayout(L);
+        saveCurrent();
+        setStatus('โหลดผังตัวอย่าง ' + L.name + ' สำเร็จ', 'ok');
+      }
+    } else if (v.startsWith('saved:')) {
+      const name = v.slice(6);
+      const all = lsGet(LS_LAYOUTS) || {};
+      if (all[name]) {
+        applyLayout({ ...all[name], name });
+        saveCurrent();
+        setStatus('โหลดผัง "' + name + '" สำเร็จ', 'ok');
+      } else {
+        setStatus('ไม่พบผังที่เลือก', 'error');
+      }
+    }
+  });
+
+  $('#layoutName').addEventListener('input', e => { state.layoutName = e.target.value; });
+
+  /* modals */
+  $('#btnList').addEventListener('click', openList);
+  $('#btnSummary').addEventListener('click', openSummary);
+  $$('[data-close]').forEach(b => b.addEventListener('click', () => {
+    const bd = b.closest('.backdrop');
+    if (bd) bd.classList.remove('open');
+  }));
+  $$('.backdrop').forEach(bd => bd.addEventListener('mousedown', e => {
+    if (e.target === bd) bd.classList.remove('open');
+  }));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') $$('.backdrop.open').forEach(bd => bd.classList.remove('open'));
+  });
+
+  /* price editing (delegated) */
+  document.addEventListener('input', e => {
+    const t = e.target;
+    if (t.matches('[data-price]')) {
+      const type = t.dataset.price;
+      state.prices[type] = Math.max(0, Number(t.value) || 0);
+      /* sync the twin input in the other modal */
+      $$('[data-price="' + type + '"]').forEach(inp => { if (inp !== t) inp.value = state.prices[type]; });
+      refreshSums();
+      scheduleSave();
+    }
+  });
+
+  /* instance delete (delegated) */
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-del]');
+    if (!b) return;
+    const id = b.dataset.del;
+    const i = state.objects.findIndex(o => o.id === id);
+    if (i >= 0) state.objects.splice(i, 1);
+    $('#listInstances').innerHTML = instancesHTML();
+    $('#listSub').textContent = state.objects.length + ' รายการ · ' + (state.layoutName || 'ยังไม่ตั้งชื่อผัง');
+    $('#listBoq').innerHTML = boqRowsHTML(true, 'ยังไม่มีอุปกรณ์ในผัง');
+    refreshSums();
+    render(); scheduleSave();
+  });
+
+  /* finance inputs */
+  const finMap = { finQuote: 'quote', finConst: 'construction', finPaid: 'paid', finDep: 'deposit' };
+  for (const id in finMap) {
+    $('#' + id).addEventListener('input', e => {
+      state.finance[finMap[id]] = Math.max(0, Number(e.target.value) || 0);
+      renderKPI();
+      scheduleSave();
+    });
+  }
+
+  /* exports */
+  $('#btnExportJson').addEventListener('click', exportJSON);
+  $('#btnCsv').addEventListener('click', exportCSV);
+  $('#btnPrint').addEventListener('click', () => {
+    buildPrintSheet();
+    window.print();
+  });
+
+  /* import json */
+  $('#fileImport').addEventListener('change', e => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const data = JSON.parse(String(rd.result));
+        if (applyLayout(data)) {
+          refreshLoadOptions();
+          saveCurrent();
+          setStatus('นำเข้าไฟล์ผังสำเร็จ (' + file.name + ')', 'ok');
+          const bd = $('#modalList');
+          bd.classList.remove('open');
+        } else {
+          setStatus('ไฟล์ไม่ถูกต้อง', 'error');
+        }
+      } catch (err) {
+        setStatus('อ่านไฟล์ .json ไม่สำเร็จ', 'error');
+      }
+    };
+    rd.onerror = () => setStatus('อ่านไฟล์ไม่สำเร็จ', 'error');
+    rd.readAsText(file, 'utf-8');
+  });
+
+  /* keyboard shortcuts */
+  window.addEventListener('keydown', e => {
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
+    if (e.key === 'r' || e.key === 'R') { e.preventDefault(); rotateSelected(); }
+    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelected(); }
+    else if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      $('#btnSave').click();
+    }
+  });
+
+  /* responsive */
+  const ro = new ResizeObserver(() => {
+    resizeCanvas();
+    if (state.view === '2d') draw();
+    else resizeThree();
+  });
+  ro.observe(stage);
+
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    if (state.view === '2d') draw();
+    else resizeThree();
+  });
+
+  window.addEventListener('beforeunload', saveCurrent);
+}
+
+/* ---------------------------- BOOTSTRAP ---------------------------- */
+function boot() {
+  wire();
+  const cur = lsGet(LS_CURRENT);
+  if (cur) {
+    applyLayout(cur);
+    if (cur.name) state.layoutName = cur.name;
+    setStatus('กู้คืนผังล่าสุดจากเครื่องแล้ว', 'info');
+  }
+  resizeCanvas();
+  refreshLoadOptions();
+  syncInputs();
+  render();
+  setTimeout(() => { resizeCanvas(); render(); }, 60);
+}
+
+boot();
+</script>
+</body>
+</html>
