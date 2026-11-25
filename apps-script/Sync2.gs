@@ -8,6 +8,17 @@
 var TARGETS_TAB = 'Targets';
 var DAILY_TAB = 'DailyReports';
 
+/** เวลา HH:mm — รองรับกรณี Sheets เก็บเป็น Date (เช่น 16:00 → 1899-12-30T16:00Z) */
+function normTime_(v) {
+  if (v === null || v === undefined || v === '') return '';
+  if (Object.prototype.toString.call(v) === '[object Date]') {
+    try { return Utilities.formatDate(v, Session.getScriptTimeZone(), 'HH:mm'); } catch (e) { return ''; }
+  }
+  var s = String(v).trim();
+  var m = s.match(/(\d{1,2}):(\d{2})/);
+  return m ? (('0' + m[1]).slice(-2) + ':' + m[2]) : s;
+}
+
 function tab_(name) {
   var ss = getSheet_().getParent();
   var sh = ss.getSheetByName(name);
@@ -100,14 +111,14 @@ function dailyOf_(r) {
   return {
     ref: String(r.ref || '').trim().toUpperCase(),
     date: normDate_(r.date),
-    time: String(r.time || ''),
+    time: normTime_(r.time),
     customer: String(r.customer || ''),
     qt: String(r.qt || ''),
     channel: String(r.channel || 'visit'),
     value: Number(r.value || 0),
     summary: String(r.summary || ''),
     nextDate: normDate_(r.nextDate),
-    nextTime: String(r.nextTime || ''),
+    nextTime: normTime_(r.nextTime),
     nextNote: String(r.nextNote || ''),
     saleId: String(r.saleId || '').trim().toUpperCase(),
     by: String(r.by || '').toLowerCase(),
@@ -166,14 +177,14 @@ function saveDailyApi_(token, p) {
   var rec = {
     ref: ref,
     date: normDate_(p.date),
-    time: String(p.time || ''),
+    time: normTime_(p.time),
     customer: customer,
     qt: String(p.qt || ''),
     channel: String(p.channel || 'visit'),
     value: Number(p.value || 0),
     summary: String(p.summary || ''),
     nextDate: normDate_(p.nextDate),
-    nextTime: String(p.nextTime || ''),
+    nextTime: normTime_(p.nextTime),
     nextNote: String(p.nextNote || ''),
     saleId: String(p.saleId || s.saleId || '').trim().toUpperCase(),
     by: String(p.by || s.email || '').toLowerCase(),
