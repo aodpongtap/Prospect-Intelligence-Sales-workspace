@@ -1076,6 +1076,7 @@ tr.divHead td{background:#1e2632;color:var(--text);border-color:var(--line-2)}
 
 /* ======================================================================
    v6 — AutoCAD-style structure: ribbon + command line + drafting toggles
+   v6.1 — history persist (25 steps) · selection kept on undo · zoom/pan saved
    ====================================================================== */
 :root{--tb-h:100px}
 .body{grid-template-rows:var(--tb-h) minmax(0,1fr) 30px}
@@ -1669,7 +1670,7 @@ kbd{
 
   <!-- ================= STATUS BAR ================= -->
   <footer class="statusbar">
-    <span class="ver">v6</span>
+    <span class="ver">v6.1</span>
     <span id="sbPhase" class="sbPhase">Phase 1</span>
     <span class="dotSep"></span>
     <span id="sbArea">พื้นที่ 600 × 380 ซม.</span>
@@ -1698,7 +1699,7 @@ kbd{
   <div class="mCard wide">
     <div class="mHead">
       <h2>คู่มือการใช้งาน — Store Studio</h2>
-      <span class="mSub">Ctrl+F5 หากหน้าจอไม่เปลี่ยนหลังอัปเดต · build v6</span>
+      <span class="mSub">Ctrl+F5 หากหน้าจอไม่เปลี่ยนหลังอัปเดต · build v6.1</span>
       <button class="mClose" data-close>✕</button>
     </div>
     <div class="mBody">
@@ -2507,12 +2508,14 @@ function excludedItems() {
 /* ------------------------------ STORAGE ------------------------------ */
 const LS_CURRENT = 'tsr.studio.current.v1';
 const LS_LAYOUTS = 'tsr.studio.layouts.v1';
+const LS_HIST = 'tsr.studio.hist.v1';
 const lsGet = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
 
 function serialize() {
   return {
-    v: 1, name: state.name, pkg: state.pkg, area: { ...state.area }, zoom: state.zoom,
+    v: 1, name: state.name, pkg: state.pkg, area: { ...state.area },
+    zoom: state.zoom, panX: state.panX || 0, panY: state.panY || 0,
     objects: state.objects.map(o => {
       const out = { type: o.type, x: o.x, y: o.y, rot: o.rot, layer: o.layer };
       if (o.w) out.w = o.w;
@@ -2543,6 +2546,50 @@ const scheduleSave = () => { clearTimeout(saveTimer); saveTimer = setTimeout(() 
 
 /* ---------------- UNDO / REDO ---------------- */
 const HIST = { stack: [], i: -1, lock: false };
+const HIST_MAX = 40;          /* จำนวนขั้นสูงสุดในหน่วยความจำ */
+const HIST_KEEP = 25;         /* จำนวนขั้นที่เก็บลง localStorage (คงเหลือหลังรีเฟรช) */
+let histTimer = 0;
+const scheduleSaveHist = () => { clearTimeout(histTimer); histTimer = setTimeout(saveHist, 600); };
+function saveHist() {
+  clearTimeout(histTimer);
+  if (!HIST.stack.length) return;
+  const keep = Math.max(0, HIST.stack.length - HIST_KEEP);
+  if (lsSet(LS_HIST, { v: 1, i: HIST.i - keep, stack: HIST.stack.slice(keep) })) return;
+  const k2 = Math.max(0, HIST.stack.length - 8);   /* เก็บไม่ไหว (โควต้าเต็ม) → ลดจำนวนขั้น */
+  lsSet(LS_HIST, { v: 1, i: Math.max(0, HIST.i - k2), stack: HIST.stack.slice(k2) });
+}
+function restoreHist() {
+  const d = lsGet(LS_HIST);
+  if (!d || !Array.isArray(d.stack)) return false;
+  const stack = d.stack.filter(s => typeof s === 'string' && s.length > 1);
+  if (stack.length < 2) return false;
+  HIST.stack = stack;
+  HIST.i = clamp(Number.isFinite(Number(d.i)) ? Math.round(Number(d.i)) : stack.length - 1, 0, stack.length - 1);
+  try { HIST.stack[HIST.i] = JSON.stringify(serialize()); } catch (e) { /* noop */ }
+  return true;
+}
+function clearHist() {
+  clearTimeout(histTimer);
+  HIST.stack = []; HIST.i = -1; HIST.lock = false;
+  try { localStorage.removeItem(LS_HIST); } catch (e) { /* noop */ }
+}
+/* จำว่ากำลังเลือกชิ้นไหนอยู่ (id ถูกสร้างใหม่ทุกครั้งที่โหลด) → คืนด้วยลำดับในอาเรย์ */
+function selectionRef() {
+  const idx = arr => arr.findIndex(x => x.id === state.selectedId);
+  let i = idx(state.objects); if (i >= 0) return { kind: 'obj', i };
+  i = idx(state.walls); if (i >= 0) return { kind: 'wall', i };
+  i = idx(state.mep); if (i >= 0) return { kind: 'mep', i };
+  i = idx(state.pipes); if (i >= 0) return { kind: 'pipe', i };
+  return null;
+}
+function restoreSelection(ref) {
+  if (!ref) return null;
+  const arr = ref.kind === 'obj' ? state.objects
+    : ref.kind === 'wall' ? state.walls
+    : ref.kind === 'mep' ? state.mep : state.pipes;
+  const hit = arr && arr[ref.i];
+  return hit ? hit.id : null;
+}
 function commit() {
   if (HIST.lock) return;
   let s;
@@ -2550,26 +2597,31 @@ function commit() {
   if (HIST.stack[HIST.i] === s) return;
   HIST.stack = HIST.stack.slice(0, HIST.i + 1);
   HIST.stack.push(s);
-  if (HIST.stack.length > 40) HIST.stack.shift();
+  if (HIST.stack.length > HIST_MAX) HIST.stack.shift();
   HIST.i = HIST.stack.length - 1;
   scheduleSave();
+  scheduleSaveHist();
 }
 function undo() {
   if (HIST.i <= 0) { status('ไม่มีขั้นตอนให้ย้อนกลับ', 'warn'); return; }
+  const sel = selectionRef();
   HIST.i--;
   HIST.lock = true;
-  applyData(JSON.parse(HIST.stack[HIST.i]));
+  applyData(JSON.parse(HIST.stack[HIST.i]), sel);
   HIST.lock = false;
   scheduleSave();
-  status('ย้อนกลับ 1 ขั้นตอน (เหลือ ' + HIST.i + ' ขั้น)', 'ok');
+  scheduleSaveHist();
+  status('ย้อนกลับ 1 ขั้นตอน (เหลือ ' + HIST.i + ' ขั้น)' + (state.selectedId ? ' · คงรายการที่เลือกไว้' : ''), 'ok');
 }
 function redo() {
   if (HIST.i >= HIST.stack.length - 1) { status('ไม่มีขั้นตอนให้ทำซ้ำ', 'warn'); return; }
+  const sel = selectionRef();
   HIST.i++;
   HIST.lock = true;
-  applyData(JSON.parse(HIST.stack[HIST.i]));
+  applyData(JSON.parse(HIST.stack[HIST.i]), sel);
   HIST.lock = false;
   scheduleSave();
+  scheduleSaveHist();
   status('ทำซ้ำ 1 ขั้นตอน (' + HIST.i + '/' + (HIST.stack.length - 1) + ')', 'ok');
 }
 function duplicateSelected() {
@@ -2593,14 +2645,16 @@ function duplicateSelected() {
   }
 }
 
-function applyData(data) {
+function applyData(data, keepSel) {
   if (!data || typeof data !== 'object') return false;
   state.area = {
     w: clamp(Number(data.area && data.area.w) || 620, 200, 3000),
     d: clamp(Number(data.area && data.area.d) || 380, 200, 3000)
   };
   state.pkg = PKGS[data.pkg] ? data.pkg : 'M';
-  state.zoom = [20, 40, 60, 80, 100, 120].includes(Number(data.zoom)) ? Number(data.zoom) : 100;
+  state.zoom = clamp(Math.round(Number(data.zoom) || 100), 20, 400);
+  state.panX = clamp(Math.round(Number(data.panX) || 0), -20000, 20000);
+  state.panY = clamp(Math.round(Number(data.panY) || 0), -20000, 20000);
   state.costs = data.costs && typeof data.costs === 'object' ? data.costs : {};
   if (data.doc && typeof data.doc === 'object') {
     state.doc = { ...freshState().doc, ...data.doc };
@@ -2682,7 +2736,7 @@ function applyData(data) {
         .map(r => ({ id: 'm' + (uid++), code: r.code, qty: parseNum(r.qty) }));
     }
   }
-  state.selectedId = null;
+  state.selectedId = keepSel ? restoreSelection(keepSel) : null;
   state.name = typeof data.name === 'string' ? data.name : '';
   rebuildMasterIndex();
   syncSidebar();
@@ -3452,6 +3506,7 @@ canvasEl.addEventListener('pointermove', e => {
     state.panX = dragging.px + (sp.x - dragging.sx);
     state.panY = dragging.py + (sp.y - dragging.sy);
     draw();
+    scheduleSave();
     return;
   }
   if (dragging && dragging.type === 'resize') {
@@ -3544,6 +3599,7 @@ canvasEl.addEventListener('wheel', e => {
   state.zoom = clamp(next, 20, 400);
   draw();
   updateStatusBar();
+  scheduleSave();
 }, { passive: false });
 canvasEl.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -5473,13 +5529,24 @@ function setDraft(k) {
   if (k === 'cross' && !state.cross) { hoverPt = null; draw(); }
   status(k.toUpperCase() + ' ' + (state[k] ? 'ON' : 'OFF'));
 }
+/* ซูมเป็นขั้นมาตรฐาน (รองรับค่าซูมอิสระจากล้อเมาส์) */
+const ZOOM_STEPS = [20, 40, 60, 80, 100, 120, 160, 200, 250, 300, 400];
+function zoomStep(dir) {
+  const next = dir > 0
+    ? ZOOM_STEPS.find(s => s > state.zoom + 0.5)
+    : ZOOM_STEPS.slice().reverse().find(s => s < state.zoom - 0.5);
+  state.zoom = next == null ? (dir > 0 ? 400 : 20) : next;
+  renderAll();
+  scheduleSave();
+  status('ZOOM ' + state.zoom + '%');
+}
 
 /* ------------------------------ RESET ------------------------------ */
 function resetAll(skipConfirm) {
   if (!skipConfirm && !confirm('ล้างข้อมูลทั้งหมด (ผัง · งานระบบ · ต้นทุนที่แก้ · ผังที่บันทึก) แล้วเริ่มใหม่?')) return false;
-  try { localStorage.removeItem(LS_CURRENT); localStorage.removeItem(LS_LAYOUTS); } catch (e) { /* noop */ }
+  try { localStorage.removeItem(LS_CURRENT); localStorage.removeItem(LS_LAYOUTS); localStorage.removeItem(LS_HIST); } catch (e) { /* noop */ }
   state = freshState();
-  HIST.stack = []; HIST.i = -1; HIST.lock = false;
+  clearHist();
   rebuildMasterIndex();
   closeModals();
   setPage('studio');
@@ -5505,7 +5572,7 @@ const DEMO_STEPS = [
   { t: '6) BOQ & ต้นทุน', b: 'ทุกอย่างถูกถอดเป็น BOQ พร้อมคอลัมน์ “ที่มาของปริมาณ” ตรวจสอบได้ทุกบรรทัด', run: () => openBoq() },
   { t: '7) พิมพ์ / ส่งมอบ', b: 'พิมพ์ BOQ (3 หน้า + title block) หรือพิมพ์สเปคให้ลูกค้า (ไม่มีตัวเลขต้นทุน)', run: () => closeModals() }
 ];
-const DEMO = { on: false, i: 0, snap: null };
+const DEMO = { on: false, i: 0, snap: null, hist: null };
 
 function demoRender() {
   const s = DEMO_STEPS[DEMO.i];
@@ -5524,6 +5591,7 @@ function demoStart() {
   closeModals();
   DEMO.on = true; DEMO.i = 0;
   DEMO.snap = JSON.stringify(serialize());
+  DEMO.hist = { stack: HIST.stack.slice(), i: HIST.i };   /* เก็บประวัติเดิมไว้คืนเมื่อจบสาธิต */
   if (state.view !== '2d') switchView('2d');
   setPage('studio');
   $('#demoCard').classList.remove('hidden');
@@ -5552,6 +5620,12 @@ function demoEnd() {
     } catch (e) { /* noop */ }
     DEMO.snap = null;
   }
+  if (DEMO.hist) {
+    HIST.stack = DEMO.hist.stack; HIST.i = DEMO.hist.i;
+    try { HIST.stack[HIST.i] = JSON.stringify(serialize()); } catch (e) { /* noop */ }
+    DEMO.hist = null;
+    scheduleSaveHist();
+  }
   toast('จบการสาธิต — คืนค่าผังเดิมแล้ว');
 }
 
@@ -5561,7 +5635,7 @@ function runCmd(raw) {  const cmd = String(raw || '').trim().toLowerCase();
   const map = {
     grid: () => setDraft('grid'), snap: () => setDraft('snap'),
     ortho: () => setDraft('ortho'), osnap: () => setDraft('osnap'), cross: () => setDraft('cross'),
-    zoom: () => { state.zoom = 100; renderAll(); status('ZOOM → 100%'); },
+    zoom: () => { state.zoom = 100; state.panX = 0; state.panY = 0; renderAll(); scheduleSave(); status('ZOOM → 100%'); },
     wall: () => setMode('wall'), line: () => setMode('wall'), select: () => setMode('select'),
     mep: () => { setSideTab('mep'); status('เปิดคลังงานระบบ'); },
     boq: () => openBoq(), master: () => openMaster(), summary: () => openSummary(),
@@ -5705,21 +5779,11 @@ function wire() {
   /* zoom */
   $('#wkFloat').addEventListener('click', e => {
     const b = e.target.closest('[data-zoom]');
-    if (b) { state.zoom = Number(b.dataset.zoom); renderAll(); }
-    if (e.target.id === 'wkFit') { state.zoom = 100; state.panX = 0; state.panY = 0; renderAll(); }
+    if (b) { state.zoom = Number(b.dataset.zoom); renderAll(); scheduleSave(); }
+    if (e.target.id === 'wkFit') { state.zoom = 100; state.panX = 0; state.panY = 0; renderAll(); scheduleSave(); }
   });
-  $('#zoomIn').addEventListener('click', () => {
-    const steps = [20, 40, 60, 80, 100, 120];
-    const i = steps.indexOf(state.zoom);
-    state.zoom = steps[Math.min(steps.length - 1, i < 0 ? 4 : i + 1)];
-    renderAll();
-  });
-  $('#zoomOut').addEventListener('click', () => {
-    const steps = [20, 40, 60, 80, 100, 120];
-    const i = steps.indexOf(state.zoom);
-    state.zoom = steps[Math.max(0, i < 0 ? 4 : i - 1)];
-    renderAll();
-  });
+  $('#zoomIn').addEventListener('click', () => zoomStep(+1));
+  $('#zoomOut').addEventListener('click', () => zoomStep(-1));
 
   /* selected actions */
   $('#inspSelected').addEventListener('click', e => {
@@ -6044,7 +6108,7 @@ function wire() {
     if (state.view === '2d') draw();
     else resizeThree();
   });
-  window.addEventListener('beforeunload', () => lsSet(LS_CURRENT, serialize()));
+  window.addEventListener('beforeunload', () => { lsSet(LS_CURRENT, serialize()); saveHist(); });
 }
 
 function refreshBoqNumbers() {
@@ -6090,8 +6154,13 @@ function expectViewAfterLoad() {
   resizeCanvas();
   renderAll();
   setTimeout(() => { resizeCanvas(); renderAll(); }, 80);
-  /* baseline ของประวัติ สำหรับ Undo/Redo */
-  commit();
+  /* baseline ของประวัติ สำหรับ Undo/Redo — กู้ประวัติเดิมที่บันทึกไว้ก่อน (DEF-03) */
+  if (restoreHist()) {
+    scheduleSaveHist();
+    status('กู้คืนผัง + ประวัติ ' + (HIST.i + 1) + ' ขั้นตอน (Undo/Redo) จากเครื่องแล้ว');
+  } else {
+    commit();
+  }
 })();
 </script>
 </body>
