@@ -128,7 +128,8 @@
       + '    <div style="display:flex;gap:8px;flex-wrap:wrap">'
       + (isAdmin() ? '      <button class="al-btn blue" id="alBkNow"><i class="fa-solid fa-database"></i> สำรองเดี๋ยวนี้</button>'
         + '      <button class="al-btn" id="alBkInstall"><i class="fa-solid fa-clock"></i> เปิดสำรองอัตโนมัติ</button>'
-        + '      <button class="al-btn" id="alBkCron"><i class="fa-solid fa-copy"></i> คัดลอก URL ตั้งเวลา</button>' : '')
+        + '      <button class="al-btn" id="alBkCron"><i class="fa-solid fa-copy"></i> คัดลอก URL ตั้งเวลา</button>'
+        + '      <a class="al-btn" style="text-decoration:none" href="https://script.google.com/home/projects/1lkYiKjFqgjKO7gCDGgxaJuk8A5PIxcKbYsqJxDsdHrfpPOfGC5bXH8NV/edit" target="_blank" rel="noopener" title="เปิด Apps Script เพื่อรันฟังก์ชัน authorizeBackup และอนุมัติสิทธิ์ Drive"><i class="fa-solid fa-key"></i> ขอสิทธิ์ Drive</a>' : '')
       + '    </div></div>'
       + '</section>';
   }
@@ -208,6 +209,11 @@
             : (r.driveReady ? 'โฟลเดอร์ ' + esc(String(r.folderName || 'Prospect Intelligence AE workspace')) : 'แท็บสำรองในไฟล์เดียวกัน (' + esc(String(r.keepTabs || 3)) + ' ชุด)')));
       box.innerHTML = 'โหมดสำรองอัตโนมัติ: <b class="' + cls + '">' + esc(modeTxt) + '</b><br>'
         + 'ปลายทาง: <b>' + dest + '</b><br>'
+        + 'สิทธิ์ Google Drive: <b class="' + (r.driveReady ? 'al-bk-ok' : 'al-bk-warn') + '">'
+        + (r.driveReady
+          ? 'พร้อมใช้งาน — ย้ายไฟล์เข้าโฟลเดอร์ + ลบไฟล์ PI-backup-* เก่าได้'
+          : 'ยังไม่อนุมัติ — ไฟล์สำรองจะอยู่ใน My Drive (กด "วิธีขอสิทธิ์" ด้านล่าง)')
+        + '</b><br>'
         + 'สำรองล่าสุด: <b>' + last + '</b>' + (r.lastName ? ' · ' + esc(r.lastName) : '') + '<br>'
         + (r.lastMode === 'single'
           ? 'รูปแบบ: รวมทุกแท็บไว้ในไฟล์เดียว (เขียนทับทุกครั้ง) + แท็บ <b>_History</b> เก็บประวัติการสำรอง<br>'
