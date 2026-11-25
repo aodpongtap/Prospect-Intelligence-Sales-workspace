@@ -18,7 +18,8 @@ var DATA_SCHEMA = {
     headers: ['email', 'name', 'level', 'status', 'passHash', 'salt', 'createdAt', 'lastLogin',
       'parent', 'saleId', 'team', 'empCode', 'startDate', 'empStatus', 'nickname', 'phone',
       'lineId', 'gmail', 'updatedAt', 'deleted'],
-    widths: [180, 150, 70, 60, 0, 0, 130, 130, 180, 60, 80, 90, 90, 80, 90, 100, 110, 170, 130, 60]
+    widths: [180, 150, 70, 60, 0, 0, 130, 130, 180, 60, 80, 90, 90, 80, 90, 100, 110, 170, 130, 60],
+    formats: { '11': '@', '15': '@', '16': '@' }
   },
 
   /* ดีล / Pipeline (โครง v2 — ตรงกับฟอร์มในหน้า AE Pipeline) */
@@ -31,7 +32,7 @@ var DATA_SCHEMA = {
       'status': ['0', '1', '2', '3', '4', '5'],
       'payment': ['cash', 'inst', 'term']
     },
-    formats: { '8': 'yyyy-mm-dd', '12': '#,##0' }
+    formats: { '0': '@', '6': '@', '7': '@', '8': 'yyyy-mm-dd', '12': '#,##0', '16': '@' }
   },
 
   /* บันทึกการเข้าพบลูกค้า (ต้นทางของดีล) */
@@ -40,7 +41,7 @@ var DATA_SCHEMA = {
       'nextDate', 'nextTime', 'nextNote', 'saleId', 'by', 'createdAt', 'updatedAt', 'deleted'],
     widths: [130, 95, 60, 170, 110, 70, 90, 240, 95, 60, 200, 60, 180, 130, 130, 55],
     validations: { 'channel': ['visit', 'call', 'email', 'line', 'meeting'] },
-    formats: { '1': 'yyyy-mm-dd', '8': 'yyyy-mm-dd', '6': '#,##0' }
+    formats: { '0': '@', '1': 'yyyy-mm-dd', '4': '@', '6': '#,##0', '8': 'yyyy-mm-dd', '9': '@' }
   },
 
   /* เป้าหมาย: ระดับทีม (saleId ว่าง) หรือรายคน (saleId = S01) */
@@ -69,7 +70,7 @@ var DATA_SCHEMA = {
       'deliveredDate', 'progress', 'blocker', 'createdAt', 'updatedAt', 'deleted',
       'ownerName', 'saleName', 'team', 'drRef', 'note', 'tasksJson'],
     widths: [120, 170, 190, 110, 130, 180, 95, 95, 95, 70, 220, 130, 130, 55, 150, 150, 90, 110, 240, 320],
-    formats: { '6': 'yyyy-mm-dd', '7': 'yyyy-mm-dd', '8': 'yyyy-mm-dd', '9': '#,##0', '10': '@' }
+    formats: { '0': '@', '3': '@', '6': 'yyyy-mm-dd', '7': 'yyyy-mm-dd', '8': 'yyyy-mm-dd', '9': '#,##0', '10': '@', '17': '@' }
   },
 
   /* Log การใช้งาน ( audit trail ) */
@@ -78,6 +79,39 @@ var DATA_SCHEMA = {
     widths: [130, 110, 220, 320, 180]
   }
 };
+
+/* ------------------------------------------------------------------
+ * คอลัมน์ที่ต้องเก็บเป็น "ข้อความ" เสมอ
+ * (กัน Google Sheets แปลง 00123 → 123 และตัดศูนย์นำหน้าทิ้ง)
+ * ------------------------------------------------------------------ */
+var TEXT_COLUMNS = ['no', 'so', 'docNo', 'qt', 'ref', 'drRef', 'dealNo', 'empCode', 'phone',
+  'lineId', 'code', 'blocker', 'ts', 'tasksJson'];
+
+/** เขียนค่าแบบบังคับข้อความลงเซลล์เดียว */
+function setCellText_(sh, row, col, val) {
+  var cell = sh.getRange(row, col);
+  try { cell.setNumberFormat('@'); } catch (e) {}
+  cell.setValue(val === undefined || val === null ? '' : String(val));
+}
+
+/** เขียนทั้งแถว (array เต็มความกว้าง) — คอลัมน์ข้อความถูกจัดรูปแบบก่อนเขียน */
+function writeRowText_(sh, rowIdx, values, headers) {
+  var heads = headers || [];
+  for (var i = 0; i < values.length; i++) {
+    var h = String(heads[i] || '');
+    if (TEXT_COLUMNS.indexOf(h) < 0) continue;
+    try { sh.getRange(rowIdx, i + 1).setNumberFormat('@'); } catch (e) {}
+    values[i] = (values[i] === null || values[i] === undefined) ? '' : String(values[i]);
+  }
+  sh.getRange(rowIdx, 1, 1, values.length).setValues([values]);
+}
+
+/** ต่อท้ายแถวใหม่ (บังคับข้อความตาม headers) */
+function appendRowText_(sh, values, headers) {
+  var row = sh.getLastRow() + 1;
+  writeRowText_(sh, row, values, headers);
+  return row;
+}
 
 /** สร้าง/อัปเดตแท็บทั้งหมดตาม DATA_SCHEMA แล้วคืนสรุปผล */
 function setupDataSheets() {

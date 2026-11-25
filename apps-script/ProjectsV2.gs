@@ -175,8 +175,9 @@ function saveProjectApi_(token, payload) {
   var row = [];
   for (var c = 1; c <= width; c++) row.push('');
   Object.keys(rec).forEach(function (k) { if (map[k]) row[map[k] - 1] = rec[k]; });
-  if (rowIdx) sh.getRange(rowIdx, 1, 1, width).setValues([row]);
-  else sh.appendRow(row);
+  var heads = sh.getRange(1, 1, 1, width).getValues()[0].map(function (h) { return String(h || ''); });
+  if (rowIdx) writeRowText_(sh, rowIdx, row, heads);
+  else appendRowText_(sh, row, heads);
 
   appendTab_('Logs', {
     ts: nowIso,

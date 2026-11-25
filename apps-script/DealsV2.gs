@@ -237,9 +237,8 @@ function saveDealV2(token, payload) {
     Object.keys(map).forEach(function (h) {
       if (h === 'createdAt') return;
       if (rec[h] === undefined) return;
-      var cell = sh.getRange(row, map[h]);
-      if (h === 'quoteDate') { cell.setNumberFormat('@'); cell.setValue(rec[h]); return; }
-      cell.setValue(rec[h]);
+      if (TEXT_COLUMNS.indexOf(h) >= 0) { setCellText_(sh, row, map[h], rec[h]); return; }
+      sh.getRange(row, map[h]).setValue(rec[h]);
     });
     if (map.deleted) sh.getRange(row, map.deleted).setValue(0);
   } else {
@@ -250,7 +249,7 @@ function saveDealV2(token, payload) {
       if (h === 'deleted') return 0;
       return rec[h] === undefined ? '' : rec[h];
     });
-    sh.appendRow(rowVals);
+    appendRowText_(sh, rowVals, headers);
     if (map.quoteDate) sh.getRange(sh.getLastRow(), map.quoteDate).setNumberFormat('@');
   }
 

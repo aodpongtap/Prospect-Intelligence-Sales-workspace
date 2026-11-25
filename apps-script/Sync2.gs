@@ -182,16 +182,17 @@ function saveDailyApi_(token, p) {
       if (h === 'createdAt' || rec[h] === undefined) return;
       var cell = sh.getRange(hit._row, map[h]);
       if (h === 'date' || h === 'nextDate') { cell.setNumberFormat('@'); cell.setValue(rec[h]); return; }
+      if (TEXT_COLUMNS.indexOf(h) >= 0) { setCellText_(sh, hit._row, map[h], rec[h]); return; }
       cell.setValue(rec[h]);
     });
     if (map.deleted) sh.getRange(hit._row, map.deleted).setValue(0);
   } else {
     rec.createdAt = nowIso;
-    sh.appendRow(heads.map(function (h) {
+    appendRowText_(sh, heads.map(function (h) {
       if (h === 'createdAt') return nowIso;
       if (h === 'deleted') return 0;
       return rec[h] === undefined ? '' : rec[h];
-    }));
+    }), heads);
     var lastRow = sh.getLastRow();
     ['date', 'nextDate'].forEach(function (h) {
       var idx = heads.indexOf(h);

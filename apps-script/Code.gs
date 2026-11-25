@@ -604,7 +604,7 @@ function writeEmpFields_(sh, row, ex) {
   Object.keys(map).forEach(function (k) {
     if (ex[k] === undefined) return;
     var cell = sh.getRange(row, map[k]);
-    if (k === 'startDate' || k === 'phone') cell.setNumberFormat('@');   // เก็บเป็นข้อความ ไม่ให้ Sheets แปลง
+    if (k === 'startDate' || k === 'phone' || k === 'empCode' || k === 'lineId') cell.setNumberFormat('@');   // เก็บเป็นข้อความ ไม่ให้ Sheets แปลง/ตัดศูนย์นำหน้า
     cell.setValue(ex[k]);
   });
 }
