@@ -425,6 +425,18 @@ function backupDailyApi_() {
   return { ok: !!r.ok, mode: r.mode, skipped: false, at: new Date().toISOString() };
 }
 
+/**
+ * ทดสอบ/ขอสิทธิ์ Drive + Trigger — รันจาก Apps Script Editor 1 ครั้ง
+ * ผลลัพธ์ที่ถูกต้อง: "Drive OK: My Drive | triggers: 0"
+ * ถ้าขึ้น Authorization required → กด Review permissions แล้ว Allow ทุกสิทธิ์
+ */
+function testDrivePermission() {
+  var root = DriveApp.getRootFolder();          /* ถ้าไม่มีสิทธิ์ Drive จะ error ที่บรรทัดนี้ */
+  var folder = backupFolder_();
+  var n = ScriptApp.getProjectTriggers().length;
+  return 'Drive OK: ' + root.getName() + ' | folder: ' + folder.getName() + ' | triggers: ' + n;
+}
+
 /** ตรวจว่าบัญชีที่เว็บแอปรันอยู่คือใคร และมีสิทธิ์ Drive/Trigger หรือไม่ (ใช้ diagnost) */
 function whoAmI_(token) {
   var s = token ? session_(token) : null;
