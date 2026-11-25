@@ -21,15 +21,18 @@
 ## 3) Backup
 - **อัตโนมัติ:** GitHub Actions `daily-sheet-backup` ทุกวัน 19:00 UTC (02:00 ไทย) → เรียก `?api=1&action=backupDaily`
 - **ระหว่างวัน:** สำรองเมื่อมีผู้ใช้เข้าระบบครั้งแรก (lazy) + ปุ่ม "สำรองเดี๋ยวนี้"
-- **ปลายทาง:** ไฟล์ Google Sheet แยกใน Drive แบบหมุนเวียน **7 ชุด** (`PI-backup-yyyyMMdd-HHmm`)
-- **กู้คืน:** เปิดไฟล์ `PI-backup-…` ที่ต้องการ → คัดลอกแท็บกลับเข้าไฟล์หลัก
+- **ปลายทาง:** **ไฟล์เดียวใน Google Drive** ชื่อ `Prospect Intelligence AE workspace`
+  - รวมทุกแท็บ (Users · Deals · DailyReports · Targets · Teams · Products · Projects · Logs) ไว้ในไฟล์เดียว
+  - เขียนทับทุกครั้งที่สำรอง → มีข้อมูลล่าสุดเสมอ · แท็บ `_Meta` = สรุป · แท็บ `_History` = ประวัติการสำรอง
+  - ถ้าสคริปต์มีสิทธิ์ Drive จะย้ายไฟล์เข้าโฟลเดอร์ `Prospect Intelligence AE workspace — สำรองข้อมูล` และลบไฟล์เก่า `PI-backup-*` ให้
+- **กู้คืน:** เปิดไฟล์ `Prospect Intelligence AE workspace` → คัดลอกแท็บที่ต้องการกลับเข้าไฟล์หลัก
 - **ล้าง Log:** Activity Log → ปุ่ม "ล้าง Log" (สำรองลง `Logs_archive_*` อัตโนมัติ)
 
 ## 4) สิทธิ์ (RBAC)
 | ระดับ | เห็น |
 |---|---|
 | L1 Admin | ทั้งเครือข่าย + Activity Log + Backup |
-| L2 BU | ทั้งเครือข่าย (ไม่เห็น Activity Log) |
+| L2 BU | ทั้งเครือข่าย (ไม่เห็น Activity Log / Backup) |
 | L3 Head Team | ทีมที่ดูแล |
 | L4 Supervisor | AE + ตัวแทนในทีม |
 | L5 AE | ตัวเอง + ตัวแทนที่ผูก (saleId) |

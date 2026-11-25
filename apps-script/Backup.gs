@@ -1,7 +1,7 @@
 /**
  * ระบบหลังบ้าน: Backup รายวัน + Activity Log (สำหรับ Admin)
  * -----------------------------------------------------------------
- * - dailyBackup_()            : สำรองไฟล์ Google Sheet ไปโฟลเดอร์ "PI Backups" (เก็บ 30 วัน)
+ * - dailyBackup_()            : สำรองข้อมูลลง "ไฟล์เดียวใน Drive" ชื่อ "Prospect Intelligence AE workspace"
  * - installDailyBackupTrigger(): ติดตั้ง trigger ทุกวัน 02:00
  * - listLogsApi_(token, opt)  : อ่านแท็บ Logs (Admin/BU เท่านั้น) รองรับ filter
  * API:
@@ -11,7 +11,9 @@
  *   ?action=backupInfo&token=…       (สถานะ backup ล่าสุด + trigger)
  */
 
-var BACKUP_FOLDER_NAME = 'PI Backups';
+/* ชื่อไฟล์/โฟลเดอร์สำรอง — รวมทุกตารางไว้ในไฟล์เดียวเพื่อความเป็นระเบียบใน Google Drive */
+var BACKUP_FILE_NAME = 'Prospect Intelligence AE workspace';
+var BACKUP_FOLDER_NAME = 'Prospect Intelligence AE workspace — สำรองข้อมูล';
 var BACKUP_KEEP_DAYS = 30;
 var BACKUP_KEEP_TABS = 3;
 var BACKUP_POOL_SIZE = 7;
@@ -45,7 +47,8 @@ function driveBackup_(props) {
   var removed = 0;
   while (files.hasNext()) {
     var f = files.next();
-    if (String(f.getName()).indexOf('PI-backup-') !== 0) continue;
+    var fn = String(f.getName());
+    if (fn.indexOf('PI-backup-') !== 0 && fn.indexOf('PI-backup-slot-') !== 0) continue;
     if (f.getDateCreated() < cutoff) { f.setTrashed(true); removed++; }
   }
 
@@ -160,26 +163,156 @@ function poolBackup_(props) {
   };
 }
 
+/* ------------------------------------------------------------------
+ * โหมดหลัก: ไฟล์เดียวรวมทุกตาราง — "Prospect Intelligence AE workspace"
+ * ------------------------------------------------------------------ */
+
+/** ไอดีไฟล์สำรองหลัก (สร้างครั้งแรกแล้วจำไว้ใน Script Properties) */
+function backupFileId_(props) {
+  var id = props.getProperty('BACKUP_FILE_ID');
+  if (id) {
+    try { SpreadsheetApp.openById(id); return id; } catch (e) { /* ไฟล์ถูกลบ → สร้างใหม่ */ }
+  }
+  var ss = SpreadsheetApp.create(BACKUP_FILE_NAME);
+  props.setProperty('BACKUP_FILE_ID', ss.getId());
+  return ss.getId();
+}
+
+/** ย้ายไฟล์เข้าโฟลเดอร์สำรอง (ทำได้เฉพาะเมื่อมีสิทธิ์ Drive) */
+function tryMoveToFolder_(fileId) {
+  try {
+    var folder = backupFolder_();
+    DriveApp.getFileById(fileId).moveTo(folder);
+    return folder.getName();
+  } catch (e) {
+    return '';
+  }
+}
+
+/** ลบไฟล์สำรองแบบเก่าที่กระจัดกระจาย (PI-backup-*) — ทำได้เฉพาะเมื่อมีสิทธิ์ Drive */
+function tryCleanLegacyBackups_(keepId) {
+  var n = 0;
+  try {
+    var files = DriveApp.getFiles();
+    while (files.hasNext()) {
+      var f = files.next();
+      if (f.getId() === keepId) continue;
+      var nm = String(f.getName());
+      if (nm.indexOf('PI-backup-') !== 0 && nm.indexOf('PI-backup-slot-') !== 0) continue;
+      try { f.setTrashed(true); n++; } catch (e2) {}
+    }
+  } catch (e) {}
+  return n;
+}
+
+/**
+ * สำรองข้อมูลทุกแท็บของฐานข้อมูลลง "ไฟล์เดียว" ใน Google Drive
+ * ไฟล์: Prospect Intelligence AE workspace  (เขียนทับทุกครั้ง = มีข้อมูลล่าสุดเสมอ)
+ * แท็บ: Users · Deals · DailyReports · Targets · Teams · Products · Projects · Logs + _Meta + _History
+ */
+function singleBackup_(props) {
+  var src = getSheet_().getParent();
+  var dst = SpreadsheetApp.openById(backupFileId_(props));
+  var stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+  var names = [], totalRows = 0, sheets = src.getSheets();
+
+  for (var i = 0; i < sheets.length; i++) {
+    var sh = sheets[i], nm = String(sh.getName());
+    if (nm.indexOf('BK ') === 0) continue;                 /* ข้ามแท็บสำรองชั่วคราว */
+    if (/^_/.test(nm)) continue;
+    var vals = [];
+    try { vals = sh.getDataRange().getValues(); } catch (e) { vals = []; }
+    var tabName = nm.slice(0, 99);
+    var target = dst.getSheetByName(tabName) || dst.insertSheet(tabName);
+    try { target.clear(); } catch (e2) {}
+    if (vals.length && vals[0] && vals[0].length) {
+      var w = Math.min(vals[0].length, 60);
+      var out = vals.map(function (r) {
+        var o = r.slice(0, w).map(function (v) { return (v instanceof Date) ? v.toISOString() : v; });
+        while (o.length < w) o.push('');
+        return o;
+      });
+      try { target.getRange(1, 1, out.length, w).setValues(out); } catch (e3) {}
+      totalRows += Math.max(0, out.length - 1);
+    }
+    names.push(tabName);
+  }
+
+  /* ลบแท็บที่ไม่มีในต้นฉบับแล้ว (ยกเว้นแท็บระบบของไฟล์สำรอง) */
+  dst.getSheets().forEach(function (s) {
+    var n = String(s.getName());
+    if (n === '_Meta' || n === '_History') return;
+    if (names.indexOf(n) < 0) { try { dst.deleteSheet(s); } catch (e) {} }
+  });
+
+  /* แท็บ _Meta = สรุปข้อมูลไฟล์นี้ */
+  var meta = dst.getSheetByName('_Meta') || dst.insertSheet('_Meta');
+  try { meta.clear(); } catch (e4) {}
+  var metaRows = [
+    ['ไฟล์สำรอง: ' + BACKUP_FILE_NAME],
+    ['สำรองล่าสุด', stamp],
+    ['ต้นฉบับ (Google Sheet)', src.getUrl()],
+    ['จำนวนแท็บ', String(names.length)],
+    ['จำนวนแถวข้อมูลรวม', String(totalRows)],
+    ['รายการแท็บ', names.join(', ')],
+    ['หมายเหตุ', 'ไฟล์นี้เขียนทับทุกครั้งที่สำรองข้อมูล — ข้อมูลล่าสุดอยู่ในแท็บตามชื่อตาราง']
+  ];
+  try { meta.getRange(1, 1, metaRows.length, 2).setValues(metaRows); } catch (e5) {}
+
+  /* แท็บ _History = ประวัติการสำรอง (ไม่ลบ ทำให้ตรวจย้อนหลังได้) */
+  var hist = dst.getSheetByName('_History');
+  if (!hist) {
+    hist = dst.insertSheet('_History');
+    try { hist.appendRow(['วันที่สำรอง', 'จำนวนแท็บ', 'จำนวนแถวรวม']); } catch (e6) {}
+  }
+  try { hist.appendRow([stamp, names.length, totalRows]); } catch (e7) {}
+
+  /* จัดเก็บให้เป็นระเบียบ: ย้ายเข้าโฟลเดอร์ + ล้างไฟล์แบบเก่า (ถ้ามีสิทธิ์ Drive) */
+  var folderName = tryMoveToFolder_(dst.getId());
+  var removed = tryCleanLegacyBackups_(dst.getId());
+
+  props.setProperty('LAST_BACKUP_AT', new Date().toISOString());
+  props.setProperty('LAST_BACKUP_NAME', dst.getName());
+  props.setProperty('LAST_BACKUP_URL', dst.getUrl());
+  props.setProperty('LAST_BACKUP_MODE', 'single');
+  return {
+    ok: true, mode: 'single', file: dst.getName(), url: dst.getUrl(),
+    folder: folderName || 'My Drive', sheets: names.length, rows: totalRows, removed: removed
+  };
+}
+
 /** สำรองข้อมูลทั้งไฟล์ (เรียกโดย trigger รายวัน หรือปุ่ม "สำรองเดี๋ยวนี้") */
 function dailyBackup_(forceMode) {
   var props = PropertiesService.getScriptProperties();
-  var out;
   if (forceMode === 'sheet') return sheetSnapshot_(props);
   if (forceMode === 'pool') return poolBackup_(props);
+  if (forceMode === 'single') return singleBackup_(props);
+
+  /* ลำดับ: ไฟล์เดียวรวมทุกตาราง → คัดลอกทั้งไฟล์ → ไฟล์หมุนเวียน → แท็บในไฟล์เดียวกัน */
   try {
-    out = driveBackup_(props);                 /* กรณีมีสิทธิ์ Drive เต็มรูปแบบ */
-  } catch (e) {
+    return singleBackup_(props);
+  } catch (e0) {
+    var singleErr = String((e0 && e0.message) || e0).slice(0, 160);
     try {
-      out = poolBackup_(props);                /* ไฟล์แยกแบบหมุนเวียน (spreadsheets scope) */
-      out.note = 'สำรองเป็นไฟล์แยกใน Drive แบบหมุนเวียน (ไม่ต้องมีสิทธิ์ Drive)';
-    } catch (e2) {
-      out = sheetSnapshot_(props);             /* สำรองเป็นแท็บในไฟล์เดียวกัน */
-      out.note = 'สำรองเป็นแท็บในไฟล์เดียวกันแทน';
-      out.driveError = String((e && e.message) || e).slice(0, 160);
-      out.poolError = String((e2 && e2.message) || e2).slice(0, 160);
+      var outDrive = driveBackup_(props);
+      outDrive.note = 'สำรองเป็นไฟล์คัดลอกทั้งไฟล์ (single-file mode ใช้ไม่ได้: ' + singleErr + ')';
+      return outDrive;
+    } catch (e1) {
+      try {
+        var outPool = poolBackup_(props);
+        outPool.note = 'สำรองเป็นไฟล์แยกแบบหมุนเวียน (ไม่ต้องมีสิทธิ์ Drive)';
+        outPool.singleError = singleErr;
+        return outPool;
+      } catch (e2) {
+        var outSheet = sheetSnapshot_(props);
+        outSheet.note = 'สำรองเป็นแท็บในไฟล์เดียวกันแทน';
+        outSheet.singleError = singleErr;
+        outSheet.driveError = String((e1 && e1.message) || e1).slice(0, 160);
+        outSheet.poolError = String((e2 && e2.message) || e2).slice(0, 160);
+        return outSheet;
+      }
     }
   }
-  return out;
 }
 
 /** ติดตั้ง trigger สำรองข้อมูลทุกวัน 02:00 (ถ้าไม่มีสิทธิ์ จะเปิดโหมดสำรองอัตโนมัติเมื่อเข้าใช้งาน) */
@@ -331,6 +464,10 @@ function backupInfoApi_(token) {
     lastName: props.getProperty('LAST_BACKUP_NAME') || '',
     lastUrl: props.getProperty('LAST_BACKUP_URL') || '',
     lastMode: props.getProperty('LAST_BACKUP_MODE') || '',
+    fileName: BACKUP_FILE_NAME,
+    fileId: props.getProperty('BACKUP_FILE_ID') || '',
+    fileUrl: props.getProperty('BACKUP_FILE_ID') ? ('https://docs.google.com/spreadsheets/d/' + props.getProperty('BACKUP_FILE_ID') + '/edit') : '',
+    folderName: BACKUP_FOLDER_NAME,
     cronUrl: isAdminLevel_(s.level) ? backupCronUrl_() : '',
     cronDaily: true,
     poolSize: BACKUP_POOL_SIZE,
@@ -372,7 +509,7 @@ var LOG_ACTIONS = ['deal.add', 'deal.edit', 'deal.del', 'daily.add', 'daily.edit
 function listLogsApi_(token, q, kind, by, limit) {
   var s = session_(token);
   if (!s) return { ok: false, error: 'กรุณาเข้าสู่ระบบใหม่', logs: [] };
-  if (!seesAllLevel_(s.level)) throw new Error('เฉพาะ Admin / BU เท่านั้น');
+  if (!isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
 
   var rows = [];
   try { rows = readTab_('Logs'); } catch (e) { rows = []; }

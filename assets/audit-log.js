@@ -199,15 +199,19 @@
           ? 'ทุกวัน ~02:00 (ตัวตั้งเวลาภายนอก) + เมื่อเข้าใช้งาน'
           : (r.lazy ? 'อัตโนมัติเมื่อเข้าใช้งานครั้งแรกของวัน' : 'ยังไม่เปิด'));
       var cls = (r.installed || r.lazy) ? 'al-bk-ok' : 'al-bk-warn';
-      var dest = r.lastMode === 'drive'
-        ? 'โฟลเดอร์ PI Backups ใน Google Drive'
-        : (r.lastMode === 'pool'
-          ? 'ไฟล์สำรองแยกใน Google Drive (' + esc(String(r.poolSize || 7)) + ' ชุดหมุนเวียน)'
-          : (r.driveReady ? 'โฟลเดอร์ PI Backups' : 'แท็บสำรองในไฟล์เดียวกัน (' + esc(String(r.keepTabs || 3)) + ' ชุด)'));
+      var dest = r.lastMode === 'single'
+        ? 'ไฟล์เดียวใน Google Drive: “' + esc(String(r.fileName || 'Prospect Intelligence AE workspace')) + '”'
+        : (r.lastMode === 'drive'
+          ? 'โฟลเดอร์ ' + esc(String(r.folderName || 'Prospect Intelligence AE workspace'))
+          : (r.lastMode === 'pool'
+            ? 'ไฟล์สำรองแยกใน Google Drive (' + esc(String(r.poolSize || 7)) + ' ชุดหมุนเวียน)'
+            : (r.driveReady ? 'โฟลเดอร์ ' + esc(String(r.folderName || 'Prospect Intelligence AE workspace')) : 'แท็บสำรองในไฟล์เดียวกัน (' + esc(String(r.keepTabs || 3)) + ' ชุด)')));
       box.innerHTML = 'โหมดสำรองอัตโนมัติ: <b class="' + cls + '">' + esc(modeTxt) + '</b><br>'
         + 'ปลายทาง: <b>' + dest + '</b><br>'
         + 'สำรองล่าสุด: <b>' + last + '</b>' + (r.lastName ? ' · ' + esc(r.lastName) : '') + '<br>'
-        + 'เก็บย้อนหลัง <b>' + esc(String(r.retentionDays || r.keepDays || 7)) + '</b> วัน'
+        + (r.lastMode === 'single'
+          ? 'รูปแบบ: รวมทุกแท็บไว้ในไฟล์เดียว (เขียนทับทุกครั้ง) + แท็บ <b>_History</b> เก็บประวัติการสำรอง<br>'
+          : 'เก็บย้อนหลัง <b>' + esc(String(r.retentionDays || r.keepDays || 7)) + '</b> วัน<br>')
         + (r.lastUrl ? '<div style="margin-top:6px"><a href="' + esc(r.lastUrl) + '" target="_blank" rel="noopener" '
           + 'style="color:#2563EB;font-size:10px"><i class="fa-solid fa-up-right-from-square"></i> เปิดไฟล์สำรองล่าสุด</a></div>' : '')
         + (r.cronUrl ? '<div style="margin-top:6px;font-size:9.5px;color:#98A2B3">'

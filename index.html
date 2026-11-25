@@ -118,20 +118,22 @@
   <script src="assets/daily-report.js?v=17"></script>
   <script src="assets/project-tracking.js?v=16"></script>
   <script src="assets/customer-intelligence.js?v=6"></script>
-  <script src="assets/audit-log.js?v=12"></script>
+  <script src="assets/audit-log.js?v=13"></script>
   <script src="assets/team-page.js?v=13"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
     window.__allowedPages__ = function () {
       var lv = String(((window.__ME__ || {}).level) || '').toLowerCase();
       var MAP = {
+        admin: ['dashboard', 'sales', 'daily', 'partners', 'projects', 'intelligence', 'reports', 'team', 'audit'],
+        bu: ['dashboard', 'sales', 'daily', 'partners', 'projects', 'intelligence', 'reports', 'team'],
         head: ['dashboard', 'sales', 'daily', 'team', 'projects', 'intelligence', 'reports'],
         editor: ['dashboard', 'sales', 'daily', 'team', 'projects', 'intelligence', 'reports'],
         sup: ['dashboard', 'daily', 'team', 'sales', 'projects', 'intelligence', 'reports'],
         sale: ['dashboard', 'sales', 'daily', 'reports'],
         agent: ['dashboard', 'sales', 'daily', 'reports']
       };
-      return MAP[lv] || null;   // admin / bu = เข้าได้ทุกหน้า (รวม Activity Log)
+      return MAP[lv] || null;   // admin = ทุกหน้า (รวม Activity Log) · ระดับอื่นเห็นเฉพาะที่กำหนด
     };
     window.__applyMe__ = function (rawMe, opts) {
       opts = opts || {};
