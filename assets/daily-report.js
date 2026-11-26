@@ -166,6 +166,11 @@
     return { type: 'all' };
   }
   function me() { return global.__ME__ || {}; }
+  /** Admin (L1) = โหมดอ่านอย่างเดียว — บันทึก/แก้/ลบกิจกรรมไม่ได้ */
+  function canEditRecords() { return String(me().level || '').toLowerCase() !== 'admin'; }
+  function denyReadOnly() {
+    if (global.toast) global.toast('โหมดอ่านอย่างเดียว — บัญชี Admin บันทึก/แก้ไขกิจกรรมไม่ได้');
+  }
   function mySaleId() {
     var sc = scope();
     if (sc.type === 'sale') return sc.saleId;
@@ -373,7 +378,7 @@
     injectCss();
     var sc = scope();
     /* Admin (L1) ดูรายงานได้อย่างเดียว — ไม่คีย์กิจกรรมเอง */
-    var canAdd = String(me().level || '').toLowerCase() !== 'admin';
+    var canAdd = canEditRecords();
     var head = '<div class="dr-head">'
       + '<div><h2 class="dr-h2">Daily Report</h2>'
       + '  <div class="dr-sub">บันทึกการเข้าพบลูกค้า / แผนงานรายวัน · Customer Visit Log &amp; Daily Plan — ใช้ร่วมกับเป้าหมายการขาย (linked to AE targets)</div></div>'
@@ -478,14 +483,16 @@
             + (x.nextNote ? '<div class="dr-s2">' + esc(x.nextNote) + '</div>' : '')
           : '<span class="dr-dim">—</span>') + '</td>'
         + '<td>' + esc(saleOf(x.saleId).name) + '</td>'
-        + '<td class="dr-act">' + mkBtn + '<button class="dr-ibtn" data-dr-edit="' + esc(x.id) + '" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>'
-        + '<button class="dr-ibtn danger" data-dr-del="' + esc(x.id) + '" title="ลบ"><i class="fa-solid fa-trash"></i></button></td>'
+        + '<td class="dr-act">' + (canAdd
+          ? mkBtn + '<button class="dr-ibtn" data-dr-edit="' + esc(x.id) + '" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>'
+            + '<button class="dr-ibtn danger" data-dr-del="' + esc(x.id) + '" title="ลบ"><i class="fa-solid fa-trash"></i></button>'
+          : '<span class="dr-dim">—</span>') + '</td>'
         + '</tr>';
     }).join('');
 
     var table = '<section class="dr-panel">'
       + '<div class="dr-ph"><div><h3>รายการบันทึก · Records (' + list.length + ')</h3>'
-      + '  <div class="dr-s2">เรียงจากใหม่ → เก่า · คลิกปุ่มดินสอเพื่อแก้ไข · newest first, click the pencil to edit</div></div></div>'
+      + '  <div class="dr-s2">' + (canAdd ? 'เรียงจากใหม่ → เก่า · คลิกปุ่มดินสอเพื่อแก้ไข · newest first, click the pencil to edit' : 'เรียงจากใหม่ → เก่า · โหมดอ่านอย่างเดียว (Admin) · newest first, read-only') + '</div></div></div>'
       + '<div class="dr-tablewrap"><table class="dr-table"><thead><tr>'
       + '<th style="width:104px">วันที่ / เวลา · Date / Time</th><th style="width:196px">ลูกค้า · Customer</th><th style="width:132px">ช่องทาง · Channel</th>'
       + '<th>สรุป / ผลการ · Summary</th><th style="width:160px">นัดครั้งต่อไป · Next Appointment</th><th style="width:124px">ผู้รับผิดชอบ · Owner</th><th style="width:82px"></th>'
@@ -987,13 +994,14 @@
       if (typeof global.render === 'function') global.render();
       return;
     }
-    if (t.closest('[data-dr-new]')) { openForm(''); return; }
+    if (t.closest('[data-dr-new]')) { if (canEditRecords()) { openForm(''); } else { denyReadOnly(); } return; }
     var ed = t.closest('[data-dr-edit]');
-    if (ed) { openForm(ed.getAttribute('data-dr-edit')); return; }
+    if (ed) { if (canEditRecords()) { openForm(ed.getAttribute('data-dr-edit')); } else { denyReadOnly(); } return; }
     var dl = t.closest('[data-dr-del]');
-    if (dl) { delRecord(dl.getAttribute('data-dr-del')); return; }
+    if (dl) { if (canEditRecords()) { delRecord(dl.getAttribute('data-dr-del')); } else { denyReadOnly(); } return; }
     var mk = t.closest('[data-dr-mkdeal]');
     if (mk) {
+      if (!canEditRecords()) { denyReadOnly(); return; }
       var rid = mk.getAttribute('data-dr-mkdeal'), rec = null;
       for (var i = 0; i < ITEMS.length; i++) if (ITEMS[i].id === rid) rec = ITEMS[i];
       if (rec) {
