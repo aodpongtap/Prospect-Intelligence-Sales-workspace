@@ -1077,6 +1077,8 @@ tr.divHead td{background:#1e2632;color:var(--text);border-color:var(--line-2)}
 /* ======================================================================
    v6 — AutoCAD-style structure: ribbon + command line + drafting toggles
    v6.1 — history persist (25 steps) · selection kept on undo · zoom/pan saved
+   v6.2 — asset catalog +พื้นยกระดับ 40 ซม. (ST-008, คิด ตร.ม.) + อ่างล้างมือ (WT-012)
+   v6.3 — ล็อกขนาดจริงของอุปกรณ์ · เตือนระยะห่างระหว่างเครื่อง < 10 ซม.
    ====================================================================== */
 :root{--tb-h:100px}
 .body{grid-template-rows:var(--tb-h) minmax(0,1fr) 30px}
@@ -1670,7 +1672,7 @@ kbd{
 
   <!-- ================= STATUS BAR ================= -->
   <footer class="statusbar">
-    <span class="ver">v6.1</span>
+    <span class="ver">v6.3</span>
     <span id="sbPhase" class="sbPhase">Phase 1</span>
     <span class="dotSep"></span>
     <span id="sbArea">พื้นที่ 600 × 380 ซม.</span>
@@ -1699,7 +1701,7 @@ kbd{
   <div class="mCard wide">
     <div class="mHead">
       <h2>คู่มือการใช้งาน — Store Studio</h2>
-      <span class="mSub">Ctrl+F5 หากหน้าจอไม่เปลี่ยนหลังอัปเดต · build v6.1</span>
+      <span class="mSub">Ctrl+F5 หากหน้าจอไม่เปลี่ยนหลังอัปเดต · build v6.3</span>
       <button class="mClose" data-close>✕</button>
     </div>
     <div class="mBody">
@@ -2055,11 +2057,13 @@ const ASSETS = {
   /* --- โซนบริการ / ระบบ (Back of House) --- */
   tank:    { name: 'ถังพักน้ำสแตนเลส 1,000 ลิตร', short: 'ถังน้ำ',   code: 'WT-010', w: 110, d: 110, h: 160, color: '#0369a1', group: 'service' },
   pump:    { name: 'ปั๊มน้ำ 0.5 HP',              short: 'ปั๊มน้ำ',  code: 'WT-011', w: 60,  d: 40,  h: 80,  color: '#0284c7', group: 'service', kw: 0.37, brk: 16, cable: '2×2.5 mm²' },
+  washsink:{ name: 'อ่างล้างมือสเตนเลส + ก๊อกน้ำ',  short: 'อ่างล้างมือ', code: 'WT-012', w: 60, d: 50, h: 90, color: '#0891b2', group: 'service', water: 12 },
   service: { name: 'ห้องเซอร์วิส / BOH',          short: 'ห้องเซอร์วิส', code: 'ST-005', w: 150, d: 150, h: 250, color: '#0f766e', group: 'service', zone: true, kw: 0.5, brk: 16, cable: '2×2.5 mm²' },
 
   /* --- โครงสร้าง --- */
   column:  { name: 'เสาคอนกรีตเสริมเหล็ก 20×20',  short: 'เสา',      code: 'ST-006', w: 20,  d: 20,  h: 280, color: '#78716c', group: 'structure' },
   door:    { name: 'ประตูหลังร้าน / ห้องเซอร์วิส', short: 'ประตู',    code: 'ST-007', w: 90,  d: 10,  h: 210, color: '#a16207', group: 'structure' },
+  platform:{ name: 'พื้นยกระดับวางเครื่อง สูง 40 ซม.', short: 'พื้นยก +40', code: 'ST-008', w: 200, d: 100, h: 40, color: '#57534e', group: 'structure', slab: true, areaQty: true },
 
   /* --- บิ้วอิน --- */
   counter: { name: 'เคาน์เตอร์บิ้วอินรับส่งผ้า',   short: 'เคาน์เตอร์', code: 'BI-001', w: 180, d: 60, h: 90,  color: '#b45309', group: 'builtin' },
@@ -2124,6 +2128,7 @@ const MASTER = [
   { code: 'WT-009', div: 'D4', cat: 'SYSTEM',    name: 'ท่อระบายน้ำ PVC 2 นิ้ว (เฉลี่ยต่อเมตร)',      unit: 'เมตร',  mat: 180,   lab: 110,   equip: 220,  waste: 8 },
   { code: 'WT-010', div: 'D4', cat: 'SYSTEM',    name: 'งานติดตั้งถังพักน้ำ + ฐานรองรับ',              unit: 'งาน',   mat: 3500,  lab: 2500,  equip: 800,  waste: 5 },
   { code: 'WT-011', div: 'D4', cat: 'SYSTEM',    name: 'งานติดตั้งปั๊มน้ำ + ฐานรองรับ',                unit: 'งาน',   mat: 2800,  lab: 2200,  equip: 600,  waste: 5 },
+  { code: 'WT-012', div: 'D4', cat: 'SYSTEM',    name: 'อ่างล้างมือสแตนเลสพร้อมก๊อกและงานติดตั้ง',    unit: 'ชุด',   mat: 5200,  lab: 1600,  equip: 300,  waste: 3 },
 
   /* D5 : งานโครงสร้างและสถาปัตย์ */
   { code: 'ST-001', div: 'D5', cat: 'STRUCTURE', name: 'งานปรับปรุงพื้นและปูผิวสำเร็จ',              unit: 'ตร.ม.', mat: 850,   lab: 420,   equip: 300,  waste: 5 },
@@ -2133,6 +2138,7 @@ const MASTER = [
   { code: 'ST-005', div: 'D5', cat: 'STRUCTURE', name: 'ห้องเซอร์วิสสำเร็จรูป (ผนังเบา+ประตู+ระบบเบื้องต้น)', unit: 'ห้อง', mat: 38000, lab: 14000, equip: 3000, waste: 3 },
   { code: 'ST-006', div: 'D5', cat: 'STRUCTURE', name: 'เสาคอนกรีตเสริมเหล็ก 20×20 ซม.',              unit: 'ต้น',   mat: 3200,  lab: 1100,  equip: 300,  waste: 5 },
   { code: 'ST-007', div: 'D5', cat: 'STRUCTURE', name: 'ประตูหลังร้าน / ห้องเซอร์วิส พร้อมติดตั้ง',    unit: 'บาน',   mat: 6800,  lab: 1800,  equip: 300,  waste: 0 },
+  { code: 'ST-008', div: 'D5', cat: 'STRUCTURE', name: 'พื้นยกระดับคอนกรีต สูง 40 ซม. (รวมผิวสำเร็จ)', unit: 'ตร.ม.', mat: 980,   lab: 520,   equip: 260,  waste: 5 },
 
   /* D6 : งานตกแต่งและอุปกรณ์เสริม */
   { code: 'AC-001', div: 'D6', cat: 'ACCESSORY', name: 'เครื่องแลกเหรียญอัตโนมัติ',                  unit: 'เครื่อง', mat: 32000, lab: 2000, equip: 500, waste: 0 },
@@ -2165,11 +2171,11 @@ const DIV_ORDER = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6'];
 
 /* ------------------------------ PACKAGES ------------------------------ */
 const PKG_SYSTEM = ['EL-001', 'EL-002', 'EL-003', 'EL-004', 'EL-005', 'EL-006',
-                    'WT-001', 'WT-002', 'WT-003', 'WT-004', 'WT-005', 'WT-006', 'WT-007', 'WT-008', 'WT-009', 'WT-010', 'WT-011'];
+                    'WT-001', 'WT-002', 'WT-003', 'WT-004', 'WT-005', 'WT-006', 'WT-007', 'WT-008', 'WT-009', 'WT-010', 'WT-011', 'WT-012'];
 const PKG_PRELIM = ['PR-001', 'PR-002'];
 const PKG_ACC_STD = ['AC-001', 'AC-002', 'AC-003', 'AC-004', 'AC-007'];
 const PKG_MACHINE = ['MC-001', 'MC-002', 'MC-003'];
-const PKG_ZONE = ['ST-005', 'ST-006', 'ST-007'];
+const PKG_ZONE = ['ST-005', 'ST-006', 'ST-007', 'ST-008'];
 const PKG_BUILTIN = ['BI-001', 'BI-002', 'BI-003', 'BI-004', 'BI-005', 'BI-006'];
 const PKGS = {
   S: {
@@ -2181,7 +2187,7 @@ const PKGS = {
   M: {
     label: 'Package M', tag: 'รุ่นมาตรฐาน', short: 'มาตรฐาน',
     note: 'รวมงานปรับปรุงพื้น · ห้องเซอร์วิส · ไม่รวมผนังเบา',
-    include: PKG_PRELIM.concat(PKG_MACHINE, ['ST-001', 'ST-005', 'ST-007'], PKG_SYSTEM, PKG_ACC_STD, ['AC-005']),
+    include: PKG_PRELIM.concat(PKG_MACHINE, ['ST-001', 'ST-005', 'ST-007', 'ST-008'], PKG_SYSTEM, PKG_ACC_STD, ['AC-005']),
     area: { w: 620, d: 380 }
   },
   L: {
@@ -2268,9 +2274,13 @@ const unitCost = code => rateOf(masterByCode[code]);
 const assetTypesOfCode = code => Object.keys(ASSETS).filter(t => ASSETS[t].code === code);
 
 /* ------------------------------ GEOMETRY ------------------------------ */
+/** ปรับขนาดได้เฉพาะงานพื้นที่ (พื้นยก/โซนห้อง) — อุปกรณ์จริงล็อกขนาดตามสเปก */
+const canResizeAsset = a => !!(a && (a.zone || a.slab));
+const canResizeObj = o => !!o && canResizeAsset(ASSETS[o.type]);
 function effSize(o) {
   const a = ASSETS[o.type] || ASSETS.gian13;
-  const w = o.w || a.w, d = o.d || a.d;
+  const fixed = !canResizeAsset(a);
+  const w = fixed ? a.w : (o.w || a.w), d = fixed ? a.d : (o.d || a.d);
   return (normRot(o.rot) % 180 === 0) ? { w, d } : { w: d, d: w };
 }
 function bbox(o) {
@@ -2285,6 +2295,8 @@ function overlapIds() {
   for (let i = 0; i < objs.length; i++) {
     for (let j = i + 1; j < objs.length; j++) {
       if (objs[i].layer !== objs[j].layer) continue;
+      /* พื้นยกระดับเป็นฐานรองรับ → ไม่นับว่าซ้อนทับกับของที่วางบน */
+      if (ASSETS[objs[i].type].slab || ASSETS[objs[j].type].slab) continue;
       if (overlapRect(bbox(objs[i]), bbox(objs[j]), 1)) { out.add(objs[i].id); out.add(objs[j].id); }
     }
   }
@@ -2293,6 +2305,15 @@ function overlapIds() {
 function baseHeightCm(o) {
   const a = ASSETS[o.type];
   let y0 = 0;
+  /* ของที่วางทับพื้นยกระดับ → ยกขึ้นตามความสูงของพื้น */
+  if (!a.slab) {
+    const b = bbox(o);
+    for (const other of state.objects) {
+      const oa = ASSETS[other.type];
+      if (!oa.slab || other.id === o.id) continue;
+      if (overlapRect(b, bbox(other), 1)) y0 = Math.max(y0, oa.h);
+    }
+  }
   if (o.layer === 2) {
     const b = bbox(o);
     for (const other of state.objects) {
@@ -2411,11 +2432,22 @@ function mepQty(code) {
   return null;
 }
 
+/** ปริมาณจากของที่วางในผัง — งานพื้นที่ (slab) คิดเป็น ตร.ม. ที่เหลือคิดเป็นจำนวนชิ้น */
+function objQtyOf(code) {
+  const types = assetTypesOfCode(code);
+  if (!types.length) return null;
+  const objs = state.objects.filter(o => types.includes(o.type));
+  if (!objs.length) return null;
+  if (objs.some(o => ASSETS[o.type].areaQty)) {
+    return r2(objs.reduce((s, o) => { const sz = effSize(o); return s + (sz.w * sz.d) / 10000; }, 0));
+  }
+  return objs.length;
+}
 function autoQty(code) {
   const types = assetTypesOfCode(code);
   if (types.length) {
-    const placed = state.objects.filter(o => types.includes(o.type)).length;
-    if (placed > 0) return placed;
+    const q = objQtyOf(code);
+    if (q != null) return q;
     const q2 = sysQty(code);          /* ไม่มีของวางบนผัง → ใช้สัญลักษณ์ MEP แทน */
     return q2 != null ? q2 : 0;
   }
@@ -2457,8 +2489,13 @@ function boqRows(pkg) {
 function basisOf(code) {
   const types = assetTypesOfCode(code);
   if (types.length) {
-    const n = state.objects.filter(o => types.includes(o.type)).length;
-    if (n > 0) return 'วางในผัง ' + n + ' ชิ้น';
+    const objs = state.objects.filter(o => types.includes(o.type));
+    if (objs.length) {
+      if (objs.some(o => ASSETS[o.type].areaQty)) {
+        return 'วางในผัง ' + objs.length + ' ชิ้น · ' + fmt2(objQtyOf(code)) + ' ตร.ม.';
+      }
+      return 'วางในผัง ' + objs.length + ' ชิ้น';
+    }
     const mq = mepQty(code);
     if (mq != null) return 'แบบ MEP: ' + fmt1(mq) + ' จุด';
     return 'ยังไม่วางในผัง';
@@ -2518,8 +2555,10 @@ function serialize() {
     zoom: state.zoom, panX: state.panX || 0, panY: state.panY || 0,
     objects: state.objects.map(o => {
       const out = { type: o.type, x: o.x, y: o.y, rot: o.rot, layer: o.layer };
-      if (o.w) out.w = o.w;
-      if (o.d) out.d = o.d;
+      if (canResizeAsset(ASSETS[o.type])) {
+        if (o.w) out.w = o.w;
+        if (o.d) out.d = o.d;
+      }
       return out;
     }),
     walls: state.walls.map(w => {
@@ -2684,8 +2723,10 @@ function applyData(data, keepSel) {
         rot: normRot(Number(o.rot) || 0),
         layer: Number(o.layer) === 2 ? 2 : 1
       };
-      if (Number(o.w) >= 20) out.w = Number(o.w);
-      if (Number(o.d) >= 20) out.d = Number(o.d);
+      if (canResizeAsset(ASSETS[o.type])) {
+        if (Number(o.w) >= 20) out.w = Number(o.w);
+        if (Number(o.d) >= 20) out.d = Number(o.d);
+      }
       return out;
     });
   state.walls = (Array.isArray(data.walls) ? data.walls : [])
@@ -2837,6 +2878,43 @@ function drawTag(text, x, y, bg, fg) {
   ctx.restore();
 }
 
+/** เส้นเตือนสีส้มระหว่างเครื่องที่ชิดกันเกิน 10 ซม. */
+function drawClearance() {
+  const pairs = tightPairsInfo();
+  if (!pairs.length) return;
+  ctx.save();
+  ctx.strokeStyle = '#ea580c';
+  ctx.lineWidth = 2;
+  for (const p of pairs) {
+    const { A, B } = p;
+    let s1, s2, tx, ty;
+    if (p.axis === 'x') {
+      const left = A.x1 <= B.x1 ? A : B, right = A.x1 <= B.x1 ? B : A;
+      const px = (left.x2 + right.x1) / 2;
+      s1 = worldToScreen(px, Math.max(A.y1, B.y1));
+      s2 = worldToScreen(px, Math.min(A.y2, B.y2));
+      tx = s1[0] + 6; ty = Math.max(s1[1], s2[1]) + 2;
+    } else {
+      const top = A.y1 <= B.y1 ? A : B, bot = A.y1 <= B.y1 ? B : A;
+      const py = (top.y2 + bot.y1) / 2;
+      s1 = worldToScreen(Math.max(A.x1, B.x1), py);
+      s2 = worldToScreen(Math.min(A.x2, B.x2), py);
+      tx = Math.max(s1[0], s2[0]) + 6; ty = s1[1] - 14;
+    }
+    /* เส้น + ขีดปิดหัวทั้งสองข้าง (แบบเส้นบอกระยะ) */
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(s1[0], s1[1]); ctx.lineTo(s2[0], s2[1]); ctx.stroke();
+    ctx.setLineDash([]);
+    const nx = p.axis === 'x' ? 4 : 0, ny = p.axis === 'x' ? 0 : 4;
+    ctx.beginPath();
+    ctx.moveTo(s1[0] - nx, s1[1] - ny); ctx.lineTo(s1[0] + nx, s1[1] + ny);
+    ctx.moveTo(s2[0] - nx, s2[1] - ny); ctx.lineTo(s2[0] + nx, s2[1] + ny);
+    ctx.stroke();
+    drawTag('ห่าง ' + Math.max(0, Math.round(p.gap)) + ' ซม.', tx, ty, 'rgba(234,88,12,.95)', '#fff');
+  }
+  ctx.restore();
+}
+
 function drawWalls() {
   for (const w of state.walls) {
     const [x1, y1] = worldToScreen(w.x1, w.y1);
@@ -2864,6 +2942,18 @@ function drawOneObject(o, ov) {
   ctx.fillStyle = colorMix(a.color, a.zone ? 0.10 : (o.layer === 2 ? 0.32 : 0.19));
   ctx.fillRect(x1, y1, w, h);
   if (o.layer === 2) { ctx.fillStyle = hatchPattern(); ctx.fillRect(x1, y1, w, h); }
+  /* พื้นยกระดับ → ลายทแยง อ่านเป็นงานฐานเครื่อง */
+  if (a.slab) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x1, y1, w, h); ctx.clip();
+    ctx.strokeStyle = colorMix(a.color, 0.55);
+    ctx.lineWidth = 1;
+    const step = Math.max(6, Math.min(14, w / 12));
+    for (let i = -h; i < w; i += step) {
+      ctx.beginPath(); ctx.moveTo(x1 + i, y1 + h); ctx.lineTo(x1 + i + h, y1); ctx.stroke();
+    }
+    ctx.restore();
+  }
 
   ctx.save();
   if (o.layer === 2 || a.zone) ctx.setLineDash(a.zone ? [7, 4] : [5, 3]);
@@ -2886,22 +2976,25 @@ function drawOneObject(o, ov) {
     }
   }
 
-  /* front edge marker */
-  const fv = frontVec(o.rot);
-  let fxw = o.x, fyw = o.y;
-  if (fv[0] !== 0) fxw = o.x + fv[0] * s.w / 2; else fyw = o.y + fv[1] * s.d / 2;
-  const [cx, cy] = worldToScreen(fxw, fyw);
-  const [ex, ey] = fv[0] !== 0 ? [0, 1] : [1, 0];
-  const half = (fv[0] !== 0 ? s.d : s.w) * 0.28;
-  const [p1x, p1y] = worldToScreen(fxw - ex * half, fyw - ey * half);
-  const [p2x, p2y] = worldToScreen(fxw + ex * half, fyw + ey * half);
-  ctx.save();
-  ctx.strokeStyle = '#b8860b';
-  ctx.lineWidth = 2.2; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(p1x, p1y); ctx.lineTo(p2x, p2y); ctx.stroke();
-  ctx.restore();
+  /* front edge marker (ข้ามงานพื้น เพราะไม่มีด้านหน้าเครื่อง) */
+  if (!a.slab) {
+    const fv = frontVec(o.rot);
+    let fxw = o.x, fyw = o.y;
+    if (fv[0] !== 0) fxw = o.x + fv[0] * s.w / 2; else fyw = o.y + fv[1] * s.d / 2;
+    const [cx, cy] = worldToScreen(fxw, fyw);
+    const [ex, ey] = fv[0] !== 0 ? [0, 1] : [1, 0];
+    const half = (fv[0] !== 0 ? s.d : s.w) * 0.28;
+    const [p1x, p1y] = worldToScreen(fxw - ex * half, fyw - ey * half);
+    const [p2x, p2y] = worldToScreen(fxw + ex * half, fyw + ey * half);
+    ctx.save();
+    ctx.strokeStyle = '#b8860b';
+    ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(p1x, p1y); ctx.lineTo(p2x, p2y); ctx.stroke();
+    ctx.restore();
+  }
 
   if (o.layer === 2) drawTag('L2', x1 + 3, y1 + 3, 'rgba(30,58,138,.92)', '#fff');
+  else if (a.slab) drawTag('Y+40', x1 + 3, y1 + 3, 'rgba(41,37,36,.92)', '#fff');
   if (bad) drawTag('ซ้อนทับ', Math.max(x1 + 3, x1 + w - 46), y1 + 3, 'rgba(198,40,40,.94)', '#fff');
 
   if (sel) {
@@ -3187,8 +3280,11 @@ function draw() {
   if (state.grid !== false) drawGrid(ax, ay, aw, ah);
   drawWalls();
   const ov = overlapIds();
-  const sorted = state.objects.slice().sort((p, q) => p.layer - q.layer);
+  /* วาดงานพื้น/ฐาน (slab) ก่อน เพื่อไม่บังเครื่องที่วางทับ */
+  const rank = o => (ASSETS[o.type].slab ? 0 : 1);
+  const sorted = state.objects.slice().sort((p, q) => (rank(p) - rank(q)) || (p.layer - q.layer));
   for (const o of sorted) drawOneObject(o, ov);
+  drawClearance();
   drawMep();
   drawPower();
   drawDraft();
@@ -3282,7 +3378,7 @@ function drawGrips() {
     ctx.strokeStyle = '#2f8cff'; ctx.lineWidth = 1.4;
     ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
     ctx.setLineDash([]);
-    const resizable = normRot(o.rot) % 180 === 0;
+    const resizable = normRot(o.rot) % 180 === 0 && canResizeAsset(ASSETS[o.type]);
     if (resizable) {
       /* จุดจับมุม — ลากเพื่อปรับขนาด */
       ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#2f8cff'; ctx.lineWidth = 1.6;
@@ -3340,7 +3436,9 @@ const canvasPoint = e => {
   return { x: e.clientX - r.left, y: e.clientY - r.top };
 };
 function pickObject(p) {
-  const list = state.objects.slice().sort((a, b) => a.layer - b.layer);
+  /* พื้นยกอยู่ล่างสุด → คลิกถูกเครื่อง/เฟอร์นิเจอร์ที่วางทับก่อนเสมอ */
+  const list = state.objects.slice().sort((a, b) =>
+    ((ASSETS[a.type].slab ? 0 : 1) - (ASSETS[b.type].slab ? 0 : 1)) || (a.layer - b.layer));
   for (let i = list.length - 1; i >= 0; i--) {
     const b = bbox(list[i]);
     if (p.x >= b.x1 && p.x <= b.x2 && p.y >= b.y1 && p.y <= b.y2) return list[i];
@@ -3399,20 +3497,36 @@ function snapToEdges(o) {
   if (Math.abs(dy) <= TOL) o.y += dy;
 }
 
-/** จำนวนเครื่องที่ห่างกันน้อยกว่า 10 ซม. (ไม่ทับกัน) */
-function tightPairs() {
+/** ระยะเว้นซ่อมบำรุงขั้นต่ำระหว่างเครื่อง (ซม.) */
+const MIN_CLEAR_CM = 10;
+/** คู่เครื่องที่ห่างกันน้อยกว่า 10 ซม. — คืนรายละเอียดเพื่อวาดเส้นเตือน */
+function tightPairsInfo() {
   const ms = state.objects.filter(o => ASSETS[o.type].group === 'machine');
-  let n = 0;
+  const out = [];
   for (let i = 0; i < ms.length; i++) {
     for (let j = i + 1; j < ms.length; j++) {
-      const a = bbox(ms[i]), b = bbox(ms[j]);
-      const gx = Math.max(a.x1 - b.x2, b.x1 - a.x2);
-      const gy = Math.max(a.y1 - b.y2, b.y1 - a.y2);
+      const A = bbox(ms[i]), B = bbox(ms[j]);
+      const gx = Math.max(A.x1 - B.x2, B.x1 - A.x2);
+      const gy = Math.max(A.y1 - B.y2, B.y1 - A.y2);
       const gap = Math.max(gx, gy);
-      if (gap >= 0 && gap < 10) n++;
+      if (gap >= 0 && gap < MIN_CLEAR_CM) {
+        out.push({ a: ms[i], b: ms[j], gap, A, B, axis: gx >= gy ? 'x' : 'y' });
+      }
     }
   }
-  return n;
+  return out;
+}
+/** จำนวนคู่ที่ชิดกันเกินกำหนด */
+function tightPairs() { return tightPairsInfo().length; }
+/** แจ้งเตือนเมื่อเครื่องที่เพิ่งขยับชิดตัวอื่นน้อยกว่า 10 ซม. */
+function warnClearance(o) {
+  if (!o) return false;
+  const hit = tightPairsInfo().find(p => p.a.id === o.id || p.b.id === o.id);
+  if (!hit) return false;
+  const msg = '⚠ ระยะห่างระหว่างเครื่อง ' + (hit.gap < 0.5 ? 'ชิดกัน' : Math.round(hit.gap) + ' ซม.') + ' — ควรเว้น ≥ ' + MIN_CLEAR_CM + ' ซม.';
+  status(msg, 'warn');
+  toast(msg, 'warn');
+  return true;
 }
 
 canvasEl.addEventListener('pointerdown', e => {
@@ -3429,9 +3543,9 @@ canvasEl.addEventListener('pointerdown', e => {
     return;
   }
 
-  /* resize: จับมุมวัตถุที่เลือกอยู่ */
+  /* resize: จับมุมวัตถุที่เลือกอยู่ (เฉพาะงานพื้นที่) */
   const selObj = state.objects.find(o => o.id === state.selectedId);
-  if (selObj && normRot(selObj.rot) % 180 === 0) {
+  if (selObj && canResizeObj(selObj) && normRot(selObj.rot) % 180 === 0) {
     const b = bbox(selObj);
     const corners = [[b.x1, b.y1], [b.x2, b.y1], [b.x1, b.y2], [b.x2, b.y2]];
     for (let i = 0; i < 4; i++) {
@@ -3569,7 +3683,7 @@ canvasEl.addEventListener('pointermove', e => {
   }
   if (state.mode === 'mep') { canvasEl.style.cursor = state.cross ? 'none' : 'copy'; return; }
   const so = state.objects.find(o => o.id === state.selectedId);
-  if (so && normRot(so.rot) % 180 === 0) {
+  if (so && canResizeObj(so) && normRot(so.rot) % 180 === 0) {
     const b = bbox(so);
     const corners = [[b.x1, b.y1], [b.x2, b.y1], [b.x1, b.y2], [b.x2, b.y2]];
     for (let i = 0; i < 4; i++) {
@@ -3669,6 +3783,7 @@ canvasEl.addEventListener('pointerup', e => {
     if (o) syncRoomWalls(o);
     dragging = null;
     renderAll(); commit();
+    if (o) warnClearance(o);
     return;
   }
   dragging = null;
@@ -3901,7 +4016,8 @@ function buildThree() {
 
     const geo = new THREE.BoxGeometry(ww, hh, dd);
     const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
-      color: new THREE.Color(a.color), roughness: .42, metalness: .16
+      color: new THREE.Color(a.color),
+      roughness: a.slab ? 0.95 : .42, metalness: a.slab ? 0.02 : .16
     }));
     mesh.position.set(cx, y0 + hh / 2, cz);
     mesh.castShadow = true; mesh.receiveShadow = true;
@@ -3911,22 +4027,24 @@ function buildThree() {
     oe.position.copy(mesh.position);
     rig.add(oe);
 
-    /* front panel */
-    const fv = frontVec(o.rot);
-    const pw = fv[0] !== 0 ? 0.02 : ww * 0.6;
-    const pd = fv[0] !== 0 ? dd * 0.6 : 0.02;
-    const panel = new THREE.Mesh(
-      new THREE.BoxGeometry(pw, hh * 0.3, pd),
-      new THREE.MeshStandardMaterial({ color: 0x0d1738, roughness: .3, metalness: .45 })
-    );
-    panel.position.set(
-      cx + (fv[0] !== 0 ? fv[0] * (ww / 2 + 0.011) : 0),
-      y0 + hh * 0.58,
-      cz + (fv[1] !== 0 ? fv[1] * (dd / 2 + 0.011) : 0)
-    );
-    rig.add(panel);
+    /* front panel (ข้ามงานพื้น) */
+    if (!a.slab) {
+      const fv = frontVec(o.rot);
+      const pw = fv[0] !== 0 ? 0.02 : ww * 0.6;
+      const pd = fv[0] !== 0 ? dd * 0.6 : 0.02;
+      const panel = new THREE.Mesh(
+        new THREE.BoxGeometry(pw, hh * 0.3, pd),
+        new THREE.MeshStandardMaterial({ color: 0x0d1738, roughness: .3, metalness: .45 })
+      );
+      panel.position.set(
+        cx + (fv[0] !== 0 ? fv[0] * (ww / 2 + 0.011) : 0),
+        y0 + hh * 0.58,
+        cz + (fv[1] !== 0 ? fv[1] * (dd / 2 + 0.011) : 0)
+      );
+      rig.add(panel);
+    }
 
-    if (a.h >= 75) {
+    if (a.h >= 75 || a.slab) {
       const sp = labelSprite(a.short);
       sp.position.set(cx, y0 + hh + 0.22, cz);
       rig.add(sp);
@@ -4142,6 +4260,8 @@ function renderInspector() {
     rows.push([drains >= machineCount(), 'จุดระบายน้ำ ≥ จำนวนเครื่อง', drains + ' / ' + machineCount()]);
     const ov = overlapIds().size;
     rows.push([ov === 0, 'ไม่มีรายการซ้อนทับ', ov ? ov + ' จุด' : 'ผ่าน']);
+    const tight = tightPairs();
+    rows.push([tight === 0, 'ระยะห่างระหว่างเครื่อง ≥ ' + MIN_CLEAR_CM + ' ซม.', tight ? tight + ' คู่ชิดเกิน' : 'ผ่าน']);
     const okN = rows.filter(r => r[0]).length;
     $('#inspCheck').innerHTML = rows.map(r =>
       '<div class="chkRow ' + (r[0] ? 'ok' : 'bad') + '"><span class="ic">' + (r[0] ? '✓' : '!') + '</span>' +
@@ -4160,8 +4280,11 @@ function renderInspector() {
           '<span class="swatch" style="background:' + a.color + '"></span>' +
           '<span><b>' + esc(a.name) + '</b><small>' + a.code + ' · ' + s.w + '×' + s.d + '×' + a.h + ' ซม.</small></span>' +
         '</div>' +
+        '<div class="kv"><span>ขนาด</span><b>' + s.w + '×' + s.d + ' ซม.' +
+          (canResizeAsset(a) ? ' · ปรับได้' : ' · คงที่ตามสเปก') + '</b></div>' +
         '<div class="kv"><span>ตำแหน่ง</span><b>X ' + Math.round(sel.x) + ' · Y ' + Math.round(sel.y) + ' ซม.</b></div>' +
         '<div class="kv"><span>ชั้นวาง</span><b>L' + sel.layer + '</b></div>' +
+        (a.areaQty ? '<div class="kv"><span>พื้นที่</span><b>' + fmt2(s.w * s.d / 10000) + ' ตร.ม.</b></div>' : '') +
         '<div class="kv"><span>ต้นทุนต่อหน่วย</span><b>' + thb(unitCost(a.code)) + '</b></div>' +
         '<div class="selActions">' +
           '<button data-act="rotate">หมุน 90°</button>' +
@@ -5005,6 +5128,7 @@ function addObject(type) {
   renderAll(); commit();
   const inc = PKGS[state.pkg].include.includes(a.code);
   status('เพิ่ม ' + a.name + (inc ? '' : ' (ไม่อยู่ในแพ็กเกจ ' + state.pkg + ')'), inc ? 'ok' : 'warn');
+  if (a.group === 'machine') warnClearance(o);
 }
 
 function rotateSelected() {
@@ -5014,6 +5138,7 @@ function rotateSelected() {
   clampInside(o);
   renderAll(); commit();
   status('หมุน ' + ASSETS[o.type].name + ' เป็น ' + o.rot + '°', 'ok');
+  warnClearance(o);
 }
 function deleteSelected() {
   const id = state.selectedId;
@@ -5566,7 +5691,7 @@ const DEMO_STEPS = [
   { t: 'ภาพรวมหน้าจอ', b: 'ริบบอน (คำสั่ง) ด้านบน · คลังอุปกรณ์ ซ้าย · แผ่นแบบ กลาง · แผงต้นทุน ขวา · command line ล่างสุด' },
   { t: '1) ตั้งชื่อโครงการ', b: 'กด “ผังงาน” เพื่อใส่ชื่อโครงการ/ลูกค้า/Phase และกำหนดขนาดพื้นที่ร้าน', run: () => openLayouts() },
   { t: '2) เลือกแพ็กเกจ + ผังแนะนำ', b: 'แพ็กเกจ L = Turnkey มีพื้น ผนังเบา บิ้วอินครบ — กด “ใช้ผังแนะนำ” เพื่อเริ่มเร็ว', run: () => { closeModals(); const b = document.querySelector('[data-pkg="L"]'); if (b) b.click(); loadPreset('L'); } },
-  { t: '3) วางอุปกรณ์', b: 'เพิ่มเครื่อง/เฟอร์นิเจอร์ได้จากคลังซ้าย · เลือกแล้วลาก “จุดจับมุมขาว” เพื่อปรับขนาด', run: () => { closeModals(); addObject('titan17'); } },
+  { t: '3) วางอุปกรณ์', b: 'เพิ่มเครื่องจากคลังซ้าย — อุปกรณ์จริงล็อกขนาดตามสเปก (ย้าย/หมุนได้) · เฉพาะพื้นยก/ห้องเซอร์วิสที่ขยายได้', run: () => { closeModals(); addObject('titan17'); } },
   { t: '4) โซนบริการ (BOH)', b: 'วางห้องเซอร์วิส → ระบบสร้างผนังรอบห้องให้อัตโนมัติ พร้อมเว้นช่องประตู 90 ซม.', run: () => addObject('service') },
   { t: '5) งานระบบ', b: 'วางสัญลักษณ์ไฟ/น้ำ จากนั้นลากเส้นท่อ — ปริมาณจะถูกถอดเข้า BOQ ทันที', run: () => { for (let i = 0; i < 3; i++) state.mep.push({ id: 'e' + (uid++), type: 'light', x: 120 + i * 90, y: 330 }); commit(); renderAll(); status('สาธิต: วางโคม LED 3 จุด'); } },
   { t: '6) BOQ & ต้นทุน', b: 'ทุกอย่างถูกถอดเป็น BOQ พร้อมคอลัมน์ “ที่มาของปริมาณ” ตรวจสอบได้ทุกบรรทัด', run: () => openBoq() },
@@ -5730,10 +5855,11 @@ function wire() {
   /* mode */
   $$('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
 
-  /* assets */
-  $('#assetsMachine').addEventListener('click', e => { const b = e.target.closest('[data-add]'); if (b) addObject(b.dataset.add); });
-  $('#assetsAccessory').addEventListener('click', e => { const b = e.target.closest('[data-add]'); if (b) addObject(b.dataset.add); });
-  $('#assetsSign').addEventListener('click', e => { const b = e.target.closest('[data-add]'); if (b) addObject(b.dataset.add); });
+  /* assets — ผูกครบทุกกลุ่ม (เดิมผูกแค่ 3 กลุ่ม ทำให้ของกลุ่มบริการ/โครงสร้าง/บิ้วอิน กดเพิ่มไม่ได้) */
+  ['#assetsMachine', '#assetsService', '#assetsStructure', '#assetsBuiltin', '#assetsAccessory', '#assetsSign'].forEach(sel => {
+    const el = $(sel);
+    if (el) el.addEventListener('click', e => { const b = e.target.closest('[data-add]'); if (b) addObject(b.dataset.add); });
+  });
 
   /* MEP palette */
   ['#mepElec', '#mepWater', '#mepPipes'].forEach(sel => {
