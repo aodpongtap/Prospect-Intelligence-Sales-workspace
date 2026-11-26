@@ -751,19 +751,17 @@ function saleLinkCell(u) {
 var TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 var __DAILY__ = null;                 /* ข้อมูลจริงจากเซิร์ฟเวอร์ (dailyV2) */
 function dailyStore() {
-  if (__DAILY__) return __DAILY__;
   try {
     var a = JSON.parse(localStorage.getItem('pi_daily_v1') || 'null');
-    if (Object.prototype.toString.call(a) === '[object Array]') return a;
+    if (Object.prototype.toString.call(a) === '[object Array]' && a.length) return a;
   } catch (e) {}
-  return [];
+  return __DAILY__ || [];
 }
 /** ดึงบันทึกการเข้าพบจาก Google Sheets แล้วเรนเดอร์ตารางใหม่ (ให้คอลัมน์ "บันทึก" มีข้อมูลจริง) */
 function loadDailyFromServer() {
   if (!PIAuth.listDailyV2) return;
   PIAuth.listDailyV2().then(function (r) {
     __DAILY__ = (r && r.items) || [];
-    try { localStorage.setItem('pi_daily_v1', JSON.stringify(__DAILY__)); } catch (e) {}
     render(PIAuth.listUsers());
   }).catch(function () {});
 }
@@ -886,11 +884,8 @@ function showTree() {
 
 function dailyCell(u) {
   var list = dailyOfScope(u.email);
-  var lvl = String(u.level || '').toLowerCase();
-  var ae = (lvl === 'sale' || lvl === 'agent') ? [] : aeUnder(u.email);
-  var aeLine = ae.length ? '<div class="mini" style="margin-top:2px">AE ใต้สายงาน ' + ae.length + ' คน</div>' : '';
   if (!list.length) {
-    return '<span class="pill l-viewer" title="ยังไม่มีบันทึกการเข้าพบ">บันทึก 0 ครั้ง</span>' + aeLine;
+    return '<span class="pill l-viewer" title="ยังไม่มีบันทึกการเข้าพบ">บันทึก 0 ครั้ง</span>';
   }
   var latest = list.slice().sort(function (a, b) {
     return String(b.date + (b.time || '')).localeCompare(String(a.date + (a.time || '')));
@@ -898,8 +893,7 @@ function dailyCell(u) {
   var monthCount = list.filter(function (x) { return String(x.date || '').slice(0, 7) === new Date().toISOString().slice(0, 7); }).length;
   var who = normMail(latest.by) !== normMail(u.email) ? ((userByMail(latest.by) || {}).name || latest.by || '') : '';
   return '<span class="pill l-editor" title="รวม ' + list.length + ' ครั้ง · เดือนนี้ ' + monthCount + ' ครั้ง">บันทึก ' + list.length + ' ครั้ง</span>'
-    + '<div class="mini" style="margin-top:2px">ล่าสุด ' + esc(shortThai(latest.date)) + (who ? ' · ' + esc(String(who).split(' ')[0]) : '') + '</div>'
-    + aeLine;
+    + '<div class="mini" style="margin-top:2px">ล่าสุด ' + esc(shortThai(latest.date)) + (who ? ' · ' + esc(String(who).split(' ')[0]) : '') + '</div>';
 }
 
 function render(users) {
