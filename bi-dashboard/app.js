@@ -205,15 +205,19 @@
   }
 
   function barsSvg(data, fmt, labelW) {
-    const W = 430, H = 230, L = labelW || 100, R = 52, T = 6, B = 6;
+    const W = 430, H = 230, T = 6, B = 6, R = 56;
     if (!data.length) return svg(W, H, t(W / 2, H / 2, 'ไม่มีข้อมูล'));
+    const maxChars = Math.min(26, Math.max(...data.map(d => String(d.label).length), 8));
+    const L = labelW || Math.min(168, Math.max(80, Math.round(maxChars * 6.3)));
     const max = Math.max(...data.map(d => d.value), 1);
     const rh = Math.min(26, (H - T - B) / data.length), iw = W - L - R;
     let g = '';
     data.forEach((d, i) => {
       const y = T + i * rh, w = iw * (d.value / max);
-      g += t(L - 8, y + rh * 0.68, String(d.label).slice(0, 20), { anchor: 'end', size: 10, fill: C.fg });
-      g += '<rect x="' + L + '" y="' + (y + rh * 0.18) + '" width="' + Math.max(w, 2) + '" height="' + (rh * 0.62) + '" fill="' + PALETTE[i % PALETTE.length] + '" rx="1"/>';
+      let lab = String(d.label);
+      if (lab.length > 26) lab = lab.slice(0, 25) + '…';
+      g += t(L - 8, y + rh * 0.68, lab, { anchor: 'end', size: 10, fill: C.fg });
+      g += '<rect x="' + L + '" y="' + (y + rh * 0.18) + '" width="' + Math.max(w, 2) + '" height="' + (rh * 0.62) + '" fill="' + PALETTE[i % PALETTE.length] + '" rx="2"/>';
       g += t(L + w + 5, y + rh * 0.68, fmt ? fmt(d.value) : String(d.value), { anchor: 'start', size: 9.5, fill: C.fg });
     });
     return svg(W, H, g);
@@ -247,9 +251,14 @@
     '<div class="v ' + (cls || '') + '" style="grid-column:' + col + ';grid-row:' + row + '">' +
     (title ? '<div class="v-title">' + esc(title) + '</div>' : '') + '<div class="v-body">' + body + '</div></div>';
 
+  const KPI_BG = {
+    '#12239E': '#F1F4FF', '#E66C37': '#FFF4EE', '#197278': '#EFFAFA', '#1AAB40': '#F0FBF2',
+    '#118DFF': '#F1F8FF', '#D9B300': '#FFFAEB', '#D64550': '#FFF2F3', '#744EC2': '#F6F2FE'
+  };
   const kpi = (col, row, label, value, color) =>
-    '<div class="v kpi" style="grid-column:' + col + ';grid-row:' + row + '"><div class="num" style="color:' + color + '">' +
-    value + '</div><div class="lbl">' + esc(label) + '</div></div>';
+    '<div class="v kpi" style="grid-column:' + col + ';grid-row:' + row +
+    ';--kpi-color:' + color + ';--kpi-bg:' + (KPI_BG[color] || '#F7FBFF') + '">' +
+    '<div class="num">' + value + '</div><div class="lbl">' + esc(label) + '</div></div>';
 
   function gauge(pct) {
     const p = Math.max(0, Math.min(100, pct));
@@ -443,9 +452,9 @@
 
     let h = '';
     h += box('1/span 3', '1/span 2', 'Year, Month', periodSlicer(), 'slicer');
-    h += kpi('4/span 3', '1', sp.title.slice(0, 22), sp.metric === 'count' ? num(distinctSO) : fmt(total), C.navy);
-    h += kpi('7/span 3', '1', 'Revenue', baht(rev), C.orange);
-    h += kpi('10/span 3', '1', 'Unit', num(units), C.teal);
+    h += kpi('4/span 3', '1', 'จำนวน SO', num(distinctSO), C.navy);
+    h += kpi('7/span 3', '1', 'Revenue (ราคาสุทธิ)', baht(rev), C.orange);
+    h += kpi('10/span 3', '1', 'Unit (จำนวนเครื่อง)', num(units), C.teal);
     h += '<div class="v" style="grid-column:1/span 12;grid-row:3/span 3"><div class="v-title">' + esc(sp.title) +
       ' ตาม ' + esc(sp.dim) + '</div><div class="v-body">' + chart + '</div></div>';
     h += box('1/span 12', '6/span 4', esc(sp.dim) + ' × ' + esc(sp.dim2), pv);
@@ -516,7 +525,9 @@
     const nav = $('pageNav');
     if (!nav) return;
     let n = 0;
-    nav.innerHTML = NAV_GROUPS.map(g =>
+    const head = '<div class="nav-head"><b>หน้า · ' + NAV_GROUPS.reduce((a, g) => a + g.pages.length, 0) +
+      '</b><button class="nav-fold" id="navFold" title="พับ/กางเมนู">◀</button></div>';
+    nav.innerHTML = head + NAV_GROUPS.map(g =>
       '<div class="nav-group"><h4>' + esc(g.label) + '</h4>' +
       g.pages.map(p => {
         n++;
@@ -528,6 +539,16 @@
     nav.querySelectorAll('.nav-item').forEach(b => {
       b.onclick = () => { S.page = b.dataset.page; S.pageIdx = 0; render(); };
     });
+    const fold = $('navFold');
+    if (fold) fold.onclick = toggleNav;
+  }
+
+  function toggleNav() {
+    document.body.classList.toggle('nav-mini');
+    try {
+      localStorage.setItem('bi.navMini', document.body.classList.contains('nav-mini') ? '1' : '0');
+    } catch (e) {}
+    setTimeout(fit, 200);
   }
 
   function setActiveNav() {
@@ -721,8 +742,9 @@
   function boot() {
     buildNav();
     window.addEventListener('resize', fit);
+    try { if (localStorage.getItem('bi.navMini') === '1') document.body.classList.add('nav-mini'); } catch (e) {}
     const tg = $('navToggle');
-    if (tg) tg.onclick = () => { document.body.classList.toggle('nav-mini'); setTimeout(fit, 180); };
+    if (tg) tg.onclick = toggleNav;
     $('btnImport').onclick = () => $('dropOverlay').classList.remove('hidden');
     const zone = $('dropZone'), input = $('fileInput');
     zone.onclick = () => input.click();
