@@ -1081,6 +1081,7 @@ tr.divHead td{background:#1e2632;color:var(--text);border-color:var(--line-2)}
    v6.2 — asset catalog +พื้นยกระดับ 40 ซม. (ST-008, คิด ตร.ม.) + อ่างล้างมือ (WT-012)
    v6.3 — ล็อกขนาดจริงของอุปกรณ์ · เตือนระยะห่างระหว่างเครื่อง < 10 ซม.
    v6.4 — พื้นยกเลือกความสูงได้ 10–60 ซม. (ราคา BOQ ปรับตามความหนา)
+   v6.5 — Vendor RFQ: ส่งออกไฟล์ขอราคา (.xlsx/.csv) + นำเข้าราคาผู้ขายกลับเข้า BOQ
    ====================================================================== */
 :root{--tb-h:100px}
 .body{grid-template-rows:var(--tb-h) minmax(0,1fr) 30px}
@@ -1674,7 +1675,7 @@ kbd{
 
   <!-- ================= STATUS BAR ================= -->
   <footer class="statusbar">
-    <span class="ver">v6.4</span>
+    <span class="ver">v6.5</span>
     <span id="sbPhase" class="sbPhase">Phase 1</span>
     <span class="dotSep"></span>
     <span id="sbArea">พื้นที่ 600 × 380 ซม.</span>
@@ -1703,7 +1704,7 @@ kbd{
   <div class="mCard wide">
     <div class="mHead">
       <h2>คู่มือการใช้งาน — Store Studio</h2>
-      <span class="mSub">Ctrl+F5 หากหน้าจอไม่เปลี่ยนหลังอัปเดต · build v6.4</span>
+      <span class="mSub">Ctrl+F5 หากหน้าจอไม่เปลี่ยนหลังอัปเดต · build v6.5</span>
       <button class="mClose" data-close>✕</button>
     </div>
     <div class="mBody">
@@ -1757,6 +1758,7 @@ kbd{
             <tr><td><b>WALL / SELECT</b></td><td>สลับโหมดวาดผนัง / เลือก</td><td><b>MEP</b></td><td>เปิดคลังงานระบบ</td></tr>
             <tr><td><b>BOQ · MASTER · SUMMARY · LAYOUTS</b></td><td>เปิดหน้าต่างงานเอกสาร</td><td><b>PRINT / SPEC</b></td><td>พิมพ์ BOQ / พิมพ์สเปคลูกค้า</td></tr>
             <tr><td><b>SYSTEMS / SOP / STUDIO</b></td><td>สลับหน้า</td><td><b>ROTATE / DEL / UNDO / REDO</b></td><td>หมุน · ลบ · ย้อนกลับ · ทำซ้ำ</td></tr>
+            <tr><td><b>VENDOR / VENDORCSV</b></td><td>สร้างไฟล์ขอราคาให้ผู้ขายกรอก</td><td><b>VENDORIMPORT</b></td><td>นำเข้าราคาที่ผู้ขายกรอกกลับมา</td></tr>
           </tbody>
         </table>
       </div>
@@ -1778,6 +1780,7 @@ kbd{
             <li><b>ต้นทุนกลาง</b> — แก้วัสดุ/ค่าแรง แล้วทุกแพ็กเกจอัปเดตทันที</li>
             <li><b>งานระบบ &amp; ก่อสร้าง</b> — ตารางโหลดไฟ/ท่อ แก้ตัวเลขเองได้รายช่อง</li>
             <li><b>พิมพ์</b> — BOQ 3 หน้า + title block · <b>พิมพ์สเปค (ลูกค้า)</b> ไม่มีตัวเลขต้นทุน</li>
+            <li><b>ไฟล์ผู้ขาย (Vendor RFQ)</b> — ส่งออก .xlsx/.csv ให้ผู้ขายกรอกราคา แล้วนำเข้ากลับเพื่ออัปเดต BOQ</li>
           </ul>
         </div>
       </div>
@@ -1854,6 +1857,14 @@ kbd{
         <button class="btn ghost sm" id="btnXlsxExport">ส่งออก Excel</button>
         <button class="btn ghost sm" id="btnXlsxImport">นำเข้า Excel</button>
         <input type="file" id="fileXlsx" accept=".xlsx,.xls" hidden>
+      </div>
+
+      <div class="addRow" style="margin-top:6px">
+        <span style="font-size:11px;color:var(--text-3)">ให้ผู้ขายกรอกราคา (Vendor RFQ):</span>
+        <button class="btn ghost sm" id="btnVendorXlsx">📤 ไฟล์ผู้ขาย (.xlsx)</button>
+        <button class="btn ghost sm" id="btnVendorCsv">📤 ไฟล์ผู้ขาย (.csv)</button>
+        <button class="btn ghost sm" id="btnVendorImport">📥 นำเข้าราคาผู้ขาย</button>
+        <input type="file" id="fileVendor" accept=".xlsx,.xls,.csv" hidden>
       </div>
     </div>
     <div class="mFoot">
@@ -2243,6 +2254,7 @@ function freshState() {
     name: '',
     manual: { S: [], M: [], L: [] },
     costs: {},                      /* code -> {mat, lab, equip, waste} overrides */
+    vendor: {},                     /* code -> {brand, lead, note, updated} ราคาที่ยื่นโดยผู้ขาย */
     sys: { elec: {}, water: {}, build: {} },  /* null/undefined = คำนวณอัตโนมัติ */
     doc: {
       no: '', rev: '00', date: (() => {
@@ -2598,6 +2610,7 @@ function serialize() {
     phase: state.phase,
     manual: JSON.parse(JSON.stringify(state.manual)),
     costs: { ...state.costs },
+    vendor: JSON.parse(JSON.stringify(state.vendor || {})),
     sys: JSON.parse(JSON.stringify(state.sys)),
     doc: { ...state.doc }
   };
@@ -2717,6 +2730,7 @@ function applyData(data, keepSel) {
   state.panX = clamp(Math.round(Number(data.panX) || 0), -20000, 20000);
   state.panY = clamp(Math.round(Number(data.panY) || 0), -20000, 20000);
   state.costs = data.costs && typeof data.costs === 'object' ? data.costs : {};
+  state.vendor = data.vendor && typeof data.vendor === 'object' ? data.vendor : {};
   if (data.doc && typeof data.doc === 'object') {
     state.doc = { ...freshState().doc, ...data.doc };
     /* แปลงวันที่รูปแบบ ISO เดิม (YYYY-MM-DD) เป็น วว/ดด/ปปปป (พ.ศ.) */
@@ -5061,7 +5075,8 @@ function openBoq() {
     }).join('') +
     '</tbody><tfoot><tr><td colspan="2">รวมทั้งสิ้น</td><td class="num">' + fmt(t.grand) + '</td><td class="num">100.0%</td></tr></tfoot></table>';
 
-  $('#boqFootNote').textContent = 'พื้นที่ ' + fmt1(floorAreaM2()) + ' ตร.ม. · ผนัง ' + fmt1(wallAreaM2()) + ' ตร.ม. · ' + state.objects.length + ' อุปกรณ์ · ' + state.doc.no + ' rev.' + state.doc.rev;
+  $('#boqFootNote').textContent = 'พื้นที่ ' + fmt1(floorAreaM2()) + ' ตร.ม. · ผนัง ' + fmt1(wallAreaM2()) + ' ตร.ม. · ' + state.objects.length + ' อุปกรณ์ · ' + state.doc.no + ' rev.' + state.doc.rev +
+    (vendorCount() ? ' · ราคาผู้ขาย ' + vendorCount() + ' รายการ' : '');
 
   /* ---- ตัวเลือกรายการเพิ่มเอง ---- */
   $('#addCode').innerHTML = DIV_ORDER.map(d =>
@@ -5672,6 +5687,170 @@ function importXlsx(e) {
   fr.readAsArrayBuffer(file);
 }
 
+/* ------------------------------ VENDOR RFQ (ไฟล์ให้ผู้ขายกรอกราคา) ------------------------------ */
+const VENDOR_HEAD = ['ลำดับ', 'รหัส', 'หมวดงาน', 'รายการ', 'สเปก / ที่มาของปริมาณ', 'ปริมาณ', 'หน่วย',
+  'ราคาวัสดุ/หน่วย (บาท)', 'ค่าแรง/หน่วย (บาท)', 'ค่าเครื่องทุ่นแรง/หน่วย (บาท)', 'เผื่อสูญเสีย (%)',
+  'ยี่ห้อ / รุ่นที่เสนอ', 'ระยะส่งของ (วัน)', 'หมายเหตุ'];
+const VENDOR_WIDTHS = [8, 12, 24, 44, 26, 10, 8, 18, 16, 20, 12, 22, 14, 26];
+
+/** จำนวนรหัสที่มีราคาผู้ขายนำเข้าแล้ว */
+function vendorCount() {
+  const v = state.vendor || {};
+  return Object.keys(v).filter(k => v[k] && v[k].updated).length;
+}
+function vendorFileBase() {
+  const nm = (state.project.name || state.name || 'TSR').replace(/[^\w\u0E00-\u0E7F\- ]+/g, '').trim().replace(/\s+/g, '_') || 'TSR';
+  const d = new Date();
+  const stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+  return 'TSR-Vendor-BOQ-' + nm + '-' + state.pkg + '-' + stamp;
+}
+function vendorMetaAoa() {
+  return [
+    ['เอกสารขอราคา (Request for Quotation) — TSR Store Studio'],
+    ['โครงการ', state.project.name || state.name || '—'],
+    ['ลูกค้า', state.project.client || '—'],
+    ['สถานที่', state.project.site || '—'],
+    ['แพ็กเกจ', PKGS[state.pkg].label + ' · ' + PKGS[state.pkg].tag],
+    ['พื้นที่ร้าน', state.area.w + ' × ' + state.area.d + ' ซม. · ' + fmt2(floorAreaM2()) + ' ตร.ม.'],
+    ['เลขที่เอกสาร', state.doc.no || '—', '', 'ครั้งที่', state.doc.rev || '00', '', 'วันที่', state.doc.date || '—'],
+    ['ผู้ขาย (กรอก)', '', '', 'ผู้ติดต่อ / เบอร์โทร', ''],
+    ['เงื่อนไข', 'กรอกราคาเฉพาะคอลัมน์ H–K เท่านั้น · ห้ามแก้รหัส/ปริมาณ · ราคาใช้ได้ 30 วัน · ระบุ VAT ในหมายเหตุ']
+  ];
+}
+function vendorDataAoa() {
+  return boqRows(state.pkg).map(r => {
+    const m = masterByCode[r.code];
+    if (!m) return null;
+    const v = state.vendor[r.code] || {};
+    return ['', m.code, DIVS[m.div].code + ' ' + DIVS[m.div].name, m.name, r.basis, r.qty, m.unit,
+      '', '', '', '', v.brand || '', v.lead || '', v.note || ''];
+  }).filter(Boolean);
+}
+
+function exportVendorXlsx() {
+  if (typeof XLSX === 'undefined') { toast('ไม่พบไลบรารี SheetJS — ต้องเชื่อมต่ออินเทอร์เน็ตก่อนส่งออก', 'err'); return; }
+  const wb = XLSX.utils.book_new();
+  const aoa = vendorMetaAoa();
+  aoa.push([]);
+  aoa.push(VENDOR_HEAD);
+  vendorDataAoa().forEach((r, i) => { r[0] = i + 1; aoa.push(r); });
+  pushSheet(wb, aoa, 'BOQ-Vendor', VENDOR_WIDTHS);
+
+  pushSheet(wb, [
+    ['วิธีกรอกไฟล์ขอราคา (สำหรับผู้ขาย)'],
+    ['1', 'เปิดชีต “BOQ-Vendor” แล้วกรอกเฉพาะคอลัมน์: ราคาวัสดุ/หน่วย, ค่าแรง/หน่วย, ค่าเครื่องทุ่นแรง/หน่วย, เผื่อสูญเสีย %'],
+    ['2', 'ห้ามแก้คอลัมน์ “รหัส” และ “ปริมาณ” — ระบบใช้รหัสเพื่อนำราคากลับเข้าสู่โครงการ'],
+    ['3', 'ราคาเป็นราคาต่อหน่วย ตามหน่วยที่ระบุ (ต่อคู่ / ต่อ ตร.ม. / ต่อเมตร / ต่อชุด)'],
+    ['4', 'รายการใดไม่เสนอราคา ให้เว้นว่างไว้ (อย่าใส่เลข 0)'],
+    ['5', 'กรอกยี่ห้อ/รุ่น, ระยะส่งของ (วัน) และหมายเหตุ (เช่น ราคารวม VAT, MOQ, ของแถม)'],
+    ['6', 'ส่งไฟล์ .xlsx กลับมา — ผู้ประมาณราคาจะกด “นำเข้าราคาผู้ขาย” เพื่ออัปเดต BOQ'],
+    [],
+    ['หมายเหตุ', 'ราคาที่กรอกจะถูกใช้เป็นต้นทุนของโครงการนี้ (override ชุดต้นทุนกลาง)']
+  ], 'วิธีกรอก', [8, 110]);
+
+  const lastRows = boqRows(state.pkg).map(r => {
+    const m = masterByCode[r.code];
+    if (!m) return null;
+    const v = state.vendor[r.code] || {};
+    return [m.code, m.name, m.unit, r.qty, m.mat, m.lab, m.equip || 0, m.waste || 0, rateOf(m),
+      v.brand || '', v.lead || '', v.note || '', v.updated || ''];
+  }).filter(Boolean);
+  pushSheet(wb, [['รหัส', 'รายการ', 'หน่วย', 'ปริมาณ', 'วัสดุ', 'ค่าแรง', 'เครื่องทุ่นแรง', 'เผื่อสูญเสีย %', 'อัตรา/หน่วย', 'ยี่ห้อ/รุ่น', 'ส่งของ (วัน)', 'หมายเหตุ', 'อัปเดตล่าสุด']]
+    .concat(lastRows), 'ราคาปัจจุบัน(ภายใน)', [12, 42, 10, 10, 12, 12, 14, 14, 14, 20, 12, 24, 12]);
+
+  XLSX.writeFile(wb, vendorFileBase() + '.xlsx');
+  toast('สร้างไฟล์ขอราคาผู้ขายแล้ว · ' + lastRows.length + ' รายการ');
+  status('ส่งไฟล์ให้ผู้ขายกรอกคอลัมน์ราคา แล้วนำเข้ากลับด้วย “นำเข้าราคาผู้ขาย”', 'ok');
+}
+
+function exportVendorCsv() {
+  const aoa = vendorMetaAoa();
+  aoa.push([]);
+  aoa.push(VENDOR_HEAD);
+  vendorDataAoa().forEach((r, i) => { r[0] = i + 1; aoa.push(r); });
+  const csv = aoa.map(r => (r || []).map(c => {
+    const s = String(c == null ? '' : c);
+    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }).join(',')).join('\r\n');
+  download(vendorFileBase() + '.csv', '\uFEFF' + csv, 'text/csv;charset=utf-8');
+  toast('สร้างไฟล์ขอราคา (CSV) แล้ว — เปิดด้วย Excel ได้');
+}
+
+function importVendor(e) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  if (typeof XLSX === 'undefined') { toast('ต้องเชื่อมต่ออินเทอร์เน็ตก่อนนำเข้าไฟล์ (SheetJS)', 'err'); return; }
+  const fr = new FileReader();
+  fr.onload = ev => {
+    try {
+      let rows = [];
+      if (/\.csv$/i.test(file.name)) {
+        /* CSV ภาษาไทย: อ่านเป็น byte array พร้อม codepage UTF-8 (ถ้าไม่เจอหัวตารางลอง 874/1252) */
+        const bytes = new Uint8Array(ev.target.result);
+        for (const cp of [65001, 874, 1252]) {
+          const wb0 = XLSX.read(bytes, { type: 'array', codepage: cp });
+          const rs = XLSX.utils.sheet_to_json(wb0.Sheets[wb0.SheetNames[0]], { header: 1, blankrows: false, defval: '' });
+          if (rs.some(r => (r || []).some(c => String(c).indexOf('รหัส') >= 0))) { rows = rs; break; }
+          if (!rows.length) rows = rs;
+        }
+      } else {
+        const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
+        for (const name of wb.SheetNames) {
+          const rs = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, blankrows: false, defval: '' });
+          if (rs.some(r => (r || []).some(c => String(c).trim() === 'รหัส'))) { rows = rs; break; }
+        }
+      }
+      const hIdx = rows.findIndex(r => (r || []).some(c => String(c).trim() === 'รหัส'));
+      if (hIdx < 0) { toast('ไม่พบหัวตาราง “รหัส” — ใช้ไฟล์ที่ส่งออกจากโปรแกรมนี้เท่านั้น', 'err'); return; }
+      const H = rows[hIdx].map(x => String(x == null ? '' : x).trim());
+      const col = re => H.findIndex(h => re.test(h));
+      const cCode = col(/^รหัส/), cMat = col(/^ราคาวัสดุ|^วัสดุ/), cLab = col(/^ค่าแรง/),
+        cEq = col(/^ค่าเครื่อง/), cW = col(/^เผื่อสูญเสีย/), cBrand = col(/^ยี่ห้อ/),
+        cLead = col(/^ระยะส่งของ/), cNote = col(/^หมายเหตุ/);
+      if (cCode < 0 || (cMat < 0 && cLab < 0)) { toast('ไม่พบคอลัมน์ราคา (ราคาวัสดุ/ค่าแรง)', 'err'); return; }
+
+      let updated = 0, noPrice = 0;
+      const unknown = new Set();
+      const today = new Date().toLocaleDateString('th-TH');
+      for (let i = hIdx + 1; i < rows.length; i++) {
+        const row = rows[i] || [];
+        const code = String(row[cCode] == null ? '' : row[cCode]).trim();
+        if (!code) continue;
+        const m = masterByCode[code];
+        if (!m) { unknown.add(code); continue; }
+        const cell = c => (c >= 0 && row[c] != null && String(row[c]).trim() !== '') ? row[c] : null;
+        const vMat = cell(cMat), vLab = cell(cLab), vEq = cell(cEq), vW = cell(cW);
+        if (vMat == null && vLab == null && vEq == null && vW == null) { noPrice++; continue; }
+        if (!state.costs[code]) state.costs[code] = { mat: m.mat, lab: m.lab, equip: m.equip || 0, waste: m.waste || 0 };
+        const apply = (key, raw) => { if (raw != null) state.costs[code][key] = parseNum(raw); };
+        apply('mat', vMat); apply('lab', vLab); apply('equip', vEq); apply('waste', vW);
+        const meta = state.vendor[code] || {};
+        if (cBrand >= 0 && row[cBrand] != null) meta.brand = String(row[cBrand]).trim();
+        if (cLead >= 0 && row[cLead] != null) meta.lead = String(row[cLead]).trim();
+        if (cNote >= 0 && row[cNote] != null) meta.note = String(row[cNote]).trim();
+        meta.updated = today;
+        state.vendor[code] = meta;
+        updated++;
+      }
+      if (!updated) { toast('ไม่พบราคาที่กรอกในไฟล์ — กรุณากรอกคอลัมน์ราคาวัสดุ/ค่าแรงก่อน', 'warn'); return; }
+      rebuildMasterIndex();
+      renderInspector(); updateStatusBar();
+      if (page === 'systems') renderSystems();
+      if (state.view === '2d') draw(); else if (T.ready) buildThree();
+      if ($('#modalBoq').classList.contains('open')) openBoq();
+      commit();
+      toast('นำเข้าราคาผู้ขาย: อัปเดต ' + updated + ' รายการ' + (noPrice ? ' · ไม่มีราคา ' + noPrice : '') + (unknown.size ? ' · รหัสไม่ตรง ' + unknown.size : ''), 'ok');
+      status('อัปเดตต้นทุนจากผู้ขายแล้ว · ยอด BOQ ใหม่ ' + thb(boqTotals(state.pkg).grand), 'ok');
+    } catch (err) {
+      console.error(err);
+      toast('อ่านไฟล์ราคาผู้ขายไม่สำเร็จ', 'err');
+    }
+  };
+  fr.onerror = () => toast('อ่านไฟล์ไม่สำเร็จ', 'err');
+  fr.readAsArrayBuffer(file);
+}
+
 /* ------------------------------ EVENTS ------------------------------ */
 function setMode(m) {
   state.mode = m;
@@ -5812,6 +5991,9 @@ function runCmd(raw) {  const cmd = String(raw || '').trim().toLowerCase();
     undo: () => undo(), redo: () => redo(),
     reset: () => resetAll(), new: () => resetAll(),
     demo: () => demoStart(),
+    vendor: () => exportVendorXlsx(),
+    vendorcsv: () => exportVendorCsv(),
+    vendorimport: () => $('#fileVendor').click(),
     help: () => openModal('#modalHelp')
   };
   const fn = map[cmd];
@@ -5988,6 +6170,11 @@ function wire() {
   $('#btnXlsxExport').addEventListener('click', exportXlsx);
   $('#btnXlsxImport').addEventListener('click', () => $('#fileXlsx').click());
   $('#fileXlsx').addEventListener('change', importXlsx);
+  /* Vendor RFQ (ให้ผู้ขายกรอกราคา) */
+  if ($('#btnVendorXlsx')) $('#btnVendorXlsx').addEventListener('click', exportVendorXlsx);
+  if ($('#btnVendorCsv')) $('#btnVendorCsv').addEventListener('click', exportVendorCsv);
+  if ($('#btnVendorImport')) $('#btnVendorImport').addEventListener('click', () => $('#fileVendor').click());
+  if ($('#fileVendor')) $('#fileVendor').addEventListener('change', importVendor);
   $('#btnPreset').addEventListener('click', () => {
     if (state.objects.length && !confirm('แทนที่ผังปัจจุบันด้วยผังแนะนำของ ' + PKGS[state.pkg].label + '?')) return;
     loadPreset(state.pkg);
