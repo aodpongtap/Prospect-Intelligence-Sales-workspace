@@ -6,6 +6,7 @@
 <title>Sale Order BI · Prospect Intelligence</title>
 <link rel="stylesheet" href="bi.css">
 <link rel="stylesheet" href="polish.css">
+<link rel="stylesheet" href="nav.css">
 </head>
 <body>
 <div class="pbi-shell">
@@ -13,6 +14,7 @@
   <!-- ===== top bar ===== -->
   <div class="pbi-topbar">
     <div class="pbi-brand"><span class="dot"></span> Sale Order BI</div>
+    <button class="nav-toggle" id="navToggle" title="ย่อ/ขยายเมนู">☰</button>
     <button class="btn primary" id="btnImport">⇪ Import ListBooking</button>
     <button class="btn" id="btnExport" disabled>⤓ Export CSV</button>
     <div class="pbi-filters" id="filterBar"></div>
@@ -22,7 +24,9 @@
     </div>
   </div>
 
-  <!-- ===== report stage ===== -->
+  <!-- ===== body: nav + stage ===== -->
+  <div class="pbi-body">
+  <aside class="pbi-nav" id="pageNav"></aside>
   <div class="pbi-stage">
     <div class="pbi-canvas" id="canvas">
       <div class="pbi-page active" id="page-overview"></div>
@@ -33,8 +37,7 @@
     </div>
   </div>
 
-  <!-- ===== page tabs ===== -->
-  <div class="pbi-pagetabs" id="pageTabs"></div>
+  </div>
 </div>
 
 <!-- ===== import overlay ===== -->

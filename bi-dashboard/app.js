@@ -314,8 +314,8 @@
     const pct = rs.length ? pass / rs.length * 100 : 0;
 
     const stM = matrix(rs, d => d.team || '(ไม่ระบุ)', d => d.admGroup, () => 1, num, { sortRows: 1, maxRows: 9, rowTitle: 'Grp ทีมขาย' });
-    const unitM = matrix(rs, d => d.group, d => d.team, d => d.units, num, { sortRows: 1, maxRows: 6, rowTitle: 'กลุ่มสินค้า · Unit' });
-    const revM = matrix(rs, d => d.group, d => d.team, d => d.revenue, baht, { sortRows: 1, maxRows: 6, rowTitle: 'กลุ่มสินค้า · Revenue' });
+    const unitM = matrix(rs, d => d.group, d => d.team, d => d.units, num, { sortRows: 1, maxRows: 3, rowTitle: 'กลุ่มสินค้า · Unit' });
+    const revM = matrix(rs, d => d.group, d => d.team, d => d.revenue, baht, { sortRows: 1, maxRows: 5, rowTitle: 'กลุ่มสินค้า · Revenue' });
 
     let h = '';
     h += box('1/span 3', '1', 'Year, Month', periodSlicer(), 'slicer');
@@ -326,9 +326,9 @@
     h += kpi('4/span 3', '1', 'SO ใบสั่งซื้อ', num(rs.length), C.navy);
     h += kpi('7/span 3', '1', 'Total (Revenue)', baht(rev), C.orange);
     h += kpi('10/span 3', '1', 'Unit', num(units), C.teal);
-    h += box('4/span 9', '2/span 4', 'SO ต่อวัน (แท่ง) · Unit (เส้น)', comboSvg(daily, ''));
-    h += box('4/span 9', '6/span 2', 'กลุ่มสินค้า × ทีมขาย · Unit', unitM);
-    h += box('4/span 9', '8/span 2', 'กลุ่มสินค้า × ทีมขาย · Revenue', revM);
+    h += box('4/span 9', '2/span 3', 'SO ต่อวัน (แท่ง) · Unit (เส้น)', comboSvg(daily, ''));
+    h += box('4/span 9', '5/span 2', 'กลุ่มสินค้า × ทีมขาย · Unit', unitM);
+    h += box('4/span 9', '7/span 3', 'กลุ่มสินค้า × ทีมขาย · Revenue', revM);
     return h;
   }
 
@@ -473,6 +473,8 @@
     const el = $('page-overview');
     el.innerHTML = html;
     el.classList.add('active');
+    setActiveNav();
+    fit();
     bind();
   }
 
@@ -500,14 +502,37 @@
     if (rst) rst.onclick = () => { S.filter.team.clear(); S.filter.channel.clear(); render(); };
   }
 
-  function buildTabs() {
-    const tabs = $('pageTabs');
-    tabs.innerHTML = PBI_PAGES.map(n2 => {
-      const k = IMPLEMENTED[n2] || n2;
-      return '<button class="pbi-tab' + (k === S.page ? ' active' : '') + '" data-page="' + esc(k) + '">' + esc(n2) + '</button>';
-    }).join('');
-    tabs.querySelectorAll('.pbi-tab').forEach(b => {
-      b.onclick = () => { S.page = b.dataset.page; tabs.querySelectorAll('.pbi-tab').forEach(x => x.classList.toggle('active', x === b)); render(); };
+  const NAV_GROUPS = [
+    { label: 'ภาพรวม', pages: ['Daily Admin', '1.Revenue', '1.Unit / Revenue', '1.Unit / Revenue New', 'Performance/TAT'] },
+    { label: 'สถานะงาน', pages: ['Status (New)', 'Status (Back log)', '2.SO Order Status', '2.Pending', '2.1.Pending-Detail', '3.Cancel', '3.1.Cancel-Detail'] },
+    { label: 'ขั้นตอนทำงาน', pages: ['P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape', 'P5.Transport', 'P6.Technicial', 'Report ติดตั้ง', 'Report สัญญา'] },
+    { label: 'สินค้า & พื้นที่', pages: ['SML', 'Pack สด/ผ่อน', 'Map', 'Product end2end-Detail'] },
+    { label: 'อื่น ๆ', pages: ['Aging (21 Day)', 'ยกเลิก**มัดจำ', 'วัน', 'All Job/Close'] }
+  ];
+
+  function pageKey(name) { return IMPLEMENTED[name] || name; }
+
+  function buildNav() {
+    const nav = $('pageNav');
+    if (!nav) return;
+    let n = 0;
+    nav.innerHTML = NAV_GROUPS.map(g =>
+      '<div class="nav-group"><h4>' + esc(g.label) + '</h4>' +
+      g.pages.map(p => {
+        n++;
+        const k = pageKey(p);
+        return '<button class="nav-item' + (k === S.page ? ' active' : '') + '" data-page="' + esc(k) + '" title="' + esc(p) + '">' +
+          '<span class="ico">' + n + '</span><span class="lbl">' + esc(p) + '</span></button>';
+      }).join('') + '</div>'
+    ).join('');
+    nav.querySelectorAll('.nav-item').forEach(b => {
+      b.onclick = () => { S.page = b.dataset.page; S.pageIdx = 0; render(); };
+    });
+  }
+
+  function setActiveNav() {
+    document.querySelectorAll('#pageNav .nav-item').forEach(b => {
+      b.classList.toggle('active', b.dataset.page === S.page);
     });
   }
 
@@ -694,8 +719,10 @@
   }
 
   function boot() {
-    buildTabs();
+    buildNav();
     window.addEventListener('resize', fit);
+    const tg = $('navToggle');
+    if (tg) tg.onclick = () => { document.body.classList.toggle('nav-mini'); setTimeout(fit, 180); };
     $('btnImport').onclick = () => $('dropOverlay').classList.remove('hidden');
     const zone = $('dropZone'), input = $('fileInput');
     zone.onclick = () => input.click();
