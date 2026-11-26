@@ -110,9 +110,13 @@
       .catch(() => null);
   }
 
-  /* ---------- ขอบเขตข้อมูล: เฉพาะกลุ่ม "หยอดเหรียญ" ---------- */
+  /* ---------- ขอบเขตข้อมูล: กลุ่ม "หยอดเหรียญ" (ไม่รวมเครื่องชงกาแฟ) ---------- */
   const KEEP_GROUP_RE = /หยอดเหรียญ/;
-  function isKeepGroup(g) { return KEEP_GROUP_RE.test(String(g == null ? '' : g)); }
+  const EXCLUDE_GROUP_RE = /ชงกาแฟ/;
+  function isKeepGroup(g) {
+    const s2 = String(g == null ? '' : g);
+    return KEEP_GROUP_RE.test(s2) && !EXCLUDE_GROUP_RE.test(s2);
+  }
 
   /* ---------- data ---------- */
   function periods() {
@@ -572,13 +576,11 @@
     return 'XL';
   }
 
-  function pageSml(rs) {
+  function smlCards(rs) {
     const byGrp = new Map();
     rs.forEach(d => {
       const k = smlOf(d);
-      const o = byGrp.get(k) || {
-        d: 0, p: 0, c: 0, rd: 0, rp: 0, rc: 0
-      };
+      const o = byGrp.get(k) || { d: 0, p: 0, c: 0, rd: 0, rp: 0, rc: 0 };
       const rv = d.revenue || 0;
       if (d.status3 === '1.Done') { o.d++; o.rd += rv; }
       else if (d.status3 === '2.Pending') { o.p++; o.rp += rv; }
@@ -590,38 +592,21 @@
       const ia = order.indexOf(a), ib = order.indexOf(b);
       return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
     });
-    const soRows = keys.map(k => {
+    const seg = (k, mode) => {
       const o = byGrp.get(k);
-      return {
-        label: k,
-        segs: [
-          { name: 'Done', v: o.d, color: C.green },
-          { name: 'Pending', v: o.p, color: C.gold },
-          { name: 'Cancel', v: o.c, color: C.red }
-        ]
-      };
-    });
-    const revRows = keys.map(k => {
-      const o = byGrp.get(k);
-      return {
-        label: k,
-        segs: [
-          { name: 'Done', v: o.rd, color: C.green },
-          { name: 'Pending', v: o.rp, color: C.gold },
-          { name: 'Cancel', v: o.rc, color: C.red }
-        ]
-      };
-    });
+      return mode === 'so'
+        ? [{ name: 'Done', v: o.d, color: C.green }, { name: 'Pending', v: o.p, color: C.gold }, { name: 'Cancel', v: o.c, color: C.red }]
+        : [{ name: 'Done', v: o.rd, color: C.green }, { name: 'Pending', v: o.rp, color: C.gold }, { name: 'Cancel', v: o.rc, color: C.red }];
+    };
+    const soRows = keys.map(k => ({ label: k, segs: seg(k, 'so') }));
+    const revRows = keys.map(k => ({ label: k, segs: seg(k, 'rev') }));
     const totalRev = sumRev(rs) || 1;
     const contRows = keys.map(k => {
       const o = byGrp.get(k);
       return { label: k, value: (o.rd + o.rp + o.rc) / totalRev * 100 };
     }).sort((a, b) => b.value - a.value);
 
-    let h = pgHead('SML · GRP SML (ขนาดยอดต่อใบ) · GRP Channel', rs);
-    h += '<div class="g">';
-    h += statusKpi(rs);
-    h += card(12, 'สถานะใบงาน3 × Grp ทีมขาย', statusTable(rs), { hint: 'SO / %SO' });
+    let h = '';
     h += card(6, 'SO ตาม GRP SML', stackedBars(soRows) + statusLegend(), { hint: 'จำนวน SO' });
     h += card(6, 'Revenue ตาม GRP SML', stackedBars(revRows, baht) + statusLegend(), { hint: 'ราคาสุทธิ' });
     h += card(6, 'Contribution % (Revenue)', hbars(contRows, v => v.toFixed(0) + '%'));
@@ -629,9 +614,32 @@
       '<ul class="note"><li>SS : Revenue &lt; 60,000.-</li><li>S : Revenue &lt;= 100,000.-</li>' +
       '<li>M : Revenue &lt;= 500,000.-</li><li>L : Revenue &lt;= 1,000,000.-</li>' +
       '<li>XL : Revenue &gt; 1,000,000.-</li></ul>');
+    return h;
+  }
+
+  /* หน้าที่ 2 ของรายงานเดิม: 2.SO Order Status */
+  function pageOrderStatus(rs) {
+    let h = pgHead('2.SO Order Status', rs);
+    h += '<div class="g">';
+    h += statusKpi(rs);
+    h += card(12, 'สถานะใบงาน3 × Grp ทีมขาย', statusTable(rs), { hint: 'SO / %SO' });
+    h += smlCards(rs);
     h += card(12, 'GRP SML × กลุ่มสินค้า · Revenue',
       matrix(rs, smlOf, d => d.group, d => d.revenue, baht, { sortRows: 1, rowTitle: 'GRP SML' }),
       { hint: 'ราคาสุทธิ (บาท)' });
+    return h + '</div>';
+  }
+
+  function pageSml(rs) {
+    let h = pgHead('SML · GRP SML (ขนาดยอดต่อใบ)', rs);
+    h += '<div class="g">';
+    h += smlCards(rs);
+    h += card(12, 'GRP SML × กลุ่มสินค้า · Revenue',
+      matrix(rs, smlOf, d => d.group, d => d.revenue, baht, { sortRows: 1, rowTitle: 'GRP SML' }),
+      { hint: 'ราคาสุทธิ (บาท)' });
+    h += card(12, 'GRP SML × Grp ทีมขาย · SO',
+      matrix(rs, smlOf, d => d.team || '(ไม่ระบุ)', () => 1, num, { sortRows: 1, rowTitle: 'GRP SML' }),
+      { hint: 'จำนวน SO' });
     return h + '</div>';
   }
 
@@ -697,6 +705,7 @@
       : S.page === 'tat' ? pageTat(rs)
       : S.page === 'data' ? pageData(rs)
       : S.page === 'SML' ? pageSml(rs)
+      : S.page === '2.SO Order Status' ? pageOrderStatus(rs)
       : SPECS[S.page] ? pageGeneric(S.page, rs)
       : pageSoon();
     ['overview', 'status', 'tat', 'data', 'soon'].forEach(k => {
