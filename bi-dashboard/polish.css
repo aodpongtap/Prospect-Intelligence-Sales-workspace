@@ -1,0 +1,79 @@
+/* ===================== POLISH v2 — ตัวกรอง + หน้าตาพรีเมียม ===================== */
+
+/* top bar */
+.pbi-topbar {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F7F7F6 100%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+}
+.pbi-brand { font-size: 15px; letter-spacing: -.2px; }
+.pbi-brand .dot {
+  width: 12px; height: 12px; border-radius: 3px;
+  background: linear-gradient(135deg, #118DFF, #12239E);
+  box-shadow: 0 1px 4px rgba(17, 141, 255, .5);
+}
+
+/* ---------- filter dropdowns ---------- */
+.pbi-filters { display: flex; gap: 6px; align-items: center; margin-left: 8px; }
+.fdrop { position: relative; }
+.fdrop > summary {
+  list-style: none; cursor: pointer; height: 30px; padding: 0 12px;
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--pbi-border); border-radius: 3px; background: #fff;
+  font-size: 12px; color: var(--pbi-fg); user-select: none; white-space: nowrap;
+}
+.fdrop > summary::-webkit-details-marker { display: none; }
+.fdrop > summary:hover { background: var(--pbi-hover); }
+.fdrop[open] > summary { border-color: var(--pbi-accent); box-shadow: 0 0 0 2px rgba(17, 141, 255, .15); }
+.fdrop .cnt { font-size: 10px; background: var(--pbi-accent); color: #fff; border-radius: 8px; padding: 0 5px; }
+.fdrop .flist {
+  position: absolute; top: 34px; left: 0; z-index: 40; min-width: 240px; max-height: 320px; overflow: auto;
+  background: #fff; border: 1px solid var(--pbi-border); border-radius: 4px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .14); padding: 6px;
+}
+.fdrop .flist label {
+  display: flex; align-items: center; gap: 7px; padding: 5px 7px; border-radius: 3px;
+  font-size: 12px; cursor: pointer; white-space: nowrap;
+}
+.fdrop .flist label:hover { background: var(--pbi-hover); }
+.fdrop .flist .fclear {
+  width: 100%; text-align: left; border: none; background: none; color: var(--pbi-accent);
+  font-size: 11.5px; cursor: pointer; padding: 4px 7px;
+  border-bottom: 1px solid var(--pbi-border); margin-bottom: 4px;
+}
+
+/* ---------- canvas / visuals ---------- */
+.pbi-canvas { box-shadow: 0 2px 12px rgba(0, 0, 0, .10); border-radius: 3px; }
+.v { border: 1px solid #E8E6E4; border-radius: 3px; transition: box-shadow .15s, border-color .15s; }
+.v:hover { border-color: #D6D4D1; box-shadow: 0 2px 8px rgba(0, 0, 0, .07); }
+.v-title { font-size: 12.5px; letter-spacing: -.1px; color: #1F1E1D; }
+
+/* ---------- KPI ---------- */
+.kpi { position: relative; border-bottom: none; padding-left: 16px; }
+.kpi::before {
+  content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px;
+  border-radius: 2px; background: var(--pbi-accent); opacity: .85;
+}
+.kpi .num { font-size: 32px; font-weight: 300; letter-spacing: -1px; }
+.kpi .lbl { font-size: 11.5px; letter-spacing: .1px; }
+
+/* ---------- gauge ---------- */
+.gauge-bar { height: 18px; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .08); }
+.gauge-val { font-size: 17px; }
+
+/* ---------- tables ---------- */
+table.pbi thead th {
+  background: linear-gradient(180deg, #FCFCFC, #F6F5F4);
+  font-size: 10.5px; color: #52504E; border-bottom: 1px solid #E1DFDD;
+}
+table.pbi tbody td { font-variant-numeric: tabular-nums; }
+table.pbi tr.grand td { background: #F4F8FF !important; border-top: 2px solid #CFE3FA; }
+
+/* ---------- page tabs ---------- */
+.pbi-pagetabs { background: #FAFAFA; }
+.pbi-tab { border-radius: 4px 4px 0 0; margin-top: 3px; border-top: none; }
+.pbi-tab.active { box-shadow: 0 -2px 0 var(--pbi-accent) inset; }
+
+/* ---------- page header ---------- */
+.page-head { display: flex; align-items: baseline; gap: 10px; }
+.page-head h1 { font-size: 15px; font-weight: 600; margin: 0; letter-spacing: -.2px; }
+.page-head .sub { font-size: 11.5px; color: var(--pbi-fg2); }
