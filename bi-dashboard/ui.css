@@ -129,7 +129,7 @@
 }
 .col:hover .col-bar { filter: brightness(1.12); }
 .col-x {
-  height: 17px; font-size: 10.5px; color: #98A2B3;
+  height: 17px; font-size: 10.5px; color: #667085;
   white-space: nowrap; font-variant-numeric: tabular-nums;
 }
 

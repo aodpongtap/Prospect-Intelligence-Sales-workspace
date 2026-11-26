@@ -229,7 +229,6 @@
     const lineArr = o.line && o.line.length === data.length ? o.line : null;
     const lineMax = lineArr ? (Math.max.apply(null, lineArr) || 1) : 1;
     const showVal = data.length <= 16;
-    const every = data.length > 20 ? 2 : 1;
     let h = '<div class="cols-wrap"><div class="cols">';
     data.forEach((d, i) => {
       const p = Math.max(1.5, Math.min(100, d.value / max * 100));
@@ -238,7 +237,7 @@
         (d.sub ? ' · ' + esc(d.sub) : '') + '">' +
         '<span class="col-v">' + (showVal ? shortNum(d.value) : '') + '</span>' +
         '<span class="col-bar-wrap"><i class="col-bar" style="height:' + p.toFixed(1) + '%"></i></span>' +
-        '<span class="col-x">' + ((i % every === 0 || i === data.length - 1) ? esc(d.label) : '') + '</span></div>';
+        '<span class="col-x">' + esc(d.label) + '</span></div>';
     });
     h += '</div>';
     if (lineArr) {
@@ -376,8 +375,7 @@
     h += kpiCard(3, 'Revenue (ราคาสุทธิ)', baht(rev), C.orange, 'หักส่วนลด ÷1.07 แล้ว');
     h += kpiCard(3, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
     h += kpiCard(3, 'ผ่านการตรวจสอบ', pct.toFixed(0) + '%', C.green, num(pass) + ' / ' + num(rs.length) + ' รายการ');
-    h += card(8, 'SO ต่อวัน', colsChart(daily, { line: instLine, barLabel: 'จำนวน SO', lineLabel: 'การติดตั้ง' }),
-      { hint: 'แท่ง = SO · เส้นแดง = การติดตั้ง' });
+    h += card(8, 'SO ต่อวัน', colsChart(daily, { line: instLine, barLabel: 'จำนวน SO', lineLabel: 'การติดตั้ง' }));
     h += card(4, 'สถานะตรวจสอบ (Admin)', donut(adm));
     h += card(12, 'Grp ทีมขาย × สถานะ Admin', stM, { hint: 'จำนวนงาน' });
     h += card(12, 'กลุ่มสินค้า × ทีมขาย · Revenue', revM, { hint: 'ราคาสุทธิ (บาท)' });
