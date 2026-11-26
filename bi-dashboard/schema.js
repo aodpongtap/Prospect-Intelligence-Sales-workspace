@@ -230,7 +230,9 @@
         slaAdmin: slaAdmin,
         slaClose: slaClose,
         closeDate: closeDate,
-        adminDate: dateAdmin
+        adminDate: dateAdmin,
+        installDate: dateOnly(r[C.installDate]),
+        installStatus: trim(r[C.installStatus])
       };
     }
     return out;

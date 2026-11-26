@@ -16,7 +16,7 @@
   const COLS = Array.from({ length: 90 }, (_, i) => i);
   const DATE_COLS = [2, 32, 47, 54];
 
-  const S = { raw: null, data: null, meta: null, page: 'overview', period: null, q: '', pageIdx: 0, filter: { team: new Set(), channel: new Set() } };
+  const S = { raw: null, data: null, meta: null, page: 'overview', period: null, q: '', pageIdx: 0, filter: { team: new Set(), channel: new Set(), group: new Set() } };
 
   const PBI_PAGES = [
     'Daily Admin', '2.SO Order Status', '1.Unit / Revenue', 'SML', 'Pack สด/ผ่อน',
@@ -81,7 +81,7 @@
   const ymd = d => (d instanceof Date && !isNaN(d)) ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') : '';
 
   /* ---------- cache: จำชุดข้อมูลล่าสุดไว้ใน IndexedDB ---------- */
-  const DB_NAME = 'sale-order-bi', STORE = 'dataset';
+  const DB_NAME = 'sale-order-bi', STORE = 'dataset', SCHEMA_VER = 3;
   function idb() {
     return new Promise((res, rej) => {
       const r = indexedDB.open(DB_NAME, 1);
@@ -95,7 +95,7 @@
   function cacheSave() {
     return idb().then(db => new Promise((res, rej) => {
       const tx = db.transaction(STORE, 'readwrite');
-      tx.objectStore(STORE).put({ meta: S.meta, data: S.data.map(ser) }, 'last');
+      tx.objectStore(STORE).put({ ver: SCHEMA_VER, meta: S.meta, data: S.data.map(ser) }, 'last');
       tx.oncomplete = () => { db.close(); res(); };
       tx.onerror = () => { db.close(); rej(tx.error); };
     })).catch(e => console.warn('cache save failed', e));
@@ -106,9 +106,13 @@
       const rq = tx.objectStore(STORE).get('last');
       rq.onsuccess = () => { db.close(); res(rq.result); };
       rq.onerror = () => { db.close(); rej(rq.error); };
-    })).then(rec => (rec && rec.data ? { meta: rec.meta, data: rec.data.map(des) } : null))
+    })).then(rec => (rec && rec.data && rec.ver === SCHEMA_VER ? { meta: rec.meta, data: rec.data.map(des) } : null))
       .catch(() => null);
   }
+
+  /* ---------- ขอบเขตข้อมูล: เฉพาะกลุ่ม "หยอดเหรียญ" ---------- */
+  const KEEP_GROUP_RE = /หยอดเหรียญ/;
+  function isKeepGroup(g) { return KEEP_GROUP_RE.test(String(g == null ? '' : g)); }
 
   /* ---------- data ---------- */
   function periods() {
@@ -119,14 +123,16 @@
   }
   function rows() {
     if (!S.data) return [];
-    const fT = S.filter.team, fC = S.filter.channel;
+    const fT = S.filter.team, fC = S.filter.channel, fG = S.filter.group;
     return S.data.filter(d => {
+      if (!isKeepGroup(d.group)) return false;
       if (S.period) {
         const p = S.period.replace('-', '');
         if (String(d.mth) !== p) return false;
       }
       if (fT.size && !fT.has(String(d.team == null ? '' : d.team))) return false;
       if (fC.size && !fC.has(String(d.channel == null ? '' : d.channel))) return false;
+      if (fG.size && !fG.has(String(d.group == null ? '' : d.group))) return false;
       return true;
     });
   }
@@ -134,6 +140,7 @@
   function distinctVals(field) {
     const m = new Map();
     (S.data || []).forEach(d => {
+      if (field === 'group' && !isKeepGroup(d.group)) return;
       const v = d[field];
       if (v == null || v === '') return;
       const k = String(v);
@@ -158,112 +165,128 @@
       });
       return h + '</div></details>';
     };
-    let h = mk('team', 'ทีมขาย') + mk('channel', 'ช่องทาง');
-    if (S.filter.team.size || S.filter.channel.size) h += '<button class="btn" id="fReset">ล้างทั้งหมด</button>';
+    let h = '<label class="fsel"><span>งวด</span><select id="periodSel" class="pbi-select">' +
+      periods().slice().reverse().map(p => '<option value="' + p + '"' + (p === S.period ? ' selected' : '') + '>' +
+        p.replace('-', ' · ') + '</option>').join('') + '</select></label>';
+    h += mk('team', 'ทีมขาย') + mk('channel', 'ช่องทาง') + mk('group', 'กลุ่มสินค้า');
+    if (S.filter.team.size || S.filter.channel.size || S.filter.group.size) h += '<button class="btn" id="fReset">ล้างทั้งหมด</button>';
     bar.innerHTML = h;
   }
 
-  /* ---------- svg ---------- */
-  function svg(w, h, inner) {
-    return '<svg class="chart" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' + inner + '</svg>';
+  /* ============ UI helpers — HTML/CSS ล้วน (คมชัด ไม่ยืด ไม่ตัดข้อความ) ============ */
+  function empty(msg) { return '<div class="empty">' + esc(msg || 'ไม่มีข้อมูลในงวดนี้') + '</div>'; }
+
+  function shortNum(v) {
+    const a = Math.abs(v || 0);
+    if (a >= 1e9) return (v / 1e9).toFixed(1) + 'พันล.';
+    if (a >= 1e6) return (v / 1e6).toFixed(1) + 'ล.';
+    if (a >= 1e4) return Math.round(v / 1e3) + 'พ.';
+    if (a >= 1e3) return (v / 1e3).toFixed(1) + 'พ.';
+    return String(Math.round(v || 0));
   }
-  function t(x, y, s, o) {
+
+  /* การ์ดมาตรฐาน: span = จำนวนคอลัมน์ (1-12) */
+  function card(span, title, body, o) {
     o = o || {};
-    return '<text x="' + x + '" y="' + y + '" font-size="' + (o.size || 9.5) + '" fill="' + (o.fill || C.fg2) +
-      '" text-anchor="' + (o.anchor || 'middle') + '"' + (o.w ? ' font-weight="600"' : '') + '>' + esc(s) + '</text>';
+    return '<section class="card s' + span + (o.cls ? ' ' + o.cls : '') + '">' +
+      (title ? '<div class="card-h"><h3>' + esc(title) + '</h3>' +
+        (o.hint ? '<span class="hint">' + esc(o.hint) + '</span>' : '') + '</div>' : '') +
+      '<div class="card-b' + (o.pad ? ' pad' : '') + '">' + body + '</div></section>';
   }
 
-  function comboSvg(data, axis) {
-    const W = 640, H = 250, L = 40, R = 14, T = 26, B = 30;
-    if (!data.length) return svg(W, H, t(W / 2, H / 2, 'ไม่มีข้อมูลในงวดนี้'));
-    const iw = W - L - R, ih = H - T - B;
-    const maxV = Math.max(...data.map(d => Math.max(d.bar, d.line || 0)), 1);
-    const step = Math.max(1, Math.ceil(maxV / 4));
-    const top = step * 4, bw = iw / data.length;
-    let g = '';
-    for (let i = 0; i <= 4; i++) {
-      const y = T + ih - ih * i / 4;
-      g += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '" stroke="' + C.grid + '"/>';
-      g += t(L - 6, y + 3, String(step * i), { anchor: 'end', size: 9 });
-    }
+  function kpiCard(span, label, value, color, sub) {
+    return '<section class="card s' + span + ' kpi2" style="--k:' + color + '">' +
+      '<div class="k-lab">' + esc(label) + '</div>' +
+      '<div class="k-val">' + value + '</div>' +
+      (sub ? '<div class="k-sub">' + esc(sub) + '</div>' : '') + '</section>';
+  }
+
+  /* แท่งแนวนอน: label | track | value  (ไม่ทับกันเด็ดขาด) */
+  function hbars(data, fmt, o) {
+    o = o || {};
+    if (!data || !data.length) return empty();
+    const f = fmt || num;
+    const max = Math.max.apply(null, data.map(d => d.value)) || 1;
+    const chars = Math.max.apply(null, data.map(d => String(d.label).length));
+    const lw = o.labelW || Math.min(230, Math.max(96, Math.round(chars * 7.2) + 8));
+    let h = '<div class="hbars" style="--lw:' + lw + 'px">';
+    data.forEach((d, i) => {
+      const p = Math.max(1.2, Math.min(100, d.value / max * 100));
+      const col = d.color || PALETTE[i % PALETTE.length];
+      h += '<div class="hbar" title="' + esc(d.label) + ' · ' + f(d.value) + '">' +
+        '<span class="hb-lab">' + esc(d.label) + '</span>' +
+        '<span class="hb-track"><i class="hb-fill" style="width:' + p.toFixed(1) + '%;background:' + col + '"></i></span>' +
+        '<span class="hb-val">' + f(d.value) + '</span></div>';
+    });
+    return h + '</div>';
+  }
+
+  /* แท่งตั้ง (รายวัน/รายเดือน) + เส้น overlay (เช่น การติดตั้ง) */
+  function colsChart(data, o) {
+    o = o || {};
+    if (!data || !data.length) return empty();
+    const max = Math.max.apply(null, data.map(d => d.value)) || 1;
+    const lineArr = o.line && o.line.length === data.length ? o.line : null;
+    const lineMax = lineArr ? (Math.max.apply(null, lineArr) || 1) : 1;
+    const showVal = data.length <= 16;
     const every = data.length > 20 ? 2 : 1;
+    let h = '<div class="cols-wrap"><div class="cols">';
     data.forEach((d, i) => {
-      const h = ih * (d.bar / top), x = L + i * bw + bw * 0.2;
-      g += '<rect x="' + x + '" y="' + (T + ih - h) + '" width="' + (bw * 0.6) + '" height="' + Math.max(h, 0) + '" fill="' + C.bar + '" rx="1"/>';
-      if (d.bar > 0) g += t(L + i * bw + bw / 2, T + ih - h - 4, String(d.bar), { size: 8.5, fill: C.fg });
-      if (i % every === 0 || i === data.length - 1) g += t(L + i * bw + bw / 2, H - 10, String(d.day), { size: 9 });
+      const p = Math.max(1.5, Math.min(100, d.value / max * 100));
+      h += '<div class="col" title="' + esc(d.label) + ' · ' + num(d.value) +
+        (lineArr ? ' · ติดตั้ง ' + num(lineArr[i]) : '') +
+        (d.sub ? ' · ' + esc(d.sub) : '') + '">' +
+        '<span class="col-v">' + (showVal ? shortNum(d.value) : '') + '</span>' +
+        '<span class="col-bar-wrap"><i class="col-bar" style="height:' + p.toFixed(1) + '%"></i></span>' +
+        '<span class="col-x">' + ((i % every === 0 || i === data.length - 1) ? esc(d.label) : '') + '</span></div>';
     });
-    const pts = data.map((d, i) => (L + i * bw + bw / 2) + ',' + (T + ih - ih * ((d.line || 0) / top))).join(' ');
-    g += '<polyline points="' + pts + '" fill="none" stroke="' + C.orange + '" stroke-width="2"/>';
-    data.forEach((d, i) => {
-      const cx = L + i * bw + bw / 2, cy = T + ih - ih * ((d.line || 0) / top);
-      g += '<circle cx="' + cx + '" cy="' + cy + '" r="2.4" fill="' + C.orange + '"/>';
-      if (d.line) g += t(cx, cy - 6, String(Math.round(d.line)), { size: 8, fill: C.orange });
-    });
-    if (axis) g += t(W / 2, H - 0.5, axis, { size: 10, fill: C.fg, w: 1 });
-    return svg(W, H, g);
+    h += '</div>';
+    if (lineArr) {
+      const n = data.length;
+      const pts = lineArr.map((v, i) => ((i + 0.5) / n * 100).toFixed(2) + ',' + (100 - (v / lineMax) * 100).toFixed(2)).join(' ');
+      h += '<div class="cols-line"><svg viewBox="0 0 100 100" preserveAspectRatio="none">' +
+        '<polyline points="' + pts + '" fill="none" stroke="#E5484D" stroke-width="2" ' +
+        'vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+      lineArr.forEach((v, i) => {
+        h += '<i class="pt" style="left:' + ((i + 0.5) / n * 100).toFixed(2) + '%;top:' + (100 - (v / lineMax) * 100).toFixed(2) + '%"></i>';
+      });
+      h += '</div>';
+    }
+    h += '</div>';
+    if (lineArr) {
+      h += '<div class="chart-legend"><span><i class="sw" style="background:linear-gradient(180deg,#4F9DFF,#118DFF)"></i>' +
+        esc(o.barLabel || 'จำนวน SO') + '</span><span><i class="sw line"></i>' + esc(o.lineLabel || 'การติดตั้ง') + '</span></div>';
+    }
+    return h;
   }
 
-  function barsSvg(data, fmt, labelW) {
-    const W = 430, H = 230, T = 6, B = 6, R = 56;
-    if (!data.length) return svg(W, H, t(W / 2, H / 2, 'ไม่มีข้อมูล'));
-    const maxChars = Math.min(26, Math.max(...data.map(d => String(d.label).length), 8));
-    const L = labelW || Math.min(168, Math.max(80, Math.round(maxChars * 6.3)));
-    const max = Math.max(...data.map(d => d.value), 1);
-    const rh = Math.min(26, (H - T - B) / data.length), iw = W - L - R;
-    let g = '';
-    data.forEach((d, i) => {
-      const y = T + i * rh, w = iw * (d.value / max);
-      let lab = String(d.label);
-      if (lab.length > 26) lab = lab.slice(0, 25) + '…';
-      g += t(L - 8, y + rh * 0.68, lab, { anchor: 'end', size: 10, fill: C.fg });
-      g += '<rect x="' + L + '" y="' + (y + rh * 0.18) + '" width="' + Math.max(w, 2) + '" height="' + (rh * 0.62) + '" fill="' + PALETTE[i % PALETTE.length] + '" rx="2"/>';
-      g += t(L + w + 5, y + rh * 0.68, fmt ? fmt(d.value) : String(d.value), { anchor: 'start', size: 9.5, fill: C.fg });
+  /* โดนัท + legend */
+  function donut(data) {
+    const list = (data || []).filter(d => d.value > 0);
+    const tot = list.reduce((a, b) => a + b.value, 0);
+    if (!tot) return empty();
+    let acc = 0;
+    const stops = [];
+    list.forEach((d, i) => {
+      const from = acc / tot * 360, to = (acc + d.value) / tot * 360;
+      stops.push(PALETTE[i % PALETTE.length] + ' ' + from.toFixed(2) + 'deg ' + to.toFixed(2) + 'deg');
+      acc += d.value;
     });
-    return svg(W, H, g);
+    const leg = list.map((d, i) =>
+      '<div class="lg"><i style="background:' + PALETTE[i % PALETTE.length] + '"></i>' +
+      '<span title="' + esc(d.label) + '">' + esc(d.label) + '</span>' +
+      '<b>' + num(d.value) + '</b><em>' + (d.value / tot * 100).toFixed(0) + '%</em></div>').join('');
+    return '<div class="donut-wrap"><div class="donut" style="background:conic-gradient(' + stops.join(',') + ')">' +
+      '<div class="donut-c"><b>' + num(tot) + '</b><span>รวม</span></div></div>' +
+      '<div class="legend">' + leg + '</div></div>';
   }
-
-  function donutSvg(data) {
-    const W = 420, H = 230, cx = 112, cy = H / 2, r = 76, ri = 44;
-    const total = data.reduce((a, b) => a + b.value, 0);
-    if (!total) return svg(W, H, t(W / 2, H / 2, 'ไม่มีข้อมูล'));
-    let ang = -Math.PI / 2, g = '';
-    data.forEach((d, i) => {
-      const a2 = ang + (d.value / total) * Math.PI * 2;
-      const p = (rad, a) => [cx + rad * Math.cos(a), cy + rad * Math.sin(a)];
-      const A = p(r, ang), B = p(r, a2), Cc = p(ri, a2), Dd = p(ri, ang);
-      const big = a2 - ang > Math.PI ? 1 : 0;
-      g += '<path d="M' + A + ' A' + r + ',' + r + ' 0 ' + big + ' 1 ' + B + ' L' + Cc + ' A' + ri + ',' + ri + ' 0 ' + big + ' 0 ' + Dd + 'Z" fill="' + PALETTE[i % PALETTE.length] + '"/>';
-      ang = a2;
-    });
-    let ly = 40;
-    data.slice(0, 8).forEach((d, i) => {
-      g += '<rect x="212" y="' + (ly - 7) + '" width="8" height="8" rx="1" fill="' + PALETTE[i % PALETTE.length] + '"/>';
-      g += t(225, ly, String(d.label).slice(0, 16), { anchor: 'start', size: 9.5, fill: C.fg });
-      g += t(400, ly, Math.round(d.value / total * 100) + '%', { anchor: 'end', size: 9.5 });
-      ly += 17;
-    });
-    return svg(W, H, g);
-  }
-
-  /* ---------- shells ---------- */
-  const box = (col, row, title, body, cls) =>
-    '<div class="v ' + (cls || '') + '" style="grid-column:' + col + ';grid-row:' + row + '">' +
-    (title ? '<div class="v-title">' + esc(title) + '</div>' : '') + '<div class="v-body">' + body + '</div></div>';
-
-  const KPI_BG = {
-    '#12239E': '#F1F4FF', '#E66C37': '#FFF4EE', '#197278': '#EFFAFA', '#1AAB40': '#F0FBF2',
-    '#118DFF': '#F1F8FF', '#D9B300': '#FFFAEB', '#D64550': '#FFF2F3', '#744EC2': '#F6F2FE'
-  };
-  const kpi = (col, row, label, value, color) =>
-    '<div class="v kpi" style="grid-column:' + col + ';grid-row:' + row +
-    ';--kpi-color:' + color + ';--kpi-bg:' + (KPI_BG[color] || '#F7FBFF') + '">' +
-    '<div class="num">' + value + '</div><div class="lbl">' + esc(label) + '</div></div>';
 
   function gauge(pct) {
-    const p = Math.max(0, Math.min(100, pct));
-    return '<div class="gauge"><div class="gauge-bar"><i style="width:' + p + '%"></i></div><div class="gauge-val">' + p.toFixed(0) + '%</div></div>';
+    const p = Math.max(0, Math.min(100, +pct || 0));
+    return '<div class="gauge"><div class="gauge-track"><i class="gauge-fill" style="width:' + p.toFixed(1) + '%"></i></div>' +
+      '<div class="gauge-row"><b>' + p.toFixed(0) + '%</b><span>ผ่านการตรวจสอบ</span></div></div>';
   }
+
 
   function periodSlicer() {
     return '<select id="periodSel" class="pbi-select">' + periods().slice().reverse().map(p =>
@@ -290,7 +313,7 @@
     cell.forEach(v => { grandTotal += v; });
     if (o.maxRows) rks = rks.slice(0, o.maxRows);
     if (o.maxCols) cks = cks.slice(0, o.maxCols);
-    let h = '<div class="tbl-wrap"><table class="pbi"><thead><tr><th class="rowhead">' + esc(o.rowTitle || '') + '</th>';
+    let h = '<div class="tbl"><table class="pbi"><thead><tr><th class="rowhead">' + esc(o.rowTitle || '') + '</th>';
     cks.forEach(c => { h += '<th class="num">' + esc(c) + '</th>'; });
     h += '<th class="num total">Total</th></tr></thead><tbody>';
     rks.forEach(rk => {
@@ -299,46 +322,66 @@
       h += '<td class="num total">' + fmt(rm.get(rk) || 0) + '</td></tr>';
     });
     h += '<tr class="grand"><td class="rowhead">Total</td>';
-    cks.forEach(ck => { h += '<td class="num">' + fmt(cm.get(ck) || 0) + '</td>'; });
+    cks.forEach(ck => { const v = cm.get(ck); h += '<td class="num">' + (v ? fmt(v) : '') + '</td>'; });
     h += '<td class="num total">' + fmt(grandTotal) + '</td></tr></tbody></table></div>';
     return h;
   }
 
   /* ---------- pages ---------- */
+  function pgHead(title, rs, extra) {
+    return '<div class="pg-head"><h1>' + esc(title) + '</h1>' +
+      '<span class="sub">' + esc(S.period ? S.period.replace('-', ' · ') : 'ทุกงวด') + ' · ' + num(rs ? rs.length : 0) + ' รายการ</span>' +
+      '<span class="field-scope">เฉพาะกลุ่มหยอดเหรียญ</span>' +
+      '<span class="grow"></span>' + (extra || '') + '</div>';
+  }
+
   function pageOverview(rs) {
-    let rev = 0, units = 0, pass = 0;
-    const byDay = new Map();
+    let rev = 0, units = 0, pass = 0, installs = 0;
+    const byDay = new Map(), instByDay = new Map();
     rs.forEach(d => {
       rev += d.revenue || 0;
       units += d.units || 0;
       if (d.admGroup === '1.ผ่าน') pass++;
       if (d.dateSO) {
-        const day = d.dateSO.getDate();
-        const a = byDay.get(day) || { bar: 0, line: 0 };
-        a.bar++; a.line += d.units || 0;
-        byDay.set(day, a);
+        const k = d.dateSO.getDate();
+        const a = byDay.get(k) || { n: 0, u: 0 };
+        a.n++; a.u += d.units || 0;
+        byDay.set(k, a);
+      }
+      if (d.installDate instanceof Date && !isNaN(d.installDate)) {
+        const k2 = d.installDate.getDate();
+        instByDay.set(k2, (instByDay.get(k2) || 0) + 1);
+        installs++;
       }
     });
-    const daily = [...byDay.entries()].sort((a, b) => a[0] - b[0]).map(e => ({ day: e[0], bar: e[1].bar, line: e[1].line }));
+    const dayKeys = [...new Set([...byDay.keys(), ...instByDay.keys()])].sort((a, b) => a - b);
+    const daily = dayKeys.map(k => ({
+      label: String(k),
+      value: (byDay.get(k) || { n: 0 }).n,
+      sub: 'Unit ' + num((byDay.get(k) || { u: 0 }).u)
+    }));
+    const instLine = dayKeys.map(k => instByDay.get(k) || 0);
     const pct = rs.length ? pass / rs.length * 100 : 0;
+    const adm = ['1.ผ่าน', '2.Pening', '3.ไม่ผ่าน', '(Blank)'].map(k => ({
+      label: k === '(Blank)' ? '(ว่าง)' : k,
+      value: rs.filter(d => String(d.admGroup || '(Blank)') === k).length
+    })).filter(d => d.value > 0);
 
-    const stM = matrix(rs, d => d.team || '(ไม่ระบุ)', d => d.admGroup, () => 1, num, { sortRows: 1, maxRows: 9, rowTitle: 'Grp ทีมขาย' });
-    const unitM = matrix(rs, d => d.group, d => d.team, d => d.units, num, { sortRows: 1, maxRows: 3, rowTitle: 'กลุ่มสินค้า · Unit' });
-    const revM = matrix(rs, d => d.group, d => d.team, d => d.revenue, baht, { sortRows: 1, maxRows: 5, rowTitle: 'กลุ่มสินค้า · Revenue' });
+    const stM = matrix(rs, d => d.team || '(ไม่ระบุ)', d => d.admGroup, () => 1, num, { sortRows: 1, rowTitle: 'Grp ทีมขาย' });
+    const revM = matrix(rs, d => d.group, d => d.team, d => d.revenue, baht, { sortRows: 1, maxRows: 10, rowTitle: 'กลุ่มสินค้า' });
 
-    let h = '';
-    h += box('1/span 3', '1', 'Year, Month', periodSlicer(), 'slicer');
-    h += '<div class="v" style="grid-column:1/span 3;grid-row:2"><div class="v-body" style="justify-content:center">' + gauge(pct) + '</div></div>';
-    h += box('1/span 3', '3/span 4', 'สถานะตรวจสอบ (Admin)', stM);
-    h += box('1/span 3', '7/span 3', 'สถานะใบงาน3 (ตาม DAX)',
-      matrix(rs, d => d.status3 || '(ไม่ระบุ)', () => 'งาน', () => 1, num, { sortRows: 1, rowTitle: 'สถานะ' }));
-    h += kpi('4/span 3', '1', 'SO ใบสั่งซื้อ', num(rs.length), C.navy);
-    h += kpi('7/span 3', '1', 'Total (Revenue)', baht(rev), C.orange);
-    h += kpi('10/span 3', '1', 'Unit', num(units), C.teal);
-    h += box('4/span 9', '2/span 3', 'SO ต่อวัน (แท่ง) · Unit (เส้น)', comboSvg(daily, ''));
-    h += box('4/span 9', '5/span 2', 'กลุ่มสินค้า × ทีมขาย · Unit', unitM);
-    h += box('4/span 9', '7/span 3', 'กลุ่มสินค้า × ทีมขาย · Revenue', revM);
-    return h;
+    let h = pgHead('Daily Admin', rs);
+    h += '<div class="g">';
+    h += kpiCard(3, 'จำนวน SO', num(rs.length), C.navy, 'ใบสั่งซื้อในงวดนี้');
+    h += kpiCard(3, 'Revenue (ราคาสุทธิ)', baht(rev), C.orange, 'หักส่วนลด ÷1.07 แล้ว');
+    h += kpiCard(3, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
+    h += kpiCard(3, 'ผ่านการตรวจสอบ', pct.toFixed(0) + '%', C.green, num(pass) + ' / ' + num(rs.length) + ' รายการ');
+    h += card(8, 'SO ต่อวัน', colsChart(daily, { line: instLine, barLabel: 'จำนวน SO', lineLabel: 'การติดตั้ง' }),
+      { hint: 'แท่ง = SO · เส้นแดง = การติดตั้ง' });
+    h += card(4, 'สถานะตรวจสอบ (Admin)', donut(adm));
+    h += card(12, 'Grp ทีมขาย × สถานะ Admin', stM, { hint: 'จำนวนงาน' });
+    h += card(12, 'กลุ่มสินค้า × ทีมขาย · Revenue', revM, { hint: 'ราคาสุทธิ (บาท)' });
+    return h + '</div>';
   }
 
   function pageStatus(rs) {
@@ -347,55 +390,58 @@
       byAdm.set(d.admGroup || '(ว่าง)', (byAdm.get(d.admGroup || '(ว่าง)') || 0) + 1);
       bySt3.set(d.status3 || '(ไม่ระบุ)', (bySt3.get(d.status3 || '(ไม่ระบุ)') || 0) + 1);
     });
-    const admData = [...byAdm.entries()].sort().map(e => ({ label: e[0], value: e[1] }));
-    const st3Data = [...bySt3.entries()].sort().map(e => ({ label: e[0], value: e[1] }));
+    const admData = [...byAdm.entries()].sort((a, b) => b[1] - a[1]).map(e => ({ label: e[0], value: e[1] }));
+    const st3Data = [...bySt3.entries()].sort((a, b) => String(a[0]).localeCompare(String(b[0]))).map(e => ({ label: e[0], value: e[1] }));
 
-    let h = '';
-    h += box('1/span 3', '1/span 2', 'Year, Month', periodSlicer(), 'slicer');
-    h += kpi('4/span 2', '1/span 2', 'ผ่าน', num(byAdm.get('1.ผ่าน') || 0), C.green);
-    h += kpi('6/span 2', '1/span 2', 'Pending', num(byAdm.get('2.Pening') || 0), C.gold);
-    h += kpi('8/span 2', '1/span 2', 'ไม่ผ่าน', num(byAdm.get('3.ไม่ผ่าน') || 0), C.red);
-    h += kpi('10/span 3', '1/span 2', 'รวมทั้งงวด', num(rs.length), C.navy);
-    h += box('1/span 6', '3/span 3', 'สถานะ Admin', barsSvg(admData, num));
-    h += box('7/span 6', '3/span 3', 'สถานะใบงาน3 (1.Done / 2.Pending / 3.Cancel)', barsSvg(st3Data, num));
-    h += box('1/span 12', '6/span 4', 'ทีมขาย × สถานะใบงาน3',
-      matrix(rs, d => d.team || '(ไม่ระบุ)', d => d.status3 || '(ไม่ระบุ)', () => 1, num, { sortRows: 1, rowTitle: 'Grp ทีมขาย' }));
-    return h;
+    let h = pgHead('Status (New)', rs);
+    h += '<div class="g">';
+    h += kpiCard(3, 'ผ่าน', num(byAdm.get('1.ผ่าน') || 0), C.green);
+    h += kpiCard(3, 'Pending', num(byAdm.get('2.Pening') || 0), C.gold);
+    h += kpiCard(3, 'ไม่ผ่าน', num(byAdm.get('3.ไม่ผ่าน') || 0), C.red);
+    h += kpiCard(3, 'รวมทั้งงวด', num(rs.length), C.navy);
+    h += card(6, 'สถานะ Admin', hbars(admData), { hint: 'จำนวนงาน' });
+    h += card(6, 'สถานะใบงาน3 (1.Done / 2.Pending / 3.Cancel)', hbars(st3Data), { hint: 'ตามสูตร MapStutus' });
+    h += card(12, 'ทีมขาย × สถานะใบงาน3',
+      matrix(rs, d => d.team || '(ไม่ระบุ)', d => d.status3 || '(ไม่ระบุ)', () => 1, num, { sortRows: 1, rowTitle: 'Grp ทีมขาย' }), { hint: 'จำนวนงาน' });
+    return h + '</div>';
   }
 
   function pageTat(rs) {
     let nA = 0, sA = 0, nC = 0, sC = 0;
-    const byMth = new Map(), byTeam = new Map();
+    const byDay = new Map(), byTeam = new Map();
     rs.forEach(d => {
       if (d.slaAdmin != null) { sA += d.slaAdmin; nA++; }
       if (d.slaClose != null && (d.status3 === '1.Done' || d.status3 === '3.Cancel')) {
         sC += d.slaClose; nC++;
-        const t2 = d.team || '(ไม่ระบุ)';
-        const b = byTeam.get(t2) || [0, 0]; b[0] += d.slaClose; b[1]++; byTeam.set(t2, b);
+        const tk = d.team || '(ไม่ระบุ)';
+        const b = byTeam.get(tk) || [0, 0]; b[0] += d.slaClose; b[1]++; byTeam.set(tk, b);
         if (d.dateSO) {
-          const day = d.dateSO.getDate();
-          const a = byMth.get(day) || [0, 0]; a[0] += d.slaClose; a[1]++; byMth.set(day, a);
+          const k2 = d.dateSO.getDate();
+          const a = byDay.get(k2) || [0, 0]; a[0] += d.slaClose; a[1]++;
+          byDay.set(k2, a);
         }
       }
     });
-    const daily = [...byMth.entries()].sort((a, b) => a[0] - b[0])
-      .map(e => ({ day: e[0], bar: e[1][1] ? Math.round(e[1][0] / e[1][1]) : 0, line: e[1][1] }));
-    const teamData = [...byTeam.entries()].map(e => ({ label: e[0], value: e[1][1] ? e[1][0] / e[1][1] : 0 }))
-      .sort((a, b) => b.value - a.value).slice(0, 8);
+    const daily = [...byDay.entries()].sort((a, b) => a[0] - b[0])
+      .map(e => ({ label: String(e[0]), value: e[1][1] ? e[1][0] / e[1][1] : 0, sub: e[1][1] + ' งาน' }));
+    const teamData = [...byTeam.entries()]
+      .map(e => ({ label: e[0], value: e[1][1] ? +(e[1][0] / e[1][1]).toFixed(1) : 0 }))
+      .sort((a, b) => b.value - a.value).slice(0, 10);
 
-    let h = '';
-    h += box('1/span 3', '1/span 2', 'Year, Month', periodSlicer(), 'slicer');
-    h += kpi('4/span 3', '1/span 2', 'SLA Admin เฉลี่ย', (nA ? sA / nA : 0).toFixed(1) + ' วัน', C.blue);
-    h += kpi('7/span 3', '1/span 2', 'SLA ปิดงาน เฉลี่ย', (nC ? sC / nC : 0).toFixed(1) + ' วัน', C.orange);
-    h += kpi('10/span 3', '1/span 2', 'งานที่ปิดแล้ว', num(nC), C.green);
-    h += box('1/span 12', '3/span 3', 'SLA ปิดงาน เฉลี่ยรายวัน (วัน)', comboSvg(daily));
-    h += box('1/span 6', '6/span 4', 'SLA เฉลี่ยตามทีม (วัน)', barsSvg(teamData, v => v.toFixed(1)));
-    h += box('7/span 6', '6/span 4', 'นิยาม (ตามสูตรในไฟล์)',
-      '<div class="note">SLA Admin = MAX(Date Admin − Date SO, 0)<br>' +
-      'SLA ปิดงาน = วันที่ปิดงาน − Date SO (งาน 1.Done / 3.Cancel)<br>' +
-      'งานที่ยังไม่ปิด = วันนี้ − Date SO<br>' +
-      'Date Admin อ้างตามสูตรคอลัมน์ DG</div>');
-    return h;
+    let h = pgHead('Performance / TAT', rs);
+    h += '<div class="g">';
+    h += kpiCard(3, 'SLA Admin เฉลี่ย', (nA ? sA / nA : 0).toFixed(1) + ' วัน', C.blue, num(nA) + ' งาน');
+    h += kpiCard(3, 'SLA ปิดงาน เฉลี่ย', (nC ? sC / nC : 0).toFixed(1) + ' วัน', C.orange, num(nC) + ' งาน');
+    h += kpiCard(3, 'งานที่ปิดแล้ว', num(nC), C.green, '1.Done + 3.Cancel');
+    h += kpiCard(3, 'งานคงค้าง', num(rs.length - nC), C.red, 'ยังไม่ปิดงาน');
+    h += card(12, 'SLA ปิดงาน เฉลี่ยรายวัน (วัน)', colsChart(daily), { hint: 'เฉลี่ยต่อวัน' });
+    h += card(6, 'SLA เฉลี่ยตามทีม (วัน)', hbars(teamData, v => v.toFixed(1)));
+    h += card(6, 'นิยามที่ใช้คำนวณ',
+      '<ul class="note"><li>SLA Admin = MAX(Date Admin − Date SO, 0)</li>' +
+      '<li>SLA ปิดงาน = วันที่ปิดงาน − Date SO (งาน 1.Done / 3.Cancel)</li>' +
+      '<li>งานที่ยังไม่ปิด = วันนี้ − Date SO</li>' +
+      '<li>Date Admin อ้างตามสูตรคอลัมน์ DG</li></ul>');
+    return h + '</div>';
   }
 
   function pageData(rs) {
@@ -406,17 +452,20 @@
     if (S.pageIdx >= pages) S.pageIdx = 0;
     const slice = list.slice(S.pageIdx * per, S.pageIdx * per + per);
 
-    let h = '<div class="toolbar"><input id="dataSearch" class="pbi-input" placeholder="ค้นหา SO / ลูกค้า / ผู้รับผิดชอบ" value="' + esc(S.q) + '">' +
+    let body = '<div class="toolbar"><input id="dataSearch" class="pbi-input" placeholder="ค้นหา SO / ลูกค้า / ผู้รับผิดชอบ" value="' + esc(S.q) + '">' +
       '<button class="btn" id="dataPrev"' + (S.pageIdx === 0 ? ' disabled' : '') + '>‹ ก่อนหน้า</button>' +
       '<span class="muted">หน้า ' + (S.pageIdx + 1) + '/' + pages + ' · ' + num(list.length) + ' แถว</span>' +
       '<button class="btn" id="dataNext"' + (S.pageIdx >= pages - 1 ? ' disabled' : '') + '>ถัดไป ›</button></div>';
-    h += '<div class="tbl-wrap"><table class="pbi"><thead><tr><th>SO</th><th>Date SO</th><th>ลูกค้า</th><th>จังหวัด</th><th>กลุ่มสินค้า</th><th>ทีมขาย</th><th class="num">Revenue</th><th class="num">Unit</th><th>สถานะใบงาน3</th><th>Admin</th><th class="num">SLA Admin</th></tr></thead><tbody>';
+    body += '<div class="tbl"><table class="pbi"><thead><tr><th>SO</th><th>Date SO</th><th>ลูกค้า</th><th>จังหวัด</th><th>กลุ่มสินค้า</th><th>ทีมขาย</th><th class="num">Revenue</th><th class="num">Unit</th><th>สถานะใบงาน3</th><th>Admin</th><th class="num">SLA Admin</th></tr></thead><tbody>';
     slice.forEach(d => {
-      h += '<tr><td>' + esc(d.so) + '</td><td>' + ymd(d.dateSO) + '</td><td>' + esc(d.customer) + '</td><td>' + esc(d.province) + '</td><td>' + esc(d.group) + '</td><td>' + esc(d.team) + '</td>' +
+      body += '<tr><td>' + esc(d.so) + '</td><td>' + ymd(d.dateSO) + '</td><td>' + esc(d.customer) + '</td><td>' + esc(d.province) + '</td><td>' + esc(d.group) + '</td><td>' + esc(d.team) + '</td>' +
         '<td class="num">' + baht(d.revenue) + '</td><td class="num">' + num(d.units) + '</td><td>' + esc(d.status3) + '</td><td>' + esc(d.admGroup) + '</td>' +
         '<td class="num">' + (d.slaAdmin == null ? '' : d.slaAdmin) + '</td></tr>';
     });
-    return '<div class="v" style="grid-column:1/span 12;grid-row:1/span 9"><div class="v-title">รายละเอียด (ค่าที่คำนวณตามสูตรจริง)</div><div class="v-body">' + h + '</div></div>';
+    body += '</tbody></table></div>';
+
+    return pgHead('All Job / Close · รายละเอียด', rs) + '<div class="g">' +
+      card(12, 'รายละเอียด (ค่าที่คำนวณตามสูตรจริง)', body, { cls: 'fill' }) + '</div>';
   }
 
   function pageGeneric(name, rs) {
@@ -426,43 +475,50 @@
     const fmt = sp.metric === 'revenue' ? baht : num;
 
     const labelOf = d => {
-      if (sp.dim === 'monthLabel') return d.mth ? String(d.mth).slice(4) + '/' + String(d.mth).slice(2, 4) : '(ว่าง)';
+      if (sp.dim === 'monthLabel') return d.mth ? String(d.mth).slice(4) + '/' + String(d.mth).slice(0, 4) : '(ว่าง)';
       if (sp.dim === 'dayLabel') return d.dateSO ? String(d.dateSO.getDate()) : '(ว่าง)';
-      return d[sp.dim] == null || d[sp.dim] === '' ? '(ว่าง)' : String(d[sp.dim]);
+      const v = d[sp.dim];
+      return v == null || v === '' ? '(ว่าง)' : String(v);
     };
     const label2Of = d => {
-      if (sp.dim2 === 'monthLabel') return d.mth ? String(d.mth).slice(4) : '(ว่าง)';
-      return d[sp.dim2] == null || d[sp.dim2] === '' ? '(ว่าง)' : String(d[sp.dim2]);
+      if (sp.dim2 === 'monthLabel') return d.mth ? String(d.mth).slice(4) + '/' + String(d.mth).slice(0, 4) : '(ว่าง)';
+      const v = d[sp.dim2];
+      return v == null || v === '' ? '(ว่าง)' : String(v);
     };
 
-    const total = data.reduce((a, d) => a + valOf(d), 0);
-    const units = data.reduce((a, d) => a + (d.units || 0), 0);
     const rev = data.reduce((a, d) => a + (d.revenue || 0), 0);
-    const distinctSO = new Set(data.map(d => String(d.so))).size;
+    const units = data.reduce((a, d) => a + (d.units || 0), 0);
+    const soCount = new Set(data.map(d => String(d.so))).size;
 
     const g = new Map();
     data.forEach(d => { const k = labelOf(d); g.set(k, (g.get(k) || 0) + valOf(d)); });
-    let bars = [...g.entries()].map(e => ({ label: e[0], value: e[1] })).sort((a, b) => b.value - a.value);
-    if (sp.dim === 'dayLabel' || sp.dim === 'monthLabel') bars = bars.sort((a, b) => String(a.label).localeCompare(String(b.label)));
-    const chart = (sp.dim === 'dayLabel' || sp.dim === 'monthLabel')
-      ? comboSvg(bars.map(b => ({ day: b.label, bar: Math.round(b.value), line: null })), S.period || '')
-      : barsSvg(bars.slice(0, 9), fmt);
+    let bars = [...g.entries()].map(e => ({ label: e[0], value: e[1] }));
+    const isTime = sp.dim === 'dayLabel' || sp.dim === 'monthLabel';
+    if (isTime) bars.sort((a, b) => (parseFloat(a.label) || 0) - (parseFloat(b.label) || 0));
+    else bars.sort((a, b) => b.value - a.value);
 
-    const pv = matrix(data, labelOf, label2Of, valOf, fmt, { sortRows: 1, maxRows: 8, maxCols: 7, rowTitle: sp.dim });
+    const chart = isTime ? colsChart(bars) : hbars(bars.slice(0, 12), fmt);
+    const dTop = bars.slice(0, 7);
+    const dRest = bars.slice(7).reduce((a, b) => a + b.value, 0);
+    const dData = dRest > 0 ? dTop.concat([{ label: 'อื่น ๆ (' + (bars.length - 7) + ')', value: dRest }]) : dTop;
+    const pv = matrix(data, labelOf, label2Of, valOf, fmt, { sortRows: 1, maxRows: 12, maxCols: 8, rowTitle: sp.dim });
+    const metricTxt = sp.metric === 'revenue' ? 'ราคาสุทธิ (บาท)' : sp.metric === 'units' ? 'จำนวนเครื่อง' : 'จำนวนงาน';
 
-    let h = '';
-    h += box('1/span 3', '1/span 2', 'Year, Month', periodSlicer(), 'slicer');
-    h += kpi('4/span 3', '1', 'จำนวน SO', num(distinctSO), C.navy);
-    h += kpi('7/span 3', '1', 'Revenue (ราคาสุทธิ)', baht(rev), C.orange);
-    h += kpi('10/span 3', '1', 'Unit (จำนวนเครื่อง)', num(units), C.teal);
-    h += '<div class="v" style="grid-column:1/span 12;grid-row:3/span 2"><div class="v-title">' + esc(sp.title) +
-      ' ตาม ' + esc(sp.dim) + '</div><div class="v-body">' + chart + '</div></div>';
-    h += box('1/span 12', '5/span 5', esc(sp.dim) + ' × ' + esc(sp.dim2), pv);
-    return h;
+    let h = pgHead(name, data);
+    h += '<div class="g">';
+    h += kpiCard(3, 'จำนวน SO', num(soCount), C.navy, 'ไม่นับซ้ำ');
+    h += kpiCard(3, 'Revenue (ราคาสุทธิ)', baht(rev), C.orange, 'ตามสูตรในไฟล์');
+    h += kpiCard(3, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
+    h += kpiCard(3, 'รายการในหน้านี้', num(data.length), C.violet, sp.filter ? 'ตามเงื่อนไขหน้านี้' : 'ทั้งงวด');
+    h += card(8, sp.title + ' · ตาม ' + sp.dim, chart, { hint: isTime ? 'รายแกนเวลา' : 'เรียงจากมากไปน้อย' });
+    h += card(4, sp.dim + ' · สัดส่วน', donut(dData));
+    h += card(12, sp.dim + ' × ' + sp.dim2, pv, { hint: metricTxt });
+    return h + '</div>';
   }
 
   function pageSoon() {
-    return '<div class="soon-note">หน้านี้ยังไม่ได้ทำในเวอร์ชันนี้<br><span class="muted">เลือกหน้าที่มีอยู่ในแถบด้านล่าง</span></div>';
+    return pgHead('หน้านี้', []) + '<div class="g">' +
+      card(12, '', '<div class="empty">หน้านี้ยังไม่ได้ทำในเวอร์ชันนี้</div>') + '</div>';
   }
 
   /* ---------- render ---------- */
@@ -483,7 +539,7 @@
     el.innerHTML = html;
     el.classList.add('active');
     setActiveNav();
-    fit();
+    scrollTopPage();
     bind();
   }
 
@@ -508,7 +564,7 @@
       b.onclick = e => { e.preventDefault(); S.filter[b.dataset.clear].clear(); render(); };
     });
     const rst = $('fReset');
-    if (rst) rst.onclick = () => { S.filter.team.clear(); S.filter.channel.clear(); render(); };
+    if (rst) rst.onclick = () => { S.filter.team.clear(); S.filter.channel.clear(); S.filter.group.clear(); render(); };
   }
 
   const NAV_GROUPS = [
@@ -598,7 +654,7 @@
       const ps = periods();
       S.period = ps.length ? ps[ps.length - 1] : null;
       S.q = ''; S.pageIdx = 0;
-      S.filter.team.clear(); S.filter.channel.clear();
+      S.filter.team.clear(); S.filter.channel.clear(); S.filter.group.clear();
       syncHeader(); render();
       cacheSave();
       bar.style.width = '100%';
@@ -743,18 +799,15 @@
   };
 
   /* ---------- boot ---------- */
+  /* ไม่ใช้ zoom/scale แล้ว — เลย์เอาต์ไหลตามขนาดจอ ตัวหนังสือคมเสมอ */
   function fit() {
-    const stage = document.querySelector('.pbi-stage'), cv = $('canvas');
-    if (!stage || !cv) return;
-    const sc = Math.min(1, (stage.clientWidth - 24) / 1280, (stage.clientHeight - 24) / 720);
-    cv.style.transform = '';
-    cv.style.marginBottom = '';
-    if ('zoom' in cv.style) { cv.style.zoom = sc; }
-    else {
-      cv.style.transform = 'scale(' + sc + ')';
-      cv.style.transformOrigin = 'top center';
-      cv.style.marginBottom = (-720 * (1 - sc)) + 'px';
-    }
+    const cv = $('canvas');
+    if (cv && cv.style.zoom) cv.style.zoom = '';
+  }
+
+  function scrollTopPage() {
+    const st = document.querySelector('.pbi-stage');
+    if (st) st.scrollTop = 0;
   }
 
   function boot() {
