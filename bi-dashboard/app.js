@@ -80,6 +80,36 @@
   const $ = id => document.getElementById(id);
   const ymd = d => (d instanceof Date && !isNaN(d)) ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') : '';
 
+  /* ---------- cache: จำชุดข้อมูลล่าสุดไว้ใน IndexedDB ---------- */
+  const DB_NAME = 'sale-order-bi', STORE = 'dataset';
+  function idb() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open(DB_NAME, 1);
+      r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains(STORE)) r.result.createObjectStore(STORE); };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  }
+  const ser = d => { const o = {}; for (const k in d) { const v = d[k]; o[k] = v instanceof Date ? { __d: v.toISOString() } : v; } return o; };
+  const des = o => { const d = {}; for (const k in o) { const v = o[k]; d[k] = (v && typeof v === 'object' && v.__d) ? new Date(v.__d) : v; } return d; };
+  function cacheSave() {
+    return idb().then(db => new Promise((res, rej) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).put({ meta: S.meta, data: S.data.map(ser) }, 'last');
+      tx.oncomplete = () => { db.close(); res(); };
+      tx.onerror = () => { db.close(); rej(tx.error); };
+    })).catch(e => console.warn('cache save failed', e));
+  }
+  function cacheLoad() {
+    return idb().then(db => new Promise((res, rej) => {
+      const tx = db.transaction(STORE, 'readonly');
+      const rq = tx.objectStore(STORE).get('last');
+      rq.onsuccess = () => { db.close(); res(rq.result); };
+      rq.onerror = () => { db.close(); rej(rq.error); };
+    })).then(rec => (rec && rec.data ? { meta: rec.meta, data: rec.data.map(des) } : null))
+      .catch(() => null);
+  }
+
   /* ---------- data ---------- */
   function periods() {
     if (!S.data) return [];
@@ -284,8 +314,8 @@
     const pct = rs.length ? pass / rs.length * 100 : 0;
 
     const stM = matrix(rs, d => d.team || '(ไม่ระบุ)', d => d.admGroup, () => 1, num, { sortRows: 1, maxRows: 9, rowTitle: 'Grp ทีมขาย' });
-    const unitM = matrix(rs, d => d.group, d => d.team, d => d.units, num, { sortRows: 1, maxRows: 5, maxCols: 6, rowTitle: 'กลุ่มสินค้า · Unit' });
-    const revM = matrix(rs, d => d.group, d => d.team, d => d.revenue, baht, { sortRows: 1, maxRows: 5, maxCols: 6, rowTitle: 'กลุ่มสินค้า · Revenue' });
+    const unitM = matrix(rs, d => d.group, d => d.team, d => d.units, num, { sortRows: 1, maxRows: 6, rowTitle: 'กลุ่มสินค้า · Unit' });
+    const revM = matrix(rs, d => d.group, d => d.team, d => d.revenue, baht, { sortRows: 1, maxRows: 6, rowTitle: 'กลุ่มสินค้า · Revenue' });
 
     let h = '';
     h += box('1/span 3', '1', 'Year, Month', periodSlicer(), 'slicer');
@@ -506,6 +536,7 @@
       S.q = ''; S.pageIdx = 0;
       S.filter.team.clear(); S.filter.channel.clear();
       syncHeader(); render();
+      cacheSave();
       bar.style.width = '100%';
       st.textContent = '✅ เสร็จแล้ว · ' + num(data.length) + ' รายการ (' + Math.round((Date.now() - t0) / 1000) + ' วินาที)';
       setTimeout(() => $('dropOverlay').classList.add('hidden'), 700);
@@ -674,6 +705,18 @@
     zone.ondrop = e => { e.preventDefault(); zone.classList.remove('hover'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); };
     $('btnExport').onclick = exportCsv;
     render(); fit();
+
+    // ถ้ามีข้อมูลที่บันทึกไว้ ให้แสดงทันทีโดยไม่ต้อง import ใหม่
+    cacheLoad().then(c => {
+      if (!c || S.data) return;
+      S.data = c.data; S.meta = c.meta;
+      const ps = periods();
+      S.period = ps.length ? ps[ps.length - 1] : null;
+      syncHeader(); render(); fit();
+      const info = $('datasetInfo');
+      if (info) info.insertAdjacentHTML('beforeend', '<br><span style="color:#0F7CD9">ข้อมูลที่บันทึกไว้ · กด Import เพื่ออัปเดต</span>');
+      $('dropOverlay').classList.add('hidden');
+    });
   }
 
   document.addEventListener('DOMContentLoaded', boot);
