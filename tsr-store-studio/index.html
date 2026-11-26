@@ -457,6 +457,7 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
   font-size:10.5px;font-weight:500;color:var(--text-2);
 }
 .selActions button:hover{background:var(--panel-3);color:var(--text)}
+.selActions button.on{background:var(--accent);border-color:var(--accent);color:var(--on-acc);font-weight:700}
 .selActions button.danger{color:var(--bad);border-color:#f3c9c5}
 .selActions button.danger:hover{background:var(--bad-bg)}
 
@@ -1079,6 +1080,7 @@ tr.divHead td{background:#1e2632;color:var(--text);border-color:var(--line-2)}
    v6.1 — history persist (25 steps) · selection kept on undo · zoom/pan saved
    v6.2 — asset catalog +พื้นยกระดับ 40 ซม. (ST-008, คิด ตร.ม.) + อ่างล้างมือ (WT-012)
    v6.3 — ล็อกขนาดจริงของอุปกรณ์ · เตือนระยะห่างระหว่างเครื่อง < 10 ซม.
+   v6.4 — พื้นยกเลือกความสูงได้ 10–60 ซม. (ราคา BOQ ปรับตามความหนา)
    ====================================================================== */
 :root{--tb-h:100px}
 .body{grid-template-rows:var(--tb-h) minmax(0,1fr) 30px}
@@ -1672,7 +1674,7 @@ kbd{
 
   <!-- ================= STATUS BAR ================= -->
   <footer class="statusbar">
-    <span class="ver">v6.3</span>
+    <span class="ver">v6.4</span>
     <span id="sbPhase" class="sbPhase">Phase 1</span>
     <span class="dotSep"></span>
     <span id="sbArea">พื้นที่ 600 × 380 ซม.</span>
@@ -1701,7 +1703,7 @@ kbd{
   <div class="mCard wide">
     <div class="mHead">
       <h2>คู่มือการใช้งาน — Store Studio</h2>
-      <span class="mSub">Ctrl+F5 หากหน้าจอไม่เปลี่ยนหลังอัปเดต · build v6.3</span>
+      <span class="mSub">Ctrl+F5 หากหน้าจอไม่เปลี่ยนหลังอัปเดต · build v6.4</span>
       <button class="mClose" data-close>✕</button>
     </div>
     <div class="mBody">
@@ -2063,7 +2065,7 @@ const ASSETS = {
   /* --- โครงสร้าง --- */
   column:  { name: 'เสาคอนกรีตเสริมเหล็ก 20×20',  short: 'เสา',      code: 'ST-006', w: 20,  d: 20,  h: 280, color: '#78716c', group: 'structure' },
   door:    { name: 'ประตูหลังร้าน / ห้องเซอร์วิส', short: 'ประตู',    code: 'ST-007', w: 90,  d: 10,  h: 210, color: '#a16207', group: 'structure' },
-  platform:{ name: 'พื้นยกระดับวางเครื่อง สูง 40 ซม.', short: 'พื้นยก +40', code: 'ST-008', w: 200, d: 100, h: 40, color: '#57534e', group: 'structure', slab: true, areaQty: true },
+  platform:{ name: 'พื้นยกระดับวางเครื่อง (เลือกความสูงได้)', short: 'พื้นยก', code: 'ST-008', w: 200, d: 100, h: 40, color: '#57534e', group: 'structure', slab: true, areaQty: true, heightOptions: [10, 20, 30, 40, 50, 60] },
 
   /* --- บิ้วอิน --- */
   counter: { name: 'เคาน์เตอร์บิ้วอินรับส่งผ้า',   short: 'เคาน์เตอร์', code: 'BI-001', w: 180, d: 60, h: 90,  color: '#b45309', group: 'builtin' },
@@ -2138,7 +2140,7 @@ const MASTER = [
   { code: 'ST-005', div: 'D5', cat: 'STRUCTURE', name: 'ห้องเซอร์วิสสำเร็จรูป (ผนังเบา+ประตู+ระบบเบื้องต้น)', unit: 'ห้อง', mat: 38000, lab: 14000, equip: 3000, waste: 3 },
   { code: 'ST-006', div: 'D5', cat: 'STRUCTURE', name: 'เสาคอนกรีตเสริมเหล็ก 20×20 ซม.',              unit: 'ต้น',   mat: 3200,  lab: 1100,  equip: 300,  waste: 5 },
   { code: 'ST-007', div: 'D5', cat: 'STRUCTURE', name: 'ประตูหลังร้าน / ห้องเซอร์วิส พร้อมติดตั้ง',    unit: 'บาน',   mat: 6800,  lab: 1800,  equip: 300,  waste: 0 },
-  { code: 'ST-008', div: 'D5', cat: 'STRUCTURE', name: 'พื้นยกระดับคอนกรีต สูง 40 ซม. (รวมผิวสำเร็จ)', unit: 'ตร.ม.', mat: 980,   lab: 520,   equip: 260,  waste: 5 },
+  { code: 'ST-008', div: 'D5', cat: 'STRUCTURE', name: 'พื้นยกระดับคอนกรีตพร้อมผิวสำเร็จ (ราคาต่อ ตร.ม. ที่ความสูง 40 ซม.)', unit: 'ตร.ม.', mat: 980,   lab: 520,   equip: 260,  waste: 5 },
 
   /* D6 : งานตกแต่งและอุปกรณ์เสริม */
   { code: 'AC-001', div: 'D6', cat: 'ACCESSORY', name: 'เครื่องแลกเหรียญอัตโนมัติ',                  unit: 'เครื่อง', mat: 32000, lab: 2000, equip: 500, waste: 0 },
@@ -2283,6 +2285,13 @@ function effSize(o) {
   const w = fixed ? a.w : (o.w || a.w), d = fixed ? a.d : (o.d || a.d);
   return (normRot(o.rot) % 180 === 0) ? { w, d } : { w: d, d: w };
 }
+/** ความสูงที่ใช้จริง (ซม.) — งานพื้นที่ที่เลือกความสูงได้จะใช้ค่าที่ตั้งไว้ */
+function heightOf(o) {
+  const a = (ASSETS[o.type] || ASSETS.gian13);
+  if (!a.heightOptions) return a.h;
+  const h = Number(o.h);
+  return a.heightOptions.includes(h) ? h : a.h;
+}
 function bbox(o) {
   const s = effSize(o);
   return { x1: o.x - s.w / 2, y1: o.y - s.d / 2, x2: o.x + s.w / 2, y2: o.y + s.d / 2 };
@@ -2311,14 +2320,14 @@ function baseHeightCm(o) {
     for (const other of state.objects) {
       const oa = ASSETS[other.type];
       if (!oa.slab || other.id === o.id) continue;
-      if (overlapRect(b, bbox(other), 1)) y0 = Math.max(y0, oa.h);
+      if (overlapRect(b, bbox(other), 1)) y0 = Math.max(y0, heightOf(other));
     }
   }
   if (o.layer === 2) {
     const b = bbox(o);
     for (const other of state.objects) {
       if (other.layer !== 1) continue;
-      if (overlapRect(b, bbox(other), 1)) y0 = Math.max(y0, ASSETS[other.type].h);
+      if (overlapRect(b, bbox(other), 1)) y0 = Math.max(y0, heightOf(other));
     }
   }
   if (a.wall) y0 = Math.max(y0, a.mount || 150);
@@ -2443,6 +2452,16 @@ function objQtyOf(code) {
   }
   return objs.length;
 }
+/** ตัวคูณราคาตามความสูงของงานพื้นที่ (อ้างอิงความสูงมาตรฐานในตาราง MASTER) */
+function heightRateFactor(code) {
+  const types = assetTypesOfCode(code);
+  if (!types.length) return 1;
+  const objs = state.objects.filter(o => types.includes(o.type) && ASSETS[o.type].heightOptions);
+  if (!objs.length) return 1;
+  const base = ASSETS[objs[0].type].h || 40;
+  const avg = objs.reduce((s, o) => s + heightOf(o), 0) / objs.length;
+  return Math.max(0.1, r2(avg / base));
+}
 function autoQty(code) {
   const types = assetTypesOfCode(code);
   if (types.length) {
@@ -2479,7 +2498,7 @@ function boqRows(pkg) {
     counters[m.div] = (counters[m.div] || 0) + 1;
     r.div = m.div;
     r.itemNo = DIVS[m.div].code + '.' + String(counters[m.div]).padStart(2, '0');
-    r.rate = rateOf(m);
+    r.rate = r2(rateOf(m) * heightRateFactor(r.code));
     r.amount = r2(r.rate * r.qty);
   }
   return raw.filter(r => r.div);
@@ -2492,7 +2511,9 @@ function basisOf(code) {
     const objs = state.objects.filter(o => types.includes(o.type));
     if (objs.length) {
       if (objs.some(o => ASSETS[o.type].areaQty)) {
-        return 'วางในผัง ' + objs.length + ' ชิ้น · ' + fmt2(objQtyOf(code)) + ' ตร.ม.';
+        const hs = [...new Set(objs.map(heightOf))];
+        return 'วางในผัง ' + objs.length + ' ชิ้น · ' + fmt2(objQtyOf(code)) + ' ตร.ม.' +
+          (hs.length ? ' · สูง ' + hs.join('/') + ' ซม.' : '');
       }
       return 'วางในผัง ' + objs.length + ' ชิ้น';
     }
@@ -2559,6 +2580,7 @@ function serialize() {
         if (o.w) out.w = o.w;
         if (o.d) out.d = o.d;
       }
+      if (ASSETS[o.type].heightOptions && o.h) out.h = o.h;
       return out;
     }),
     walls: state.walls.map(w => {
@@ -2727,6 +2749,7 @@ function applyData(data, keepSel) {
         if (Number(o.w) >= 20) out.w = Number(o.w);
         if (Number(o.d) >= 20) out.d = Number(o.d);
       }
+      if (ASSETS[o.type].heightOptions && ASSETS[o.type].heightOptions.includes(Number(o.h))) out.h = Number(o.h);
       return out;
     });
   state.walls = (Array.isArray(data.walls) ? data.walls : [])
@@ -2994,7 +3017,7 @@ function drawOneObject(o, ov) {
   }
 
   if (o.layer === 2) drawTag('L2', x1 + 3, y1 + 3, 'rgba(30,58,138,.92)', '#fff');
-  else if (a.slab) drawTag('Y+40', x1 + 3, y1 + 3, 'rgba(41,37,36,.92)', '#fff');
+  else if (a.slab) drawTag('Y+' + heightOf(o), x1 + 3, y1 + 3, 'rgba(41,37,36,.92)', '#fff');
   if (bad) drawTag('ซ้อนทับ', Math.max(x1 + 3, x1 + w - 46), y1 + 3, 'rgba(198,40,40,.94)', '#fff');
 
   if (sel) {
@@ -4010,7 +4033,7 @@ function buildThree() {
   for (const o of state.objects) {
     const a = ASSETS[o.type];
     const s = effSize(o);
-    const ww = s.w / 100, dd = s.d / 100, hh = a.h / 100;
+    const ww = s.w / 100, dd = s.d / 100, hh = heightOf(o) / 100;
     const y0 = baseHeightCm(o) / 100;
     const cx = toX(o.x), cz = toZ(o.y);
 
@@ -4044,7 +4067,7 @@ function buildThree() {
       rig.add(panel);
     }
 
-    if (a.h >= 75 || a.slab) {
+    if (heightOf(o) >= 75 || a.slab) {
       const sp = labelSprite(a.short);
       sp.position.set(cx, y0 + hh + 0.22, cz);
       rig.add(sp);
@@ -4278,14 +4301,20 @@ function renderInspector() {
       '<div class="selCard">' +
         '<div class="selTop">' +
           '<span class="swatch" style="background:' + a.color + '"></span>' +
-          '<span><b>' + esc(a.name) + '</b><small>' + a.code + ' · ' + s.w + '×' + s.d + '×' + a.h + ' ซม.</small></span>' +
+          '<span><b>' + esc(a.name) + '</b><small>' + a.code + ' · ' + s.w + '×' + s.d + '×' + heightOf(sel) + ' ซม.</small></span>' +
         '</div>' +
         '<div class="kv"><span>ขนาด</span><b>' + s.w + '×' + s.d + ' ซม.' +
           (canResizeAsset(a) ? ' · ปรับได้' : ' · คงที่ตามสเปก') + '</b></div>' +
         '<div class="kv"><span>ตำแหน่ง</span><b>X ' + Math.round(sel.x) + ' · Y ' + Math.round(sel.y) + ' ซม.</b></div>' +
         '<div class="kv"><span>ชั้นวาง</span><b>L' + sel.layer + '</b></div>' +
         (a.areaQty ? '<div class="kv"><span>พื้นที่</span><b>' + fmt2(s.w * s.d / 10000) + ' ตร.ม.</b></div>' : '') +
-        '<div class="kv"><span>ต้นทุนต่อหน่วย</span><b>' + thb(unitCost(a.code)) + '</b></div>' +
+        (a.heightOptions
+          ? '<div class="kv"><span>ความสูง</span><b>' + heightOf(sel) + ' ซม.</b></div>' +
+            '<div class="selActions" style="grid-template-columns:repeat(3,1fr)">' +
+              a.heightOptions.map(hh => '<button data-act="height" data-h="' + hh + '" class="' + (heightOf(sel) === hh ? 'on' : '') + '">' + hh + ' ซม.</button>').join('') +
+            '</div>'
+          : '') +
+        '<div class="kv"><span>ต้นทุนต่อหน่วย</span><b>' + thb(r2(unitCost(a.code) * heightRateFactor(a.code))) + '</b></div>' +
         '<div class="selActions">' +
           '<button data-act="rotate">หมุน 90°</button>' +
           '<button data-act="layer">สลับชั้น</button>' +
@@ -5140,6 +5169,18 @@ function rotateSelected() {
   status('หมุน ' + ASSETS[o.type].name + ' เป็น ' + o.rot + '°', 'ok');
   warnClearance(o);
 }
+/** เปลี่ยนความสูงของงานพื้นที่ (พื้นยก) */
+function setSlabHeight(v) {
+  const o = state.objects.find(x => x.id === state.selectedId);
+  if (!o) return;
+  const opts = ASSETS[o.type].heightOptions;
+  const h = Number(v);
+  if (!opts || !opts.includes(h)) return;
+  if (heightOf(o) === h) return;
+  o.h = h;
+  renderAll(); commit();
+  status('ตั้งความสูง' + ASSETS[o.type].short + ' เป็น ' + h + ' ซม. · ราคาปรับตามความหนา', 'ok');
+}
 function deleteSelected() {
   const id = state.selectedId;
   if (!id) { status('กรุณาเลือกอุปกรณ์หรือผนังก่อนลบ', 'warn'); return; }
@@ -5918,6 +5959,7 @@ function wire() {
     if (b.dataset.act === 'rotate') rotateSelected();
     else if (b.dataset.act === 'delete') deleteSelected();
     else if (b.dataset.act === 'layer') toggleLayer();
+    else if (b.dataset.act === 'height') setSlabHeight(b.dataset.h);
     else if (b.dataset.act === 'mepmode') setMepTool(b.dataset.tool);
   });
 
