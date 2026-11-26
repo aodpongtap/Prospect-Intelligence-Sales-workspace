@@ -455,9 +455,9 @@
     h += kpi('4/span 3', '1', 'จำนวน SO', num(distinctSO), C.navy);
     h += kpi('7/span 3', '1', 'Revenue (ราคาสุทธิ)', baht(rev), C.orange);
     h += kpi('10/span 3', '1', 'Unit (จำนวนเครื่อง)', num(units), C.teal);
-    h += '<div class="v" style="grid-column:1/span 12;grid-row:3/span 3"><div class="v-title">' + esc(sp.title) +
+    h += '<div class="v" style="grid-column:1/span 12;grid-row:3/span 2"><div class="v-title">' + esc(sp.title) +
       ' ตาม ' + esc(sp.dim) + '</div><div class="v-body">' + chart + '</div></div>';
-    h += box('1/span 12', '6/span 4', esc(sp.dim) + ' × ' + esc(sp.dim2), pv);
+    h += box('1/span 12', '5/span 5', esc(sp.dim) + ' × ' + esc(sp.dim2), pv);
     return h;
   }
 
@@ -543,16 +543,34 @@
     if (fold) fold.onclick = toggleNav;
   }
 
+  function buildTabs() {
+    const tabs = $('pageTabs');
+    if (!tabs) return;
+    tabs.innerHTML = PBI_PAGES.map(name => {
+      const k = pageKey(name);
+      return '<button class="pbi-tab' + (k === S.page ? ' active' : '') + '" data-page="' + esc(k) + '">' + esc(name) + '</button>';
+    }).join('');
+    tabs.querySelectorAll('.pbi-tab').forEach(b => {
+      b.onclick = () => {
+        S.page = b.dataset.page; S.pageIdx = 0; render();
+        b.scrollIntoView({ block: 'nearest', inline: 'center' });
+      };
+    });
+    const act = tabs.querySelector('.pbi-tab.active');
+    if (act) act.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+
   function toggleNav() {
-    document.body.classList.toggle('nav-mini');
-    try {
-      localStorage.setItem('bi.navMini', document.body.classList.contains('nav-mini') ? '1' : '0');
-    } catch (e) {}
+    document.body.classList.toggle('nav-off');
+    try { localStorage.setItem('bi.navOff', document.body.classList.contains('nav-off') ? '1' : '0'); } catch (e) {}
     setTimeout(fit, 200);
   }
 
   function setActiveNav() {
     document.querySelectorAll('#pageNav .nav-item').forEach(b => {
+      b.classList.toggle('active', b.dataset.page === S.page);
+    });
+    document.querySelectorAll('#pageTabs .pbi-tab').forEach(b => {
       b.classList.toggle('active', b.dataset.page === S.page);
     });
   }
@@ -741,8 +759,13 @@
 
   function boot() {
     buildNav();
+    buildTabs();
     window.addEventListener('resize', fit);
-    try { if (localStorage.getItem('bi.navMini') === '1') document.body.classList.add('nav-mini'); } catch (e) {}
+    try {
+      const v = localStorage.getItem('bi.navOff');
+      if (v === '1' || v === null) document.body.classList.add('nav-off');
+      else document.body.classList.remove('nav-off');
+    } catch (e) {}
     const tg = $('navToggle');
     if (tg) tg.onclick = toggleNav;
     $('btnImport').onclick = () => $('dropOverlay').classList.remove('hidden');
