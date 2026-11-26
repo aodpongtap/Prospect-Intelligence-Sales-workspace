@@ -24,8 +24,7 @@ function levelN_(level) {
   return i < 0 ? LEVELS.length : i + 1;
 }
 var ADMIN_EMAILS = [
-  'aodputta@gmail.com',
-  'aodpongtaptsr@gmail.com'   /* Dev */
+  'aodpongtaptsr@gmail.com'   /* Dev — บัญชี Admin หลักที่ล็อกไว้ (ห้ามลดระดับ/ปิด/ลบ) */
 ];
 // บัญชีที่เป็น "Head Sale" (L3 · Head Team) — ไม่ใช่ Admin หลัก
 var HEAD_SALES_EMAILS = [
@@ -710,6 +709,7 @@ function updateUser(token, email, level, status, parent, saleId, name, team, ext
   var sh = getSheet_();
 
   if (level !== undefined && level !== null && String(level) !== '') {
+    if (isProtected && !isAdminLevel_(s.level)) throw new Error('แก้ไขระดับของ Admin หลักไม่ได้');
     if (isProtected && isAdminLevel_(String(sh.getRange(row, 3).getValue() || '')) && adminCount_() <= 1) {
       throw new Error('ต้องเหลือ Admin อย่างน้อย 1 คนในระบบ');
     }
