@@ -80,7 +80,7 @@
       </nav>
       <div class="nav-label" id="navLabelUsers">ผู้ใช้ &amp; สิทธิ์</div>
       <nav class="nav-list" id="navUsers">
-        <a class="nav-item" id="navUserMgmt" href="users.html?v=5" style="display:none;text-decoration:none"><i class="fa-solid fa-user-gear"></i>User Management</a>
+        <a class="nav-item" id="navUserMgmt" href="users.html?v=6" style="display:none;text-decoration:none"><i class="fa-solid fa-user-gear"></i>User Management</a>
         <button class="nav-item" data-page="audit"><i class="fa-solid fa-clock-rotate-left"></i>Activity Log</button>
         <button class="nav-item" data-page="team"><i class="fa-solid fa-sitemap"></i>ทีม &amp; สิทธิ์</button>
       </nav>
@@ -525,7 +525,7 @@
       if (me.isAdmin) {
         var um = document.getElementById('navUserMgmt');
         if (um) {
-          um.href = opts.usersUrl || 'users.html?v=5';
+          um.href = opts.usersUrl || 'users.html?v=6';
           um.target = opts.usersTarget || '_self';
           um.style.display = 'flex';
         }
@@ -621,7 +621,7 @@
       var sess = PIAuth.session();
       if (!sess) { location.replace('login.html'); return; }
       window.__applyMe__(sess, {
-        usersUrl: 'users.html?v=5',
+        usersUrl: 'users.html?v=6',
         onLogout: function () { PIAuth.logout(); location.replace('login.html'); }
       });
     })();

@@ -840,9 +840,20 @@ function moveParent(email) {
   document.getElementById('mvCancel').addEventListener('click', function () { document.body.removeChild(wrap); });
   document.getElementById('mvOk').addEventListener('click', function () {
     var np = document.getElementById('mvSel').value;
+    var npName = '';
+    (window.__USERS__ || []).forEach(function (x) { if (x.email === np) npName = x.name || x.email; });
     document.body.removeChild(wrap);
+    if (String(np || '') === String(target.parent || '')) {
+      showMsg('ผู้ดูแลคนเดิม — ไม่มีการเปลี่ยนแปลง', 'err');
+      return;
+    }
     PIAuth.updateUser(email, '', '', np).then(function () {
-      render(PIAuth.listUsers()); showMsg('ย้ายสายงานแล้ว', 'ok');
+      /* ดึงรายชื่อล่าสุดจากเซิร์ฟเวอร์อีกครั้ง การันตีว่าตารางสะท้อนค่าจริงหลังย้าย */
+      return PIAuth.refresh().then(function (l) { return l; }, function () { return PIAuth.listUsers(); });
+    }).then(function (list) {
+      render(list || PIAuth.listUsers());
+      if (window.PILog) { try { window.PILog.add('user.move', email, 'ย้ายผู้ดูแลเป็น ' + (npName || np)); } catch (e) {} }
+      showMsg('ย้ายสายงานแล้ว · ผู้ดูแลใหม่: ' + (npName || np), 'ok');
     }).catch(function (e) { showMsg(e.message || String(e), 'err'); });
   });
 }
