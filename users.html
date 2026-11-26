@@ -360,25 +360,81 @@ function saleLinkCell(u) {
     var up = null;
     (window.__USERS__ || []).forEach(function (x) { if (String(x.email).toLowerCase() === String(u.parent || '').toLowerCase()) up = x; });
     if (up) return '<span class="pill l-admin" title="ตัวแทนภายใต้ AE: ' + esc(up.email) + '"><i class="fa-solid fa-user-tie" style="margin-right:4px"></i>' + esc(up.name || up.email) + '</span>';
-    return '<span class="pill pill-warn" title="ยังไม่มี AE ผู้ดูแล">⚠ ยังไม่ผูก AE</span>';
+    return '<span class="pill pill-warn" title="ยังไม่มี AE ผู้ดูแล"><i class="fa-solid fa-triangle-exclamation" style="margin-right:4px"></i>ยังไม่ผูก AE</span>';
   }
-  var m = matchSale(u);
-  if (!m) return '<span style="color:#c2cbd8">—</span>';
-  if (m.sale) {
-    return '<span class="pill l-editor" title="ผูกด้วย: ' + esc(m.how) + '">'
-      + esc(m.sale.id) + ' · ' + esc(m.sale.name) + '</span>';
+  /* L5 AE: รหัส AE ที่ผูกกับบัญชีนี้ (จากชีต Users คอลัมน์ saleId) หรือจับคู่จากรายชื่อ AE ใน Reports */
+  if (lvl === 'sale') {
+    var sid = String(u.saleId || '').toUpperCase();
+    if (sid) return '<span class="pill l-editor" title="รหัส AE ที่ผูกกับบัญชีนี้ (ชีต Users)">' + esc(sid) + '</span>';
+    var m = matchSale(u);
+    if (m && m.sale) return '<span class="pill l-editor" title="ผูกด้วย: ' + esc(m.how) + '">' + esc(m.sale.id) + ' · ' + esc(m.sale.name) + '</span>';
+    return '<span class="pill pill-warn" title="' + esc((m && m.why) || 'ยังไม่ได้ผูก AE') + '"><i class="fa-solid fa-triangle-exclamation" style="margin-right:4px"></i>ยังไม่ผูก AE</span>';
   }
-  return '<span class="pill pill-warn" title="' + esc(m.why) + '">⚠ ยังไม่ผูก</span>';
+  /* Admin / BU / Head / Supervisor: สรุป AE + ตัวแทน ในสายงาน */
+  var ae = aeUnder(u.email);
+  if (!ae.length) return '<span class="pill l-viewer">ไม่มี AE ใต้สายงาน</span>';
+  var sales = ae.filter(function (x) { return String(x.level) === 'sale'; }).length;
+  var agents = ae.length - sales;
+  var names = ae.slice(0, 8).map(function (x) { return x.name || x.email; }).join(', ') + (ae.length > 8 ? ' …' : '');
+  return '<span class="pill l-editor" title="AE ' + sales + ' · ตัวแทน ' + agents + ': ' + esc(names) + '">AE ใต้สายงาน ' + ae.length + ' คน</span>';
 }
 
 /* ---------- รีวิว: บันทึกการพบลูกค้า (Daily Report) ของแต่ละบัญชี ---------- */
 var TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+var __DAILY__ = null;                 /* ข้อมูลจริงจากเซิร์ฟเวอร์ (dailyV2) */
 function dailyStore() {
+  if (__DAILY__) return __DAILY__;
   try {
     var a = JSON.parse(localStorage.getItem('pi_daily_v1') || 'null');
     if (Object.prototype.toString.call(a) === '[object Array]') return a;
   } catch (e) {}
   return [];
+}
+/** ดึงบันทึกการเข้าพบจาก Google Sheets แล้วเรนเดอร์ตารางใหม่ (ให้คอลัมน์ "บันทึก" มีข้อมูลจริง) */
+function loadDailyFromServer() {
+  if (!PIAuth.listDailyV2) return;
+  PIAuth.listDailyV2().then(function (r) {
+    __DAILY__ = (r && r.items) || [];
+    try { localStorage.setItem('pi_daily_v1', JSON.stringify(__DAILY__)); } catch (e) {}
+    render(PIAuth.listUsers());
+  }).catch(function () {});
+}
+function normMail(v) { return String(v || '').trim().toLowerCase(); }
+function userByMail(m) {
+  var out = null;
+  (window.__USERS__ || []).forEach(function (u) { if (normMail(u.email) === normMail(m)) out = u; });
+  return out;
+}
+/** อีเมลของตัวเอง + ลูกข่ายทุกชั้น */
+function scopeEmails(email) {
+  return [normMail(email)].concat(descOf(normMail(email)).map(normMail));
+}
+/** รหัส AE (S0x) ที่ผูกกับบัญชีในสายงาน */
+function scopeSaleIds(email) {
+  var seen = {};
+  scopeEmails(email).forEach(function (m) {
+    var u = userByMail(m);
+    var s = u && u.saleId ? String(u.saleId).toUpperCase() : '';
+    if (s) seen[s] = 1;
+  });
+  return Object.keys(seen);
+}
+/** AE/ตัวแทนในสายงาน (ไม่รวมตัวเอง) */
+function aeUnder(email) {
+  var scope = scopeEmails(email), me = normMail(email);
+  return (window.__USERS__ || []).filter(function (x) {
+    var l = String(x.level || '').toLowerCase();
+    var m = normMail(x.email);
+    return (l === 'sale' || l === 'agent') && m !== me && scope.indexOf(m) >= 0;
+  });
+}
+/** บันทึกการเข้าพบของตัวเอง + สายงาน */
+function dailyOfScope(email) {
+  var mails = scopeEmails(email), ids = scopeSaleIds(email);
+  return dailyStore().filter(function (x) {
+    var by = normMail(x.by), sid = String(x.saleId || '').toUpperCase();
+    return mails.indexOf(by) >= 0 || (sid && ids.indexOf(sid) >= 0);
+  });
 }
 function shortThai(iso) {
   var p = String(iso || '').split('-');
@@ -461,19 +517,21 @@ function showTree() {
 }
 
 function dailyCell(u) {
-  var m = matchSale(u);
-  var mail = String(u.email || '').toLowerCase();
-  var list = dailyStore().filter(function (x) {
-    if (m && m.sale) return String(x.saleId || '') === String(m.sale.id);
-    return String(x.by || '').toLowerCase() === mail;
-  });
-  if (!list.length) return '<span style="color:#c2cbd8">—</span>';
+  var list = dailyOfScope(u.email);
+  var lvl = String(u.level || '').toLowerCase();
+  var ae = (lvl === 'sale' || lvl === 'agent') ? [] : aeUnder(u.email);
+  var aeLine = ae.length ? '<div class="mini" style="margin-top:2px">AE ใต้สายงาน ' + ae.length + ' คน</div>' : '';
+  if (!list.length) {
+    return '<span class="pill l-viewer" title="ยังไม่มีบันทึกการเข้าพบ">บันทึก 0 ครั้ง</span>' + aeLine;
+  }
   var latest = list.slice().sort(function (a, b) {
     return String(b.date + (b.time || '')).localeCompare(String(a.date + (a.time || '')));
   })[0];
   var monthCount = list.filter(function (x) { return String(x.date || '').slice(0, 7) === new Date().toISOString().slice(0, 7); }).length;
-  return '<span class="pill l-viewer" title="รวม ' + list.length + ' ครั้ง · เดือนนี้ ' + monthCount + ' ครั้ง">' + list.length + ' ครั้ง</span>'
-    + '<div style="font-size:9.5px;color:#98a2b3;margin-top:2px">ล่าสุด ' + esc(shortThai(latest.date)) + '</div>';
+  var who = normMail(latest.by) !== normMail(u.email) ? ((userByMail(latest.by) || {}).name || latest.by || '') : '';
+  return '<span class="pill l-editor" title="รวม ' + list.length + ' ครั้ง · เดือนนี้ ' + monthCount + ' ครั้ง">บันทึก ' + list.length + ' ครั้ง</span>'
+    + '<div class="mini" style="margin-top:2px">ล่าสุด ' + esc(shortThai(latest.date)) + (who ? ' · ' + esc(String(who).split(' ')[0]) : '') + '</div>'
+    + aeLine;
 }
 
 function render(users) {
@@ -656,6 +714,7 @@ function load() {
       if (el('me')) el('me').textContent = me.email + ' · ' + String(me.level).toUpperCase();
     }
     render(list);
+    loadDailyFromServer();
   });
 }
 
