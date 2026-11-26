@@ -124,7 +124,7 @@
       + (canReg ? ' · กำหนด/ผูกสิทธิ์ได้ที่หน้าจัดการผู้ใช้งาน' : ' · อ่านอย่างเดียว') + '</div></div>'
       + '<div class="tp-head-acts">'
       + '<button class="tp-btn" data-tp-tree><i class="fa-solid fa-sitemap"></i> แผนผังเครือข่าย</button>'
-      + '<a class="tp-btn dark" href="users.html?v=3" style="text-decoration:none"><i class="fa-solid fa-user-gear"></i> ผูกสิทธิ์ที่ “จัดการผู้ใช้งาน”</a>'
+      + '<a class="tp-btn dark" href="users.html?v=4" style="text-decoration:none"><i class="fa-solid fa-user-gear"></i> ผูกสิทธิ์ที่ “จัดการผู้ใช้งาน”</a>'
       + '</div></div>';
 
     var stats = '<div class="tp-stats">'
@@ -302,6 +302,10 @@
     }).join('');
     var body = '<div class="tp-treewrap">'
       + '<div class="tp-legend">' + legend + '</div>'
+      + '<div class="tp-tree-all">'
+      + '  <button class="tp-btn" data-tp-expand><i class="fa-solid fa-angles-down"></i> ขยายทั้งหมด</button>'
+      + '  <button class="tp-btn" data-tp-collapse><i class="fa-solid fa-angles-up"></i> ย่อทั้งหมด</button>'
+      + '</div>'
       + (orphan ? '<div class="tp-empty" style="text-align:left;color:#B45309;background:#FFFBEB;border:1px solid #FDE68A;border-radius:9px;padding:8px 11px;margin-bottom:10px">'
         + '<i class="fa-solid fa-circle-info"></i> มี ' + orphan + ' บัญชีที่ไม่ได้อยู่ในสายงานนี้ (ยังไม่กำหนดผู้ดูแลต้นสาย)</div>' : '')
       + (root ? '<ul class="tp-tree">' + treeNode(root, 0) + '</ul>'
@@ -309,6 +313,43 @@
       + '</div>';
     global.setModal('แผนผังเครือข่าย', 'เริ่มจาก ' + (me().name || me().email || '-') + ' · ทั้งหมด ' + USERS.length + ' คน',
       body, [{ label: 'ปิด', primary: true }], true);
+    setTimeout(wireTreeToggles, 60);
+  }
+
+  /** ใส่ปุ่มย่อ/ขยายให้ทุกโหนดที่มีลูกข่าย */
+  function wireTreeToggles() {
+    var root = document.querySelector('.tp-tree');
+    if (!root) return;
+    Array.prototype.slice.call(root.querySelectorAll('li')).forEach(function (li) {
+      if (!li.querySelector('ul')) return;
+      var node = li.querySelector('.tp-node');
+      if (!node || node.querySelector('.tp-tg')) return;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tp-tg';
+      b.textContent = '▾';
+      b.title = 'ย่อ/ขยายสาขานี้';
+      b.setAttribute('aria-expanded', 'true');
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var col = li.classList.toggle('collapsed');
+        b.textContent = col ? '▸' : '▾';
+        b.setAttribute('aria-expanded', col ? 'false' : 'true');
+      });
+      node.insertBefore(b, node.firstChild);
+    });
+  }
+  function setTreeAll(collapse) {
+    var root = document.querySelector('.tp-tree');
+    if (!root) return;
+    Array.prototype.slice.call(root.querySelectorAll('li')).forEach(function (li) {
+      if (!li.querySelector('ul')) return;
+      if (collapse) li.classList.add('collapsed'); else li.classList.remove('collapsed');
+    });
+    Array.prototype.slice.call(root.querySelectorAll('.tp-tg')).forEach(function (b) {
+      b.textContent = collapse ? '▸' : '▾';
+      b.setAttribute('aria-expanded', collapse ? 'false' : 'true');
+    });
   }
 
   /* ---------------- events ---------------- */
@@ -336,6 +377,8 @@
     var t = e.target;
     if (!t || !t.closest) return;
     if (t.closest('[data-tp-new]')) { registerModal(); return; }
+    if (t.closest('[data-tp-expand]')) { setTreeAll(false); return; }
+    if (t.closest('[data-tp-collapse]')) { setTreeAll(true); return; }
     if (t.closest('[data-tp-action="retry"]')) { LOADED = false; load(true); return; }
     if (t.closest('[data-tp-tree]')) { if (!LOADED) { load(true); } treeModal(); return; }
     if (t.closest('[data-tp-reset]')) { state = { q: '', level: '', team: '' }; global.render(); return; }
@@ -436,6 +479,11 @@
       + '.tp-tree ul>li::before{content:"";position:absolute;left:-13px;top:0;bottom:0;border-left:1.5px solid #E3EAF3}'
       + '.tp-tree ul>li:last-child::before{bottom:calc(100% - 34px)}'
       + '.tp-tree ul>li::after{content:"";position:absolute;left:-13px;top:34px;width:14px;border-top:1.5px solid #E3EAF3}'
+      + '.tp-tree li.collapsed>ul{display:none}'
+      + '.tp-tree-all{display:flex;gap:6px;margin:0 0 9px}'
+      + '.tp-tg{flex:0 0 auto;width:18px;height:18px;border:1px solid #DCE3EB;background:#F1F5F9;color:#4338CA;border-radius:5px;'
+      + 'cursor:pointer;font-size:10px;line-height:1;display:inline-flex;align-items:center;justify-content:center;padding:0}'
+      + '.tp-tg:hover{background:#E0E7FF;border-color:#C7D2FE}'
       + '.tp-node{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E9EEF5;border-radius:11px;'
       + 'padding:10px 13px;position:relative;z-index:1}'
       + '.tp-node:hover{border-color:#C7D7EE;box-shadow:0 8px 18px rgba(15,43,70,.08)}'
