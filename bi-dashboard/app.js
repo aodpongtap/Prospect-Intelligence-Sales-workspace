@@ -18,14 +18,15 @@
 
   const S = { raw: null, data: null, meta: null, page: 'overview', period: null, q: '', pageIdx: 0, filter: { team: new Set(), channel: new Set(), group: new Set() } };
 
+  /* 21 หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) */
   const PBI_PAGES = [
     'Daily Admin', '2.SO Order Status', '1.Unit / Revenue', 'SML', 'Pack สด/ผ่อน',
-    '2.Pending', '2.1.Pending-Detail', 'Report สัญญา', 'Map', 'Performance/TAT',
-    '3.Cancel', '3.1.Cancel-Detail', 'P1.Sale/Admin', 'P2.Checker', 'P3.Consult',
-    'P4.Sale Scape', 'P5.Transport', 'P6.Technicial', 'Aging (21 Day)',
-    '1.Unit / Revenue New', 'Product end2end-Detail', 'All Job/Close', '1.Revenue',
-    'Status (Back log)', 'Status (New)', 'Report ติดตั้ง', 'ยกเลิก**มัดจำ', 'วัน'
+    '2.Pending', '2.1.Pending-Detail', 'Map', 'Performance/TAT', '3.Cancel',
+    '3.1.Cancel-Detail', 'P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape',
+    'P5.Transport', 'P6.Technicial', 'Aging (21 Day)', 'Report ติดตั้ง', 'ยกเลิก**มัดจำ', 'วัน'
   ];
+  /* หน้าที่มีเพิ่มในเว็บ (ไม่มีใน PBI) — เปิดจากเมนู ☰ เท่านั้น */
+  const EXTRA_PAGES = ['1.Unit / Revenue New', 'Product end2end-Detail', 'All Job/Close', '1.Revenue', 'Status (Back log)', 'Status (New)', 'Report สัญญา'];
   const IMPLEMENTED = {
     'Daily Admin': 'overview', 'Status (New)': 'status',
     'Performance/TAT': 'tat', 'All Job/Close': 'data'
@@ -346,19 +347,23 @@
   /* 9 การ์ดแบบหน้าเดิมของ PBI: Total SO / Rev + Done-Pending-Cancel (จำนวน + ยอดเงิน) */
   function statusKpi(rs) {
     const sp = splitStatus(rs), n = rs.length || 1;
-    const rev = sumRev(rs);
+    /* ตาม measure ใน .pbix: Rev.Total / Total Unit กรอง สถานะใบงาน3 IN {1.Done,2.Pending,3.Cancel} */
+    const valid = rs.filter(d => d.status3 === '1.Done' || d.status3 === '2.Pending' || d.status3 === '3.Cancel');
+    const rev = sumRev(valid);
+    const units = valid.reduce((a, d) => a + (d.units || 0), 0);
     const pc = v => (v / n * 100).toFixed(0) + '% ของทั้งหมด';
-    const other = rs.length - (sp['1.Done'].length + sp['2.Pending'].length + sp['3.Cancel'].length);
+    const other = rs.length - valid.length;
     let h = '';
-    h += kpiCard(6, 'จำนวน SO ทั้งหมด', num(rs.length), C.navy,
-      other > 0 ? 'Total SO · ไม่มีสถานะ ' + num(other) + ' รายการ' : 'Total SO');
-    h += kpiCard(6, 'Revenue รวม', baht(rev), C.purple, 'ราคาสุทธิ (ตามสูตรในไฟล์)');
+    h += kpiCard(6, 'Total SO', num(rs.length), C.navy,
+      other > 0 ? 'ไม่รวมสถานะว่าง ' + num(other) + ' ใบ ในยอดเงิน' : 'ใบสั่งซื้อในงวดนี้');
+    h += kpiCard(6, 'Rev (ราคาสุทธิ)', baht(rev), C.purple, 'Rev.Total = SUM(revenue) เฉพาะ 3 สถานะ');
     h += kpiCard(4, 'Done', num(sp['1.Done'].length), C.green, pc(sp['1.Done'].length));
     h += kpiCard(4, 'Pending', num(sp['2.Pending'].length), C.gold, pc(sp['2.Pending'].length));
     h += kpiCard(4, 'Cancel', num(sp['3.Cancel'].length), C.red, pc(sp['3.Cancel'].length));
     h += kpiCard(4, 'Done Rev', baht(sumRev(sp['1.Done'])), C.green);
     h += kpiCard(4, 'Pending Rev', baht(sumRev(sp['2.Pending'])), C.gold);
     h += kpiCard(4, 'Cancel Rev', baht(sumRev(sp['3.Cancel'])), C.red);
+    h += kpiCard(12, 'Total Unit', num(units), C.teal, 'SUM(จำนวนเครื่องซักผ้า) เฉพาะ 3 สถานะ (Total Unit ใน .pbix)');
     return h;
   }
 
@@ -937,15 +942,23 @@
   };
 
   /* ---------- statistics hook (ตรวจความถูกต้อง) ---------- */
-  window.__stats = function () {
+  window.__stats = function (mth) {
     if (!S.data) return { error: 'no data' };
+    const useMth = String(mth || '202611');
     const byMonth = {};
-    S.data.forEach(d => { const k = d.mth ? String(d.mth) : 'null'; byMonth[k] = (byMonth[k] || 0) + 1; });
-    const nov = S.data.filter(d => String(d.mth) === '202611');
+    S.data.forEach(d => { if (isKeepGroup(d.group)) { const k = d.mth ? String(d.mth) : 'null'; byMonth[k] = (byMonth[k] || 0) + 1; } });
+    const nov = S.data.filter(d => isKeepGroup(d.group) && String(d.mth) === useMth);
     const dist = new Set(nov.map(d => String(d.so).trim()));
     const rev = nov.reduce((a, d) => a + (d.revenue || 0), 0);
     const units = nov.reduce((a, d) => a + (d.units || 0), 0);
-    return { total: S.data.length, novRows: nov.length, novDistinctSO: dist.size, novRevenue: rev, novUnits: units, byMonth: byMonth };
+    const byStatus = {};
+    nov.forEach(d => {
+      const k = d.status3 == null ? '(blank)' : String(d.status3);
+      const o = byStatus[k] || { n: 0, rev: 0, units: 0 };
+      o.n++; o.rev += d.revenue || 0; o.units += d.units || 0;
+      byStatus[k] = o;
+    });
+    return { total: S.data.length, novRows: nov.length, novDistinctSO: dist.size, novRevenue: rev, novUnits: units, byMonth: byMonth, byStatus: byStatus };
   };
 
   /* ---------- verification hook (ใช้เทียบกับค่าจริงใน Excel) ---------- */
