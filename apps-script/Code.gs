@@ -307,6 +307,14 @@ function saveSession_(token, data) {
 }
 
 function isAdminLevel_(level) { return String(level).toLowerCase() === 'admin'; }
+
+/** บัญชีที่ได้สิทธิ์กำหนดระดับสิทธิ์ได้ทุกระดับ (แม้ไม่ใช่ Admin) — ตั้งค่าได้ที่นี้ */
+var LEVEL_MANAGER_EMAILS = ['aodputta@gmail.com'];
+function canManageLevels_(s) {
+  if (!s) return false;
+  if (isAdminLevel_(s.level)) return true;
+  return LEVEL_MANAGER_EMAILS.indexOf(String(s.email || '').toLowerCase()) >= 0;
+}
 /** ปรับระดับสิทธิ์ใน session ที่ค้างอยู่ของผู้ใช้คนนั้น (ไม่ต้อง logout) */
 function syncSessionLevel_(email, level) {
   var props = PropertiesService.getScriptProperties();
@@ -691,7 +699,10 @@ function updateUser(token, email, level, status, parent, saleId, name, team, ext
   if (!s || levelN_(s.level) > 4) throw new Error('เฉพาะ Admin / BU / Head Team / Supervisor เท่านั้น');
 
   var e = String(email || '').trim().toLowerCase();
-  if (!canManageTarget_(s, e)) throw new Error('ไม่มีสิทธิ์จัดการผู้ใช้นี้ (นอกสายงาน)');
+  /* บัญชีที่ได้สิทธิ์กำหนดระดับ (LEVEL_MANAGER_EMAILS) แก้ "ระดับสิทธิ์" ของใครก็ได้ แม้อยู่นอกสายงาน */
+  var levelOnly = canManageLevels_(s) && String(level || '') !== ''
+    && [status, parent, saleId, name, extra].every(function (v) { return v === undefined || v === null || String(v) === ''; });
+  if (!canManageTarget_(s, e) && !levelOnly) throw new Error('ไม่มีสิทธิ์จัดการผู้ใช้นี้ (นอกสายงาน)');
   var row = findRow_(e);
   if (!row) throw new Error('ไม่พบผู้ใช้นี้');
 
@@ -704,7 +715,7 @@ function updateUser(token, email, level, status, parent, saleId, name, team, ext
     }
     var lv = String(level).toLowerCase();
     if (LEVELS.indexOf(lv) < 0) throw new Error('ระดับสิทธิ์ไม่ถูกต้อง');
-    if (!isAdminLevel_(s.level) && levelN_(lv) <= levelN_(s.level)) throw new Error('กำหนดได้เฉพาะระดับที่ต่ำกว่าตัวเอง');
+    if (!canManageLevels_(s) && levelN_(lv) <= levelN_(s.level)) throw new Error('กำหนดได้เฉพาะระดับที่ต่ำกว่าตัวเอง');
     sh.getRange(row, 3).setValue(lv);
     syncSessionLevel_(e, lv);   // ให้ session ที่เปิดค้างอยู่เห็นสิทธิ์ใหม่ทันที
   }

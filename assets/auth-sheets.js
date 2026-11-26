@@ -322,9 +322,8 @@
   }
 
   global.PIAuth = {
-    coreAdmins: [
-      'aodputta@gmail.com'
-    ],
+    // ว่าง = ทุกบัญชีแก้ระดับสิทธิ์ได้จากหน้าจัดการผู้ใช้งาน
+    coreAdmins: [],
     headSales: [
       'sittharphon.1994@gmail.com',
       'chanphaphat.k@gmail.com'

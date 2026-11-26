@@ -1,0 +1,12 @@
+Pushed 11 files at 15:19:29.
+└─ appsscript.json
+└─ AuthSheets.html
+└─ Backup.gs
+└─ Code.gs
+└─ DataSchema.gs
+└─ DealsV2.gs
+└─ Index.html
+└─ Login.html
+└─ ProjectsV2.gs
+└─ Sync2.gs
+└─ Users.html
