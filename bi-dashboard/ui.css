@@ -220,6 +220,33 @@ table.pbi tr.grand td {
   border-top: 2px solid #B2DDFF;
 }
 
+/* ---------------- แท่งซ้อน (Done / Pending / Cancel) ---------------- */
+.stk { display: flex; flex-direction: column; gap: 10px; }
+.stk-row {
+  display: grid; grid-template-columns: 64px minmax(0, 1fr) 92px;
+  align-items: center; gap: 12px;
+}
+.stk-lab {
+  font-size: 12px; font-weight: 600; color: #344054; text-align: right;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.stk-track {
+  display: flex; height: 18px; background: #F2F4F7;
+  border-radius: 5px; overflow: hidden;
+}
+.stk-track > i { display: block; height: 100%; transition: width .25s ease; }
+.stk-track > i:hover { filter: brightness(1.1); }
+.stk-val {
+  font-size: 12px; font-weight: 650; color: #101828; text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- ตารางสถานะ (หัว 2 ชั้น) ---------------- */
+table.pbi.st thead th[colspan] { text-align: center; color: #344054; }
+table.pbi.st td.c-done { color: #0F7B32; }
+table.pbi.st td.c-pend { color: #8A6D00; }
+table.pbi.st td.c-canc { color: #B42318; }
+
 /* ---------------- misc ---------------- */
 .empty {
   display: grid; place-items: center; min-height: 120px;

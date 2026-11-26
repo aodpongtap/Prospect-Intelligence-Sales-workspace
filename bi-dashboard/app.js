@@ -326,6 +326,106 @@
     return h;
   }
 
+  /* ---------- status (1.Done / 2.Pending / 3.Cancel) ---------- */
+  const ST = [
+    { key: '1.Done', name: 'Done', color: C.green },
+    { key: '2.Pending', name: 'Pending', color: C.gold },
+    { key: '3.Cancel', name: 'Cancel', color: C.red }
+  ];
+  const sumRev = arr => arr.reduce((a, d) => a + (d.revenue || 0), 0);
+  function splitStatus(rs) {
+    const o = { '1.Done': [], '2.Pending': [], '3.Cancel': [] };
+    rs.forEach(d => { if (o[d.status3]) o[d.status3].push(d); });
+    return o;
+  }
+
+  /* 9 การ์ดแบบหน้าเดิมของ PBI: Total SO / Rev + Done-Pending-Cancel (จำนวน + ยอดเงิน) */
+  function statusKpi(rs) {
+    const sp = splitStatus(rs), n = rs.length || 1;
+    const rev = sumRev(rs);
+    const pc = v => (v / n * 100).toFixed(0) + '% ของทั้งหมด';
+    const other = rs.length - (sp['1.Done'].length + sp['2.Pending'].length + sp['3.Cancel'].length);
+    let h = '';
+    h += kpiCard(6, 'จำนวน SO ทั้งหมด', num(rs.length), C.navy,
+      other > 0 ? 'Total SO · ไม่มีสถานะ ' + num(other) + ' รายการ' : 'Total SO');
+    h += kpiCard(6, 'Revenue รวม', baht(rev), C.purple, 'ราคาสุทธิ (ตามสูตรในไฟล์)');
+    h += kpiCard(4, 'Done', num(sp['1.Done'].length), C.green, pc(sp['1.Done'].length));
+    h += kpiCard(4, 'Pending', num(sp['2.Pending'].length), C.gold, pc(sp['2.Pending'].length));
+    h += kpiCard(4, 'Cancel', num(sp['3.Cancel'].length), C.red, pc(sp['3.Cancel'].length));
+    h += kpiCard(4, 'Done Rev', baht(sumRev(sp['1.Done'])), C.green);
+    h += kpiCard(4, 'Pending Rev', baht(sumRev(sp['2.Pending'])), C.gold);
+    h += kpiCard(4, 'Cancel Rev', baht(sumRev(sp['3.Cancel'])), C.red);
+    return h;
+  }
+
+  /* ตาราง Done / Pending / Cancel × ทีม พร้อม %SO */
+  function statusTable(rs) {
+    const m = new Map();
+    rs.forEach(d => {
+      const k = d.team || '(ไม่ระบุ)';
+      const o = m.get(k) || { d: 0, p: 0, c: 0, x: 0 };
+      if (d.status3 === '1.Done') o.d++;
+      else if (d.status3 === '2.Pending') o.p++;
+      else if (d.status3 === '3.Cancel') o.c++;
+      else o.x++;
+      m.set(k, o);
+    });
+    const list = [...m.entries()].sort((a, b) => (b[1].d + b[1].p + b[1].c + b[1].x) - (a[1].d + a[1].p + a[1].c + a[1].x));
+    const tot = list.reduce((a, e) => ({
+      d: a.d + e[1].d, p: a.p + e[1].p, c: a.c + e[1].c, x: a.x + e[1].x
+    }), { d: 0, p: 0, c: 0, x: 0 });
+    const hasX = tot.x > 0;
+    const pc = (v, t) => (t ? Math.round(v / t * 100) + '%' : '');
+    let h = '<div class="tbl"><table class="pbi st"><thead><tr>' +
+      '<th class="rowhead" rowspan="2">Grp ทีมขาย</th>' +
+      '<th colspan="2">1.Done</th><th colspan="2">2.Pending</th><th colspan="2">3.Cancel</th>' +
+      (hasX ? '<th colspan="2">อื่น ๆ</th>' : '') + '<th colspan="2">Total</th></tr><tr>' +
+      '<th class="num">SO</th><th class="num">%SO</th><th class="num">SO</th><th class="num">%SO</th>' +
+      '<th class="num">SO</th><th class="num">%SO</th>' + (hasX ? '<th class="num">SO</th><th class="num">%SO</th>' : '') +
+      '<th class="num">SO</th><th class="num">%SO</th></tr></thead><tbody>';
+    list.forEach(e => {
+      const k = e[0], o = e[1], t = o.d + o.p + o.c + o.x;
+      h += '<tr><td class="rowhead">' + esc(k) + '</td>' +
+        '<td class="num c-done">' + num(o.d) + '</td><td class="num c-done">' + pc(o.d, t) + '</td>' +
+        '<td class="num c-pend">' + num(o.p) + '</td><td class="num c-pend">' + pc(o.p, t) + '</td>' +
+        '<td class="num c-canc">' + num(o.c) + '</td><td class="num c-canc">' + pc(o.c, t) + '</td>' +
+        (hasX ? '<td class="num">' + (o.x || '') + '</td><td class="num">' + pc(o.x, t) + '</td>' : '') +
+        '<td class="num total">' + num(t) + '</td><td class="num total">' + (t ? '100%' : '') + '</td></tr>';
+    });
+    const T = tot.d + tot.p + tot.c + tot.x;
+    h += '<tr class="grand"><td class="rowhead">Total</td>' +
+      '<td class="num">' + num(tot.d) + '</td><td class="num">' + pc(tot.d, T) + '</td>' +
+      '<td class="num">' + num(tot.p) + '</td><td class="num">' + pc(tot.p, T) + '</td>' +
+      '<td class="num">' + num(tot.c) + '</td><td class="num">' + pc(tot.c, T) + '</td>' +
+      (hasX ? '<td class="num">' + num(tot.x) + '</td><td class="num">' + pc(tot.x, T) + '</td>' : '') +
+      '<td class="num">' + num(T) + '</td><td class="num">' + (T ? '100%' : '') + '</td></tr>';
+    return h + '</tbody></table></div>';
+  }
+
+  /* แท่งซ้อน: แต่ละแถวมีหลายส่วน (Done/Pending/Cancel) */
+  function stackedBars(rows, fmt) {
+    const f = fmt || num;
+    if (!rows || !rows.length) return empty();
+    const totals = rows.map(r => r.segs.reduce((a, s) => a + s.v, 0));
+    const max = Math.max.apply(null, totals) || 1;
+    let h = '<div class="stk">';
+    rows.forEach((r, i) => {
+      h += '<div class="stk-row" title="' + esc(r.label) + ' · รวม ' + f(totals[i]) + '">' +
+        '<span class="stk-lab">' + esc(r.label) + '</span><span class="stk-track">';
+      r.segs.forEach(s => {
+        if (s.v > 0) h += '<i style="width:' + (s.v / max * 100).toFixed(2) + '%;background:' + s.color + '" title="' +
+          esc(s.name) + ' · ' + f(s.v) + '"></i>';
+      });
+      h += '</span><span class="stk-val">' + f(totals[i]) + '</span></div>';
+    });
+    return h + '</div>';
+  }
+
+  function statusLegend() {
+    return '<div class="chart-legend">' + ST.map(s =>
+      '<span><i class="sw" style="background:' + s.color + '"></i>' + esc(s.name) + '</span>').join('') + '</div>';
+  }
+
   /* ---------- pages ---------- */
   function pgHead(title, rs, extra) {
     return '<div class="pg-head"><h1>' + esc(title) + '</h1>' +
@@ -393,14 +493,10 @@
 
     let h = pgHead('Status (New)', rs);
     h += '<div class="g">';
-    h += kpiCard(3, 'ผ่าน', num(byAdm.get('1.ผ่าน') || 0), C.green);
-    h += kpiCard(3, 'Pending', num(byAdm.get('2.Pening') || 0), C.gold);
-    h += kpiCard(3, 'ไม่ผ่าน', num(byAdm.get('3.ไม่ผ่าน') || 0), C.red);
-    h += kpiCard(3, 'รวมทั้งงวด', num(rs.length), C.navy);
+    h += statusKpi(rs);
+    h += card(12, 'สถานะใบงาน3 × Grp ทีมขาย', statusTable(rs), { hint: 'SO / %SO' });
     h += card(6, 'สถานะ Admin', hbars(admData), { hint: 'จำนวนงาน' });
-    h += card(6, 'สถานะใบงาน3 (1.Done / 2.Pending / 3.Cancel)', hbars(st3Data), { hint: 'ตามสูตร MapStutus' });
-    h += card(12, 'ทีมขาย × สถานะใบงาน3',
-      matrix(rs, d => d.team || '(ไม่ระบุ)', d => d.status3 || '(ไม่ระบุ)', () => 1, num, { sortRows: 1, rowTitle: 'Grp ทีมขาย' }), { hint: 'จำนวนงาน' });
+    h += card(6, 'สถานะใบงาน3 · สัดส่วน', donut(st3Data));
     return h + '</div>';
   }
 
@@ -466,6 +562,79 @@
       card(12, 'รายละเอียด (ค่าที่คำนวณตามสูตรจริง)', body, { cls: 'fill' }) + '</div>';
   }
 
+  /* GRP SML = ขนาดยอดต่อใบ ตามเกณฑ์ในรายงานเดิม */
+  function smlOf(d) {
+    const v = d.revenue || 0;
+    if (v < 60000) return 'SS';
+    if (v <= 100000) return 'S';
+    if (v <= 500000) return 'M';
+    if (v <= 1000000) return 'L';
+    return 'XL';
+  }
+
+  function pageSml(rs) {
+    const byGrp = new Map();
+    rs.forEach(d => {
+      const k = smlOf(d);
+      const o = byGrp.get(k) || {
+        d: 0, p: 0, c: 0, rd: 0, rp: 0, rc: 0
+      };
+      const rv = d.revenue || 0;
+      if (d.status3 === '1.Done') { o.d++; o.rd += rv; }
+      else if (d.status3 === '2.Pending') { o.p++; o.rp += rv; }
+      else if (d.status3 === '3.Cancel') { o.c++; o.rc += rv; }
+      byGrp.set(k, o);
+    });
+    const order = ['SS', 'S', 'M', 'L', 'XL'];
+    const keys = [...byGrp.keys()].sort((a, b) => {
+      const ia = order.indexOf(a), ib = order.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    });
+    const soRows = keys.map(k => {
+      const o = byGrp.get(k);
+      return {
+        label: k,
+        segs: [
+          { name: 'Done', v: o.d, color: C.green },
+          { name: 'Pending', v: o.p, color: C.gold },
+          { name: 'Cancel', v: o.c, color: C.red }
+        ]
+      };
+    });
+    const revRows = keys.map(k => {
+      const o = byGrp.get(k);
+      return {
+        label: k,
+        segs: [
+          { name: 'Done', v: o.rd, color: C.green },
+          { name: 'Pending', v: o.rp, color: C.gold },
+          { name: 'Cancel', v: o.rc, color: C.red }
+        ]
+      };
+    });
+    const totalRev = sumRev(rs) || 1;
+    const contRows = keys.map(k => {
+      const o = byGrp.get(k);
+      return { label: k, value: (o.rd + o.rp + o.rc) / totalRev * 100 };
+    }).sort((a, b) => b.value - a.value);
+
+    let h = pgHead('SML · GRP SML (ขนาดยอดต่อใบ) · GRP Channel', rs);
+    h += '<div class="g">';
+    h += statusKpi(rs);
+    h += card(12, 'สถานะใบงาน3 × Grp ทีมขาย', statusTable(rs), { hint: 'SO / %SO' });
+    h += card(6, 'SO ตาม GRP SML', stackedBars(soRows) + statusLegend(), { hint: 'จำนวน SO' });
+    h += card(6, 'Revenue ตาม GRP SML', stackedBars(revRows, baht) + statusLegend(), { hint: 'ราคาสุทธิ' });
+    h += card(6, 'Contribution % (Revenue)', hbars(contRows, v => v.toFixed(0) + '%'));
+    h += card(6, 'เกณฑ์ GRP SML (ตามรายงานเดิม)',
+      '<ul class="note"><li>SS : Revenue &lt; 60,000.-</li><li>S : Revenue &lt;= 100,000.-</li>' +
+      '<li>M : Revenue &lt;= 500,000.-</li><li>L : Revenue &lt;= 1,000,000.-</li>' +
+      '<li>XL : Revenue &gt; 1,000,000.-</li></ul>');
+    h += card(12, 'GRP SML × กลุ่มสินค้า · Revenue',
+      matrix(rs, smlOf, d => d.group, d => d.revenue, baht, { sortRows: 1, rowTitle: 'GRP SML' }),
+      { hint: 'ราคาสุทธิ (บาท)' });
+    return h + '</div>';
+  }
+
   function pageGeneric(name, rs) {
     const sp = SPECS[name] || { dim: 'team', dim2: 'status3', metric: 'count', title: name };
     const data = sp.filter ? rs.filter(sp.filter) : rs;
@@ -527,6 +696,7 @@
       : S.page === 'status' ? pageStatus(rs)
       : S.page === 'tat' ? pageTat(rs)
       : S.page === 'data' ? pageData(rs)
+      : S.page === 'SML' ? pageSml(rs)
       : SPECS[S.page] ? pageGeneric(S.page, rs)
       : pageSoon();
     ['overview', 'status', 'tat', 'data', 'soon'].forEach(k => {
