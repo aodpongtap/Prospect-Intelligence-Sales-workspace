@@ -80,7 +80,7 @@
       </nav>
       <div class="nav-label" id="navLabelUsers">ผู้ใช้ &amp; สิทธิ์</div>
       <nav class="nav-list" id="navUsers">
-        <a class="nav-item" id="navUserMgmt" href="users.html?v=2" style="display:none;text-decoration:none"><i class="fa-solid fa-user-gear"></i>User Management</a>
+        <a class="nav-item" id="navUserMgmt" href="users.html?v=3" style="display:none;text-decoration:none"><i class="fa-solid fa-user-gear"></i>User Management</a>
         <button class="nav-item" data-page="audit"><i class="fa-solid fa-clock-rotate-left"></i>Activity Log</button>
         <button class="nav-item" data-page="team"><i class="fa-solid fa-sitemap"></i>ทีม &amp; สิทธิ์</button>
       </nav>
@@ -488,7 +488,7 @@
   <script src="assets/project-tracking.js?v=16"></script>
   <script src="assets/customer-intelligence.js?v=6"></script>
   <script src="assets/audit-log.js?v=15"></script>
-  <script src="assets/team-page.js?v=13"></script>
+  <script src="assets/team-page.js?v=14"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
     window.__allowedPages__ = function () {
@@ -526,7 +526,7 @@
       if (me.isAdmin) {
         var um = document.getElementById('navUserMgmt');
         if (um) {
-          um.href = opts.usersUrl || 'users.html?v=2';
+          um.href = opts.usersUrl || 'users.html?v=3';
           um.target = opts.usersTarget || '_self';
           um.style.display = 'flex';
         }
@@ -622,7 +622,7 @@
       var sess = PIAuth.session();
       if (!sess) { location.replace('login.html'); return; }
       window.__applyMe__(sess, {
-        usersUrl: 'users.html?v=2',
+        usersUrl: 'users.html?v=3',
         onLogout: function () { PIAuth.logout(); location.replace('login.html'); }
       });
     })();

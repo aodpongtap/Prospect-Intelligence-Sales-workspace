@@ -121,10 +121,10 @@
       + '<div><h1>ทีม &amp; สิทธิ์</h1>'
       + '<div class="tp-sub">คุณคือ <b>L' + my.n + ' ' + my.label + '</b> · '
       + (seesAll ? (my.n === 1 ? 'เห็นทั้งเครือข่าย (ทุก BU / ทุกทีม)' : 'เห็นทุกทีมใต้ BU และเห็นทั้งเครือข่าย') : 'เห็นเฉพาะผู้ใช้ในสายงานของคุณ')
-      + (canReg ? ' · ลงทะเบียน ID ได้' : ' · อ่านอย่างเดียว') + '</div></div>'
+      + (canReg ? ' · กำหนด/ผูกสิทธิ์ได้ที่หน้าจัดการผู้ใช้งาน' : ' · อ่านอย่างเดียว') + '</div></div>'
       + '<div class="tp-head-acts">'
       + '<button class="tp-btn" data-tp-tree><i class="fa-solid fa-sitemap"></i> แผนผังเครือข่าย</button>'
-      + (canReg ? '<button class="tp-btn dark" data-tp-new><i class="fa-solid fa-user-plus"></i> ลงทะเบียน ID</button>' : '')
+      + '<a class="tp-btn dark" href="users.html?v=3" style="text-decoration:none"><i class="fa-solid fa-user-gear"></i> ผูกสิทธิ์ที่ “จัดการผู้ใช้งาน”</a>'
       + '</div></div>';
 
     var stats = '<div class="tp-stats">'

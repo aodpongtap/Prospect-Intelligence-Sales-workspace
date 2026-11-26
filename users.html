@@ -77,6 +77,15 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
 .legend{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .legend div{border:1px solid var(--line);border-radius:9px;padding:9px;font-size:11px;color:#475467;line-height:1.55}
 @media(max-width:760px){.fg{grid-template-columns:1fr}.legend{grid-template-columns:1fr}}
+.panel-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.panel-h h3{margin:0}
+.tree ul{list-style:none;margin:6px 0 6px 16px;padding-left:12px;border-left:1px dashed #DCE3EB}
+.tree>ul{margin-left:0;border-left:0;padding-left:0}
+.tree li{margin:5px 0;font-size:11.5px;color:#344054;line-height:1.5}
+.tree .tn-av{display:inline-flex;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center;font-size:9px;color:#fff;margin-right:5px;vertical-align:middle}
+.tree .tn-lv{font-size:9.5px;color:#667085;background:#F1F5F9;border:1px solid #E5EAF0;border-radius:999px;padding:0 6px;margin-left:5px;white-space:nowrap}
+.tree .tn-me{font-size:9px;color:#2563EB;background:#EFF6FF;border-radius:999px;padding:0 6px;margin-left:5px}
+.tree .tn-mail{color:#98A2B3;font-size:10px}
 </style>
 </head>
 <body>
@@ -136,7 +145,10 @@ td.c-act .acts{justify-content:flex-end;flex-wrap:nowrap;gap:4px}
   </section>
 
   <section class="panel">
-    <h3>รายชื่อผู้ใช้ (<span id="count">0</span>)</h3>
+    <div class="panel-h">
+      <h3>รายชื่อผู้ใช้ (<span id="count">0</span>)</h3>
+      <button class="btn" id="treeBtn" type="button"><i class="fa-solid fa-sitemap"></i> แผนผังเครือข่าย</button>
+    </div>
     <div class="fbar">
       <input id="fSearch" placeholder="ค้นหาชื่อ / อีเมล">
       <select id="fLevel"><option value="">ทุกระดับ</option></select>
@@ -369,6 +381,53 @@ function shortThai(iso) {
   if (p.length < 3) return iso || '—';
   return Number(p[2]) + ' ' + (TH_M[Number(p[1]) - 1] || '') + ' ' + String(Number(p[0]) + 543).slice(-2);
 }
+
+/* ---------- แผนผังเครือข่าย (ย้ายมาจากหน้า ทีม & สิทธิ์) ---------- */
+var TREE_COLORS = { admin: '#2563EB', bu: '#7C3AED', head: '#0EA5E9', sup: '#16A34A', sale: '#F59E0B', agent: '#64748B', editor: '#0E9384', viewer: '#94A3B8' };
+function showTree() {
+  var all = (window.__USERS__ || []).filter(function (u) { return u && u.email; });
+  if (!all.length) { showMsg('ยังไม่มีรายชื่อผู้ใช้', 'err'); return; }
+  var myMail = String((window.__ME__ || {}).email || '').toLowerCase();
+  function kids(mail) {
+    return all.filter(function (u) { return String(u.parent || '').toLowerCase() === String(mail || '').toLowerCase(); });
+  }
+  var mailSet = {};
+  all.forEach(function (u) { mailSet[String(u.email).toLowerCase()] = 1; });
+  var roots = all.filter(function (u) { return !u.parent || !mailSet[String(u.parent).toLowerCase()]; });
+
+  function node(u) {
+    var lv = String(u.level || 'viewer').toLowerCase();
+    var nm = String(u.name || u.email || '');
+    var ini = nm.trim().charAt(0) || '?';
+    var ch = kids(u.email);
+    var isMe = String(u.email).toLowerCase() === myMail;
+    return '<li>'
+      + '<span class="tn-av" style="background:' + (TREE_COLORS[lv] || '#94A3B8') + '">' + esc(ini) + '</span>'
+      + '<b>' + esc(nm) + '</b>'
+      + '<span class="tn-lv">' + esc(lvlLabel(lv)) + '</span>'
+      + (String(u.team || '').trim() ? '<span class="tn-lv">' + esc(String(u.team).toUpperCase()) + '</span>' : '')
+      + (isMe ? '<span class="tn-me">คุณ</span>' : '')
+      + ' <span class="tn-mail">' + esc(u.email) + '</span>'
+      + (ch.length ? '<ul>' + ch.map(node).join('') + '</ul>' : '')
+      + '</li>';
+  }
+
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.45);display:grid;place-items:center;z-index:99;padding:16px';
+  wrap.innerHTML = '<div style="background:#fff;border-radius:14px;padding:18px;width:min(760px,100%);max-height:82vh;display:flex;flex-direction:column;font-family:Prompt,sans-serif">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">'
+    + '  <div><h3 style="margin:0;color:#0F2B46;font-size:15px"><i class="fa-solid fa-sitemap" style="color:#2563EB;margin-right:6px"></i>แผนผังเครือข่าย</h3>'
+    + '  <div style="color:#667085;font-size:11px;margin-top:2px">ทั้งหมด ' + all.length + ' บัญชี · เรียงตามสายงาน (ผู้ดูแล → ลูกข่าย)</div></div>'
+    + '  <button class="btn" id="treeClose" type="button">ปิด</button></div>'
+    + '<div class="tree" style="overflow:auto;flex:1"><ul>' + roots.map(node).join('') + '</ul></div></div>';
+  document.body.appendChild(wrap);
+  function close() { if (wrap.parentNode) document.body.removeChild(wrap); document.removeEventListener('keydown', onEsc); }
+  function onEsc(e) { if (e.key === 'Escape') close(); }
+  document.addEventListener('keydown', onEsc);
+  wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
+  document.getElementById('treeClose').addEventListener('click', close);
+}
+
 function dailyCell(u) {
   var m = matchSale(u);
   var mail = String(u.email || '').toLowerCase();
@@ -524,6 +583,7 @@ function applyFilters() {
 el('fSearch') && el('fSearch').addEventListener('input', applyFilters);
 el('fLevel') && el('fLevel').addEventListener('change', applyFilters);
 el('fParent') && el('fParent').addEventListener('change', applyFilters);
+el('treeBtn') && el('treeBtn').addEventListener('click', showTree);
 el('fClear') && el('fClear').addEventListener('click', function () {
   if (el('fSearch')) el('fSearch').value = '';
   if (el('fLevel')) el('fLevel').value = '';
