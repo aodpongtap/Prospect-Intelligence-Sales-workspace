@@ -372,11 +372,13 @@
   function render() {
     injectCss();
     var sc = scope();
+    /* Admin (L1) ดูรายงานได้อย่างเดียว — ไม่คีย์กิจกรรมเอง */
+    var canAdd = String(me().level || '').toLowerCase() !== 'admin';
     var head = '<div class="dr-head">'
       + '<div><h2 class="dr-h2">Daily Report</h2>'
       + '  <div class="dr-sub">บันทึกการเข้าพบลูกค้า / แผนงานรายวัน · Customer Visit Log &amp; Daily Plan — ใช้ร่วมกับเป้าหมายการขาย (linked to AE targets)</div></div>'
       + '<div class="dr-tools">'
-      + '  <button class="dr-btn primary" data-dr-new><i class="fa-solid fa-plus"></i> บันทึกกิจกรรม · Add Activity</button>'
+      + (canAdd ? '  <button class="dr-btn primary" data-dr-new><i class="fa-solid fa-plus"></i> บันทึกกิจกรรม · Add Activity</button>' : '')
       + '  <button class="dr-btn" data-dr-export><i class="fa-solid fa-file-csv"></i> Export CSV</button>'
       + '</div></div>';
 
