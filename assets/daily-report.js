@@ -717,7 +717,10 @@
       if (global.toast) global.toast(ok ? 'เติมข้อมูลผู้ตัดสินใจเดิมของ “' + (r.customer || '') + '” แล้ว' : 'เลือก “' + (r.customer || '') + '” แล้ว');
     }
     function render(q) {
-      var hits = customerHistory(q).slice(0, 6);
+      /* แสดงเฉพาะเมื่อพิมพ์ค้นหาแล้ว — ไม่เด้งรายชื่อทั้งหมดตอนโฟกัส */
+      var kw = normCust(q);
+      if (kw.length < 2) { box.hidden = true; box.innerHTML = ''; return; }
+      var hits = customerHistory(kw).slice(0, 6);
       if (!hits.length) { box.hidden = true; box.innerHTML = ''; return; }
       box.hidden = false;
       box.innerHTML = '<div class="dr-hits-t"><i class="fa-solid fa-clock-rotate-left"></i> เคยบันทึกไว้ ' + hits.length + ' ราย — คลิกเพื่อเติมข้อมูลเดิม</div>'
@@ -735,12 +738,11 @@
       });
     }
     inp.addEventListener('input', function () { render(inp.value); });
-    inp.addEventListener('focus', function () { render(inp.value); });
     inp.addEventListener('blur', function () {
       setTimeout(function () { box.hidden = true; }, 200);
       applyDm(inp.value);
     });
-    if (inp.value) render(inp.value);
+    if (normCust(inp.value).length >= 2) render(inp.value);
   }
 
   /* ---------- form ---------- */
