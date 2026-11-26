@@ -288,17 +288,17 @@
     const revM = matrix(rs, d => d.group, d => d.team, d => d.revenue, baht, { sortRows: 1, maxRows: 5, maxCols: 6, rowTitle: 'กลุ่มสินค้า · Revenue' });
 
     let h = '';
-    h += box('1/span 3', '1/span 2', 'Year, Month', periodSlicer(), 'slicer');
-    h += '<div class="v" style="grid-column:1/span 3;grid-row:3"><div class="v-body" style="justify-content:center">' + gauge(pct) + '</div></div>';
-    h += box('1/span 3', '4/span 3', 'สถานะตรวจสอบ (Admin)', stM);
+    h += box('1/span 3', '1', 'Year, Month', periodSlicer(), 'slicer');
+    h += '<div class="v" style="grid-column:1/span 3;grid-row:2"><div class="v-body" style="justify-content:center">' + gauge(pct) + '</div></div>';
+    h += box('1/span 3', '3/span 4', 'สถานะตรวจสอบ (Admin)', stM);
     h += box('1/span 3', '7/span 3', 'สถานะใบงาน3 (ตาม DAX)',
       matrix(rs, d => d.status3 || '(ไม่ระบุ)', () => 'งาน', () => 1, num, { sortRows: 1, rowTitle: 'สถานะ' }));
     h += kpi('4/span 3', '1', 'SO ใบสั่งซื้อ', num(rs.length), C.navy);
     h += kpi('7/span 3', '1', 'Total (Revenue)', baht(rev), C.orange);
     h += kpi('10/span 3', '1', 'Unit', num(units), C.teal);
-    h += box('4/span 9', '2/span 3', 'SO ต่อวัน (แท่ง) · Unit (เส้น)', comboSvg(daily, S.period || ''));
-    h += box('4/span 9', '5/span 2', 'กลุ่มสินค้า × ทีมขาย · Unit', unitM);
-    h += box('4/span 9', '7/span 3', 'กลุ่มสินค้า × ทีมขาย · Revenue', revM);
+    h += box('4/span 9', '2/span 4', 'SO ต่อวัน (แท่ง) · Unit (เส้น)', comboSvg(daily, ''));
+    h += box('4/span 9', '6/span 2', 'กลุ่มสินค้า × ทีมขาย · Unit', unitM);
+    h += box('4/span 9', '8/span 2', 'กลุ่มสินค้า × ทีมขาย · Revenue', revM);
     return h;
   }
 
@@ -652,8 +652,14 @@
     const stage = document.querySelector('.pbi-stage'), cv = $('canvas');
     if (!stage || !cv) return;
     const sc = Math.min(1, (stage.clientWidth - 24) / 1280, (stage.clientHeight - 24) / 720);
-    cv.style.transform = 'scale(' + sc + ')';
-    cv.style.marginBottom = (-720 * (1 - sc)) + 'px';
+    cv.style.transform = '';
+    cv.style.marginBottom = '';
+    if ('zoom' in cv.style) { cv.style.zoom = sc; }
+    else {
+      cv.style.transform = 'scale(' + sc + ')';
+      cv.style.transformOrigin = 'top center';
+      cv.style.marginBottom = (-720 * (1 - sc)) + 'px';
+    }
   }
 
   function boot() {
