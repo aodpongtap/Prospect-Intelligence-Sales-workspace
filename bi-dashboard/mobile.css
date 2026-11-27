@@ -247,3 +247,23 @@ body.tab-edit-mode .pbi-tab.active { box-shadow: inset 0 0 0 1.5px #118DFF; }
   .mon-2col { grid-template-columns: minmax(0, 1fr); }
 }
 .mon-fu .mon-ack:hover { border-color: #118DFF; color: #0B5CAB; background: #F5F9FF; }
+
+/* ── 15) Cross-sell: ตาราง → การ์ดแนวตั้งบนมือถือ ────────────────────── */
+.cs-list { display: none; }
+@media (max-width: 700px) {
+  .cs-tbl { display: none !important; }
+  .cs-list { display: flex; flex-direction: column; gap: 8px; }
+  .cs-item {
+    border: 1px solid #E4E9F0; border-radius: 10px; background: #fff;
+    padding: 9px 11px; box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+  }
+  .cs-h { display: flex; align-items: center; gap: 8px; }
+  .cs-h b { font-size: 12.6px; letter-spacing: -.2px; color: #0F172A; }
+  .cs-badge {
+    margin-left: auto; flex: 0 0 auto; font-size: 10px; font-weight: 800;
+    color: #0369A1; background: #F0F9FF; border-radius: 99px; padding: 2px 7px;
+  }
+  .cs-amt { font-size: 13.2px; font-weight: 800; color: #0F172A; margin-top: 3px; }
+  .cs-meta { font-size: 11.3px; color: #667085; margin-top: 2px; line-height: 1.45; }
+}
+

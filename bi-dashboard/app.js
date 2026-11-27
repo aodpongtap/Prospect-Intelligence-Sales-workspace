@@ -1893,7 +1893,7 @@
       : '<div style="font-size:11.6px;color:#98A2B3">ยังไม่มีลูกค้าที่ซื้อหลายกลุ่ม</div>';
 
     let oppTbl = opp.length
-      ? '<div class="tbl"><table class="pbi"><thead><tr><th>ลูกค้า</th><th>กลุ่มที่ซื้อ</th><th>จังหวัด</th>' +
+      ? '<div class="cs-tbl"><div class="tbl"><table class="pbi"><thead><tr><th>ลูกค้า</th><th>กลุ่มที่ซื้อ</th><th>จังหวัด</th>' +
         '<th class="num">ยอดสะสม</th><th>ขนาด</th><th>ทีม · เซลล์</th></tr></thead><tbody>' +
         opp.map(e => '<tr><td>' + esc(String(e[0]).slice(0, 30)) + '</td>' +
           '<td>' + esc([...e[1].cats][0]) + '</td>' +
@@ -1901,13 +1901,24 @@
           '<td class="num">' + baht(e[1].rev) + '</td>' +
           '<td><b>' + sizeOfRev(e[1].rev) + '</b></td>' +
           '<td>' + esc(stripNum(e[1].team || '-')) + ' · ' + esc(String(e[1].sales || '-').slice(0, 14)) + '</td></tr>').join('') +
-        '</tbody></table></div>'
+        '</tbody></table></div></div>'
       : empty('ไม่มีลูกค้าที่เข้าเงื่อนไข');
+    /* มือถือ: แสดงเป็นการ์ดแนวตั้งแทนตาราง (ไม่ต้องปัด sideways) */
+    const oppCards = opp.length
+      ? '<div class="cs-list">' + opp.map(e =>
+          '<div class="cs-item">' +
+            '<div class="cs-h"><b>' + esc(String(e[0]).slice(0, 34)) + '</b>' +
+              '<span class="cs-badge">' + esc(sizeOfRev(e[1].rev)) + '</span></div>' +
+            '<div class="cs-amt">' + baht(e[1].rev) + '</div>' +
+            '<div class="cs-meta">' + esc([...e[1].cats][0]) + ' · ' + esc(String(e[1].prov || '-').slice(0, 16)) + '</div>' +
+            '<div class="cs-meta">' + esc(stripNum(e[1].team || '-')) + ' · ' + esc(String(e[1].sales || '-').slice(0, 16)) + '</div>' +
+          '</div>').join('') + '</div>'
+      : '';
 
-    const csCard = card(12, 'โอกาส Cross-sell · เฉพาะลูกค้าที่เคยซื้อเครื่องซักผ้าฝาหน้า',
+    const csCard = card(12, 'โอกาส Cross-sell · เฉพาะลูกค้าที่เคยซื้อเครื่องซักผ้า 13/17 กก.',
       '<div class="mon-2col" style="grid-template-columns:minmax(0,1fr) minmax(0,1.9fr)">' +
         '<div><div style="font-size:11.5px;color:#667085;margin-bottom:6px">คู่สินค้าที่ลูกค้าซื้อร่วม</div>' + pairHtml + '</div>' +
-        '<div><div style="font-size:11.5px;color:#667085;margin-bottom:6px">ลูกค้าที่ซื้อกลุ่มเดียว แต่ยอดสะสม ≥ ฿300,000 (' + num(frontCust.filter(e => e[1].cats.size === 1 && e[1].rev >= 300000).length) + ' ราย)</div>' + oppTbl + '</div>' +
+        '<div><div style="font-size:11.5px;color:#667085;margin-bottom:6px">ลูกค้าที่ซื้อกลุ่มเดียว แต่ยอดสะสม ≥ ฿300,000 (' + num(frontCust.filter(e => e[1].cats.size === 1 && e[1].rev >= 300000).length) + ' ราย)</div>' + oppTbl + oppCards + '</div>' +
       '</div>',
       { hint: 'ซื้อหลายกลุ่ม ' + num(csMulti) + ' / ' + num(csTotal) + ' ราย (' + csPct.toFixed(1) + '%)' });
 
