@@ -355,9 +355,10 @@
       const p = Math.max(1.2, Math.min(100, d.value / max * 100));
       const col = d.color || (o.palette ? PALETTE[i % PALETTE.length] : 'linear-gradient(90deg,#7EA6FF,#118DFF)');
       const sel = xfHas(o.field, d.label);
+      const lab = o.keepNum ? String(d.label) : stripNum(d.label);
       h += '<div class="hbar' + (sel ? ' sel' : '') + '"' + xfAttr(o.field, d.label) +
-        ' title="' + esc(d.label) + ' · ' + f(d.value) + (totPct ? ' (' + (d.value / totPct * 100).toFixed(1) + '%)' : '') + '">' +
-        '<span class="hb-lab">' + esc(d.label) + '</span>' +
+        ' title="' + esc(lab) + ' · ' + f(d.value) + (totPct ? ' (' + (d.value / totPct * 100).toFixed(1) + '%)' : '') + '">' +
+        '<span class="hb-lab">' + esc(lab) + '</span>' +
         '<span class="hb-track"><i class="hb-fill" style="width:' + p.toFixed(1) + '%;background:' + col + '"></i></span>' +
         '<span class="hb-val">' + f(d.value) + (totPct ? '<em>' + (d.value / totPct * 100).toFixed(0) + '%</em>' : '') + '</span></div>';
     });
@@ -455,6 +456,11 @@
     return String(a).localeCompare(String(b), 'th', { numeric: true, sensitivity: 'base' });
   }
 
+  /* ตัด "1. ", "2. " ออกจากชื่อ — ใช้เฉพาะลิสต์ที่เรียงตามค่ามาก→น้อย (อันดับ)
+     เพราะเลขทีมจะเรียงกระโดด (1, 2, 8, 5 …) อ่านแล้วขัดตา */
+  const NUM_PREFIX = /^\s*\d+\s*[.)]\s*/;
+  function stripNum(v) { return String(v == null ? '' : v).replace(NUM_PREFIX, ''); }
+
   function matrix(rowsIn, rowFn, colFn, valFn, fmt, o) {
     o = o || {};
     const rm = new Map(), cm = new Map(), cell = new Map();
@@ -483,7 +489,8 @@
     h += '<th class="num total">Total</th></tr></thead><tbody>';
     rks.forEach(rk => {
       const selR = xfHas(o.rowField, rk);
-      h += '<tr><td class="rowhead' + (selR ? ' sel' : '') + '"' + xfAttr(o.rowField, rk) + '>' + esc(rk) + '</td>';
+      const rLab = o.sortRows ? stripNum(rk) : rk;   /* เรียงตามยอด = ไม่ต้องมีเลขนำหน้า */
+      h += '<tr><td class="rowhead' + (selR ? ' sel' : '') + '"' + xfAttr(o.rowField, rk) + '>' + esc(rLab) + '</td>';
       cks.forEach(ck => { const v = cell.get(rk + '\u0001' + ck); h += '<td class="num">' + (v ? fmt(v) : '') + '</td>'; });
       h += '<td class="num total">' + fmt(rm.get(rk) || 0) + '</td></tr>';
     });
@@ -557,7 +564,7 @@
     list.forEach(e => {
       const k = e[0], o = e[1], t = o.d + o.p + o.c + o.x;
       const selR = xfHas('team', k);
-      h += '<tr><td class="rowhead' + (selR ? ' sel' : '') + '"' + xfAttr('team', k) + '>' + esc(k) + '</td>' +
+      h += '<tr><td class="rowhead' + (selR ? ' sel' : '') + '"' + xfAttr('team', k) + '>' + esc(stripNum(k)) + '</td>' +
         '<td class="num c-done">' + num(o.d) + '</td><td class="num c-done">' + pc(o.d, t) + '</td>' +
         '<td class="num c-pend">' + num(o.p) + '</td><td class="num c-pend">' + pc(o.p, t) + '</td>' +
         '<td class="num c-canc">' + num(o.c) + '</td><td class="num c-canc">' + pc(o.c, t) + '</td>' +
@@ -879,7 +886,7 @@
       const tot = total || items.reduce((a, x) => a + x.value, 0) || 1;
       return '<div class="sum-rank">' + items.map(x =>
         '<div class="sum-rank-row' + (field && xfHas(field, x.label) ? ' sel' : '') + '"' + (field ? xfAttr(field, x.label) : '') + ' title="' + esc(x.label) + ' · ' + fmt(x.value) + ' (' + (x.value / tot * 100).toFixed(1) + '%)">' +
-        '<span class="sum-rank-name">' + esc(x.label) + '</span>' +
+        '<span class="sum-rank-name">' + esc(stripNum(x.label)) + '</span>' +
         '<span class="sum-rank-val">' + fmt(x.value) + '<em>' + (x.value / tot * 100).toFixed(0) + '%</em></span>' +
         '<span class="sum-rank-track"><i style="width:' + (x.value / mx * 100).toFixed(1) + '%"></i></span></div>').join('') + '</div>';
     };
@@ -1453,7 +1460,7 @@
     teamList.forEach(e => {
       const t = e[1], fcs = Math.round(t.so / elapsed * dim), pv = prevTeam.get(e[0]) || 0;
       const dd = pv ? ((fcs - pv) / pv * 100) : null;
-      teamTbl += '<tr><td>' + esc(e[0]) + '</td><td class="num">' + num(t.so) + '</td>' +
+      teamTbl += '<tr><td>' + esc(stripNum(e[0])) + '</td><td class="num">' + num(t.so) + '</td>' +
         '<td class="num c-done">' + num(t.d) + '</td><td class="num c-pend">' + num(t.p) + '</td>' +
         '<td><div class="tbcell"><span class="tbar"><i style="width:' + (fcs / maxFc * 100).toFixed(0) + '%"></i></span>' +
         '<b>' + num(fcs) + '</b></div></td>' +
@@ -1566,7 +1573,7 @@
       '<th class="num">ปิดจริง·ไม่รวม Backlog</th><th class="num">Backlog ค้าง</th><th class="num">ปิดจริง·รวม Backlog</th>' +
       '</tr></thead><tbody>';
     doneRows.forEach(x => {
-      doneTbl += '<tr><td>' + esc(x.name) + '</td>' +
+      doneTbl += '<tr><td>' + esc(stripNum(x.name)) + '</td>' +
         '<td class="num">' + num(x.so) + '</td>' +
         '<td class="num c-done">' + num(x.d) + '</td>' +
         '<td class="num c-pend">' + num(x.p) + '</td>' +
@@ -1971,7 +1978,7 @@
       clearInterval(tick);
       bar.style.width = '93%'; st.textContent = 'คำนวณตามสูตร Excel (' + num(raw.length) + ' แถว)…';
       const data = BISchema.build(raw);
-      S.raw = raw; S.data = data;
+      S.raw = raw; S.data = fixTeams(data);
       S.meta = { file: file.name, rows: data.length, at: new Date(), stamp: (file.name.match(/(\d{14})/) || [])[1] || '' };
       const ps = periods();
       S.period = ps.length ? ps[ps.length - 1] : null;
@@ -2205,7 +2212,7 @@
     // ถ้ามีข้อมูลที่บันทึกไว้ ให้แสดงทันทีโดยไม่ต้อง import ใหม่
     cacheLoad().then(c => {
       if (c && c.data && !S.data) {
-        S.data = c.data; S.meta = Object.assign({}, c.meta, { cached: true });
+        S.data = fixTeams(c.data); S.meta = Object.assign({}, c.meta, { cached: true });
         const ps = periods();
         S.period = ps.length ? ps[ps.length - 1] : null;
         applyView();          /* ★ คืนมุมมองที่บันทึก (หน้า/เดือน/ตัวกรอง) */
@@ -2222,9 +2229,20 @@
   }
 
   /* ---------- snapshot ที่ฝังมากับเว็บ (อ่านอย่างเดียว) ---------- */
+  /* แก้เลขทีมที่ซ้ำในข้อมูลเก่า (master data เดิมให้ Employee/E-Com เป็น 9 ทั้งคู่) */
+  const TEAM_ALIAS = { '9. Employee': '10. Employee', '9. Online/E-Com': '11. Online/E-Com' };
+  function fixTeams(arr) {
+    if (!arr || !arr.length) return arr;
+    for (let i = 0; i < arr.length; i++) {
+      const d = arr[i];
+      if (d && TEAM_ALIAS[d.team]) d.team = TEAM_ALIAS[d.team];
+    }
+    return arr;
+  }
+
   function applySnapshot(snap) {
     if (!snap || !snap.data || S.data) return;
-    S.data = snap.data.map(des);
+    S.data = fixTeams(snap.data.map(des));
     S.meta = Object.assign({}, snap.meta, { snapshot: true });
     const ps = periods();
     S.period = ps.length ? ps[ps.length - 1] : null;
