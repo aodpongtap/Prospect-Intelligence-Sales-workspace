@@ -229,6 +229,19 @@
     });
   }
 
+  /* เรียงค่าตัวกรองแบบธรรมชาติ: เอาตัวเลขนำหน้ามาก่อน (1. S1, 2. S2-CRD, … 9. Online/E-Com)
+     แล้วค่อยเรียงตามชื่อ · ค่าที่ไม่มีเลขนำหน้าไปต่อท้าย */
+  function valKey(v) {
+    const m = String(v).match(/^\s*(\d+)\s*[.)]?\s*(.*)$/);
+    return m ? { g: 0, n: Number(m[1]), s: m[2] } : { g: 1, n: 0, s: String(v) };
+  }
+  function cmpVal(a, b) {
+    const ka = valKey(a), kb = valKey(b);
+    if (ka.g !== kb.g) return ka.g - kb.g;
+    if (ka.n !== kb.n) return ka.n - kb.n;
+    return ka.s.localeCompare(kb.s, 'th');
+  }
+
   function distinctVals(field) {
     const m = new Map();
     (S.data || []).forEach(d => {
@@ -238,7 +251,7 @@
       const k = String(v);
       m.set(k, (m.get(k) || 0) + 1);
     });
-    return [...m.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]);
+    return [...m.keys()].sort(cmpVal);
   }
 
   function renderFilterBar() {
