@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monthly Monitor — Preview (ใหม่)</title>
+<style>
+:root{
+  --bg:#F4F6FA; --panel:#FFFFFF; --ink:#0F172A; --ink2:#475569; --ink3:#8D9AAD;
+  --line:#E4E9F0; --line2:#EEF2F7;
+  --brand:#4F46E5; --brand-soft:#EEF0FF;
+  --red:#E11D48; --red-soft:#FFF1F3;
+  --amber:#D97706; --amber-soft:#FFF8EB;
+  --green:#059669; --green-soft:#ECFDF5;
+  --blue:#0EA5E9; --blue-soft:#F0F9FF;
+  --r:16px; --sh:0 1px 2px rgba(15,23,42,.05), 0 10px 26px -18px rgba(15,23,42,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink); font-size:13.5px; line-height:1.5;
+  font-family:"Inter","Segoe UI","Leelawadee UI",Tahoma,sans-serif; -webkit-font-smoothing:antialiased;
+}
+.shell{max-width:1440px;margin:0 auto;padding:18px 18px 70px}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#D5DCE6;border-radius:8px;border:2px solid transparent;background-clip:content-box}
+
+/* ── top ── */
+.note{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#FFFAEB;border:1px solid #FEDF89;
+  color:#92400E;border-radius:12px;padding:9px 13px;font-size:12px;font-weight:600;margin-bottom:14px}
+.tagd{display:inline-flex;align-items:center;height:19px;padding:0 8px;border-radius:6px;background:#FEF3C7;
+  color:#92400E;font-size:10px;font-weight:800;letter-spacing:.3px}
+
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+h1{margin:0;font-size:22px;letter-spacing:-.5px}
+.sub{margin:2px 0 0;color:var(--ink2);font-size:12.5px}
+.mth{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:10px;background:#fff;
+  border:1px solid var(--line);font-weight:700;font-size:13px;box-shadow:var(--sh)}
+.seg{display:flex;gap:4px;background:#E9EDF4;padding:4px;border-radius:11px;margin-left:auto}
+.seg button{border:0;background:transparent;font:inherit;font-weight:700;font-size:12px;color:var(--ink2);
+  padding:7px 14px;border-radius:8px;cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(15,23,42,.14)}
+
+/* ── layout ── */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media (max-width:1080px){.grid{grid-template-columns:1fr}}
+
+/* ── hero strip ── */
+.hero{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+@media (max-width:760px){.hero{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.hcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;box-shadow:var(--sh)}
+.hcard .lab{font-size:11.5px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.hcard .val{font-size:24px;font-weight:800;letter-spacing:-.8px;margin-top:3px}
+.hcard .val small{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:0}
+.hcard .foot{font-size:11px;color:var(--ink3);margin-top:2px}
+.bar{height:7px;border-radius:99px;background:#EDF0F5;overflow:hidden;margin-top:9px;position:relative}
+.bar i{display:block;height:100%;border-radius:99px}
+.bar u{position:absolute;top:-2px;right:0;width:2px;height:11px;background:#0F172A;opacity:.4}
+
+/* ── section head ── */
+.shead{display:flex;align-items:center;gap:9px;margin:2px 0 10px}
+.shead h2{margin:0;font-size:15px;letter-spacing:-.3px}
+.shead .cnt{font-size:11px;font-weight:800;color:#fff;background:var(--red);border-radius:99px;padding:2px 8px}
+.shead .hint{margin-left:auto;font-size:11.5px;color:var(--ink3)}
+
+/* ── follow-up cards ── */
+.list{display:flex;flex-direction:column;gap:10px}
+.fu{background:#fff;border:1px solid var(--line);border-left:4px solid var(--red);border-radius:14px;
+  padding:12px 14px;box-shadow:var(--sh);transition:.16s;position:relative}
+.fu:hover{transform:translateY(-1px);border-color:#CBD5E1;box-shadow:0 6px 20px -12px rgba(15,23,42,.4)}
+.fu.warn{border-left-color:var(--amber)}
+.fu.ok{border-left-color:var(--green)}
+.fu.done{opacity:.55;border-left-color:var(--green);background:#FAFCFB}
+.fu.done .t{text-decoration:line-through}
+.fu-r1{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.fu .t{font-weight:800;font-size:13.5px;letter-spacing:-.2px}
+.fu .who{font-size:11.5px;color:var(--ink2)}
+.pill{display:inline-flex;align-items:center;gap:5px;height:21px;padding:0 9px;border-radius:99px;
+  font-size:10.8px;font-weight:800;white-space:nowrap}
+.pill.r{background:var(--red-soft);color:#BE123C}
+.pill.a{background:var(--amber-soft);color:#B45309}
+.pill.g{background:var(--green-soft);color:#047857}
+.pill.b{background:var(--blue-soft);color:#0369A1}
+.fu-r2{display:flex;align-items:center;gap:14px;margin-top:7px;font-size:12px;color:var(--ink2);flex-wrap:wrap}
+.fu-r2 b{color:var(--ink)}
+.fu-act{margin-left:auto;display:flex;gap:6px}
+.btn{height:28px;padding:0 11px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink2);
+  font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;transition:.14s}
+.btn:hover{border-color:#0EA5E9;color:#0369A1;background:#F0F9FF}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.pri:hover{background:#4338CA;border-color:#4338CA;color:#fff}
+.btn.done{background:var(--green-soft);border-color:#A7F3D0;color:#047857}
+
+/* ── rail ── */
+.rail{display:flex;flex-direction:column;gap:12px;position:sticky;top:18px}
+@media (max-width:1080px){.rail{position:static}}
+.rcard{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.rcard .rh{padding:11px 14px;border-bottom:1px solid var(--line2);font-weight:800;font-size:12.5px;display:flex;align-items:center;gap:7px}
+.rcard .rb{padding:12px 14px}
+.rcard .rb ul{margin:0;padding-left:17px;font-size:12.2px;color:var(--ink2);line-height:1.75}
+.rcard .rb ul b{color:var(--ink)}
+.why{display:flex;gap:9px;font-size:11.8px;color:var(--ink2);line-height:1.55;padding:9px 0;border-bottom:1px dashed var(--line2)}
+.why:last-child{border-bottom:0;padding-bottom:0}
+.why .n{flex:0 0 auto;width:20px;height:20px;border-radius:7px;background:var(--brand-soft);color:var(--brand);
+  font-weight:800;font-size:10.5px;display:grid;place-items:center}
+.mini{height:6px;border-radius:99px;background:#EDF0F5;overflow:hidden;margin-top:6px}
+.mini i{display:block;height:100%;border-radius:99px}
+.trow{display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:6px 0}
+.trow span{color:var(--ink2)}
+.trow b{font-variant-numeric:tabular-nums}
+
+/* ── table view ── */
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.2px}
+thead th{position:sticky;top:0;background:#F8FAFC;color:#667085;font-size:10.5px;font-weight:700;
+  text-align:right;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+thead th:first-child{text-align:left}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--line2);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+tbody td:first-child{text-align:left;font-weight:700;white-space:normal}
+.hide{display:none}
+.foot{margin-top:18px;font-size:11px;color:var(--ink3);text-align:center}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="note">
+    <span class="tagd">ตัวอย่าง</span>
+    <span>หน้านี้เป็น <b>UX/UI ใหม่</b> ที่ผมทำแยกมาให้ดูก่อน — ข้อมูลเป็น <b>ข้อมูลจำลอง</b> ยังไม่เชื่อมระบบจริง</span>
+  </div>
+
+  <div class="top">
+    <div>
+      <h1>Monthly Monitor · ติดตามงานรายเดือน</h1>
+      <p class="sub">โฟกัสที่ “ผมต้องตามใคร เรื่องอะไร ภายในเมื่อไร” — ไม่ใช่รายงานยอดขาย</p>
+    </div>
+    <span class="mth">📅 พ.ย. 2569 · ผ่านไป 90% (27/30 วัน)</span>
+    <div class="seg">
+      <button class="on" data-view="board">บอร์ดตามงาน</button>
+      <button data-view="table">ตารางรวม</button>
+    </div>
+  </div>
+
+  <!-- ── hero ── -->
+  <div class="hero">
+    <div class="hcard">
+      <div class="lab">ต้องตามวันนี้</div>
+      <div class="val" style="color:#E11D48">8 <small>งาน</small></div>
+      <div class="foot">มูลค่ารวม ฿4.2 ลบ. · 3 งานเลยกำหนด &gt; 7 วัน</div>
+      <div class="bar"><i style="width:100%;background:linear-gradient(90deg,#F97066,#FDA29B)"></i></div>
+    </div>
+    <div class="hcard">
+      <div class="lab">คาดปิดสิ้นเดือน</div>
+      <div class="val">463 <small>/ เป้า 450</small></div>
+      <div class="foot">เกินเป้า 13 ใบ · ถ้าปิด 5 งานแรกทัน = 468 ใบ</div>
+      <div class="bar"><i style="width:100%;background:linear-gradient(90deg,#12B76A,#6CE9A6)"></i><u style="left:auto;right:2.8%"></u></div>
+    </div>
+    <div class="hcard">
+      <div class="lab">งานค้างทั้งระบบ</div>
+      <div class="val">872 <small>ใบ</small></div>
+      <div class="foot">เกิน 21 วัน 722 ใบ (83%) · ของเดือนนี้ 180 ใบ</div>
+      <div class="bar"><i style="width:83%;background:linear-gradient(90deg,#F79009,#FDB022)"></i></div>
+    </div>
+    <div class="hcard">
+      <div class="lab">มัดจำค้าง</div>
+      <div class="val" style="color:#B45309">133 <small>ใบ · ฿3.9 ลบ.</small></div>
+      <div class="foot">ทำให้สั่งของไม่ได้ 98 ใบ (มูลค่า ฿2.6 ลบ.)</div>
+      <div class="bar"><i style="width:32%;background:linear-gradient(90deg,#F79009,#FDB022)"></i></div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- ── follow-up board ── -->
+    <div>
+      <div class="shead">
+        <h2>สิ่งที่ผมต้องตามทีม</h2>
+        <span class="cnt">8</span>
+        <span class="hint">เรียงตามความเร่งด่วน · กด “ตามแล้ว” เพื่อตัดออกจากลิสต์</span>
+      </div>
+
+      <div class="list" id="board">
+
+        <div class="fu">
+          <div class="fu-r1">
+            <span class="t">SO261102110 · ดริงค์โค จำกัด</span>
+            <span class="pill r">เลยกำหนด 5 วัน</span>
+            <span class="who">S2-CRD · คุณสมชาย</span>
+            <span class="fu-act">
+              <button class="btn pri">โทรตาม</button>
+              <button class="btn js-ack">ตามแล้ว</button>
+            </span>
+          </div>
+          <div class="fu-r2">
+            <span>ค้างขั้น <b>Admin ตรวจสอบ</b> (SLA 0 วัน)</span>
+            <span>มัดจำ <b>จ่ายแล้ว</b></span>
+            <span>สั่งของ <b>ยังไม่สั่ง</b></span>
+            <span>มูลค่า <b>฿412,000</b></span>
+          </div>
+        </div>
+
+        <div class="fu">
+          <div class="fu-r1">
+            <span class="t">SO261101884 · บริษัท สยามฟู้ดส์ จำกัด</span>
+            <span class="pill r">เลยกำหนด 9 วัน</span>
+            <span class="who">S1 · คุณวารี</span>
+            <span class="fu-act">
+              <button class="btn pri">โทรตาม</button>
+              <button class="btn js-ack">ตามแล้ว</button>
+            </span>
+          </div>
+          <div class="fu-r2">
+            <span>ค้างขั้น <b>ตรวจสอบพื้นที่</b> (SLA 2 วัน)</span>
+            <span>มัดจำ <b>ค้างจ่าย ฿180,000</b></span>
+            <span>สั่งของ <b>ยังไม่สั่ง</b></span>
+            <span>มูลค่า <b>฿980,000</b></span>
+          </div>
+        </div>
+
+        <div class="fu">
+          <div class="fu-r1">
+            <span class="t">SO261102401 · ร้านกาแฟ บ้านสวน</span>
+            <span class="pill r">เลยกำหนด 8 วัน</span>
+            <span class="who">S2-CRD · คุณสมชาย</span>
+            <span class="fu-act">
+              <button class="btn pri">โทรตาม</button>
+              <button class="btn js-ack">ตามแล้ว</button>
+            </span>
+          </div>
+          <div class="fu-r2">
+            <span>ค้างขั้น <b>ติดตั้งงาน</b> (SLA 5 วัน)</span>
+            <span>มัดจำ <b>จ่ายแล้ว</b></span>
+            <span>สั่งของ <b>ของเข้าแล้ว</b></span>
+            <span>มูลค่า <b>฿265,000</b></span>
+          </div>
+        </div>
+
+        <div class="fu warn">
+          <div class="fu-r1">
+            <span class="t">SO261102355 · โรงงาน ไทยพลาส จำกัด</span>
+            <span class="pill a">เหลือ 1 วัน</span>
+            <span class="who">S3-BU · คุณอนันต์</span>
+            <span class="fu-act">
+              <button class="btn">มอบหมายใหม่</button>
+              <button class="btn js-ack">ตามแล้ว</button>
+            </span>
+          </div>
+          <div class="fu-r2">
+            <span>ค้างขั้น <b>ตรวจสอบเครดิต</b> (SLA 0.5 วัน)</span>
+            <span>มัดจำ <b>จ่ายแล้ว</b></span>
+            <span>สั่งของ <b>รออนุมัติ</b></span>
+            <span>มูลค่า <b>฿1,240,000</b></span>
+          </div>
+        </div>
+
+        <div class="fu warn">
+          <div class="fu-r1">
+            <span class="t">SO261101902 · หจก. รับสร้างบ้าน</span>
+            <span class="pill a">เหลือ 2 วัน</span>
+            <span class="who">BU/Dealer · คุณพิชัย</span>
+            <span class="fu-act">
+              <button class="btn">มอบหมายใหม่</button>
+              <button class="btn js-ack">ตามแล้ว</button>
+            </span>
+          </div>
+          <div class="fu-r2">
+            <span>ค้างขั้น <b>มัดจำ / ชำระ</b> (SLA 30 วัน)</span>
+            <span>มัดจำ <b>ค้างจ่าย ฿96,000</b></span>
+            <span>สั่งของ <b>ยังไม่สั่ง</b></span>
+            <span>มูลค่า <b>฿540,000</b></span>
+          </div>
+        </div>
+
+        <div class="fu warn">
+          <div class="fu-r1">
+            <span class="t">SO261102088 · ฟิตเนส วันฟิต</span>
+            <span class="pill a">เหลือ 3 วัน</span>
+            <span class="who">S1 · คุณวารี</span>
+            <span class="fu-act">
+              <button class="btn">มอบหมายใหม่</button>
+              <button class="btn js-ack">ตามแล้ว</button>
+            </span>
+          </div>
+          <div class="fu-r2">
+            <span>ค้างขั้น <b>ประสานงานเข้าพื้นที่</b> (SLA 5 วัน)</span>
+            <span>มัดจำ <b>จ่ายแล้ว</b></span>
+            <span>สั่งของ <b>ยังไม่สั่ง</b></span>
+            <span>มูลค่า <b>฿318,000</b></span>
+          </div>
+        </div>
+
+        <div class="fu ok">
+          <div class="fu-r1">
+            <span class="t">SO261102512 · คลินิก ทันตกรรมใส</span>
+            <span class="pill g">ทันกำหนด</span>
+            <span class="who">Online/E-Com · คุณนัท</span>
+            <span class="fu-act">
+              <button class="btn js-ack">ติดตามปกติ</button>
+            </span>
+          </div>
+          <div class="fu-r2">
+            <span>ค้างขั้น <b>ส่งมอบ / สัญญา</b> (SLA 15 วัน)</span>
+            <span>มัดจำ <b>จ่ายแล้ว</b></span>
+            <span>สั่งของ <b>ของเข้าแล้ว</b></span>
+            <span>มูลค่า <b>฿152,000</b></span>
+          </div>
+        </div>
+
+        <div class="fu ok">
+          <div class="fu-r1">
+            <span class="t">SO261102634 · อพาร์ทเมนท์ สุขใจ</span>
+            <span class="pill b">รอทีมตอบ</span>
+            <span class="who">S3-OEM · คุณก้อย</span>
+            <span class="fu-act">
+              <button class="btn js-ack">ติดตามปกติ</button>
+            </span>
+          </div>
+          <div class="fu-r2">
+            <span>ค้างขั้น <b>แจ้งงานทีมช่าง</b> (SLA 2 วัน)</span>
+            <span>มัดจำ <b>จ่ายแล้ว</b></span>
+            <span>สั่งของ <b>ยังไม่ถึงขั้น</b></span>
+            <span>มูลค่า <b>฿289,000</b></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── table view ── -->
+      <div id="tableView" class="hide" style="background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:auto;box-shadow:var(--sh);max-height:640px">
+        <table>
+          <thead><tr>
+            <th>งาน / ลูกค้า</th><th>ทีม</th><th>ขั้นที่ค้าง</th><th>SLA</th><th>เลยกำหนด</th>
+            <th>มัดจำ</th><th>สั่งของ</th><th>มูลค่า</th>
+          </tr></thead>
+          <tbody>
+            <tr><td>SO261102110 · ดริงค์โค</td><td>S2-CRD</td><td>Admin ตรวจสอบ</td><td>0 วัน</td><td style="color:#BE123C;font-weight:800">+5</td><td style="color:#047857">จ่ายแล้ว</td><td>ยังไม่สั่ง</td><td>฿412,000</td></tr>
+            <tr><td>SO261101884 · สยามฟู้ดส์</td><td>S1</td><td>ตรวจสอบพื้นที่</td><td>2 วัน</td><td style="color:#BE123C;font-weight:800">+9</td><td style="color:#B45309">ค้าง ฿180,000</td><td>ยังไม่สั่ง</td><td>฿980,000</td></tr>
+            <tr><td>SO261102401 · บ้านสวน</td><td>S2-CRD</td><td>ติดตั้งงาน</td><td>5 วัน</td><td style="color:#BE123C;font-weight:800">+8</td><td style="color:#047857">จ่ายแล้ว</td><td>ของเข้าแล้ว</td><td>฿265,000</td></tr>
+            <tr><td>SO261102355 · ไทยพลาส</td><td>S3-BU</td><td>ตรวจสอบเครดิต</td><td>0.5 วัน</td><td style="color:#B45309;font-weight:800">+1</td><td style="color:#047857">จ่ายแล้ว</td><td>รออนุมัติ</td><td>฿1,240,000</td></tr>
+            <tr><td>SO261101902 · รับสร้างบ้าน</td><td>BU/Dealer</td><td>มัดจำ / ชำระ</td><td>30 วัน</td><td style="color:#B45309;font-weight:800">+2</td><td style="color:#B45309">ค้าง ฿96,000</td><td>ยังไม่สั่ง</td><td>฿540,000</td></tr>
+            <tr><td>SO261102088 · วันฟิต</td><td>S1</td><td>ประสานงานเข้าพื้นที่</td><td>5 วัน</td><td style="color:#B45309;font-weight:800">+3</td><td style="color:#047857">จ่ายแล้ว</td><td>ยังไม่สั่ง</td><td>฿318,000</td></tr>
+            <tr><td>SO261102512 · ทันตกรรมใส</td><td>Online/E-Com</td><td>ส่งมอบ / สัญญา</td><td>15 วัน</td><td style="color:#047857;font-weight:800">ทัน</td><td style="color:#047857">จ่ายแล้ว</td><td>ของเข้าแล้ว</td><td>฿152,000</td></tr>
+            <tr><td>SO261102634 · สุขใจ</td><td>S3-OEM</td><td>แจ้งงานทีมช่าง</td><td>2 วัน</td><td style="color:#0369A1;font-weight:800">รอตอบ</td><td style="color:#047857">จ่ายแล้ว</td><td>ยังไม่ถึงขั้น</td><td>฿289,000</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="foot">ตัวอย่าง UX/UI — ตัวเลขทั้งหมดเป็นข้อมูลจำลองเพื่อดูหน้าตา</div>
+    </div>
+
+    <!-- ── right rail ── -->
+    <aside class="rail">
+
+      <div class="rcard">
+        <div class="rh">📌 สรุป 1 นาที (สำหรับหัวหน้า)</div>
+        <div class="rb">
+          <div class="why"><span class="n">1</span><div><b>ต้องตาม 8 งาน</b> มูลค่า <b>฿4.2 ลบ.</b> = 32% ของยอดคาดปิดสิ้นเดือน</div></div>
+          <div class="why"><span class="n">2</span><div>งานเลยกำหนด <b>3 งาน</b> อยู่กับ <b>S2-CRD</b> ทั้งหมด → คุยกับหัวหน้าทีมคนเดียวจบ</div></div>
+          <div class="why"><span class="n">3</span><div>มัดจำค้าง <b>133 ใบ</b> ทำให้ <b>98 ใบ</b> สั่งของไม่ได้ (ค้างเงิน <b>฿3.9 ลบ.</b>)</div></div>
+          <div class="why"><span class="n">4</span><div>ปิด 5 งานแรกทันสัปดาห์นี้ → คาดปิด <b>468 ใบ</b> (เป้า 450) = <b>ถึงเป้า</b></div></div>
+          <div class="why"><span class="n">5</span><div>ขั้นที่หลุดบ่อยสุด: <b>ติดตั้งงาน</b> (52 ใบ) · <b>ตรวจสอบพื้นที่</b> (47 ใบ)</div></div>
+        </div>
+      </div>
+
+      <div class="rcard">
+        <div class="rh">⏱ SLA ที่ใช้ตัดสิน</div>
+        <div class="rb">
+          <div class="trow"><span>พื้นที่พร้อมติดตั้ง — รวมทั้งกระบวนการ</span><b>15 วัน</b></div>
+          <div class="mini"><i style="width:78%;background:linear-gradient(90deg,#12B76A,#6CE9A6)"></i></div>
+          <div class="trow"><span>พื้นที่ไม่พร้อมติดตั้ง — รวมทั้งกระบวนการ</span><b>14–21 วัน</b></div>
+          <div class="mini"><i style="width:61%;background:linear-gradient(90deg,#F79009,#FDB022)"></i></div>
+          <div class="trow"><span>Admin ตรวจสอบ</span><b>0 วัน</b></div>
+          <div class="trow"><span>ตรวจสอบเครดิต</span><b>12 ชม.</b></div>
+          <div class="trow"><span>แจ้งงานทีมช่าง</span><b>1–2 วัน</b></div>
+          <div class="trow"><span>สั่งของ / จัดส่ง</span><b>21 วัน</b></div>
+          <div class="trow"><span>ติดตั้งงาน</span><b>5 วัน</b></div>
+        </div>
+      </div>
+
+      <div class="rcard">
+        <div class="rh">👥 ทีมที่ต้องตามมากสุด</div>
+        <div class="rb">
+          <div class="trow"><span>S2-CRD</span><b>3 งาน · ฿677,000</b></div>
+          <div class="mini"><i style="width:100%;background:linear-gradient(90deg,#F97066,#FDA29B)"></i></div>
+          <div class="trow"><span>S1</span><b>2 งาน · ฿1.30 ลบ.</b></div>
+          <div class="mini"><i style="width:66%;background:linear-gradient(90deg,#FDB022,#FEC84B)"></i></div>
+          <div class="trow"><span>S3-BU</span><b>1 งาน · ฿1.24 ลบ.</b></div>
+          <div class="mini"><i style="width:33%;background:linear-gradient(90deg,#FDB022,#FEC84B)"></i></div>
+          <div class="trow"><span>BU/Dealer</span><b>1 งาน · ฿540,000</b></div>
+          <div class="mini"><i style="width:22%;background:linear-gradient(90deg,#98A2B3,#D0D5DD)"></i></div>
+          <div class="trow"><span>Online/E-Com · S3-OEM</span><b>2 งาน · ฿441,000</b></div>
+          <div class="mini"><i style="width:18%;background:linear-gradient(90deg,#98A2B3,#D0D5DD)"></i></div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+</div>
+
+<script>
+/* สลับมุมมอง บอร์ด / ตาราง */
+document.querySelectorAll('.seg button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.seg button').forEach(x => x.classList.toggle('on', x === b));
+    const isBoard = b.dataset.view === 'board';
+    document.getElementById('board').classList.toggle('hide', !isBoard);
+    document.getElementById('tableView').classList.toggle('hide', isBoard);
+  };
+});
+/* กด “ตามแล้ว” แล้วตัดออกจากลิสต์ */
+document.querySelectorAll('.js-ack').forEach(btn => {
+  btn.onclick = () => {
+    const card = btn.closest('.fu');
+    card.classList.add('done');
+    btn.textContent = '✓ ตามแล้ว';
+    btn.classList.add('done');
+    setTimeout(() => { card.style.display = 'none'; }, 700);
+  };
+});
+</script>
+</body>
+</html>
