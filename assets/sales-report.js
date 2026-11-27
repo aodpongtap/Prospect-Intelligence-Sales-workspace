@@ -204,15 +204,48 @@
     return '';
   }
 
+  /**
+   * ซิงก์ "รายชื่อ AE" จากหน้าจัดการผู้ใช้งาน (คอลัมน์รหัสเซลส์ saleId) — ให้มีแหล่งเดียว
+   * คืนค่า true เมื่อรายชื่อเปลี่ยน
+   */
+  function syncSalesFromUsers_(users) {
+    if (!users || !users.length) return false;
+    var next = [];
+    users.forEach(function (u) {
+      var lvl = String((u && u.level) || '').toLowerCase();
+      var sid = String((u && u.saleId) || '').trim().toUpperCase();
+      if (!sid) return;
+      if (lvl !== 'sale' && lvl !== 'agent') return;
+      next.push({
+        id: sid,
+        name: String(u.name || u.email || sid).trim(),
+        team: String(u.team || '').toUpperCase(),
+        parent: '',
+        auto: true,
+        email: String(u.email || '').toLowerCase()
+      });
+    });
+    if (!next.length) return false;
+    next.sort(function (a, b) { return String(a.id).localeCompare(String(b.id)); });
+    var sig = function (arr) {
+      return arr.map(function (s) { return [s.id, s.name, s.team].join('|'); }).sort().join(';');
+    };
+    if (sig(SALES) === sig(next)) return false;
+    SALES = next;
+    saveSales();
+    return true;
+  }
+
   /** ดึงรายชื่อผู้ใช้ครั้งเดียวต่อการโหลดหน้า เพื่อเดินสายงานได้ */
   function ensureTeamUsers_(email) {
     var users = global.__TEAM__ || [];
-    if (users.length) return;
+    if (users.length) { try { syncSalesFromUsers_(users); } catch (e) {} return; }
     if (!global.PIAuth || !global.PIAuth.refresh || global.__SCOPE_FETCHING__) return;
     global.__SCOPE_FETCHING__ = true;
     try {
       global.PIAuth.refresh().then(function (list) {
         global.__TEAM__ = list || [];
+        try { syncSalesFromUsers_(list); } catch (e) {}
         global.__SCOPE_FETCHING__ = false;
         var t = teamViaUpline(email);
         setScopeCache(email, t);
@@ -526,6 +559,7 @@
       amount: Number(c.amount) || 0, payment: c.payment || 'cash',
       status: Number(c.status) || 0, prob: probOfStatus(c.status),
       note: c.note || '', drRef: (c.drRef || '').toUpperCase(), docNo: c.docNo || '',
+      ownerEmail: String(c.ownerEmail || '').toLowerCase(),
       createdAt: c.createdAt || '', updatedAt: c.updatedAt || ''
     };
   }
@@ -1179,7 +1213,7 @@
         + '<td class="sr-num">' + shortDate(d.quoteDate) + '</td>'
         + '<td class="sr-num">' + String(d.month).padStart(2, '0') + '.' + TH_MONTHS[d.month - 1] + ' ' + String(d.year + 543).slice(-2) + '</td>'
         + '<td><div class="sr-nm">' + esc(aeNameOf(d) || '-') + '</div><div class="sr-s2">' + esc([d.saleId, teamByCode(sale(d.saleId).team).name].filter(Boolean).join(' · ')) + '</div></td>'
-        + '<td><div class="sr-nm">' + esc(userNameOf(d.ownerEmail) || '-') + '</div><div class="sr-s2">' + esc(d.createdAt ? shortDate(String(d.createdAt).slice(0, 10)) : '') + '</div></td>'
+        + '<td><div class="sr-nm">' + esc(keyedByOf(d) || '-') + '</div><div class="sr-s2">' + esc(d.createdAt ? shortDate(String(d.createdAt).slice(0, 10)) : '') + '</div></td>'
         + '<td><span class="sr-dot" style="background:' + p.color + '"></span>' + esc(p.short) + '</td>'
         + '<td class="sr-num sr-strong">' + money(d.amount) + '</td>'
         + '<td>' + esc(pay.name) + '</td>'
@@ -1214,6 +1248,13 @@
     var s = sale(d && d.saleId);
     if (s && s.name && s.name !== s.id) return s.name;
     return String((d && d.saleId) || '');
+  }
+
+  /** ชื่อผู้บันทึก (เจ้าของดีล) — ถ้าไม่ทราบให้ใช้ชื่อ AE ผู้รับผิดชอบแทน */
+  function keyedByOf(d) {
+    var n = userNameOf(d && d.ownerEmail);
+    if (n) return n;
+    return aeNameOf(d);
   }
 
   function renderDealsTable(list) {
@@ -1321,22 +1362,31 @@
       return '<tr>'
         + '<td><span class="sr-sid">' + esc(s.id) + '</span></td>'
         + '<td><div class="sr-sale"><span class="sr-av">' + esc(String(s.name).trim().charAt(0) || '?') + '</span>'
-        + '  <div style="min-width:0"><div class="sr-nm">' + esc(s.name)
-        + (s.auto ? ' <span class="sr-autotag" title="สร้างอัตโนมัติจากบัญชีผู้ใช้ระดับ AE">จากบัญชี</span>' : '')
-        + '</div><div class="sr-s2">' + cnt + ' ดีล</div></div></div></td>'
+        + '  <div style="min-width:0"><div class="sr-nm">' + esc(s.name) + '</div><div class="sr-s2">' + cnt + ' ดีล</div></div></div></td>'
         + '<td>' + esc(teamByCode(s.team).name) + '</td>'
-        + '<td class="sr-num"><button class="sr-xbtn" data-sr-delsale="' + esc(s.id) + '" title="ลบรายชื่อนี้"><i class="fa-solid fa-trash"></i></button></td>'
+        + '<td class="sr-num"></td>'
         + '</tr>';
     }).join('');
+    var missing = (global.__TEAM__ || []).filter(function (u) {
+      var lv = String(u.level || '').toLowerCase();
+      return (lv === 'sale' || lv === 'agent') && !String(u.saleId || '').trim();
+    });
+    var missNote = missing.length
+      ? '<div class="sr-note" style="margin:0 0 10px;color:#9A3412;background:#FFF7ED;border-color:#FED7AA">'
+        + '<i class="fa-solid fa-triangle-exclamation"></i> ยังไม่ผูก <b>รหัสเซลส์ (Sxx)</b> ' + missing.length + ' คน: '
+        + esc(missing.slice(0, 6).map(function (u) { return u.name || u.email; }).join(', '))
+        + (missing.length > 6 ? ' …' : '') + ' — ผูกที่หน้าจัดการผู้ใช้งาน</div>'
+      : '';
     return '<section class="sr-panel">'
       + '  <div class="sr-ph"><div><h3>รายชื่อ AE</h3>'
-      + '    <div class="sr-s2">ใช้เลือกในฟอร์มดีลและคำนวณ “เป้า/คน” · รหัส S01, S02, … ระบบสร้างให้อัตโนมัติ</div></div>'
-      + '    <div class="sr-tools"><button class="sr-btn dark" data-sr-addsale><i class="fa-solid fa-user-plus"></i> เพิ่ม AE</button></div></div>'
+      + '    <div class="sr-s2">ดึงจากหน้าจัดการผู้ใช้งาน (ช่อง “รหัสเซลส์ S01, S02, …”) — แก้ไข/ผูกที่นั้นเท่านั้น</div></div>'
+      + '    <div class="sr-tools"><a class="sr-btn dark" href="users.html"><i class="fa-solid fa-user-gear"></i> ไปผูกที่หน้าจัดการผู้ใช้งาน</a></div></div>'
+      + missNote
       + (list.length
         ? '<div class="sr-tablewrap"><table class="sr-table sr-saletable"><thead><tr>'
-          + '<th style="width:70px">รหัส</th><th>ชื่อ AE</th><th style="width:130px">ทีม (BU)</th><th style="width:56px"></th>'
+          + '<th style="width:70px">รหัส</th><th>ชื่อ AE</th><th style="width:160px">ทีม (BU)</th>'
           + '</tr></thead><tbody>' + rows + '</tbody></table></div>'
-        : '<div class="sr-empty-note"><i class="fa-solid fa-user-plus" style="margin-right:6px"></i> ยังไม่มีรายชื่อ AE — กด “เพิ่ม AE” เพื่อเริ่มต้น</div>')
+        : '<div class="sr-empty-note"><i class="fa-solid fa-user-gear" style="margin-right:6px"></i> ยังไม่มี AE ที่ผูก “รหัสเซลส์” — ไปผูกที่หน้าจัดการผู้ใช้งาน</div>')
       + '</section>';
   }
 
@@ -2561,7 +2611,7 @@
       + '  <div><small>มูลค่างานประมาณ</small><strong>' + money(d.amount) + '</strong></div>'
       + '  <div><small>Cash In คาดรับ</small><strong>' + (cashInOf(d) ? money(cashInOf(d)) : '—') + '</strong></div>'
       + '  <div><small>AE ผู้รับผิดชอบ</small><strong>' + esc(aeNameOf(d) || '-') + '</strong></div>'
-      + '  <div><small>ผู้บันทึก</small><strong>' + esc(userNameOf(d.ownerEmail) || '-') + '</strong></div>'
+      + '  <div><small>ผู้บันทึก</small><strong>' + esc(keyedByOf(d) || '-') + '</strong></div>'
       + '  <div><small>สินค้า</small><strong>' + esc(p.name) + '</strong></div>'
       + '  <div><small>รูปแบบการซื้อ</small><strong>' + esc(pay.name) + '</strong></div>'
       + '  <div><small>วันที่สร้างใบเสนอราคา</small><strong>' + shortDate(d.quoteDate) + '</strong></div>'

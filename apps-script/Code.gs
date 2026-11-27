@@ -74,6 +74,7 @@ function apiResponse_(p) {
     else if (action === 'delDeal') out = deleteDealV2(p.token, p.no);
     else if (action === 'purgeTestDeals') out = purgeTestDealsApi_(p.token);
     else if (action === 'fixDupDealNos') out = fixDupDealNosApi_(p.token);
+    else if (action === 'dedupeDeals') out = dedupeDealsApi_(p.token);
     else if (action === 'dealLogs') out = dealLogsApi_(p.token, p.no);
     else if (action === 'targetsV2') out = listTargetsApi_(p.token);
     else if (action === 'saveTarget') out = saveTargetApi_(p.token, { team: p.team, saleId: p.saleId, year: p.year, month: p.month, amount: p.amount });

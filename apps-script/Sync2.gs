@@ -185,9 +185,17 @@ function saveDailyApiCore_(token, p) {
   var sh = tab_(DAILY_TAB);
   var rows = tabRows_(sh);
   var ref = String(p.ref || '').trim().toUpperCase();
+  var myMail = String(s.email || '').toLowerCase();
   var hit = null;
-  if (ref) rows.forEach(function (r) { if (String(r.ref || '').toUpperCase() === ref) hit = r; });
-  if (!ref) ref = nextDailyRef_(p.date, sh);
+  /* แก้ได้เฉพาะบันทึกของตัวเอง (Admin แก้ได้ทุกใบ) — ref ของคนอื่นห้ามทับ */
+  if (ref) {
+    rows.forEach(function (r) {
+      if (String(r.ref || '').toUpperCase() !== ref) return;
+      var owner = String(r.by || '').toLowerCase();
+      if (owner === myMail || isAdminLevel_(s.level)) hit = r;
+    });
+  }
+  if (!hit) ref = nextDailyRef_(p.date, sh);   /* ไม่พบบันทึกของตัวเอง → ออกเลขใหม่จากเซิร์ฟเวอร์ */
 
   var nowIso = new Date().toISOString();
   var heads = tabHeaders_(sh);

@@ -87,6 +87,48 @@ function listDealsV2Api_(token) {
 }
 
 /**
+ * ล้างดีลซ้ำ (Admin เท่านั้น): ลูกค้า+มูลค่า+drRef เดียวกัน → เก็บใบเก่าสุด ลบทิ้งที่เหลือ (soft delete)
+ */
+function dedupeDealsApi_(token) {
+  var s = session_(token);
+  if (!s) throw new Error('กรุณาเข้าสู่ระบบใหม่');
+  if (!isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
+  var lock = LockService.getScriptLock();
+  var locked = false;
+  try { locked = lock.tryLock(30000); } catch (e) { locked = false; }
+  if (!locked) throw new Error('ระบบกำลังทำงานอื่นอยู่ กรุณาลองใหม่');
+  try {
+    var sh = dealSheet_();
+    var map = dealColMap_(sh);
+    var last = sh.getLastRow();
+    var removed = [];
+    if (last < 2) return { ok: true, removed: removed };
+    var rows = sh.getRange(2, 1, last - 1, sh.getLastColumn()).getValues();
+    var seen = {};
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      if (map.deleted && Number(r[map.deleted - 1]) === 1) continue;
+      var no = map.no ? String(r[map.no - 1] || '').trim() : '';
+      var cust = map.customer ? String(r[map.customer - 1] || '').trim() : '';
+      var amt = map.amount ? Number(r[map.amount - 1] || 0) : 0;
+      var dref = map.drRef ? String(r[map.drRef - 1] || '').trim().toUpperCase() : '';
+      if (!dref || !cust) continue;
+      var key = dref + '||' + cust + '||' + amt;
+      if (!seen[key]) { seen[key] = true; continue; }
+      if (map.deleted) sh.getRange(i + 2, map.deleted).setValue(1);
+      if (map.updatedAt) sh.getRange(i + 2, map.updatedAt).setValue(new Date().toISOString());
+      removed.push(no + ' | ' + cust + ' | ' + amt);
+    }
+    try {
+      appendTab_('Logs', { ts: new Date().toISOString(), action: 'deal.dedupe', ref: String(removed.length) + ' ดีล', detail: removed.join(' ; '), by: String(s.email).toLowerCase() });
+    } catch (e) {}
+    return { ok: true, removed: removed, count: removed.length };
+  } finally {
+    try { lock.releaseLock(); } catch (e2) {}
+  }
+}
+
+/**
  * ล้างข้อมูลดีลทดสอบ (Admin เท่านั้น) — soft delete ทุกแถวที่เข้าข่ายทดสอบ
  * เกณฑ์: ชื่อลูกค้า/ชื่องานมีคำว่า ทดสอบ/ทดลอง/QC · ชื่อลูกค้ารูปแบบ "ลูกค้า YYYY-NNNN" ·
  *        ชื่อลูกค้าเป็น "A" · เจ้าของเป็นบัญชีอีเมลที่มีคำว่า test
@@ -277,6 +319,25 @@ function saveDealV2_(token, payload) {
     if (existing && existing.ownerEmail && existing.ownerEmail !== String(s.email).toLowerCase() && !seesAllLevel_(s.level)) {
       no = '';
       row = 0;
+    }
+  }
+  if (!row) {
+    /* กันดีลซ้ำ: บันทึกเดียวกัน (drRef) + ลูกค้าเดียวกัน → คืนเลขดีลเดิมไม่สร้างใหม่ */
+    var wantedRef = String(p.drRef || '').trim().toUpperCase();
+    if (wantedRef) {
+      var dl = sh.getLastRow();
+      if (dl >= 2) {
+        var scan = sh.getRange(2, 1, dl - 1, sh.getLastColumn()).getValues();
+        for (var q = 0; q < scan.length; q++) {
+          var rr = scan[q];
+          if (map.deleted && Number(rr[map.deleted - 1]) === 1) continue;
+          var dref = map.drRef ? String(rr[map.drRef - 1] || '').trim().toUpperCase() : '';
+          var dcust = map.customer ? String(rr[map.customer - 1] || '').trim() : '';
+          if (dref && dref === wantedRef && dcust === customer) {
+            return { ok: true, no: String(rr[map.no - 1] || ''), dup: true };
+          }
+        }
+      }
     }
   }
   if (!row) no = no || nextDealNo_(year, sh);
