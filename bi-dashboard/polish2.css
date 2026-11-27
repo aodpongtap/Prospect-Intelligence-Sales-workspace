@@ -184,6 +184,16 @@ table.pbi thead th { color: #52504E; }
 .more-item:hover { background: #F2F4F7; color: #101828; }
 .more-item.active { background: #EFF8FF; color: #0B5CAB; font-weight: 700; }
 
+/* ---------------- โดนัท/เกจ: จัดกลางการ์ด ไม่เว้นที่ว่างด้านล่าง ---------------- */
+.card.center-b .card-b {
+  display: flex; align-items: center; justify-content: center;
+  padding: 4px 0 2px;
+}
+.card.center-b .donut-wrap { width: 100%; justify-content: center; gap: 16px; }
+.card.center-b .donut { width: 118px; height: 118px; }
+.card.center-b .donut-c b { font-size: 19px; }
+.card.center-b .legend { flex: 1 1 150px; gap: 9px; }
+
 /* ---------------- สถานะว่าง ---------------- */
 .empty {
   display: grid; place-items: center; gap: 6px; min-height: 110px;

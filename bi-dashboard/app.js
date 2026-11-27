@@ -84,7 +84,7 @@
   const ymd = d => (d instanceof Date && !isNaN(d)) ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') : '';
 
   /* ---------- cache: จำชุดข้อมูลล่าสุดไว้ใน IndexedDB ---------- */
-  const DB_NAME = 'sale-order-bi', STORE = 'dataset', SCHEMA_VER = 5;
+  const DB_NAME = 'sale-order-bi', STORE = 'dataset', SCHEMA_VER = 7;
   function idb() {
     return new Promise((res, rej) => {
       const r = indexedDB.open(DB_NAME, 1);
@@ -265,7 +265,8 @@
   /* การ์ดมาตรฐาน: span = จำนวนคอลัมน์ (1-12) */
   function card(span, title, body, o) {
     o = o || {};
-    return '<section class="card s' + span + (o.cls ? ' ' + o.cls : '') + '">' +
+    const center = typeof body === 'string' && (body.indexOf('donut-wrap') >= 0 || body.indexOf('class="gauge"') >= 0);
+    return '<section class="card s' + span + (o.cls ? ' ' + o.cls : '') + (center ? ' center-b' : '') + '">' +
       (title ? '<div class="card-h"><h3>' + esc(title) + '</h3>' +
         (o.hint ? '<span class="hint">' + esc(o.hint) + '</span>' : '') + '</div>' : '') +
       '<div class="card-b' + (o.pad ? ' pad' : '') + '">' + body + '</div></section>';
@@ -824,17 +825,6 @@
       (old21 ? '<div class="sum-risk-alert">⚠ ค้างเกิน 21 วัน ' + num(old21) + ' ใบ จากทั้งหมด ' + num(openAll.length) + ' ใบ</div>' : '') +
       rankList(BKL.map((k, i) => ({ label: k, value: bkc[i] })), num), { hint: 'นับจากวันเปิด SO ถึงวันนี้' });
     h += card(6, 'เทียบเดือนก่อน (Month over Month)', momTbl, { hint: 'เขียว = ดีขึ้น · แดง = แย่ลง' });
-
-    h += card(12, 'นิยาม & วิธีอ่าน',
-      '<ul class="note">' +
-      '<li><b>ขอบเขต</b> = เฉพาะกลุ่มสินค้าหยอดเหรียญ · เดือนที่เลือกจากตัวกรองด้านบน</li>' +
-      '<li><b>Revenue สุทธิ</b> = IF(เงินสดว่าง, ราคาตั้ง, ราคาเงินสด) − ส่วนลด ÷ 1.07</li>' +
-      '<li><b>ปิดจริง (Done)</b> = สถานะ 1.Done · <b>อัตราปิดงาน</b> = Done ÷ (Done + Pending)</li>' +
-      '<li><b>ยอด SO สะสม</b> = บวกเพิ่มวันละใบ ตั้งแต่ต้นเดือนถึงวันที่ผ่านมา (เส้นประ = เดือนก่อน วันเดียวกัน)</li>' +
-      '<li><b>ประมาณการสิ้นเดือน</b> = ยอดถึงวันนี้ ÷ วันที่ผ่านไป × วันในเดือน (run-rate)</li>' +
-      '<li><b>Backlog</b> = งาน Pending ทุกเดือนที่ยังไม่ปิด · “เกิน 21 วัน” ค้างนานกว่ากรอบ Aging</li>' +
-      '<li>คลิกกราฟ/แท่ง/แถวเพื่อกรองได้หลายค่า · ปุ่ม “ล้างทั้งหมด” เพื่อคืนค่า</li>' +
-      '</ul>');
     return h + '</div>';
   }
 
@@ -1939,6 +1929,22 @@
       byStatus[k] = o;
     });
     return { total: S.data.length, novRows: nov.length, novDistinctSO: dist.size, novRevenue: rev, novUnits: units, byMonth: byMonth, byStatus: byStatus };
+  };
+
+  /* ---------- row hook (ใช้ตรวจสูตรรายใบ) ---------- */
+  window.__row = function (so) {
+    if (!S.data) return { error: 'no data' };
+    const d = S.data.find(x => String(x.so).trim() === String(so).trim());
+    if (!d) return { error: 'not found', so: so };
+    const f = v => (v instanceof Date && !isNaN(v)) ? v.toISOString().slice(0, 10) : v;
+    const raw = (S.raw || []).find(x => String(x[1]).trim() === String(so).trim());
+    const dump = raw ? raw.map((v, i) => i + '=' + (v instanceof Date ? f(v) : String(v == null ? '' : v).slice(0, 32))) : [];
+    return {
+      so: d.so, team: d.team, status3: d.status3, admGroup: d.admGroup, jobStage: d.jobStage,
+      dateSO: f(d.dateSO), dateAdmin: f(d.adminDate), closeDate: f(d.closeDate), installDate: f(d.installDate),
+      slaAdmin: d.slaAdmin, slaClose: d.slaClose, revenue: d.revenue, units: d.units, mth: d.mth,
+      raw40_70: dump.slice(40, 71)
+    };
   };
 
   /* ---------- verification hook (ใช้เทียบกับค่าจริงใน Excel) ---------- */
