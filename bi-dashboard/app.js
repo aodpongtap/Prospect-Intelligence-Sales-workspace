@@ -1024,12 +1024,22 @@
     const curU = curMtd.reduce((a, d) => a + (d.units || 0), 0);
     const prevU = prevMtd.reduce((a, d) => a + (d.units || 0), 0);
     const curR = sum(curMtd, 'revenue'), prevR = sum(prevMtd, 'revenue');
-    const sumRows = [['SO', curMtd.length, prevMtd.length, num], ['Rev', curR, prevR, revFmt], ['Units', curU, prevU, num]];
-    const cmpTop = '<div class="cmp-box cmp-top"><div class="cmp-t">สรุป · ' + esc(mthLabel(curKeyM)) + ' vs ' + esc(mthLabel(c1)) + '</div>' +
-      '<div class="tbl"><table class="pbi cmp"><thead><tr><th></th><th class="num">' + esc(mthLabel(curKeyM)) + '</th>' +
-      '<th class="num">' + esc(mthLabel(c1)) + '</th><th class="num">Diff</th></tr></thead><tbody>' +
-      sumRows.map(r => '<tr><td><b>' + r[0] + '</b></td><td class="num">' + r[3](r[1]) + '</td><td class="num">' + r[3](r[2]) + '</td>' + dCell(r[1], r[2], r[3]) + '</tr>').join('') +
-      '</tbody></table></div></div>';
+    const cmpTile = (label, a, b, fmt) => {
+      const dv = a - b;
+      const cls = Math.abs(dv) < 0.005 ? 'flat' : dv > 0 ? 'up' : 'down';
+      return '<div class="cmp-tile">' +
+        '<span class="cmp-l">' + esc(label) + '</span>' +
+        '<b class="cmp-v">' + fmt(a) + '</b>' +
+        '<span class="cmp-p">vs ' + esc(mthLabel(c1)) + ' · ' + fmt(b) + '</span>' +
+        '<span class="cmp-d ' + cls + '">' +
+          (Math.abs(dv) < 0.005 ? 'เท่าเดิม' : (dv > 0 ? '▲ +' : '▼ −') + fmt(Math.abs(dv))) +
+        '</span></div>';
+    };
+    const cmpTop = '<div class="cmp-tiles">' +
+      cmpTile('SO (ใบ)', curMtd.length, prevMtd.length, num) +
+      cmpTile('Revenue สุทธิ', curR, prevR, revFmt) +
+      cmpTile('Unit (เครื่อง)', curU, prevU, num) +
+      '</div>';
     const cmpBlock = '<div class="cmp-wrap">' + cmpTop +
       miniCmp('SO · ตามทีม', TORDER, tcB, tpB, 'so', num) +
       miniCmp('Units · ตามสินค้า', GORDER, gcB, gpB, 'units', num) +

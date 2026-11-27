@@ -326,26 +326,54 @@ body.tab-edit-mode .pbi-tab.active { box-shadow: inset 0 0 0 1.5px #118DFF; }
   gap: 12px;
   align-items: start;
 }
-.cmp-wrap .cmp-top { grid-column: 1 / -1; max-width: 460px; }
+.cmp-wrap .cmp-tiles { grid-column: 1 / -1; }
+.cmp-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.cmp-tile {
+  display: flex; flex-direction: column; gap: 1px;
+  border: 1px solid #E7ECF3; border-radius: 12px;
+  background: linear-gradient(180deg, #FBFDFF, #FFFFFF);
+  padding: 10px 13px 11px; min-width: 0;
+}
+.cmp-l { font-size: 10.8px; font-weight: 700; color: #667085; }
+.cmp-v { font-size: 19px; font-weight: 800; color: #0F172A; letter-spacing: -.4px; font-variant-numeric: tabular-nums; }
+.cmp-p { font-size: 10.6px; color: #98A2B3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmp-d {
+  margin-top: 5px; align-self: flex-start;
+  font-size: 10.8px; font-weight: 800; padding: 2px 9px; border-radius: 99px; white-space: nowrap;
+}
+.cmp-d.up { color: #047857; background: #ECFDF5; }
+.cmp-d.down { color: #BE123C; background: #FFF1F3; }
+.cmp-d.flat { color: #64748B; background: #F2F4F7; }
+
 .cmp-box {
   border: 1px solid #E7ECF3; border-radius: 10px; background: #fff;
-  padding: 8px 10px 10px; min-width: 0;
+  padding: 9px 10px 10px; min-width: 0; display: flex; flex-direction: column;
 }
 .cmp-t {
   font-size: 11.6px; font-weight: 800; color: #0F172A;
-  margin-bottom: 6px; letter-spacing: -.1px;
+  margin-bottom: 7px; letter-spacing: -.1px;
 }
 .cmp-box .tbl { max-height: 260px; overflow: auto; }
-table.pbi.cmp { font-size: 11.5px; }
-table.pbi.cmp th { font-size: 10.8px; font-weight: 700; color: #667085; white-space: nowrap; }
+table.pbi.cmp { font-size: 11.5px; table-layout: fixed; width: 100%; }
+table.pbi.cmp th { font-size: 10.6px; font-weight: 700; color: #667085; white-space: nowrap; }
+table.pbi.cmp th:first-child, table.pbi.cmp td:first-child { text-align: left; width: auto; }
+table.pbi.cmp th:nth-child(n+2), table.pbi.cmp td:nth-child(n+2) { width: 92px; text-align: right; }
 table.pbi.cmp td { padding: 4px 8px; }
+table.pbi.cmp tbody tr:nth-child(even) td { background: #FAFBFD; }
 table.pbi.cmp td.c-done { color: #047857; font-weight: 800; }
 table.pbi.cmp td.c-canc { color: #BE123C; font-weight: 800; }
-table.pbi.cmp tr.grand td { background: #FFF9DB; font-weight: 800; }
+table.pbi.cmp tr.grand td { background: #FFF9DB; font-weight: 800; border-top: 1px solid #F2E9A8; }
 @media (max-width: 900px) {
   .cmp-wrap { grid-template-columns: minmax(0, 1fr); }
-  .cmp-wrap .cmp-top { max-width: none; }
   .cmp-box .tbl { max-height: none; }
+}
+@media (max-width: 560px) {
+  .cmp-tiles { grid-template-columns: minmax(0, 1fr); }
+  table.pbi.cmp th:nth-child(n+2), table.pbi.cmp td:nth-child(n+2) { width: 74px; }
 }
 
 
