@@ -151,3 +151,25 @@
     background-attachment: local, scroll;
   }
 }
+
+/* ── 11) ทุกความกว้างจอ: ไม่ให้ชื่อทีม/พื้นที่ในแท่งซ้อนถูกตัดเป็น "…" ────
+   (เดิม .stk-lab กว้าง 64px + ellipsis ทำให้ "7. S3-Horeca & Project" หาย) */
+.stk-row { grid-template-columns: minmax(96px, 30%) minmax(0, 1fr) auto; }
+.stk-lab {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.25;
+  word-break: break-word;
+}
+.lg span {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.3;
+}
+.card-h .hint {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
