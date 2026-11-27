@@ -280,7 +280,8 @@
   /* การ์ดมาตรฐาน: span = จำนวนคอลัมน์ (1-12) */
   function card(span, title, body, o) {
     o = o || {};
-    const center = typeof body === 'string' && (body.indexOf('donut-wrap') >= 0 || body.indexOf('class="gauge"') >= 0 || body.indexOf('sum-comp') >= 0);
+    const center = typeof body === 'string' && (body.indexOf('donut-wrap') >= 0 || body.indexOf('class="gauge"') >= 0 ||
+      body.indexOf('sum-comp') >= 0 || body.indexOf('<div class="hbars') === 0 || body.indexOf('<div class="stk"') === 0);
     return '<section class="card s' + span + (o.cls ? ' ' + o.cls : '') + (center ? ' center-b' : '') + '">' +
       (title ? '<div class="card-h"><h3>' + esc(title) + '</h3>' +
         (o.hint ? '<span class="hint">' + esc(o.hint) + '</span>' : '') + '</div>' : '') +
@@ -334,16 +335,18 @@
     const max = Math.max.apply(null, data.map(d => d.value)) || 1;
     const chars = Math.max.apply(null, data.map(d => String(d.label).length));
     const lw = o.labelW || Math.min(230, Math.max(96, Math.round(chars * 7.2) + 8));
-    let h = '<div class="hbars" style="--lw:' + lw + 'px">';
+    const totPct = o.pct === true ? (data.reduce((a, x) => a + x.value, 0) || 1)
+      : (typeof o.pct === 'number' && o.pct > 0 ? o.pct : 0);
+    let h = '<div class="hbars' + (totPct ? ' pct' : '') + '" style="--lw:' + lw + 'px">';
     data.forEach((d, i) => {
       const p = Math.max(1.2, Math.min(100, d.value / max * 100));
       const col = d.color || (o.palette ? PALETTE[i % PALETTE.length] : 'linear-gradient(90deg,#7EA6FF,#118DFF)');
       const sel = xfHas(o.field, d.label);
       h += '<div class="hbar' + (sel ? ' sel' : '') + '"' + xfAttr(o.field, d.label) +
-        ' title="' + esc(d.label) + ' · ' + f(d.value) + '">' +
+        ' title="' + esc(d.label) + ' · ' + f(d.value) + (totPct ? ' (' + (d.value / totPct * 100).toFixed(1) + '%)' : '') + '">' +
         '<span class="hb-lab">' + esc(d.label) + '</span>' +
         '<span class="hb-track"><i class="hb-fill" style="width:' + p.toFixed(1) + '%;background:' + col + '"></i></span>' +
-        '<span class="hb-val">' + f(d.value) + '</span></div>';
+        '<span class="hb-val">' + f(d.value) + (totPct ? '<em>' + (d.value / totPct * 100).toFixed(0) + '%</em>' : '') + '</span></div>';
     });
     return h + '</div>';
   }
@@ -999,7 +1002,7 @@
     h += '<div class="g">';
     h += statusKpi(rs);
     h += card(12, 'สถานะใบงาน3 × Grp ทีมขาย', statusTable(rs), { hint: 'SO / %SO' });
-    h += card(6, 'สถานะ Admin', hbars(admData, num, { field: 'admGroup' }), { hint: 'จำนวนงาน' });
+    h += card(6, 'สถานะ Admin', hbars(admData, num, { field: 'admGroup', pct: true }), { hint: 'จำนวนงาน · % ของทั้งหมด' });
     h += card(6, 'สถานะใบงาน3 · สัดส่วน', donut(st3Data, { field: 'status3' }));
     h += card(12, 'นิยาม & วิธีอ่านหน้านี้',
       '<ul class="note">' +
@@ -1060,7 +1063,7 @@
     h += kpiCard(3, 'งานคงค้าง', num(rs.length - nC), C.red, 'ยังไม่ปิดงาน');
     h += card(12, 'SLA ปิดงาน เฉลี่ยรายวัน (วัน)', colsChart(daily, { field: 'day' }), { hint: 'เฉลี่ยต่อวัน' });
     h += card(6, 'SLA เฉลี่ยตามทีม (วัน)', hbars(teamData, v => v.toFixed(1), { field: 'team' }));
-    h += card(6, 'อายุงานคงค้าง (Aging) · งานที่ยังไม่ปิด', hbars(agingData, num), { hint: 'นับจากวันที่เปิด SO ถึงวันนี้' });
+    h += card(6, 'อายุงานคงค้าง (Aging) · งานที่ยังไม่ปิด', hbars(agingData, num, { pct: true }), { hint: 'นับจากวันที่เปิด SO ถึงวันนี้' });
     h += card(12, 'นิยามที่ใช้คำนวณ',
       '<ul class="note"><li>SLA Admin = MAX(Date Admin − Date SO, 0)</li>' +
       '<li>SLA ปิดงาน = วันที่ปิดงาน − Date SO (งาน 1.Done / 3.Cancel)</li>' +
@@ -1262,11 +1265,11 @@
         { name: 'ผ่อน', values: instArr, color: C.navy },
         { name: 'เงินสด', values: cashArr, color: C.cyan }
       ]) + donut(byPkg, { field: 'pkg' }));
-    h += card(6, 'Top 5 (Team)', hbars(topTeam, baht, { field: 'team' }));
+    h += card(6, 'Top 5 (Team)', hbars(topTeam, baht, { field: 'team', pct: sum(rs, 'revenue') }), { hint: 'ราคาสุทธิ · % ของทั้งหมด' });
     h += card(7, 'ลูกค้า (Top 15 ตามยอดขาย)', cusTbl);
     h += card(5, 'หน่วยตามทีม', hbars([...new Map(rsT.map(d => [d.team || '(ไม่ระบุ)', 0])).keys()].map(k => ({
       label: k, value: rsT.filter(d => (d.team || '(ไม่ระบุ)') === k).reduce((a, d) => a + (d.units || 0), 0)
-    })).sort((a, b) => b.value - a.value).slice(0, 10), num, { field: 'team' }));
+    })).sort((a, b) => b.value - a.value).slice(0, 10), num, { field: 'team', pct: sum(rs, 'units') }), { hint: 'จำนวนเครื่อง · % ของทั้งหมด' });
     return h + '</div>';
   }
 
@@ -1460,7 +1463,7 @@
       '<th class="num">จอง</th><th class="num">1.Done</th><th class="num">2.Pending</th><th class="num">3.Cancel</th>' +
       '<th class="num">รวม backlog</th><th class="num">ยกมาจากก่อน</th><th class="num">เดือนก่อนยกมา</th>' +
       '<th class="num">Done เดือนก่อน·ติดเดือนนี้</th><th class="num">Backlog &lt;1Jan26</th>' +
-      '<th class="num">Total</th><th class="num">Unit</th><th class="num">คาดติดได้เดือนนี้</th>' +
+      '<th class="num">Total</th><th class="num">Unit</th><th class="num">คาดติดได้เดือนนี้</th><th class="num">%ปิดได้</th>' +
       '</tr></thead><tbody>';
     plan.forEach(r => {
       planTbl += '<tr><td>' + esc(r.g) + '</td>' +
@@ -1475,11 +1478,13 @@
         '<td class="num">' + num(r.backlogOld) + '</td>' +
         '<td class="num total">' + num(r.total) + '</td>' +
         '<td class="num">' + num(r.unit) + '</td>' +
-        '<td class="num">' + num(r.expInst) + '</td></tr>';
+        '<td class="num">' + num(r.expInst) + '</td>' +
+        '<td class="num c-done">' + (r.total ? (r.done / r.total * 100).toFixed(0) : 0) + '%</td></tr>';
     });
     planTbl += '<tr class="grand"><td>Total</td>' +
       ['booking', 'done', 'pend', 'canc', 'booking', 'carryBefore', 'carryPrev', 'prevDoneInst', 'backlogOld', 'total', 'unit', 'expInst']
-        .map(k => '<td class="num">' + num(sumBy(k)) + '</td>').join('') + '</tr>';
+        .map(k => '<td class="num">' + num(sumBy(k)) + '</td>').join('') +
+      '<td class="num">' + (sumBy('total') ? (sumBy('done') / sumBy('total') * 100).toFixed(0) : 0) + '%</td></tr>';
     planTbl += '</tbody></table></div>';
 
     /* ===== ประมาณการ “ปิดจริง” (Done) ณ สิ้นเดือน ===== */
@@ -1622,7 +1627,7 @@
         value: b.value,
         xv: sp.dim === 'monthLabel' ? b.label.slice(3) + b.label.slice(0, 2) : b.label
       })), { field: sp.dim })
-      : hbars(bars.slice(0, 12), fmt, { field: sp.dim });
+      : hbars(bars.slice(0, 12), fmt, { field: sp.dim, pct: sp.metric === 'revenue' ? rev : sp.metric === 'units' ? units : data.length });
     const dTop = bars.slice(0, 7);
     const dRest = bars.slice(7).reduce((a, b) => a + b.value, 0);
     const dData = dRest > 0 ? dTop.concat([{ label: 'อื่น ๆ (' + (bars.length - 7) + ')', value: dRest }]) : dTop;
@@ -1677,7 +1682,7 @@
     h += card(12, dimTh + ' × ' + dim2Th, pv, { hint: metricTxt });
     h += card(6, 'สถานะงาน × ' + dimTh, stRows.length ? stackedBars(stRows) + statusLegend() : empty(),
       { hint: 'จำนวน SO' });
-    h += card(6, dim2Th + ' · Top 10', bars2.length ? hbars(bars2, fmt, { field: sp.dim2 }) : empty(), { hint: metricTxt });
+    h += card(6, dim2Th + ' · Top 10', bars2.length ? hbars(bars2, fmt, { field: sp.dim2, pct: sp.metric === 'revenue' ? rev : sp.metric === 'units' ? units : data.length }) : empty(), { hint: metricTxt + ' · % ของทั้งหมด' });
     h += card(12, 'นิยาม & วิธีใช้',
       '<ul class="note">' +
       '<li><b>ตัววัดหลัก</b> = ' + metricTxt + ' · <b>มิติ</b> = ' + dimTh + ' × ' + dim2Th + '</li>' +
