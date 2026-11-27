@@ -92,7 +92,7 @@
   const ymd = d => (d instanceof Date && !isNaN(d)) ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') : '';
 
   /* ---------- cache: จำชุดข้อมูลล่าสุดไว้ใน IndexedDB ---------- */
-  const DB_NAME = 'sale-order-bi', STORE = 'dataset', SCHEMA_VER = 8;
+  const DB_NAME = 'sale-order-bi', STORE = 'dataset', SCHEMA_VER = 9;
   function idb() {
     return new Promise((res, rej) => {
       const r = indexedDB.open(DB_NAME, 1);
@@ -184,8 +184,8 @@
     viewToast._t = setTimeout(() => t.classList.add('hidden'), 3200);
   }
 
-  /* ---------- ขอบเขตข้อมูล: กลุ่ม "หยอดเหรียญ" ทั้งหมด (รวมเครื่องชงกาแฟ) ---------- */
-  const KEEP_GROUP_RE = /หยอดเหรียญ/;
+  /* ---------- ขอบเขตข้อมูล: กลุ่ม "หยอดเหรียญ" ทั้งหมด + ตู้กดสินค้า Vending ---------- */
+  const KEEP_GROUP_RE = /หยอดเหรียญ|vending/i;
   function isKeepGroup(g) {
     return KEEP_GROUP_RE.test(String(g == null ? '' : g));
   }
@@ -632,7 +632,7 @@
   function pgHead(title, rs, extra) {
     return '<div class="pg-head"><h1>' + esc(title) + '</h1>' +
       '<span class="sub">' + esc(S.period ? S.period.replace('-', ' · ') : 'ทุกเดือน') + ' · ' + num(rs ? rs.length : 0) + ' รายการ</span>' +
-      '<span class="field-scope">เฉพาะกลุ่มหยอดเหรียญ</span>' + xfChips() +
+      '<span class="field-scope">กลุ่มหยอดเหรียญ + Vending</span>' + xfChips() +
       '<span class="grow"></span>' + (extra || '') + '</div>';
   }
 
@@ -813,13 +813,40 @@
       { k: 'ยกเลิก (3.Cancel)', v: nC, c: '#E11D48' }
     ];
     if (nBlank > 0) compRows.push({ k: 'ยังไม่ระบุสถานะ', v: nBlank, c: '#94A3B8' });
-    const compHtml = '<div class="sum-comp"><div class="sum-comp-bar">' +
-      compRows.filter(x => x.v).map(x => '<i style="width:' + (x.v / ctot * 100).toFixed(1) +
-        '%;background:' + x.c + '" title="' + esc(x.k) + ' ' + num(x.v) + ' ใบ"></i>').join('') +
-      '</div><div class="sum-comp-rows">' +
-      compRows.map(x => '<div class="sum-comp-row"><i style="background:' + x.c + '"></i><span>' + esc(x.k) +
-        '</span><b>' + num(x.v) + '</b><em>' + (x.v / ctot * 100).toFixed(0) + '%</em></div>').join('') +
-      '</div></div>';
+
+    /* รายได้แยกตามสถานะ (เฉพาะ 3 สถานะหลัก ตามสูตร Rev.Total) */
+    const revBy = { '1.Done': 0, '2.Pending': 0, '3.Cancel': 0 };
+    rs.forEach(d => { if (revBy[d.status3] != null) revBy[d.status3] += (d.revenue || 0); });
+    const revRows = [
+      { k: 'ปิดจริง', v: revBy['1.Done'], c: '#059669' },
+      { k: 'คงค้าง', v: revBy['2.Pending'], c: '#F59E0B' },
+      { k: 'ยกเลิก', v: revBy['3.Cancel'], c: '#E11D48' }
+    ];
+    const revTot = (revRows[0].v + revRows[1].v + revRows[2].v) || 1;
+    const compHtml = '<div class="sum-comp">' +
+      '<div class="sum-comp-grp">' +
+        '<div class="sum-comp-h">สัดส่วนจำนวน (SO)</div>' +
+        '<div class="sum-comp-bar">' +
+          compRows.filter(x => x.v).map(x => '<i style="width:' + (x.v / ctot * 100).toFixed(1) +
+            '%;background:' + x.c + '" title="' + esc(x.k) + ' ' + num(x.v) + ' ใบ"></i>').join('') +
+        '</div>' +
+        '<div class="sum-comp-rows">' +
+          compRows.map(x => '<div class="sum-comp-row"><i style="background:' + x.c + '"></i><span>' + esc(x.k) +
+            '</span><b>' + num(x.v) + '</b><em>' + (x.v / ctot * 100).toFixed(0) + '%</em></div>').join('') +
+        '</div>' +
+      '</div>' +
+      '<div class="sum-comp-grp">' +
+        '<div class="sum-comp-h">สัดส่วนรายได้ (Revenue) · รวม ' + baht(revTot) + '</div>' +
+        '<div class="sum-comp-bar" style="height:16px">' +
+          revRows.filter(x => x.v > 0).map(x => '<i style="width:' + (x.v / revTot * 100).toFixed(1) +
+            '%;background:' + x.c + '" title="' + esc(x.k) + ' ' + baht(x.v) + '"></i>').join('') +
+        '</div>' +
+        '<div class="sum-comp-legend">' +
+          revRows.map(x => '<span><i style="background:' + x.c + '"></i>' + esc(x.k) + ' <b>' + baht(x.v) +
+            '</b> · ' + (x.v / revTot * 100).toFixed(0) + '%</span>').join('') +
+        '</div>' +
+      '</div>' +
+      '</div>';
 
     /* ---- อายุงานค้าง ---- */
     const BKL = ['0–3 วัน', '4–7 วัน', '8–14 วัน', '15–21 วัน', 'เกิน 21 วัน'];
@@ -2187,7 +2214,7 @@
     return new Promise(res => {
       if (window.BI_SNAPSHOT) return res(window.BI_SNAPSHOT);
       const s = document.createElement('script');
-      s.src = 'data-snapshot.js?v=1129e';
+      s.src = 'data-snapshot.js?v=1129g';
       s.async = true;
       s.onload = () => res(window.BI_SNAPSHOT || null);
       s.onerror = () => res(null);

@@ -133,7 +133,7 @@ const win = loadSandbox();
 const data = win.BISchema.build(raw);
 console.log('computed rows:', data.length);
 
-const keep = data.filter(d => /หยอดเหรียญ/.test(String(d.group == null ? '' : d.group)));
+const keep = data.filter(d => /หยอดเหรียญ|vending/i.test(String(d.group == null ? '' : d.group)));
 console.log('coin-op rows:', keep.length);
 
 const ser = d => {
@@ -143,7 +143,7 @@ const ser = d => {
 };
 const stamp = (path.basename(XLSX).match(/(\d{14})/) || [])[1] || '';
 const payload = {
-  ver: 8,
+  ver: 9,
   meta: { file: path.basename(XLSX), rows: data.length, at: new Date().toISOString(), stamp: stamp },
   data: keep.map(ser)
 };

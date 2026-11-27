@@ -206,6 +206,38 @@ table.pbi thead th { color: #52504E; }
 .card.center-b .donut-c b { font-size: 19px; }
 .card.center-b .legend { flex: 1 1 150px; gap: 9px; }
 
+/* ---------------- มือถือ: กันเนื้อหาถูกบัง/ถูกตัด ---------------- */
+.pbi-shell { height: 100vh; }
+@supports (height: 100dvh) {
+  .pbi-shell { height: 100dvh; }
+}
+
+/* บังคับจำนวนคอลัมน์ของกริดให้ถูกต้อง (กันกฎอื่นมาทับ) */
+@media (max-width: 560px) {
+  .g { grid-template-columns: minmax(0, 1fr) !important; }
+  .g > .card, .g > .kpirow, .g > .sum-hero, .g > .sum-ins {
+    grid-column: 1 / -1 !important;
+  }
+  .kpirow { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (min-width: 561px) and (max-width: 1024px) {
+  .g { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+  .g > .s1, .g > .s2, .g > .s3, .g > .s4 { grid-column: span 3 !important; }
+  .g > .s5, .g > .s6, .g > .s7, .g > .s8,
+  .g > .s9, .g > .s10, .g > .s11, .g > .s12 { grid-column: span 6 !important; }
+  .g > .kpirow, .g > .sum-hero, .g > .sum-ins { grid-column: span 6 !important; }
+}
+
+@media (max-width: 820px) {
+  .pbi-pagetabs {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -8px 14px -10px rgba(16, 24, 40, .35);
+    z-index: 20; position: relative;
+  }
+  .pbi-stage { padding-bottom: 10px; }
+  .g { padding-bottom: 26px; }
+}
+
 /* ---------------- โหมดดูอย่างเดียว (มือถือ / ผู้บริหาร) ---------------- */
 body.view-only #btnImport,
 body.view-only #btnExport,
