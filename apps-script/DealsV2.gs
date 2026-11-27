@@ -86,6 +86,49 @@ function listDealsV2Api_(token) {
   return { ok: true, deals: all, count: all.length, level: s.level, deletedNos: deletedDealNos_(s) };
 }
 
+/**
+ * ล้างข้อมูลดีลทดสอบ (Admin เท่านั้น) — soft delete ทุกแถวที่เข้าข่ายทดสอบ
+ * เกณฑ์: ชื่อลูกค้า/ชื่องานมีคำว่า ทดสอบ/ทดลอง/QC · ชื่อลูกค้ารูปแบบ "ลูกค้า YYYY-NNNN" ·
+ *        ชื่อลูกค้าเป็น "A" · เจ้าของเป็นบัญชีอีเมลที่มีคำว่า test
+ */
+function purgeTestDealsApi_(token) {
+  var s = session_(token);
+  if (!s) throw new Error('กรุณาเข้าสู่ระบบใหม่');
+  if (!isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
+  var sh = dealSheet_();
+  var map = dealColMap_(sh);
+  var last = sh.getLastRow();
+  var hitRows = [], out = [];
+  if (last < 2) return { ok: true, deleted: out, count: 0 };
+  var vals = sh.getRange(2, 1, last - 1, sh.getLastColumn()).getValues();
+  var RE_TEST = /ทดสอบ|ทดลอง|^QC/i;
+  var RE_PLACEHOLDER = /^ลูกค้า\s*\d{4}-\d+/i;
+  for (var i = 0; i < vals.length; i++) {
+    var r = vals[i];
+    if (map.deleted && Number(r[map.deleted - 1]) === 1) continue;
+    var no = map.no ? String(r[map.no - 1] || '').trim() : '';
+    var cust = map.customer ? String(r[map.customer - 1] || '').trim() : '';
+    var job = map.job ? String(r[map.job - 1] || '').trim() : '';
+    var own = map.ownerEmail ? String(r[map.ownerEmail - 1] || '').trim().toLowerCase() : '';
+    var hit = RE_TEST.test(cust) || RE_TEST.test(job) || RE_PLACEHOLDER.test(cust) ||
+      /^A$/i.test(cust) || /test/i.test(own);
+    if (!hit) continue;
+    hitRows.push(i + 2);
+    out.push(String(no) + ' | ' + cust);
+  }
+  hitRows.forEach(function (row) {
+    if (map.deleted) sh.getRange(row, map.deleted).setValue(1);
+    if (map.updatedAt) sh.getRange(row, map.updatedAt).setValue(new Date().toISOString());
+  });
+  try {
+    appendTab_('Logs', {
+      ts: new Date().toISOString(), action: 'deal.purgeTest',
+      ref: String(out.length) + ' ดีล', detail: out.join(' ; '), by: String(s.email).toLowerCase()
+    });
+  } catch (e) {}
+  return { ok: true, deleted: out, count: out.length };
+}
+
 /** รายการเลขดีลที่ถูกลบแล้ว (ให้ client ลบสำเนาในเครื่องทิ้ง ไม่ให้ดันกลับขึ้นมาฟื้นคืน) */
 function deletedDealNos_(s) {
   var out = [];
