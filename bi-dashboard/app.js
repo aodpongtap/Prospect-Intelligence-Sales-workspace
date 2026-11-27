@@ -20,7 +20,7 @@
 
   /* หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) — เพิ่ม Summary เป็นหน้าแรก */
   const PBI_PAGES = [
-    'Summary',
+    'Summary', 'Monthly Monitor',
     'Daily Admin', 'End of Mth', '2.SO Order Status', '1.Unit / Revenue', 'SML', 'P3.Consult', 'Pack สด/ผ่อน',
     '2.Pending', '2.1.Pending-Detail', 'Map', 'Performance/TAT', '3.Cancel',
     '3.1.Cancel-Detail', 'P1.Sale/Admin', 'P2.Checker', 'P4.Sale Scape',
@@ -38,6 +38,7 @@
   const EXTRA_TITLE_OF = p => EXTRA_LABEL[p] || p;
   const IMPLEMENTED = {
     'Summary': 'summary',
+    'Monthly Monitor': 'monitor',
     'Daily Admin': 'overview', 'Status (New)': 'status',
     'Performance/TAT': 'tat', 'All Job/Close': 'data'
   };
@@ -1742,6 +1743,107 @@
       card(4, 'สรุป SLA · ทีมที่เลยกำหนด', lateHtml, { hint: '🔸 ตัวอย่าง' });
   }
 
+  /* ══════════════════════════════════════════════════════════════════════
+     Monthly Monitor — หน้าใหม่ (ตัวอย่าง UX/UI) *** ข้อมูลจำลอง ***
+     โฟกัส “ผมต้องตามใคร เรื่องอะไร ภายในเมื่อไร” ไม่ใช่รายงานยอดขาย
+     ══════════════════════════════════════════════════════════════════════ */
+  function pageMonitor() {
+    const CASES = [
+      { so: 'SO261102110', cus: 'ดริงค์โค จำกัด', team: 'S2-CRD', owner: 'คุณสมชาย', step: 'Admin ตรวจสอบ', sla: '0 วัน', late: 5, lvl: 'r', dep: 'จ่ายแล้ว', depOk: 1, ord: 'ยังไม่สั่ง', val: 412000 },
+      { so: 'SO261101884', cus: 'บริษัท สยามฟู้ดส์ จำกัด', team: 'S1', owner: 'คุณวารี', step: 'ตรวจสอบพื้นที่', sla: '2 วัน', late: 9, lvl: 'r', dep: 'ค้าง ฿180,000', depOk: 0, ord: 'ยังไม่สั่ง', val: 980000 },
+      { so: 'SO261102401', cus: 'ร้านกาแฟ บ้านสวน', team: 'S2-CRD', owner: 'คุณสมชาย', step: 'ติดตั้งงาน', sla: '5 วัน', late: 8, lvl: 'r', dep: 'จ่ายแล้ว', depOk: 1, ord: 'ของเข้าแล้ว', val: 265000 },
+      { so: 'SO261102355', cus: 'โรงงาน ไทยพลาส จำกัด', team: 'S3-BU', owner: 'คุณอนันต์', step: 'ตรวจสอบเครดิต', sla: '0.5 วัน', late: 1, lvl: 'a', dep: 'จ่ายแล้ว', depOk: 1, ord: 'รออนุมัติ', val: 1240000 },
+      { so: 'SO261101902', cus: 'หจก. รับสร้างบ้าน', team: 'BU/Dealer', owner: 'คุณพิชัย', step: 'มัดจำ / ชำระ', sla: '30 วัน', late: 2, lvl: 'a', dep: 'ค้าง ฿96,000', depOk: 0, ord: 'ยังไม่สั่ง', val: 540000 },
+      { so: 'SO261102088', cus: 'ฟิตเนส วันฟิต', team: 'S1', owner: 'คุณวารี', step: 'ประสานงานเข้าพื้นที่', sla: '5 วัน', late: 3, lvl: 'a', dep: 'จ่ายแล้ว', depOk: 1, ord: 'ยังไม่สั่ง', val: 318000 },
+      { so: 'SO261102512', cus: 'คลินิก ทันตกรรมใส', team: 'Online/E-Com', owner: 'คุณนัท', step: 'ส่งมอบ / สัญญา', sla: '15 วัน', late: 0, lvl: 'g', dep: 'จ่ายแล้ว', depOk: 1, ord: 'ของเข้าแล้ว', val: 152000 },
+      { so: 'SO261102634', cus: 'อพาร์ทเมนท์ สุขใจ', team: 'S3-OEM', owner: 'คุณก้อย', step: 'แจ้งงานทีมช่าง', sla: '2 วัน', late: -1, lvl: 'b', dep: 'จ่ายแล้ว', depOk: 1, ord: 'ยังไม่ถึงขั้น', val: 289000 }
+    ];
+    const COL = { r: '#E11D48', a: '#F59E0B', g: '#059669', b: '#0EA5E9' };
+    const PILL = {
+      r: 'background:#FFF1F3;color:#BE123C', a: 'background:#FFF8EB;color:#B45309',
+      g: 'background:#ECFDF5;color:#047857', b: 'background:#F0F9FF;color:#0369A1'
+    };
+    const pill = c => 'display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:99px;font-size:10.8px;font-weight:800;white-space:nowrap;' + PILL[c];
+    const lateTxt = x => x.late > 0 ? 'เลยกำหนด ' + x.late + ' วัน' : (x.late === 0 ? 'ทันกำหนด' : 'รอทีมตอบ');
+    const ord = { r: 0, a: 1, g: 2, b: 3 };
+    const sorted = CASES.slice().sort((x, y) => ord[x.lvl] - ord[y.lvl] || y.late - x.late);
+    const wrong = CASES.filter(x => x.late > 0).length;
+    const value = CASES.reduce((a, x) => a + x.val, 0);
+
+    let list = '<div style="display:flex;flex-direction:column;gap:9px">';
+    sorted.forEach(x => {
+      list += '<div class="mon-fu" style="border:1px solid #E4E9F0;border-left:4px solid ' + COL[x.lvl] +
+        ';border-radius:12px;padding:11px 13px;background:#fff">' +
+        '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">' +
+          '<span style="font-weight:800;font-size:13px;letter-spacing:-.2px">' + esc(x.so + ' · ' + x.cus) + '</span>' +
+          '<span style="' + pill(x.lvl) + '">' + lateTxt(x) + '</span>' +
+          '<span style="font-size:11.5px;color:#475569">' + esc(x.team + ' · ' + x.owner) + '</span>' +
+          '<span style="margin-left:auto;display:flex;gap:6px">' +
+            (x.lvl === 'r' ? '<button class="btn" style="height:26px;padding:0 10px;border-radius:8px;border:1px solid #4F46E5;background:#4F46E5;color:#fff;font:inherit;font-size:11px;font-weight:700;cursor:pointer">โทรตาม</button>' : '') +
+            '<button class="btn mon-ack" style="height:26px;padding:0 10px;border-radius:8px;border:1px solid #E4E9F0;background:#fff;color:#475569;font:inherit;font-size:11px;font-weight:700;cursor:pointer">ตามแล้ว</button>' +
+          '</span>' +
+        '</div>' +
+        '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:11.8px;color:#475569">' +
+          '<span>ค้างขั้น <b style="color:#0F172A">' + esc(x.step) + '</b> (SLA ' + esc(x.sla) + ')</span>' +
+          '<span>มัดจำ <b style="color:' + (x.depOk ? '#047857' : '#B45309') + '">' + esc(x.dep) + '</b></span>' +
+          '<span>สั่งของ <b style="color:#0F172A">' + esc(x.ord) + '</b></span>' +
+          '<span>มูลค่า <b style="color:#0F172A">' + baht(x.val) + '</b></span>' +
+        '</div></div>';
+    });
+    list += '</div>';
+
+    const sumRows = [
+      ['ต้องตาม 8 งาน มูลค่า ' + baht(value) + ' = 32% ของยอดคาดปิดสิ้นเดือน'],
+      ['งานเลยกำหนด ' + wrong + ' งาน — อยู่กับ <b>S2-CRD</b> ทั้งหมด → ตามหัวหน้าทีมคนเดียวจบ'],
+      ['มัดจำค้าง <b>133 ใบ</b> ทำให้ <b>98 ใบ</b> สั่งของไม่ได้ (ค้างเงิน <b>฿3.9 ลบ.</b>)'],
+      ['ปิด 5 งานแรกทันสัปดาห์นี้ → คาดปิด <b>468 ใบ</b> (เป้า 450) = <b>ถึงเป้า</b>'],
+      ['ขั้นที่หลุดบ่อยสุด: <b>ติดตั้งงาน</b> (52 ใบ) · <b>ตรวจสอบพื้นที่</b> (47 ใบ)']
+    ];
+    const railSum = '<div style="display:flex;flex-direction:column;gap:9px">' + sumRows.map((t, i) =>
+      '<div style="display:flex;gap:9px;font-size:11.9px;color:#475569;line-height:1.55">' +
+      '<span style="flex:0 0 auto;width:20px;height:20px;border-radius:7px;background:#EEF0FF;color:#4F46E5;' +
+      'font-weight:800;font-size:10.5px;display:grid;place-items:center">' + (i + 1) + '</span><span>' + t + '</span></div>'
+    ).join('') + '</div>';
+
+    const slas = [['พื้นที่พร้อมติดตั้ง — รวมทั้งกระบวนการ', '15 วัน', 78, '#059669'],
+      ['พื้นที่ไม่พร้อมติดตั้ง — รวมทั้งกระบวนการ', '14–21 วัน', 61, '#F59E0B'],
+      ['Admin ตรวจสอบ', '0 วัน', 26, '#94A3B8'],
+      ['ตรวจสอบเครดิต', '12 ชม.', 34, '#94A3B8'],
+      ['แจ้งงานทีมช่าง', '1–2 วัน', 44, '#94A3B8'],
+      ['สั่งของ / จัดส่ง', '21 วัน', 70, '#94A3B8'],
+      ['ติดตั้งงาน', '5 วัน', 38, '#94A3B8']];
+    const railSla = slas.map(s =>
+      '<div style="display:flex;justify-content:space-between;font-size:11.8px;padding:5px 0"><span style="color:#475569">' +
+      esc(s[0]) + '</span><b>' + s[1] + '</b></div>' +
+      '<div style="height:5px;border-radius:99px;background:#EDF0F5;overflow:hidden"><i style="display:block;height:100%;border-radius:99px;width:' +
+      s[2] + '%;background:' + s[3] + '"></i></div>').join('');
+
+    const teams = [['S2-CRD', '3 งาน · ฿677,000', 100], ['S1', '2 งาน · ฿1.30 ลบ.', 66],
+      ['S3-BU', '1 งาน · ฿1.24 ลบ.', 33], ['BU/Dealer', '1 งาน · ฿540,000', 22],
+      ['Online/E-Com · S3-OEM', '2 งาน · ฿441,000', 18]];
+    const railTeam = teams.map((t, i) =>
+      '<div style="display:flex;justify-content:space-between;font-size:11.8px;padding:5px 0"><span style="color:#475569">' +
+      esc(t[0]) + '</span><b>' + t[1] + '</b></div>' +
+      '<div style="height:5px;border-radius:99px;background:#EDF0F5;overflow:hidden"><i style="display:block;height:100%;border-radius:99px;width:' +
+      t[2] + '%;background:' + (i === 0 ? 'linear-gradient(90deg,#F97066,#FDA29B)' : i < 3 ? 'linear-gradient(90deg,#FDB022,#FEC84B)' : 'linear-gradient(90deg,#98A2B3,#D0D5DD)') + '"></i></div>').join('');
+
+    let h = pgHead('Monthly Monitor', []);
+    h += '<div class="g">';
+    h += '<div class="s12" style="grid-column:1/-1;display:flex;align-items:center;gap:9px;flex-wrap:wrap;' +
+      'padding:9px 13px;border-radius:11px;background:#FFFAEB;border:1px solid #FEDF89;color:#92400E;font-size:12px;font-weight:600">' +
+      '<span style="display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:5px;background:#FEF3C7;color:#92400E;font-size:10px;font-weight:800">ตัวอย่าง</span>' +
+      'หน้านี้เป็น <b>UX/UI ใหม่</b> ที่ทำไว้ดูก่อน — ข้อมูลเป็น <b>ข้อมูลจำลอง</b> ยังไม่เชื่อมระบบจริง (ต้องมีฟิลด์ วันที่ผ่านแต่ละขั้น · สถานะมัดจำ · สถานะสั่งของ)</span>';
+    h += kpiCard(3, 'ต้องตามวันนี้', '8 งาน', C.red, 'มูลค่า ' + baht(value) + ' · เลยกำหนด >7 วัน 3 งาน');
+    h += kpiCard(3, 'คาดปิดสิ้นเดือน', '463 / 450', C.green, 'เกินเป้า 13 ใบ · ปิด 5 งานแรกทัน = 468');
+    h += kpiCard(3, 'งานค้างทั้งระบบ', '872 ใบ', C.gold, 'เกิน 21 วัน 722 ใบ (83%) · เดือนนี้ 180 ใบ');
+    h += kpiCard(3, 'มัดจำค้าง', '133 ใบ', C.orange, '฿3.9 ลบ. · ทำให้สั่งของไม่ได้ 98 ใบ');
+    h += card(8, 'สิ่งที่ผมต้องตามทีม', list, { hint: 'เรียงตามความเร่งด่วน · กด “ตามแล้ว” เพื่อตัดออก' });
+    h += card(4, 'สรุป 1 นาที (สำหรับหัวหน้า)', railSum, { hint: 'ตัวอย่าง' });
+    h += card(6, 'SLA ที่ใช้ตัดสิน', railSla, { hint: 'ตาม Flowchart งานขาย SHOP' });
+    h += card(6, 'ทีมที่ต้องตามมากสุด', railTeam, { hint: 'จำนวนงาน · มูลค่า' });
+    return h + '</div>';
+  }
+
   function pageGeneric(name, rs) {
     const sp = SPECS[name] || { dim: 'team', dim2: 'status3', metric: 'count', title: name };
     const pick = rws => (sp.filter ? rws.filter(sp.filter) : rws);
@@ -1893,6 +1995,7 @@
     renderFilterBar();
     const html = !S.data ? pageWelcome()
       : S.page === 'summary' ? pageSummary(rs)
+      : S.page === 'monitor' ? pageMonitor()
       : S.page === 'overview' ? pageOverview(rs)
       : S.page === 'status' ? pageStatus(rs)
       : S.page === 'tat' ? pageTat(rs)
@@ -1973,10 +2076,24 @@
     if (wi) wi.onclick = () => { const f = $('fileInput'); if (f) f.click(); };
     const wr = $('welcomeReload');
     if (wr) wr.onclick = () => location.reload();
+    /* Monthly Monitor: ปุ่ม “ตามแล้ว” → ตัดการ์ดออกจากลิสต์ */
+    document.querySelectorAll('.mon-ack').forEach(b => {
+      b.onclick = () => {
+        const c = b.closest('.mon-fu');
+        if (!c) return;
+        b.textContent = '✓ ตามแล้ว';
+        b.style.borderColor = '#A7F3D0';
+        b.style.background = '#ECFDF5';
+        b.style.color = '#047857';
+        c.style.transition = 'opacity .3s';
+        c.style.opacity = '.45';
+        setTimeout(() => { c.style.display = 'none'; }, 450);
+      };
+    });
   }
 
   const NAV_GROUPS = [
-    { label: 'ภาพรวม', pages: ['Summary', 'Daily Admin', 'End of Mth', '1.Revenue', '1.Unit / Revenue', '1.Unit / Revenue New', 'Performance/TAT'] },
+    { label: 'ภาพรวม', pages: ['Summary', 'Monthly Monitor', 'Daily Admin', 'End of Mth', '1.Revenue', '1.Unit / Revenue', '1.Unit / Revenue New', 'Performance/TAT'] },
     { label: 'สถานะงาน', pages: ['Status (New)', 'Status (Back log)', '2.SO Order Status', '2.Pending', '2.1.Pending-Detail', '3.Cancel', '3.1.Cancel-Detail'] },
     { label: 'ขั้นตอนทำงาน', pages: ['P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape', 'P5.Transport', 'P6.Technician', 'Report ติดตั้ง', 'Report สัญญา'] },
     { label: 'สินค้า & พื้นที่', pages: ['SML', 'Pack สด/ผ่อน', 'Map', 'Product end2end-Detail'] },
