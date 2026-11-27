@@ -76,14 +76,26 @@
 
 /* ── 5) ตารางกว้าง: หัวคอลัมน์แรกตรึงต้องทึบ ไม่งั้นตัวอักษรทับกัน ───── */
 @media (max-width: 1024px) {
-  .plan th:first-child,
-  .plan td:first-child {
+  /* ตรึงคอลัมน์แรกของทุกตาราง ให้ชื่อแถวไม่เลื่อนหายตอนปัดแนวนอน */
+  table.pbi th:first-child,
+  table.pbi td:first-child {
     position: sticky;
     left: 0;
     z-index: 2;
     background: #fff;
-    box-shadow: 8px 0 10px -8px rgba(16, 24, 40, .25);
+    box-shadow: 8px 0 10px -9px rgba(16, 24, 40, .35);
   }
+  table.pbi thead th:first-child { z-index: 4; background: #F9FAFB; }
+  table.pbi tbody tr:nth-child(even) td:first-child { background: #FCFCFD; }
+  table.pbi tbody tr:hover td:first-child { background: #F5F9FF; }
+  table.pbi tr.grand td:first-child { background: #EFF8FF !important; }
+  table.pbi td.total:first-child { background: #FAFBFC; }
+  table.pbi td.c-done:first-child,
+  table.pbi td.c-pend:first-child,
+  table.pbi td.c-canc:first-child { background: #fff; }
+
+  .plan th:first-child,
+  .plan td:first-child { position: sticky; left: 0; z-index: 2; background: #fff; }
   .plan thead th:first-child { z-index: 4; background: #F9FAFB; }
   .plan tbody tr:nth-child(even) td:first-child { background: #FCFCFD; }
   .plan tbody tr:hover td:first-child { background: #F5F9FF; }
@@ -99,6 +111,12 @@
   }
   .k3-row b { font-size: 16px; }
   .kpi3 { min-height: 84px; }
+}
+
+/* ── 8) แถบตัวกรองบนสุด: ไม่ให้ป้าย "เดือน" ตกไปอีกบรรทัด ───────────── */
+@media (max-width: 900px) {
+  .fsel { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex: 0 0 auto; }
+  .fsel > span { white-space: nowrap; }
 }
 
 /* ── 7) ตาราง: ระยะห่างในมือถือให้หายใจได้ ─────────────────────────── */
