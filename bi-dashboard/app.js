@@ -663,8 +663,14 @@
   /* ตารางสัดส่วน % (ใช้กับ Lead O2O / Status / Area) */
   function pctRows(items, opts) {
     opts = opts || {};
-    const tot = items.reduce((a, b) => a + b.value, 0) || 1;
-    const rows = items.slice().sort((a, b) => b.value - a.value);
+    /* ตัดแถวที่ไม่มีชื่อ (ว่าง / ไม่ระบุ) และแถวค่า 0 ออก เพื่อไม่ให้รก */
+    const isBlank = s => {
+      const v = String(s == null ? '' : s).trim();
+      return v === '' || v === '-' || /^(n\/a|na|null|undefined)$/i.test(v) || /^\(?\s*(ว่าง|ไม่ระบุ)\s*\)?$/.test(v);
+    };
+    const keep = items.filter(r => !isBlank(r.label) && Number(r.value) > 0);
+    const tot = keep.reduce((a, b) => a + b.value, 0) || 1;
+    const rows = keep.slice().sort((a, b) => b.value - a.value);
     return hbars(rows.map(r => ({ label: r.label, value: r.value })), v => Math.round(v / tot * 100) + '%', opts);
   }
 
