@@ -28,11 +28,11 @@
 
 /* ---------------- page header ---------------- */
 .pg-head {
-  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
-  padding: 12px 14px 0; max-width: 1720px; margin: 0 auto;
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  padding: 9px 12px 0; max-width: 1720px; margin: 0 auto;
 }
-.pg-head h1 { font-size: 17px; font-weight: 700; margin: 0; color: #101828; letter-spacing: -.3px; }
-.pg-head .sub { font-size: 12px; color: #667085; }
+.pg-head h1 { font-size: 16px; font-weight: 700; margin: 0; color: #101828; letter-spacing: -.3px; }
+.pg-head .sub { font-size: 11.5px; color: #667085; }
 .pg-head .field-scope {
   font-size: 11.5px; font-weight: 600; color: #0B4A8F;
   background: #EFF8FF; border: 1px solid #B2DDFF;
@@ -44,8 +44,8 @@
 .g {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 10px;
-  padding: 10px 14px 18px;
+  gap: 8px;
+  padding: 8px 12px 14px;
   max-width: 1720px;
   margin: 0 auto;
   align-items: start;
@@ -61,13 +61,13 @@
   border: 1px solid #E4E7EC;
   border-radius: 10px;
   box-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 1px 3px rgba(16, 24, 40, .04);
-  padding: 10px 12px 12px;
+  padding: 8px 10px 9px;
   display: flex; flex-direction: column;
   min-width: 0; overflow: hidden;
 }
-.card-h { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex: 0 0 auto; }
+.card-h { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex: 0 0 auto; }
 .card-h h3 {
-  font-size: 12.5px; font-weight: 650; color: #101828; margin: 0; letter-spacing: -.1px;
+  font-size: 12px; font-weight: 650; color: #101828; margin: 0; letter-spacing: -.1px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .card-h .hint { font-size: 10.5px; color: #98A2B3; margin-left: auto; white-space: nowrap; }
@@ -77,20 +77,20 @@
 .kpi2 {
   border-left: 4px solid var(--k, #118DFF);
   justify-content: center;
-  gap: 1px;
-  min-height: 66px;
-  padding: 8px 12px;
+  gap: 0;
+  min-height: 56px;
+  padding: 6px 10px;
   overflow: visible;
 }
-.kpi2 .k-lab { font-size: 11.5px; color: #667085; font-weight: 500; }
+.kpi2 .k-lab { font-size: 11px; color: #667085; font-weight: 500; }
 .kpi2 .k-val {
-  font-size: 22px; font-weight: 700; color: #101828; line-height: 1.15;
-  letter-spacing: -.5px; font-variant-numeric: tabular-nums;
+  font-size: 20px; font-weight: 700; color: #101828; line-height: 1.12;
+  letter-spacing: -.4px; font-variant-numeric: tabular-nums;
 }
-.kpi2 .k-sub { font-size: 10.5px; color: #98A2B3; }
+.kpi2 .k-sub { font-size: 10px; color: #98A2B3; }
 
 /* ---------------- แท่งแนวนอน ---------------- */
-.hbars { display: flex; flex-direction: column; gap: 6px; }
+.hbars { display: flex; flex-direction: column; gap: 5px; }
 .hbar {
   display: grid;
   grid-template-columns: var(--lw, 150px) minmax(0, 1fr) 84px;
@@ -109,7 +109,7 @@
 
 /* ---------------- แท่งตั้ง ---------------- */
 .cols-wrap { position: relative; }
-.cols { display: flex; align-items: stretch; gap: 2px; height: 176px; }
+.cols { display: flex; align-items: stretch; gap: 2px; height: 152px; }
 .col {
   flex: 1 1 0; min-width: 0;
   display: flex; flex-direction: column; align-items: center;
@@ -159,17 +159,17 @@
 
 /* legend ใต้กราฟ */
 .chart-legend {
-  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  margin-top: 6px; font-size: 11px; color: #475467;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin-top: 4px; font-size: 10.5px; color: #475467;
 }
 .chart-legend span { display: inline-flex; align-items: center; gap: 7px; }
 .chart-legend .sw { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
 .chart-legend .sw.line { height: 3px; border-radius: 2px; background: #E5484D; }
 
 /* ---------------- โดนัท + legend ---------------- */
-.donut-wrap { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.donut-wrap { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .donut {
-  position: relative; width: 118px; height: 118px; border-radius: 50%;
+  position: relative; width: 100px; height: 100px; border-radius: 50%;
   flex: 0 0 auto;
 }
 .donut::after {
@@ -208,18 +208,18 @@
 .card.fill .tbl { max-height: calc(100vh - 220px); }
 table.pbi {
   width: 100%; border-collapse: separate; border-spacing: 0;
-  font-size: 11.5px; font-variant-numeric: tabular-nums;
+  font-size: 11px; font-variant-numeric: tabular-nums;
 }
 table.pbi thead th {
   position: sticky; top: 0; z-index: 2;
   background: #F9FAFB; color: #667085;
-  font-size: 10.5px; font-weight: 650; letter-spacing: .2px;
-  padding: 7px 10px; text-align: right; white-space: nowrap;
+  font-size: 10px; font-weight: 650; letter-spacing: .2px;
+  padding: 6px 9px; text-align: right; white-space: nowrap;
   border-bottom: 1px solid #EAECF0;
 }
 table.pbi thead th.rowhead, table.pbi thead th:first-child { text-align: left; }
 table.pbi tbody td {
-  padding: 6px 10px; text-align: right; white-space: nowrap;
+  padding: 5px 9px; text-align: right; white-space: nowrap;
   border-bottom: 1px solid #F2F4F7; color: #344054;
 }
 table.pbi tbody td.rowhead, table.pbi tbody td:first-child {
