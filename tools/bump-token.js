@@ -1,0 +1,10 @@
+const fs = require('fs');
+const f = 'D:/Test Code/bi-dashboard/index.html';
+const OLD = '?v=1130a';
+const NEW = process.argv[2] || '?v=1130b';
+let t = fs.readFileSync(f, 'utf8');
+const before = (t.match(/\?v=[0-9a-z]+/g) || []).length;
+t = t.split(OLD).join(NEW);
+fs.writeFileSync(f, t, 'utf8');
+const after = (t.match(/\?v=[0-9a-z]+/g) || []).length;
+console.log('refs=' + before + ' -> ' + after + ' token=' + NEW);

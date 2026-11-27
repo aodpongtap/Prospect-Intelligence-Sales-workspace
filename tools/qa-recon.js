@@ -34,7 +34,7 @@ for (let r = 1; r < recs.length; r++) {
   if (!recs[r]) continue;
   const c = parse(recs[r]);
   if (String(c[71] || '').slice(0, 7) !== MTH) continue;
-  if (!/หยอดเหรียญ/.test(c[12] || '')) continue;
+  if (!/หยอดเหรียญ|Vending/i.test(c[12] || '')) continue;
   n++;
   const st = String(c[85] || '').trim() || '(blank)';
   const rv = num(c[95]), un = num(c[87]);

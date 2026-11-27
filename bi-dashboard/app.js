@@ -908,8 +908,8 @@
         s: 'ปิดจริง ' + num(nD) + ' จาก ' + num(nD + nP) + ' ใบที่ปิดได้ · ยังค้าง ' + num(nP) + ' ใบ' },
       { c: '#E11D48', t: 'ยกเลิก ' + num(nC) + ' ใบ (' + (so ? (nC / so * 100).toFixed(0) : 0) + '% ของ SO)',
         s: 'เดือนก่อน ' + num(pTC) + ' ใบ — ' + (pTC > nC ? 'ดีขึ้น ' + (pTC - nC) + ' ใบ' : pTC < nC ? 'แย่ลง ' + (nC - pTC) + ' ใบ' : 'เท่าเดิม') },
-      { c: '#0EA5E9', t: 'Backlog ค้าง ' + num(openAll.length) + ' ใบ',
-        s: 'ค้างเกิน 21 วัน ' + num(old21) + ' ใบ (' + (openAll.length ? (old21 / openAll.length * 100).toFixed(0) : 0) + '% ของ backlog)' }
+      { c: '#0EA5E9', t: 'Backlog ค้าง ' + num(openAll.length) + ' ใบ (ทั้งระบบ)',
+        s: 'ค้างเกิน 21 วัน ' + num(old21) + ' ใบ (' + (openAll.length ? (old21 / openAll.length * 100).toFixed(0) : 0) + '% ของ backlog) · ไม่จำกัดเดือน' }
     ];
 
     let h = pgHead('Summary', rs);
@@ -920,15 +920,15 @@
       '<div class="sum-ins-t">' + esc(x.t) + '</div><div class="sum-ins-s">' + esc(x.s) + '</div></div></div>').join('') + '</div>';
 
     h += card(7, 'ยอด SO สะสม · เดือนนี้เทียบเดือนก่อน', trendChart, { hint: 'ถึงวันที่ ' + elapsed });
-    h += card(5, 'องค์ประกอบสถานะใบงาน', compHtml, { hint: 'สัดส่วน 100%' });
+    h += card(5, 'องค์ประกอบสถานะใบงาน', compHtml, { hint: num(so) + ' ใบ · ' + baht(revTot) });
 
     h += card(4, 'Top 5 ทีมขาย · Revenue', rankList(topTeam.slice(0, 5), baht, 'team', rev), { hint: 'ราคาสุทธิ' });
     h += card(4, 'กลุ่มสินค้า · Unit', rankList(byGroup, num, 'group', units), { hint: 'จำนวนเครื่อง' });
     h += card(4, 'พื้นที่ · SO', rankList(byArea, num, 'gbkk', so), { hint: 'จำนวนใบ' });
 
     h += card(6, 'ความเสี่ยงงานค้าง (Backlog)',
-      (old21 ? '<div class="sum-risk-alert">⚠ ค้างเกิน 21 วัน ' + num(old21) + ' ใบ จากทั้งหมด ' + num(openAll.length) + ' ใบ</div>' : '') +
-      rankList(BKL.map((k, i) => ({ label: k, value: bkc[i] })), num), { hint: 'นับจากวันเปิด SO ถึงวันนี้' });
+      (old21 ? '<div class="sum-risk-alert">⚠ ค้างเกิน 21 วัน ' + num(old21) + ' ใบ จากทั้งหมด ' + num(openAll.length) + ' ใบ (ทั้งระบบ ไม่จำกัดเดือน)</div>' : '') +
+      rankList(BKL.map((k, i) => ({ label: k, value: bkc[i] })), num), { hint: 'ทั้งระบบ · นับจากวันเปิด SO ถึงวันนี้' });
     h += card(6, 'เทียบเดือนก่อน (Month over Month)', momTbl, { hint: 'เขียว = ดีขึ้น · แดง = แย่ลง' });
     return h + '</div>';
   }
