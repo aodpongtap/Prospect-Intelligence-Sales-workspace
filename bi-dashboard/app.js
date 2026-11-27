@@ -238,11 +238,13 @@
     let h = '<div class="cols-wrap"><div class="cols">';
     data.forEach((d, i) => {
       const p = Math.max(1.5, Math.min(100, d.value / max * 100));
+      const inside = p >= 10;            /* แท่งสูงพอ -> ใส่เลขในแท่ง */
       h += '<div class="col" title="' + esc(d.label) + ' · ' + num(d.value) +
         (lineArr ? ' · ติดตั้ง ' + num(lineArr[i]) : '') +
         (d.sub ? ' · ' + esc(d.sub) : '') + '">' +
-        '<span class="col-v"' + (dense ? ' style="font-size:9.5px"' : '') + '>' + (showVal ? shortNum(d.value) : '') + '</span>' +
-        '<span class="col-bar-wrap"><i class="col-bar" style="height:' + p.toFixed(1) + '%"></i></span>' +
+        '<span class="col-v"' + (dense ? ' style="font-size:9.5px"' : '') + '>' + (showVal && !inside ? shortNum(d.value) : '') + '</span>' +
+        '<span class="col-bar-wrap"><i class="col-bar" style="height:' + p.toFixed(1) + '%">' +
+          (showVal && inside ? '<b class="bar-in">' + shortNum(d.value) + '</b>' : '') + '</i></span>' +
         '<span class="col-x">' + esc(d.label) + '</span></div>';
     });
     h += '</div>';
