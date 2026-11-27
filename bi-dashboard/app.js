@@ -16,10 +16,11 @@
   const COLS = Array.from({ length: 90 }, (_, i) => i);
   const DATE_COLS = [2, 32, 47, 54];
 
-  const S = { raw: null, data: null, meta: null, page: 'overview', period: null, q: '', pageIdx: 0, xf: {}, filter: { team: new Set(), channel: new Set(), group: new Set() } };
+  const S = { raw: null, data: null, meta: null, page: 'summary', period: null, q: '', pageIdx: 0, xf: {}, filter: { team: new Set(), channel: new Set(), group: new Set() } };
 
-  /* 21 หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) */
+  /* หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) — เพิ่ม Summary เป็นหน้าแรก */
   const PBI_PAGES = [
+    'Summary',
     'Daily Admin', 'End of Mth', '2.SO Order Status', '1.Unit / Revenue', 'SML', 'Pack สด/ผ่อน',
     '2.Pending', '2.1.Pending-Detail', 'Map', 'Performance/TAT', '3.Cancel',
     '3.1.Cancel-Detail', 'P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape',
@@ -28,6 +29,7 @@
   /* หน้าที่มีเพิ่มในเว็บ (ไม่มีใน PBI) — เปิดจากเมนู ☰ เท่านั้น */
   const EXTRA_PAGES = ['1.Unit / Revenue New', 'Product end2end-Detail', 'All Job/Close', '1.Revenue', 'Status (Back log)', 'Status (New)', 'Report สัญญา'];
   const IMPLEMENTED = {
+    'Summary': 'summary',
     'Daily Admin': 'overview', 'Status (New)': 'status',
     'Performance/TAT': 'tat', 'All Job/Close': 'data'
   };
@@ -613,6 +615,139 @@
       '<span class="sub">' + esc(S.period ? S.period.replace('-', ' · ') : 'ทุกเดือน') + ' · ' + num(rs ? rs.length : 0) + ' รายการ</span>' +
       '<span class="field-scope">เฉพาะกลุ่มหยอดเหรียญ</span>' + xfChips() +
       '<span class="grow"></span>' + (extra || '') + '</div>';
+  }
+
+  /* ===== Summary — หน้าแรก สรุปสำหรับผู้บริหาร ===== */
+  function pageSummary(rs) {
+    const sum = (arr, f) => arr.reduce((a, d) => a + (d[f] || 0), 0);
+    const now = new Date();
+    const parts = String(S.period || '').split('-').map(Number);
+    const yy = parts[0] || now.getFullYear(), mm = parts[1] || (now.getMonth() + 1);
+    const dim = new Date(yy, mm, 0).getDate();
+    const isCur = (yy === now.getFullYear() && mm === (now.getMonth() + 1));
+    const maxDay = rs.reduce((a, d) => (d.dateSO ? Math.max(a, d.dateSO.getDate()) : a), 0);
+    const elapsed = Math.min(dim, Math.max(1, isCur ? Math.max(now.getDate(), maxDay) : dim));
+    const left = Math.max(dim - elapsed, 0);
+    const pctMonth = Math.round(elapsed / dim * 100);
+
+    const so = rs.length, rev = sum(rs, 'revenue'), units = sum(rs, 'units');
+    const nD = rs.filter(d => d.status3 === '1.Done').length;
+    const nP = rs.filter(d => d.status3 === '2.Pending').length;
+    const nC = rs.filter(d => d.status3 === '3.Cancel').length;
+    const closeRate = (nD + nP) ? nD / (nD + nP) : 0;
+    const fcSo = Math.round(so / elapsed * dim);
+    const fcRev = rev / elapsed * dim;
+
+    /* เดือนก่อนหน้า เพื่อเทียบ */
+    const pm = (mm === 1) ? { y: yy - 1, m: 12 } : { y: yy, m: mm - 1 };
+    const prev = monthRowsOf(pm.y * 100 + pm.m);
+    const pSo = prev.length, pRev = sum(prev, 'revenue'), pUnit = sum(prev, 'units');
+    const pD = prev.filter(d => d.status3 === '1.Done').length;
+    const pC = prev.filter(d => d.status3 === '3.Cancel').length;
+    const dl = (a, b) => (b ? (a - b) / b * 100 : null);
+    const dlTx = v => (v == null ? '–' : (v >= 0 ? '▲ ' : '▼ ') + Math.abs(v).toFixed(0) + '% เทียบเดือนก่อน');
+
+    /* รายวัน: เปิด SO + ติดตั้ง */
+    const byDay = new Map(), instDay = new Map();
+    rs.forEach(d => {
+      if (d.dateSO) { const k = d.dateSO.getDate(); byDay.set(k, (byDay.get(k) || 0) + 1); }
+      if (d.installDate instanceof Date && !isNaN(d.installDate)) {
+        const k = d.installDate.getDate();
+        instDay.set(k, (instDay.get(k) || 0) + 1);
+      }
+    });
+    const days = [...new Set([...byDay.keys(), ...instDay.keys()])].sort((a, b) => a - b);
+    const daily = days.map(k => ({ label: String(k), value: byDay.get(k) || 0 }));
+    const instLine = days.map(k => instDay.get(k) || 0);
+
+    const stD = [
+      { label: '1.Done', value: nD },
+      { label: '2.Pending', value: nP },
+      { label: '3.Cancel', value: nC }
+    ].filter(x => x.value > 0);
+
+    /* Top ทีม / กลุ่มสินค้า / พื้นที่ */
+    const tm = new Map(), gm = new Map(), am = new Map();
+    rs.forEach(d => {
+      const t = d.team || '(ไม่ระบุ)';
+      tm.set(t, (tm.get(t) || 0) + (d.revenue || 0));
+      const g = d.group || '(ไม่ระบุ)';
+      gm.set(g, (gm.get(g) || 0) + (d.units || 0));
+      const a = d.gbkk || '(ไม่ระบุ)';
+      am.set(a, (am.get(a) || 0) + 1);
+    });
+    const topTeam = [...tm.entries()].map(e => ({ label: e[0], value: e[1] })).sort((a, b) => b.value - a.value).slice(0, 6);
+    const byGroup = [...gm.entries()].map(e => ({ label: e[0], value: e[1] })).filter(x => x.value > 0).sort((a, b) => b.value - a.value);
+    const byArea = [...am.entries()].map(e => ({ label: e[0], value: e[1] })).sort((a, b) => b.value - a.value);
+
+    /* ความเสี่ยง: backlog ค้างทั้งหมด + เกิน 21 วัน */
+    const all = allFiltered();
+    const openAll = all.filter(d => d.status3 === '2.Pending');
+    const old21 = openAll.filter(d => d.dateSO instanceof Date && !isNaN(d.dateSO) && (now - d.dateSO) / 86400000 > 21).length;
+
+    /* ตารางเทียบเดือนก่อน */
+    const mom = [
+      { k: 'จำนวน SO (ใบ)', a: so, b: pSo, f: num, better: 1 },
+      { k: 'Revenue สุทธิ', a: rev, b: pRev, f: baht, better: 1 },
+      { k: 'Unit (เครื่อง)', a: units, b: pUnit, f: num, better: 1 },
+      { k: 'ปิดจริง (1.Done)', a: nD, b: pD, f: num, better: 1 },
+      { k: 'ยกเลิก (3.Cancel)', a: nC, b: pC, f: num, better: -1 },
+      { k: 'ยอดเฉลี่ยต่อใบ', a: so ? rev / so : 0, b: pSo ? pRev / pSo : 0, f: baht, better: 1 }
+    ];
+    let momTbl = '<div class="tbl"><table class="pbi"><thead><tr>' +
+      '<th class="rowhead">ตัวชี้วัด</th><th class="num">' + esc(S.period ? S.period.replace('-', ' · ') : 'เดือนนี้') + '</th>' +
+      '<th class="num">' + pm.m + ' · ' + pm.y + '</th><th class="num">ต่าง</th><th class="num">%</th></tr></thead><tbody>';
+    mom.forEach(r => {
+      const d0 = r.a - r.b, p0 = dl(r.a, r.b);
+      const good = p0 == null ? '' : ((p0 * r.better) >= 0 ? 'c-done' : 'c-canc');
+      momTbl += '<tr><td class="rowhead">' + esc(r.k) + '</td>' +
+        '<td class="num">' + r.f(r.a) + '</td><td class="num">' + r.f(r.b) + '</td>' +
+        '<td class="num ' + good + '">' + (d0 >= 0 ? '+' : '−') + r.f(Math.abs(d0)) + '</td>' +
+        '<td class="num ' + good + '">' + (p0 == null ? '–' : (p0 >= 0 ? '+' : '−') + Math.abs(p0).toFixed(0) + '%') + '</td></tr>';
+    });
+    momTbl += '</tbody></table></div>';
+
+    let h = pgHead('Summary', rs);
+    h += '<div class="g">';
+    h += kpiCard(3, 'SO เดือนนี้', num(so), C.navy, dlTx(dl(so, pSo)));
+    h += kpiCard(3, 'Revenue สุทธิ', baht(rev), C.purple, dlTx(dl(rev, pRev)));
+    h += kpiCard(3, 'Unit (เครื่อง)', num(units), C.teal, dlTx(dl(units, pUnit)));
+    h += kpiCard(3, 'ปิดจริง (Done)', num(nD), C.green, 'อัตราปิดงาน ' + (closeRate * 100).toFixed(0) + '% · เดือนก่อน ' + num(pD));
+    h += kpiCard(3, 'Pending คงค้าง', num(nP), C.gold, so ? (nP / so * 100).toFixed(0) + '% ของ SO' : '–');
+    h += kpiCard(3, 'ยกเลิก', num(nC), C.red, so ? (nC / so * 100).toFixed(0) + '% ของ SO · เดือนก่อน ' + num(pC) : '–');
+    h += kpiCard(3, 'ประมาณการ SO สิ้นเดือน', num(fcSo), C.orange, 'อีก ' + left + ' วัน · เฉลี่ย ' + (so / elapsed).toFixed(1) + ' ใบ/วัน');
+    h += kpiCard(3, 'Backlog ค้างทั้งหมด', num(openAll.length), C.blue, 'เกิน 21 วัน ' + num(old21) + ' ใบ');
+
+    h += card(8, 'SO รายวัน · แท่ง = เปิด SO / เส้นแดง = ติดตั้ง',
+      colsChart(daily, { line: instLine, barLabel: 'เปิด SO', lineLabel: 'ติดตั้ง', field: 'day' }));
+    h += card(4, 'สถานะใบงาน3', donut(stD, { field: 'status3' }) +
+      '<div class="chart-legend"><span><i class="sw" style="background:#059669"></i>Done ' + num(nD) + '</span>' +
+      '<span><i class="sw" style="background:#F59E0B"></i>Pending ' + num(nP) + '</span>' +
+      '<span><i class="sw" style="background:#E11D48"></i>Cancel ' + num(nC) + '</span></div>');
+
+    h += card(12, 'ประมาณการสิ้นเดือน · ' + elapsed + '/' + dim + ' วัน',
+      '<div class="fc"><div><div class="big">' + num(fcSo) + '</div><small>ประมาณการ SO</small></div>' +
+      '<div><div class="big" style="color:#E66C37">' + baht(fcRev) + '</div><small>ประมาณการ Revenue</small></div>' +
+      '<div class="track"><i style="width:' + pctMonth + '%"></i><u style="left:' + pctMonth + '%"></u></div>' +
+      '<small>ทำได้แล้ว ' + num(so) + ' ใบ (' + pctMonth + '% ของเดือน) · เหลือ ' + left + ' วัน<br>' +
+      'ปิดจริงถึงวันนี้ ' + num(nD) + ' ใบ · เดือนก่อนปิดได้ ' + num(pD) + ' ใบ</small></div>',
+      { hint: 'run-rate จากวันที่ผ่านไป' });
+
+    h += card(4, 'Top 6 ทีมขาย · Revenue', hbars(topTeam, baht, { field: 'team' }), { hint: 'ราคาสุทธิ' });
+    h += card(4, 'กลุ่มสินค้า · Unit', hbars(byGroup, num, { field: 'group' }), { hint: 'จำนวนเครื่อง' });
+    h += card(4, 'พื้นที่ (GBKK/UPC) · SO', hbars(byArea, num, { field: 'gbkk' }), { hint: 'จำนวนใบ' });
+
+    h += card(12, 'เทียบเดือนก่อน (Month over Month)', momTbl, { hint: 'เขียว = ดีขึ้น · แดง = แย่ลง' });
+    h += card(12, 'นิยาม & วิธีอ่าน',
+      '<ul class="note">' +
+      '<li><b>ขอบเขต</b> = เฉพาะกลุ่มสินค้าหยอดเหรียญ · เดือนที่เลือกจากตัวกรองด้านบน</li>' +
+      '<li><b>Revenue สุทธิ</b> = IF(เงินสดว่าง, ราคาตั้ง, ราคาเงินสด) − ส่วนลด ÷ 1.07</li>' +
+      '<li><b>ปิดจริง (Done)</b> = งานที่มีสัญญา / สถานะ 1.Done · <b>อัตราปิดงาน</b> = Done ÷ (Done + Pending)</li>' +
+      '<li><b>ประมาณการสิ้นเดือน</b> = ยอดถึงวันนี้ ÷ วันที่ผ่านไป × วันในเดือน (run-rate)</li>' +
+      '<li><b>Backlog ค้างทั้งหมด</b> = งาน Pending ทุกเดือนที่ยังไม่ปิด · “เกิน 21 วัน” คือค้างนานกว่ากรอบ Aging</li>' +
+      '<li>คลิกกราฟ/แท่ง/แถวเพื่อกรองได้หลายค่า · ปุ่ม “ล้างทั้งหมด” เพื่อคืนค่า</li>' +
+      '</ul>');
+    return h + '</div>';
   }
 
   function pageOverview(rs) {
@@ -1410,7 +1545,8 @@
   function render() {
     const rs = rows();
     renderFilterBar();
-    const html = S.page === 'overview' ? pageOverview(rs)
+    const html = S.page === 'summary' ? pageSummary(rs)
+      : S.page === 'overview' ? pageOverview(rs)
       : S.page === 'status' ? pageStatus(rs)
       : S.page === 'tat' ? pageTat(rs)
       : S.page === 'data' ? pageData(rs)
@@ -1476,7 +1612,7 @@
   }
 
   const NAV_GROUPS = [
-    { label: 'ภาพรวม', pages: ['Daily Admin', 'End of Mth', '1.Revenue', '1.Unit / Revenue', '1.Unit / Revenue New', 'Performance/TAT'] },
+    { label: 'ภาพรวม', pages: ['Summary', 'Daily Admin', 'End of Mth', '1.Revenue', '1.Unit / Revenue', '1.Unit / Revenue New', 'Performance/TAT'] },
     { label: 'สถานะงาน', pages: ['Status (New)', 'Status (Back log)', '2.SO Order Status', '2.Pending', '2.1.Pending-Detail', '3.Cancel', '3.1.Cancel-Detail'] },
     { label: 'ขั้นตอนทำงาน', pages: ['P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape', 'P5.Transport', 'P6.Technician', 'Report ติดตั้ง', 'Report สัญญา'] },
     { label: 'สินค้า & พื้นที่', pages: ['SML', 'Pack สด/ผ่อน', 'Map', 'Product end2end-Detail'] },
