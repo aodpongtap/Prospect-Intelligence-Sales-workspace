@@ -2230,7 +2230,10 @@
 
   /* ---------- snapshot ที่ฝังมากับเว็บ (อ่านอย่างเดียว) ---------- */
   /* แก้เลขทีมที่ซ้ำในข้อมูลเก่า (master data เดิมให้ Employee/E-Com เป็น 9 ทั้งคู่) */
-  const TEAM_ALIAS = { '9. Employee': '10. Employee', '9. Online/E-Com': '11. Online/E-Com' };
+  const TEAM_ALIAS = {
+    '9. Employee': '10. Employee', '9. Online/E-Com': '11. Online/E-Com',
+    'Service/Credit': '12. Service/Credit'
+  };
   function fixTeams(arr) {
     if (!arr || !arr.length) return arr;
     for (let i = 0; i < arr.length; i++) {
