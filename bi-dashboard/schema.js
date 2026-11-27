@@ -72,6 +72,19 @@
 
   const D = (y, m, d) => new Date(y, m - 1, d);
   const TODAY = () => { const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()); };
+  /* ดัชนี lookup แบบไม่สนใจช่องว่าง (fallback เท่านั้น) */
+  const NORM_IDX = {};
+  function lkNormalized(rangeKey) {
+    if (!NORM_IDX[rangeKey]) {
+      const m2 = new Map();
+      lkArr(rangeKey).forEach(row => {
+        const k = s(row[0]).replace(/\s+/g, '');
+        if (k && !m2.has(k)) m2.set(k, row[2]);
+      });
+      NORM_IDX[rangeKey] = m2;
+    }
+    return NORM_IDX[rangeKey];
+  }
   function dateOnly(v) {
     if (!(v instanceof Date) || isNaN(v)) return null;
     return new Date(v.getFullYear(), v.getMonth(), v.getDate());
@@ -136,8 +149,17 @@
   function fStatus3(r, jobStage, svCancel) {
     if (trim(r[C.contract]) !== '') return '1.Done';
     if (svCancel === '') {
-      const memo = trim(r[C.owner]) + trim(r[C.allStatus]) + trim(jobStage);
-      const v = vlookup(memo, 'Master Stutus!D:F', 3);
+      /* Excel: CONCATENATE([ผู้รับผิดชอบ],[สถานะ ALL],[สถานะใบงาน]) — ไม่ตัดช่องว่าง */
+      const memoRaw = s(r[C.owner]) + s(r[C.allStatus]) + s(jobStage);
+      let v = vlookup(memoRaw, 'Master Stutus!D:F', 3);
+      if (v == null) {
+        const memoTrim = trim(r[C.owner]) + trim(r[C.allStatus]) + trim(jobStage);
+        if (memoTrim !== memoRaw) v = vlookup(memoTrim, 'Master Stutus!D:F', 3);
+      }
+      if (v == null) {
+        /* fallback: เทียบแบบไม่สนใจช่องว่างทั้งหมด (กัน space หาย/เกินจากต้นทาง) */
+        v = lkNormalized('Master Stutus!D:F').get(memoRaw.replace(/\s+/g, '')) || null;
+      }
       return v == null ? null : trim(v);
     }
     return '3.Cancel';
