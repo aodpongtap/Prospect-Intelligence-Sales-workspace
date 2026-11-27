@@ -196,6 +196,9 @@ function saveDailyApiCore_(token, p) {
     });
   }
   if (!hit) ref = nextDailyRef_(p.date, sh);   /* ไม่พบบันทึกของตัวเอง → ออกเลขใหม่จากเซิร์ฟเวอร์ */
+  /* แก้ทับของคนอื่น (Admin) → ต้องคงเจ้าของเดิมไว้ ไม่ย้ายเจ้าของเป็นคนที่กดแก้ */
+  var ownerEmail = hit ? String(hit.by || myMail).toLowerCase()
+    : (isAdminLevel_(s.level) && p.by ? String(p.by).toLowerCase() : myMail);
 
   var nowIso = new Date().toISOString();
   var heads = tabHeaders_(sh);
@@ -212,7 +215,7 @@ function saveDailyApiCore_(token, p) {
     nextTime: normTime_(p.nextTime),
     nextNote: String(p.nextNote || ''),
     saleId: String(p.saleId || s.saleId || '').trim().toUpperCase(),
-    by: String(p.by || s.email || '').toLowerCase(),
+    by: ownerEmail,
     dmName: String(p.dmName || '').trim().slice(0, 120),
     dmPhone: String(p.dmPhone || '').trim().slice(0, 30),
     dmEmail: String(p.dmEmail || '').trim().slice(0, 120),
