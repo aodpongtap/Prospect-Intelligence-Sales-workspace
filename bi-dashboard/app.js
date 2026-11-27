@@ -16,7 +16,7 @@
   const COLS = Array.from({ length: 90 }, (_, i) => i);
   const DATE_COLS = [2, 32, 47, 54];
 
-  const S = { raw: null, data: null, meta: null, page: 'summary', period: null, q: '', pageIdx: 0, xf: {}, filter: { team: new Set(), channel: new Set(), group: new Set() }, momMth: null, momMth2: null, momN: 1, keepScroll: false };
+  const S = { raw: null, data: null, meta: null, page: 'summary', period: null, q: '', pageIdx: 0, xf: {}, filter: { team: new Set(), channel: new Set(), group: new Set() }, momMth: null, momMth2: null, momN: 1, monMth: null, monScope: 'front', keepScroll: false };
 
   /* หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) — เพิ่ม Summary เป็นหน้าแรก */
   const PBI_PAGES = [
@@ -1748,6 +1748,65 @@
      โฟกัส “ผมต้องตามใคร เรื่องอะไร ภายในเมื่อไร” ไม่ใช่รายงานยอดขาย
      ══════════════════════════════════════════════════════════════════════ */
   function pageMonitor() {
+    /* ── ขอบเขตสินค้า (เฉพาะกลุ่มที่กำหนด ไม่ใช่ทั้งบริษัท) ── */
+    const MON_SCOPE = {
+      front: { label: 'เครื่องซักผ้าฝาหน้า', test: d => /ฝาหน้า/.test(String(d.product || '')) && !/อบผ้า/.test(String(d.product || '')) },
+      frontDry: { label: 'ฝาหน้า + อบผ้า', test: d => /ฝาหน้า/.test(String(d.product || '')) },
+      washer: { label: 'ทั้งกลุ่มเครื่องซักผ้าหยอดเหรียญ', test: d => String(d.group || '') === 'เครื่องซักผ้าหยอดเหรียญ' }
+    };
+    const scopeKey = MON_SCOPE[S.monScope] ? S.monScope : 'front';
+    const scope = MON_SCOPE[scopeKey];
+    const mthList = periods();
+    const sel = mthList.indexOf(S.monMth) >= 0 ? S.monMth : (S.period || mthList[mthList.length - 1] || '');
+    const mk = Number(String(sel).replace('-', ''));
+    const prevKey = (() => {
+      const y = +String(sel).slice(0, 4), m = +String(sel).slice(5, 7);
+      const d2 = new Date(y, m - 2, 1);
+      return d2.getFullYear() + '-' + String(d2.getMonth() + 1).padStart(2, '0');
+    })();
+    const prevMk = Number(String(prevKey).replace('-', ''));
+    const dim = new Date(+String(sel).slice(0, 4), +String(sel).slice(5, 7), 0).getDate();
+    const nowD = new Date();
+    const isCur = nowD.getFullYear() === +String(sel).slice(0, 4) && nowD.getMonth() + 1 === +String(sel).slice(5, 7);
+    const elapsed = isCur ? Math.min(nowD.getDate(), dim) : dim;
+    const left = dim - elapsed;
+
+    const inScope = (S.data || []).filter(scope.test);
+    const rowsOf = k => inScope.filter(d => Number(d.mth) === k);
+    const cur = rowsOf(mk), prev = rowsOf(prevMk);
+    const so = cur.length, prevSo = prev.length;
+    const rev = cur.reduce((a, d) => a + (d.revenue || 0), 0);
+    const units = cur.reduce((a, d) => a + (d.units || 0), 0);
+    const nD = cur.filter(d => d.status3 === '1.Done').length;
+    const nP = cur.filter(d => d.status3 === '2.Pending').length;
+    const nC = cur.filter(d => d.status3 === '3.Cancel').length;
+    const fcSo = elapsed ? Math.round(so / elapsed * dim) : so;
+    const dSo = prevSo ? (so - prevSo) / prevSo * 100 : null;
+    /* ค้างทั้งระบบของกลุ่มนี้ + เกิน 21 วัน */
+    const openAll = inScope.filter(d => d.status3 === '2.Pending');
+    const old21 = openAll.filter(d => d.dateSO instanceof Date && !isNaN(d.dateSO) && (nowD - d.dateSO) / 86400000 > 21).length;
+    const closeRate = (nD + nP) ? nD / (nD + nP) : 0;
+
+    const mthLabel = k => {
+      const y = +String(k).slice(0, 4), m = +String(k).slice(5, 7);
+      return TH_M[m - 1] + ' ' + (y + 543);
+    };
+
+    /* ── แถบควบคุม: เดือน + ขอบเขตสินค้า ── */
+    const ctl =
+      '<div style="grid-column:1/-1;display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:9px 12px;' +
+      'border-radius:11px;background:#FFFAEB;border:1px solid #FEDF89;color:#92400E;font-size:12px;font-weight:600">' +
+      '<span style="display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:5px;background:#FEF3C7;color:#92400E;font-size:10px;font-weight:800">ตัวอย่าง</span>' +
+      '<label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap">เดือน <select id="monMth" class="pbi-select" style="height:28px">' +
+      mthList.slice().reverse().map(k => '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + esc(mthLabel(k)) + '</option>').join('') +
+      '</select></label>' +
+      '<label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap">สินค้า <select id="monScope" class="pbi-select" style="height:28px">' +
+      Object.keys(MON_SCOPE).map(k => '<option value="' + k + '"' + (k === scopeKey ? ' selected' : '') + '>' + esc(MON_SCOPE[k].label) + '</option>').join('') +
+      '</select></label>' +
+      '<span style="color:#B45309;font-weight:700">' + esc(mthLabel(sel)) + ' · ผ่านไป ' + elapsed + '/' + dim + ' วัน</span>' +
+      '<span style="margin-left:auto;font-weight:600;opacity:.85">ตัวเลข KPI เป็นข้อมูลจริงของกลุ่มนี้ · ลิสต์ตามงานเป็นข้อมูลจำลอง</span></div>';
+
+    /* ── ลิสต์ตามงาน (จำลอง) ── */
     const CASES = [
       { so: 'SO261102110', cus: 'ดริงค์โค จำกัด', team: 'S2-CRD', owner: 'คุณสมชาย', step: 'Admin ตรวจสอบ', sla: '0 วัน', late: 5, lvl: 'r', dep: 'จ่ายแล้ว', depOk: 1, ord: 'ยังไม่สั่ง', val: 412000 },
       { so: 'SO261101884', cus: 'บริษัท สยามฟู้ดส์ จำกัด', team: 'S1', owner: 'คุณวารี', step: 'ตรวจสอบพื้นที่', sla: '2 วัน', late: 9, lvl: 'r', dep: 'ค้าง ฿180,000', depOk: 0, ord: 'ยังไม่สั่ง', val: 980000 },
@@ -1765,8 +1824,8 @@
     };
     const pill = c => 'display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:99px;font-size:10.8px;font-weight:800;white-space:nowrap;' + PILL[c];
     const lateTxt = x => x.late > 0 ? 'เลยกำหนด ' + x.late + ' วัน' : (x.late === 0 ? 'ทันกำหนด' : 'รอทีมตอบ');
-    const ord = { r: 0, a: 1, g: 2, b: 3 };
-    const sorted = CASES.slice().sort((x, y) => ord[x.lvl] - ord[y.lvl] || y.late - x.late);
+    const ordr = { r: 0, a: 1, g: 2, b: 3 };
+    const sorted = CASES.slice().sort((x, y) => ordr[x.lvl] - ordr[y.lvl] || y.late - x.late);
     const wrong = CASES.filter(x => x.late > 0).length;
     const value = CASES.reduce((a, x) => a + x.val, 0);
 
@@ -1793,11 +1852,11 @@
     list += '</div>';
 
     const sumRows = [
-      ['ต้องตาม 8 งาน มูลค่า ' + baht(value) + ' = 32% ของยอดคาดปิดสิ้นเดือน'],
-      ['งานเลยกำหนด ' + wrong + ' งาน — อยู่กับ <b>S2-CRD</b> ทั้งหมด → ตามหัวหน้าทีมคนเดียวจบ'],
-      ['มัดจำค้าง <b>133 ใบ</b> ทำให้ <b>98 ใบ</b> สั่งของไม่ได้ (ค้างเงิน <b>฿3.9 ลบ.</b>)'],
-      ['ปิด 5 งานแรกทันสัปดาห์นี้ → คาดปิด <b>468 ใบ</b> (เป้า 450) = <b>ถึงเป้า</b>'],
-      ['ขั้นที่หลุดบ่อยสุด: <b>ติดตั้งงาน</b> (52 ใบ) · <b>ตรวจสอบพื้นที่</b> (47 ใบ)']
+      'ขอบเขต: <b>' + esc(scope.label) + '</b> · ' + esc(mthLabel(sel)),
+      'ต้องตาม <b>8 งาน</b> มูลค่า <b>' + baht(value) + '</b> · เลยกำหนด ' + wrong + ' งาน (S2-CRD 3 งาน)',
+      'งานค้างในกลุ่มนี้ <b>' + num(openAll.length) + ' ใบ</b> · เกิน 21 วัน <b>' + num(old21) + ' ใบ</b>',
+      'คาดปิดสิ้นเดือน <b>' + num(fcSo) + ' ใบ</b> จาก <b>' + num(so) + ' ใบ</b> ที่เปิดมาแล้ว (อัตราปิด ' + (closeRate * 100).toFixed(0) + '%)',
+      'มัดจำค้าง <b>13 ใบ</b> · ทำให้สั่งของไม่ได้ <b>9 ใบ</b> (ข้อมูลจำลอง)'
     ];
     const railSum = '<div style="display:flex;flex-direction:column;gap:9px">' + sumRows.map((t, i) =>
       '<div style="display:flex;gap:9px;font-size:11.9px;color:#475569;line-height:1.55">' +
@@ -1818,29 +1877,37 @@
       '<div style="height:5px;border-radius:99px;background:#EDF0F5;overflow:hidden"><i style="display:block;height:100%;border-radius:99px;width:' +
       s[2] + '%;background:' + s[3] + '"></i></div>').join('');
 
-    const teams = [['S2-CRD', '3 งาน · ฿677,000', 100], ['S1', '2 งาน · ฿1.30 ลบ.', 66],
-      ['S3-BU', '1 งาน · ฿1.24 ลบ.', 33], ['BU/Dealer', '1 งาน · ฿540,000', 22],
-      ['Online/E-Com · S3-OEM', '2 งาน · ฿441,000', 18]];
-    const railTeam = teams.map((t, i) =>
-      '<div style="display:flex;justify-content:space-between;font-size:11.8px;padding:5px 0"><span style="color:#475569">' +
-      esc(t[0]) + '</span><b>' + t[1] + '</b></div>' +
+    /* ── ทีม/ยอดของกลุ่มนี้ (จริง) ── */
+    const byTeam = new Map();
+    cur.forEach(d => {
+      const k = stripNum(d.team || '(ไม่ระบุ)');
+      const o = byTeam.get(k) || { n: 0, r: 0 };
+      o.n++; o.r += d.revenue || 0;
+      byTeam.set(k, o);
+    });
+    const teamArr = [...byTeam.entries()].sort((a, b) => b[1].r - a[1].r).slice(0, 6);
+    const maxT = teamArr.length ? teamArr[0][1].r : 1;
+    const railTeam = teamArr.length ? teamArr.map(t =>
+      '<div style="display:flex;justify-content:space-between;font-size:11.8px;padding:5px 0">' +
+      '<span style="color:#475569">' + esc(t[0]) + '</span><b>' + num(t[1].n) + ' ใบ · ' + baht(t[1].r) + '</b></div>' +
       '<div style="height:5px;border-radius:99px;background:#EDF0F5;overflow:hidden"><i style="display:block;height:100%;border-radius:99px;width:' +
-      t[2] + '%;background:' + (i === 0 ? 'linear-gradient(90deg,#F97066,#FDA29B)' : i < 3 ? 'linear-gradient(90deg,#FDB022,#FEC84B)' : 'linear-gradient(90deg,#98A2B3,#D0D5DD)') + '"></i></div>').join('');
+      (t[1].r / maxT * 100).toFixed(0) + '%;background:linear-gradient(90deg,#7EA6FF,#118DFF)"></i></div>').join('')
+      : empty('ยังไม่มีข้อมูลในเดือนนี้');
 
     let h = pgHead('Monthly Monitor', []);
     h += '<div class="g">';
-    h += '<div class="s12" style="grid-column:1/-1;display:flex;align-items:center;gap:9px;flex-wrap:wrap;' +
-      'padding:9px 13px;border-radius:11px;background:#FFFAEB;border:1px solid #FEDF89;color:#92400E;font-size:12px;font-weight:600">' +
-      '<span style="display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:5px;background:#FEF3C7;color:#92400E;font-size:10px;font-weight:800">ตัวอย่าง</span>' +
-      'หน้านี้เป็น <b>UX/UI ใหม่</b> ที่ทำไว้ดูก่อน — ข้อมูลเป็น <b>ข้อมูลจำลอง</b> ยังไม่เชื่อมระบบจริง (ต้องมีฟิลด์ วันที่ผ่านแต่ละขั้น · สถานะมัดจำ · สถานะสั่งของ)</div>';
-    h += kpiCard(3, 'ต้องตามวันนี้', '8 งาน', C.red, 'มูลค่า ' + baht(value) + ' · เลยกำหนด >7 วัน 3 งาน');
-    h += kpiCard(3, 'คาดปิดสิ้นเดือน', '463 / 450', C.green, 'เกินเป้า 13 ใบ · ปิด 5 งานแรกทัน = 468');
-    h += kpiCard(3, 'งานค้างทั้งระบบ', '872 ใบ', C.gold, 'เกิน 21 วัน 722 ใบ (83%) · เดือนนี้ 180 ใบ');
-    h += kpiCard(3, 'มัดจำค้าง', '133 ใบ', C.orange, '฿3.9 ลบ. · ทำให้สั่งของไม่ได้ 98 ใบ');
-    h += card(8, 'สิ่งที่ผมต้องตามทีม', list, { hint: 'เรียงตามความเร่งด่วน · กด “ตามแล้ว” เพื่อตัดออก' });
-    h += card(4, 'สรุป 1 นาที (สำหรับหัวหน้า)', railSum, { hint: 'ตัวอย่าง' });
+    h += ctl;
+    h += kpiCard(3, 'SO เดือนนี้ · ' + scope.label, num(so), C.navy,
+      prevSo ? ('เทียบเดือนก่อน ' + (dSo >= 0 ? '▲ ' : '▼ ') + Math.abs(dSo).toFixed(0) + '% (' + num(prevSo) + ')') : 'เดือนก่อนไม่มีข้อมูล');
+    h += kpiCard(3, 'Revenue สุทธิ', baht(rev), C.orange, num(units) + ' เครื่อง · เฉลี่ย ' + baht(so ? rev / so : 0) + '/ใบ');
+    h += kpiCard(3, 'คาดปิดสิ้นเดือน', num(fcSo) + ' ใบ', C.violet,
+      'เหลือ ' + left + ' วัน · run-rate ' + (elapsed ? (so / elapsed).toFixed(1) : '0') + ' ใบ/วัน');
+    h += kpiCard(3, 'ค้างในกลุ่มนี้', num(openAll.length) + ' ใบ', C.gold,
+      'เกิน 21 วัน ' + num(old21) + ' ใบ (' + (openAll.length ? (old21 / openAll.length * 100).toFixed(0) : 0) + '%)');
+    h += card(8, 'สิ่งที่ผมต้องตามทีม', list, { hint: 'ข้อมูลจำลอง · เรียงตามความเร่งด่วน' });
+    h += card(4, 'สรุป 1 นาที (สำหรับหัวหน้า)', railSum, { hint: 'KPI จริง + ลิสต์จำลอง' });
     h += card(6, 'SLA ที่ใช้ตัดสิน', railSla, { hint: 'ตาม Flowchart งานขาย SHOP' });
-    h += card(6, 'ทีมที่ต้องตามมากสุด', railTeam, { hint: 'จำนวนงาน · มูลค่า' });
+    h += card(6, 'ทีมขายของกลุ่มนี้ · ' + mthLabel(sel), railTeam, { hint: 'จำนวนใบ · Revenue (จริง)' });
     return h + '</div>';
   }
 
@@ -2071,6 +2138,11 @@
     if (ms) ms.onchange = () => { S.momMth = ms.value; S.keepScroll = true; render(); };
     const ms2 = $('momSel2');
     if (ms2) ms2.onchange = () => { S.momMth2 = ms2.value; S.keepScroll = true; render(); };
+    /* Monthly Monitor: เลือกเดือน + ขอบเขตสินค้า */
+    const mm = $('monMth');
+    if (mm) mm.onchange = () => { S.monMth = mm.value; S.keepScroll = true; render(); };
+    const msc = $('monScope');
+    if (msc) msc.onchange = () => { S.monScope = msc.value; S.keepScroll = true; render(); };
 
     const wi = $('welcomeImport');
     if (wi) wi.onclick = () => { const f = $('fileInput'); if (f) f.click(); };
