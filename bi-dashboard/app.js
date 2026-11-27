@@ -644,8 +644,15 @@
     const pSo = prev.length, pRev = sum(prev, 'revenue'), pUnit = sum(prev, 'units');
     const pD = prev.filter(d => d.status3 === '1.Done').length;
     const pC = prev.filter(d => d.status3 === '3.Cancel').length;
+    /* เทียบแบบวันต่อวัน: เดือนก่อนนับถึงวันที่เท่ากัน (elapsed) */
+    const prevTD = prev.filter(d => d.dateSO instanceof Date && !isNaN(d.dateSO) && d.dateSO.getDate() <= elapsed);
+    const pTSo = prevTD.length, pTRev = sum(prevTD, 'revenue'), pTUnit = sum(prevTD, 'units');
+    const pTD = prevTD.filter(d => d.status3 === '1.Done').length;
+    const pTC = prevTD.filter(d => d.status3 === '3.Cancel').length;
     const dl = (a, b) => (b ? (a - b) / b * 100 : null);
-    const dlTx = v => (v == null ? '–' : (v >= 0 ? '▲ ' : '▼ ') + Math.abs(v).toFixed(0) + '% เทียบเดือนก่อน');
+    const TH_M = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    const curMthTh = TH_M[mm - 1] + ' ' + (yy + 543);
+    const prevMthTh = TH_M[pm.m - 1] + ' ' + (pm.y + 543);
 
     /* รายวัน: เปิด SO + ติดตั้ง */
     const byDay = new Map(), instDay = new Map();
@@ -687,16 +694,18 @@
 
     /* ตารางเทียบเดือนก่อน */
     const mom = [
-      { k: 'จำนวน SO (ใบ)', a: so, b: pSo, f: num, better: 1 },
-      { k: 'Revenue สุทธิ', a: rev, b: pRev, f: baht, better: 1 },
-      { k: 'Unit (เครื่อง)', a: units, b: pUnit, f: num, better: 1 },
-      { k: 'ปิดจริง (1.Done)', a: nD, b: pD, f: num, better: 1 },
-      { k: 'ยกเลิก (3.Cancel)', a: nC, b: pC, f: num, better: -1 },
-      { k: 'ยอดเฉลี่ยต่อใบ', a: so ? rev / so : 0, b: pSo ? pRev / pSo : 0, f: baht, better: 1 }
+      { k: 'จำนวน SO (ใบ)', a: so, b: pTSo, f: num, better: 1 },
+      { k: 'Revenue สุทธิ', a: rev, b: pTRev, f: baht, better: 1 },
+      { k: 'Unit (เครื่อง)', a: units, b: pTUnit, f: num, better: 1 },
+      { k: 'ปิดจริง (1.Done)', a: nD, b: pTD, f: num, better: 1 },
+      { k: 'ยกเลิก (3.Cancel)', a: nC, b: pTC, f: num, better: -1 },
+      { k: 'ยอดเฉลี่ยต่อใบ', a: so ? rev / so : 0, b: pTSo ? pTRev / pTSo : 0, f: baht, better: 1 }
     ];
     let momTbl = '<div class="tbl"><table class="pbi"><thead><tr>' +
-      '<th class="rowhead">ตัวชี้วัด</th><th class="num">' + esc(S.period ? S.period.replace('-', ' · ') : 'เดือนนี้') + '</th>' +
-      '<th class="num">' + pm.m + ' · ' + pm.y + '</th><th class="num">ต่าง</th><th class="num">%</th></tr></thead><tbody>';
+      '<th class="rowhead">ตัวชี้วัด</th>' +
+      '<th class="num">' + esc(curMthTh) + '<br><small>ถึงวันที่ ' + elapsed + '</small></th>' +
+      '<th class="num">' + esc(prevMthTh) + '<br><small>ถึงวันที่ ' + elapsed + '</small></th>' +
+      '<th class="num">ต่าง</th><th class="num">%</th></tr></thead><tbody>';
     mom.forEach(r => {
       const d0 = r.a - r.b, p0 = dl(r.a, r.b);
       const good = p0 == null ? '' : ((p0 * r.better) >= 0 ? 'c-done' : 'c-canc');
@@ -707,44 +716,123 @@
     });
     momTbl += '</tbody></table></div>';
 
+    /* ---- ยอดสะสมรายวัน เดือนนี้ vs เดือนก่อน ---- */
+    const curByDay = new Map(), prevByDay = new Map();
+    rs.forEach(d => { if (d.dateSO && !isNaN(d.dateSO)) { const k = d.dateSO.getDate(); curByDay.set(k, (curByDay.get(k) || 0) + 1); } });
+    prev.forEach(d => { if (d.dateSO && !isNaN(d.dateSO)) { const k = d.dateSO.getDate(); prevByDay.set(k, (prevByDay.get(k) || 0) + 1); } });
+    const cLabels = [], cumCur = [], cumPrev = [];
+    let a1 = 0, a2 = 0;
+    for (let d = 1; d <= elapsed; d++) {
+      cLabels.push(String(d));
+      a1 += curByDay.get(d) || 0; cumCur.push(a1);
+      a2 += prevByDay.get(d) || 0; cumPrev.push(a2);
+    }
+    const trendChart = elapsed > 1 ? multiLine(cLabels, [
+      { name: 'SO สะสม · ' + curMthTh, color: '#118DFF', values: cumCur },
+      { name: 'SO สะสม · ' + prevMthTh, color: '#98A2B3', values: cumPrev, dashed: true }
+    ], { height: 210 }) : empty();
+
+    /* ---- องค์ประกอบสถานะ ---- */
+    const ctot = (nD + nP + nC) || 1;
+    const compRows = [
+      { k: 'ปิดจริง (1.Done)', v: nD, c: '#059669' },
+      { k: 'คงค้าง (2.Pending)', v: nP, c: '#F59E0B' },
+      { k: 'ยกเลิก (3.Cancel)', v: nC, c: '#E11D48' }
+    ];
+    const compHtml = '<div class="sum-comp"><div class="sum-comp-bar">' +
+      compRows.filter(x => x.v).map(x => '<i style="width:' + (x.v / ctot * 100).toFixed(1) +
+        '%;background:' + x.c + '" title="' + esc(x.k) + ' ' + num(x.v) + ' ใบ"></i>').join('') +
+      '</div><div class="sum-comp-rows">' +
+      compRows.map(x => '<div class="sum-comp-row"><i style="background:' + x.c + '"></i><span>' + esc(x.k) +
+        '</span><b>' + num(x.v) + '</b><em>' + (x.v / ctot * 100).toFixed(0) + '%</em></div>').join('') +
+      '</div></div>';
+
+    /* ---- อายุงานค้าง ---- */
+    const BKL = ['0–3 วัน', '4–7 วัน', '8–14 วัน', '15–21 วัน', 'เกิน 21 วัน'];
+    const bkc = [0, 0, 0, 0, 0];
+    openAll.forEach(d => {
+      if (!(d.dateSO instanceof Date) || isNaN(d.dateSO)) return;
+      const ageDays = (now - d.dateSO) / 86400000;
+      if (ageDays > 21) { bkc[4]++; return; }
+      const age = Math.max(0, Math.round(ageDays));
+      bkc[age <= 3 ? 0 : age <= 7 ? 1 : age <= 14 ? 2 : 3]++;
+    });
+
+    /* ---- ตัวช่วย: อันดับแบบแท่ง ---- */
+    const rankList = (items, fmt) => {
+      if (!items || !items.length) return empty();
+      const mx = Math.max.apply(null, items.map(x => x.value)) || 1;
+      return '<div class="sum-rank">' + items.map(x =>
+        '<div class="sum-rank-row"><span class="sum-rank-name" title="' + esc(x.label) + '">' + esc(x.label) + '</span>' +
+        '<span class="sum-rank-val">' + fmt(x.value) + '</span>' +
+        '<span class="sum-rank-track"><i style="width:' + (x.value / mx * 100).toFixed(1) + '%"></i></span></div>').join('') + '</div>';
+    };
+
+    /* ---- HERO ---- */
+    const dRev = dl(rev, pTRev), dSo = dl(so, pTSo), dUnit = dl(units, pTUnit), dDone = dl(nD, pTD);
+    const chip = v => '<span class="sum-chip ' + (v == null || Math.abs(v) < 1 ? 'flat' : v > 0 ? 'up' : 'down') + '">' +
+      (v == null ? '–' : Math.abs(v) < 1 ? '≈ เดิม' : (v > 0 ? '▲ ' : '▼ ') + Math.abs(v).toFixed(0) + '%') + '</span>';
+
+    const hero = '<section class="sum-hero">' +
+      '<div class="sum-hero-main">' +
+        '<div class="sum-eyebrow">รายได้สุทธิ · ' + curMthTh + '</div>' +
+        '<div class="sum-hero-num">' + baht(rev) + '</div>' +
+        '<div class="sum-hero-lbl">หลังหักส่วนลด ÷ 1.07 · เฉพาะกลุ่มหยอดเหรียญ</div>' +
+        '<div class="sum-hero-delta">' + chip(dRev) + '<small>เทียบ ' + prevMthTh + ' (ถึงวันที่ ' + elapsed + ') · ' + baht(pTRev) + '</small></div>' +
+      '</div>' +
+      '<div class="sum-hero-stats">' +
+        '<div class="sum-stat"><b>' + num(so) + '</b><span>SO (ใบ)</span>' + chip(dSo) + '</div>' +
+        '<div class="sum-stat"><b>' + num(units) + '</b><span>Unit (เครื่อง)</span>' + chip(dUnit) + '</div>' +
+        '<div class="sum-stat"><b>' + num(nD) + '</b><span>ปิดจริง (Done)</span>' + chip(dDone) + '</div>' +
+      '</div>' +
+      '<div class="sum-hero-prog">' +
+        '<div class="sum-hero-track"><i style="width:' + pctMonth + '%"></i><u style="left:' + pctMonth + '%"></u></div>' +
+        '<small>เดือนผ่านไป ' + pctMonth + '% (' + elapsed + '/' + dim + ' วัน) · คาดปิดเดือน ' +
+        num(fcSo) + ' ใบ / ' + baht(fcRev) + '</small>' +
+      '</div></section>';
+
+    /* ---- INSIGHTS ---- */
+    const insights = [
+      { c: (dRev == null || dRev >= 0) ? '#059669' : '#E11D48',
+        t: 'รายได้ ' + (dRev == null ? '–' : Math.abs(dRev) < 1 ? 'ทรงตัว' : (dRev > 0 ? 'โต ' : 'ลด ') + Math.abs(dRev).toFixed(0) + '%'),
+        s: baht(rev) + ' เทียบ ' + baht(pTRev) + ' (' + prevMthTh + ' ถึงวันที่ ' + elapsed + ')' },
+      { c: '#4F46E5', t: 'คาดปิดเดือน ' + num(fcSo) + ' ใบ · ' + baht(fcRev),
+        s: 'เหลือ ' + left + ' วัน · อีก +' + num(Math.max(fcSo - so, 0)) + ' ใบ (run-rate ' + (so / elapsed).toFixed(1) + ' ใบ/วัน)' },
+      { c: '#F59E0B', t: 'อัตราปิดงาน ' + (closeRate * 100).toFixed(0) + '%',
+        s: 'ปิดจริง ' + num(nD) + ' จาก ' + num(nD + nP) + ' ใบที่ปิดได้ · ยังค้าง ' + num(nP) + ' ใบ' },
+      { c: '#E11D48', t: 'ยกเลิก ' + num(nC) + ' ใบ (' + (so ? (nC / so * 100).toFixed(0) : 0) + '% ของ SO)',
+        s: 'เดือนก่อน ' + num(pTC) + ' ใบ — ' + (pTC > nC ? 'ดีขึ้น ' + (pTC - nC) + ' ใบ' : pTC < nC ? 'แย่ลง ' + (nC - pTC) + ' ใบ' : 'เท่าเดิม') },
+      { c: '#0EA5E9', t: 'Backlog ค้าง ' + num(openAll.length) + ' ใบ',
+        s: 'ค้างเกิน 21 วัน ' + num(old21) + ' ใบ (' + (openAll.length ? (old21 / openAll.length * 100).toFixed(0) : 0) + '% ของ backlog)' }
+    ];
+
     let h = pgHead('Summary', rs);
     h += '<div class="g">';
-    h += kpiCard(3, 'SO เดือนนี้', num(so), C.navy, dlTx(dl(so, pSo)));
-    h += kpiCard(3, 'Revenue สุทธิ', baht(rev), C.purple, dlTx(dl(rev, pRev)));
-    h += kpiCard(3, 'Unit (เครื่อง)', num(units), C.teal, dlTx(dl(units, pUnit)));
-    h += kpiCard(3, 'ปิดจริง (Done)', num(nD), C.green, 'อัตราปิดงาน ' + (closeRate * 100).toFixed(0) + '% · เดือนก่อน ' + num(pD));
-    h += kpiCard(3, 'Pending คงค้าง', num(nP), C.gold, so ? (nP / so * 100).toFixed(0) + '% ของ SO' : '–');
-    h += kpiCard(3, 'ยกเลิก', num(nC), C.red, so ? (nC / so * 100).toFixed(0) + '% ของ SO · เดือนก่อน ' + num(pC) : '–');
-    h += kpiCard(3, 'ประมาณการ SO สิ้นเดือน', num(fcSo), C.orange, 'อีก ' + left + ' วัน · เฉลี่ย ' + (so / elapsed).toFixed(1) + ' ใบ/วัน');
-    h += kpiCard(3, 'Backlog ค้างทั้งหมด', num(openAll.length), C.blue, 'เกิน 21 วัน ' + num(old21) + ' ใบ');
+    h += hero;
+    h += '<div class="sum-ins">' + insights.map(x =>
+      '<div class="sum-ins-item"><span class="sum-ins-dot" style="background:' + x.c + '"></span><div>' +
+      '<div class="sum-ins-t">' + esc(x.t) + '</div><div class="sum-ins-s">' + esc(x.s) + '</div></div></div>').join('') + '</div>';
 
-    h += card(8, 'SO รายวัน · แท่ง = เปิด SO / เส้นแดง = ติดตั้ง',
-      colsChart(daily, { line: instLine, barLabel: 'เปิด SO', lineLabel: 'ติดตั้ง', field: 'day' }));
-    h += card(4, 'สถานะใบงาน3', donut(stD, { field: 'status3' }) +
-      '<div class="chart-legend"><span><i class="sw" style="background:#059669"></i>Done ' + num(nD) + '</span>' +
-      '<span><i class="sw" style="background:#F59E0B"></i>Pending ' + num(nP) + '</span>' +
-      '<span><i class="sw" style="background:#E11D48"></i>Cancel ' + num(nC) + '</span></div>');
+    h += card(7, 'ยอด SO สะสม · เดือนนี้เทียบเดือนก่อน', trendChart, { hint: 'ถึงวันที่ ' + elapsed });
+    h += card(5, 'องค์ประกอบสถานะใบงาน', compHtml, { hint: 'สัดส่วน 100%' });
 
-    h += card(12, 'ประมาณการสิ้นเดือน · ' + elapsed + '/' + dim + ' วัน',
-      '<div class="fc"><div><div class="big">' + num(fcSo) + '</div><small>ประมาณการ SO</small></div>' +
-      '<div><div class="big" style="color:#E66C37">' + baht(fcRev) + '</div><small>ประมาณการ Revenue</small></div>' +
-      '<div class="track"><i style="width:' + pctMonth + '%"></i><u style="left:' + pctMonth + '%"></u></div>' +
-      '<small>ทำได้แล้ว ' + num(so) + ' ใบ (' + pctMonth + '% ของเดือน) · เหลือ ' + left + ' วัน<br>' +
-      'ปิดจริงถึงวันนี้ ' + num(nD) + ' ใบ · เดือนก่อนปิดได้ ' + num(pD) + ' ใบ</small></div>',
-      { hint: 'run-rate จากวันที่ผ่านไป' });
+    h += card(4, 'Top 5 ทีมขาย · Revenue', rankList(topTeam.slice(0, 5), baht), { hint: 'ราคาสุทธิ' });
+    h += card(4, 'กลุ่มสินค้า · Unit', rankList(byGroup, num), { hint: 'จำนวนเครื่อง' });
+    h += card(4, 'พื้นที่ · SO', rankList(byArea, num), { hint: 'จำนวนใบ' });
 
-    h += card(4, 'Top 6 ทีมขาย · Revenue', hbars(topTeam, baht, { field: 'team' }), { hint: 'ราคาสุทธิ' });
-    h += card(4, 'กลุ่มสินค้า · Unit', hbars(byGroup, num, { field: 'group' }), { hint: 'จำนวนเครื่อง' });
-    h += card(4, 'พื้นที่ (GBKK/UPC) · SO', hbars(byArea, num, { field: 'gbkk' }), { hint: 'จำนวนใบ' });
+    h += card(6, 'ความเสี่ยงงานค้าง (Backlog)',
+      (old21 ? '<div class="sum-risk-alert">⚠ ค้างเกิน 21 วัน ' + num(old21) + ' ใบ จากทั้งหมด ' + num(openAll.length) + ' ใบ</div>' : '') +
+      rankList(BKL.map((k, i) => ({ label: k, value: bkc[i] })), num), { hint: 'นับจากวันเปิด SO ถึงวันนี้' });
+    h += card(6, 'เทียบเดือนก่อน (Month over Month)', momTbl, { hint: 'เขียว = ดีขึ้น · แดง = แย่ลง' });
 
-    h += card(12, 'เทียบเดือนก่อน (Month over Month)', momTbl, { hint: 'เขียว = ดีขึ้น · แดง = แย่ลง' });
     h += card(12, 'นิยาม & วิธีอ่าน',
       '<ul class="note">' +
       '<li><b>ขอบเขต</b> = เฉพาะกลุ่มสินค้าหยอดเหรียญ · เดือนที่เลือกจากตัวกรองด้านบน</li>' +
       '<li><b>Revenue สุทธิ</b> = IF(เงินสดว่าง, ราคาตั้ง, ราคาเงินสด) − ส่วนลด ÷ 1.07</li>' +
-      '<li><b>ปิดจริง (Done)</b> = งานที่มีสัญญา / สถานะ 1.Done · <b>อัตราปิดงาน</b> = Done ÷ (Done + Pending)</li>' +
+      '<li><b>ปิดจริง (Done)</b> = สถานะ 1.Done · <b>อัตราปิดงาน</b> = Done ÷ (Done + Pending)</li>' +
+      '<li><b>ยอด SO สะสม</b> = บวกเพิ่มวันละใบ ตั้งแต่ต้นเดือนถึงวันที่ผ่านมา (เส้นประ = เดือนก่อน วันเดียวกัน)</li>' +
       '<li><b>ประมาณการสิ้นเดือน</b> = ยอดถึงวันนี้ ÷ วันที่ผ่านไป × วันในเดือน (run-rate)</li>' +
-      '<li><b>Backlog ค้างทั้งหมด</b> = งาน Pending ทุกเดือนที่ยังไม่ปิด · “เกิน 21 วัน” คือค้างนานกว่ากรอบ Aging</li>' +
+      '<li><b>Backlog</b> = งาน Pending ทุกเดือนที่ยังไม่ปิด · “เกิน 21 วัน” ค้างนานกว่ากรอบ Aging</li>' +
       '<li>คลิกกราฟ/แท่ง/แถวเพื่อกรองได้หลายค่า · ปุ่ม “ล้างทั้งหมด” เพื่อคืนค่า</li>' +
       '</ul>');
     return h + '</div>';
@@ -1622,6 +1710,21 @@
   function pageKey(name) { return IMPLEMENTED[name] || name; }
 
   function buildNav() {
+    /* เมนู "⋯ เพิ่มเติม" — หน้ารายงานของเว็บที่ไม่มีใน PBI */
+    const list = $('moreList');
+    if (list) {
+      list.innerHTML = EXTRA_PAGES.map(p => {
+        const k = pageKey(p);
+        return '<button class="more-item' + (k === S.page ? ' active' : '') + '" data-page="' + esc(k) + '">' + esc(p) + '</button>';
+      }).join('');
+      list.querySelectorAll('.more-item').forEach(b => {
+        b.onclick = () => {
+          S.page = b.dataset.page; S.pageIdx = 0;
+          const d = $('morePages'); if (d) d.removeAttribute('open');
+          render(); scrollTopPage();
+        };
+      });
+    }
     const nav = $('pageNav');
     if (!nav) return;
     let n = 0;
@@ -1673,6 +1776,17 @@
     document.querySelectorAll('#pageTabs .pbi-tab').forEach(b => {
       b.classList.toggle('active', b.dataset.page === S.page);
     });
+    let inMore = false;
+    document.querySelectorAll('#moreList .more-item').forEach(b => {
+      const on = b.dataset.page === S.page;
+      b.classList.toggle('active', on);
+      if (on) inMore = true;
+    });
+    const sm = document.querySelector('#morePages > summary');
+    if (sm) {
+      sm.classList.toggle('active', inMore);
+      sm.title = inMore ? 'กำลังดูหน้าเพิ่มเติม' : 'หน้ารายงานเพิ่มเติมของเว็บ (ไม่มีใน Power BI)';
+    }
   }
 
   /* ---------- import ---------- */
