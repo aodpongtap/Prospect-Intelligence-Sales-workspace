@@ -2187,7 +2187,7 @@
     return new Promise(res => {
       if (window.BI_SNAPSHOT) return res(window.BI_SNAPSHOT);
       const s = document.createElement('script');
-      s.src = 'data-snapshot.js';
+      s.src = 'data-snapshot.js?v=1129e';
       s.async = true;
       s.onload = () => res(window.BI_SNAPSHOT || null);
       s.onerror = () => res(null);
