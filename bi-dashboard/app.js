@@ -1735,7 +1735,9 @@
         '<div class="w-ico">▤</div>' +
         '<h2>' + (vo ? 'ยังไม่มีข้อมูล' : 'เครื่อง/เบราว์เซอร์นี้ยังไม่มีข้อมูล') + '</h2>' +
         (vo
-          ? '<p>กรุณาติดต่อผู้ดูแลระบบเพื่ออัปเดตข้อมูล</p>'
+          ? '<p>ยังโหลดข้อมูลชุดล่าสุดไม่ได้ (สัญญาณหรือเน็ตอาจขาดช่วง)<br>' +
+            '<span class="w-note">กดปุ่มด้านล่างเพื่อลองโหลดอีกครั้ง</span></p>' +
+            '<button class="btn primary w-btn" id="welcomeReload">↻ ลองโหลดใหม่</button>'
           : '<p>ข้อมูลทั้งหมดถูกอ่านและเก็บไว้ในเบราว์เซอร์ของอุปกรณ์นั้น ๆ ไม่มีการอัปโหลดขึ้นเซิร์ฟเวอร์<br>' +
             'ดังนั้นถ้าเปิดจากมือถือ/เครื่องอื่น ต้องกด Import ไฟล์ <b>*_ListBooking.xlsx</b> 1 ครั้งก่อน' +
             '<br><span class="w-note">ปุ่ม ✓ Save จำเฉพาะ “หน้าที่เปิดอยู่ + ตัวกรอง” ไม่ได้ส่งข้อมูลข้ามเครื่อง</span></p>' +
@@ -1843,6 +1845,8 @@
 
     const wi = $('welcomeImport');
     if (wi) wi.onclick = () => { const f = $('fileInput'); if (f) f.click(); };
+    const wr = $('welcomeReload');
+    if (wr) wr.onclick = () => location.reload();
   }
 
   const NAV_GROUPS = [
@@ -2210,14 +2214,20 @@
   }
 
   /* ---------- snapshot ที่ฝังมากับเว็บ (อ่านอย่างเดียว) ---------- */
-  function loadSnapshot() {
+  function loadSnapshot(attempt) {
+    attempt = attempt || 0;
     return new Promise(res => {
       if (window.BI_SNAPSHOT) return res(window.BI_SNAPSHOT);
       const s = document.createElement('script');
-      s.src = 'data-snapshot.js?v=1129g';
+      /* ลองซ้ำสูงสุด 3 ครั้ง — กันกรณีเน็ตมือถือหลุด/GitHub Pages เพิ่ง deploy ยังไม่ propagate */
+      s.src = 'data-snapshot.js?v=1130c' + (attempt ? '&r=' + attempt : '');
       s.async = true;
       s.onload = () => res(window.BI_SNAPSHOT || null);
-      s.onerror = () => res(null);
+      s.onerror = () => {
+        s.remove();
+        if (attempt >= 3) return res(null);
+        setTimeout(() => res(loadSnapshot(attempt + 1)), 900);
+      };
       document.head.appendChild(s);
     });
   }
