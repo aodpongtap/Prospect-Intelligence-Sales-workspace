@@ -111,6 +111,66 @@
       .catch(() => null);
   }
 
+  /* ---------- บันทึกมุมมอง (Save) — เปิดใหม่แสดงหน้า/ตัวกรองเดิมทันที ---------- */
+  const VIEW_KEY = 'bi.savedView';
+  function readView() {
+    try { return JSON.parse(localStorage.getItem(VIEW_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function knownPages() {
+    const s = new Set(['overview', 'status', 'tat', 'data', 'soon']);
+    PBI_PAGES.forEach(p => s.add(pageKey(p)));
+    EXTRA_PAGES.forEach(p => s.add(pageKey(p)));
+    return s;
+  }
+  function applyView() {
+    const v = readView();
+    if (!v || typeof v !== 'object') return false;
+    if (v.page && knownPages().has(v.page)) S.page = v.page;
+    const ps = periods();
+    if (v.period && (!ps.length || ps.indexOf(v.period) >= 0)) S.period = v.period;
+    ['team', 'channel', 'group'].forEach(f => {
+      S.filter[f] = new Set(Array.isArray(v[f]) ? v[f].filter(x => x != null && x !== '') : []);
+    });
+    S.xf = (v.xf && typeof v.xf === 'object' && !Array.isArray(v.xf)) ? v.xf : {};
+    if (typeof v.q === 'string') S.q = v.q;
+    S.pageIdx = 0;
+    return true;
+  }
+  function saveView() {
+    const v = {
+      page: S.page, period: S.period,
+      team: [...S.filter.team], channel: [...S.filter.channel], group: [...S.filter.group],
+      xf: S.xf, q: S.q, at: new Date().toISOString()
+    };
+    let ok = true;
+    try { localStorage.setItem(VIEW_KEY, JSON.stringify(v)); } catch (e) { ok = false; }
+    const b = $('btnSaveView');
+    if (b && ok) {
+      b.classList.add('saved', 'has-save');
+      b.title = 'บันทึกไว้เมื่อ ' + new Date(v.at).toLocaleString('th-TH');
+      setTimeout(() => b.classList.remove('saved'), 1400);
+    }
+    viewToast(ok
+      ? 'บันทึกมุมมองแล้ว · เปิดเว็บครั้งหน้าจะแสดงหน้านี้พร้อมตัวกรองเดิมทันที'
+      : 'บันทึกไม่สำเร็จ (เบราว์เซอร์บล็อกที่เก็บข้อมูล)');
+    return ok;
+  }
+  function clearView() {
+    try { localStorage.removeItem(VIEW_KEY); } catch (e) {}
+    const b = $('btnSaveView');
+    if (b) { b.classList.remove('has-save', 'saved'); b.title = 'บันทึกมุมมองปัจจุบัน (หน้า + ช่วงเดือน + ตัวกรอง)'; }
+    viewToast('ล้างมุมมองที่บันทึกไว้แล้ว · กลับไปค่าเริ่มต้น');
+  }
+  function viewToast(msg) {
+    const t = $('viewToast');
+    if (!t) return;
+    const s = t.querySelector('.status');
+    if (s) s.textContent = msg;
+    t.classList.remove('hidden');
+    clearTimeout(viewToast._t);
+    viewToast._t = setTimeout(() => t.classList.add('hidden'), 3200);
+  }
+
   /* ---------- ขอบเขตข้อมูล: กลุ่ม "หยอดเหรียญ" ทั้งหมด (รวมเครื่องชงกาแฟ) ---------- */
   const KEEP_GROUP_RE = /หยอดเหรียญ/;
   function isKeepGroup(g) {
@@ -1348,8 +1408,9 @@
       S.meta = { file: file.name, rows: data.length, at: new Date(), stamp: (file.name.match(/(\d{14})/) || [])[1] || '' };
       const ps = periods();
       S.period = ps.length ? ps[ps.length - 1] : null;
-      S.q = ''; S.pageIdx = 0;
+      S.q = ''; S.pageIdx = 0; S.xf = {};
       S.filter.team.clear(); S.filter.channel.clear(); S.filter.group.clear();
+      applyView();            /* ★ หลัง import กลับไปมุมมองที่บันทึกไว้ (ถ้ามี) */
       syncHeader(); render();
       cacheSave();
       bar.style.width = '100%';
@@ -1514,6 +1575,7 @@
   }
 
   function boot() {
+    applyView();            /* ★ คืนหน้ามุมมองที่บันทึกไว้ก่อนวาดครั้งแรก */
     buildNav();
     buildTabs();
     window.addEventListener('resize', fit);
@@ -1538,6 +1600,14 @@
       if (f) handleFile(f);
     });
     $('btnExport').onclick = exportCsv;
+    const sv = $('btnSaveView');
+    if (sv) {
+      sv.onclick = saveView;
+      const v = readView();
+      if (v) { sv.classList.add('has-save'); sv.title = 'บันทึกไว้เมื่อ ' + new Date(v.at || Date.now()).toLocaleString('th-TH'); }
+    }
+    const sc = $('btnSaveClear');
+    if (sc) sc.onclick = clearView;
     render(); fit();
 
     // ถ้ามีข้อมูลที่บันทึกไว้ ให้แสดงทันทีโดยไม่ต้อง import ใหม่
@@ -1546,6 +1616,7 @@
       S.data = c.data; S.meta = c.meta;
       const ps = periods();
       S.period = ps.length ? ps[ps.length - 1] : null;
+      applyView();          /* ★ คืนมุมมองที่บันทึก (หน้า/เดือน/ตัวกรอง) */
       syncHeader(); render(); fit();
       const info = $('datasetInfo');
       if (info) info.insertAdjacentHTML('beforeend', '<br><span style="color:#0F7CD9">ข้อมูลที่บันทึกไว้ · กด Import เพื่ออัปเดต</span>');

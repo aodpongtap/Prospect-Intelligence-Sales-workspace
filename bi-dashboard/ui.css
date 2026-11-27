@@ -334,6 +334,30 @@ table.pbi.st td.c-canc { color: #B42318; }
 .eb span { position: absolute; bottom: -16px; font-size: 9.5px; color: #98A2B3; white-space: nowrap; }
 .eb:hover .a { filter: brightness(1.1); }
 
+/* แท่งซ้อน Done / Pending / Cancel / ประมาณการ */
+.eb .stack {
+  position: relative; width: 100%; max-width: 26px; height: 0;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  border-radius: 3px 3px 0 0; overflow: hidden;
+}
+.eb .stack i { display: block; width: 100%; min-height: 1px; transition: height .25s ease; }
+.eb .s-done { background: linear-gradient(180deg, #12B76A, #059669); }
+.eb .s-pend { background: linear-gradient(180deg, #FDB022, #F59E0B); }
+.eb .s-canc { background: linear-gradient(180deg, #F04438, #E11D48); }
+.eb .s-proj {
+  background: repeating-linear-gradient(45deg, #C7CBF7 0 4px, #E7E9FC 4px 8px);
+  border-top: 1px dashed #B9BEF3; box-sizing: border-box;
+}
+.eb:hover .stack { filter: brightness(1.08); }
+.eb.xf-on .stack { outline: 2px solid #4F46E5; outline-offset: 1px; }
+
+/* ---------------- ปุ่ม Save มุมมอง ---------------- */
+#btnSaveView.has-save { border-color: #A5ABF7; background: #F2F3FF; color: #4F46E5; font-weight: 700; }
+#btnSaveView.saved { background: #059669; border-color: #059669; color: #fff; }
+#btnSaveClear { padding-left: 8px; padding-right: 8px; }
+#viewToast { width: 300px; }
+#viewToast .toast-head { margin-bottom: 0; }
+
 /* ช่องตารางที่มีแท่งเทียบ */
 .tbcell { display: flex; align-items: center; gap: 8px; }
 .tbcell .tbar { flex: 1 1 auto; height: 8px; border-radius: 4px; background: #EEF0F4; overflow: hidden; min-width: 40px; }

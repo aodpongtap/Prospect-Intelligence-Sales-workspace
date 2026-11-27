@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sale Order BI · Prospect Intelligence</title>
-<link rel="stylesheet" href="bi.css?v=1127k">
-<link rel="stylesheet" href="polish.css?v=1127k">
-<link rel="stylesheet" href="nav.css?v=1127k">
-<link rel="stylesheet" href="viz.css?v=1127k">
-<link rel="stylesheet" href="tabs.css?v=1127k">
-<link rel="stylesheet" href="ui.css?v=1127k">
+<link rel="stylesheet" href="bi.css?v=1127m">
+<link rel="stylesheet" href="polish.css?v=1127m">
+<link rel="stylesheet" href="nav.css?v=1127m">
+<link rel="stylesheet" href="viz.css?v=1127m">
+<link rel="stylesheet" href="tabs.css?v=1127m">
+<link rel="stylesheet" href="ui.css?v=1127m">
 </head>
 <body class="nav-off">
 <div class="pbi-shell">
@@ -21,6 +21,8 @@
     <button class="btn primary" id="btnImport"
       title="เลือกไฟล์ *_ListBooking.xlsx ที่ IT สร้างให้ทุกเช้า · ไฟล์ถูกอ่านในเบราว์เซอร์เท่านั้น ไม่มีการอัปโหลด · หรือลากไฟล์มาวางที่หน้าเว็บได้เลย">⇪ Import ListBooking</button>
     <button class="btn" id="btnExport" disabled>⤓ Export CSV</button>
+    <button class="btn" id="btnSaveView" title="บันทึกมุมมองปัจจุบัน (หน้า + ช่วงเดือน + ตัวกรอง) แล้วเปิดใหม่จะแสดงแบบนี้ทันที">✓ Save</button>
+    <button class="btn" id="btnSaveClear" title="ล้างมุมมองที่บันทึกไว้">⟲</button>
     <div class="pbi-filters" id="filterBar"></div>
     <div class="spacer"></div>
     <div class="pbi-dataset" id="datasetInfo">
@@ -57,6 +59,12 @@
   </div>
 </div>
 
+<!-- ===== view saved toast ===== -->
+<div class="toast hidden" id="viewToast">
+  <div class="toast-head">มุมมอง</div>
+  <div class="status"></div>
+</div>
+
 <!-- ===== import progress toast ===== -->
 <div class="toast hidden" id="importToast">
   <div class="toast-head">Import ListBooking</div>
@@ -66,10 +74,10 @@
 
 <input type="file" id="fileInput" accept=".xlsx" hidden>
 
-<script src="xlsx-lite.js?v=1127k"></script>
-<script src="lookups.js?v=1127k"></script>
-<script src="master-status.js?v=1127k"></script>
-<script src="schema.js?v=1127k"></script>
-<script src="app.js?v=1127k"></script>
+<script src="xlsx-lite.js?v=1127m"></script>
+<script src="lookups.js?v=1127m"></script>
+<script src="master-status.js?v=1127m"></script>
+<script src="schema.js?v=1127m"></script>
+<script src="app.js?v=1127m"></script>
 </body>
 </html>
