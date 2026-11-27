@@ -455,7 +455,8 @@
       '<th class="num">SO</th><th class="num">%SO</th></tr></thead><tbody>';
     list.forEach(e => {
       const k = e[0], o = e[1], t = o.d + o.p + o.c + o.x;
-      h += '<tr><td class="rowhead">' + esc(k) + '</td>' +
+      const selR = xfHas('team', k);
+      h += '<tr><td class="rowhead' + (selR ? ' sel' : '') + '"' + xfAttr('team', k) + '>' + esc(k) + '</td>' +
         '<td class="num c-done">' + num(o.d) + '</td><td class="num c-done">' + pc(o.d, t) + '</td>' +
         '<td class="num c-pend">' + num(o.p) + '</td><td class="num c-pend">' + pc(o.p, t) + '</td>' +
         '<td class="num c-canc">' + num(o.c) + '</td><td class="num c-canc">' + pc(o.c, t) + '</td>' +
@@ -865,6 +866,14 @@
     return h + '</div>';
   }
 
+  /* ชื่อฟิลด์ -> ชื่อไทย (ใช้ในหัวข้อกราฟ/ตาราง) */
+  const FIELD_TH = {
+    team: 'ทีมขาย', admGroup: 'สถานะ Admin', status3: 'สถานะใบงาน3', group: 'กลุ่มสินค้า',
+    pkg: 'การชำระ', province: 'จังหวัด', salesperson: 'พนักงานขาย', gbkk: 'โซน (GBKK/UPC)',
+    prodCat: 'ประเภทสินค้า', jobStage: 'ขั้นตอนงาน', channel: 'ช่องทาง',
+    dayLabel: 'วันที่', monthLabel: 'เดือน', area: 'พื้นที่'
+  };
+
   function pageGeneric(name, rs) {
     const sp = SPECS[name] || { dim: 'team', dim2: 'status3', metric: 'count', title: name };
     const pick = rws => (sp.filter ? rws.filter(sp.filter) : rws);
@@ -906,7 +915,7 @@
     const dTop = bars.slice(0, 7);
     const dRest = bars.slice(7).reduce((a, b) => a + b.value, 0);
     const dData = dRest > 0 ? dTop.concat([{ label: 'อื่น ๆ (' + (bars.length - 7) + ')', value: dRest }]) : dTop;
-    const pv = matrix(data, labelOf, label2Of, valOf, fmt, { sortRows: 1, maxRows: 12, maxCols: 8, rowTitle: sp.dim, rowField: sp.dim, colField: sp.dim2 });
+    const pv = matrix(data, labelOf, label2Of, valOf, fmt, { sortRows: 1, maxRows: 12, maxCols: 8, rowTitle: FIELD_TH[sp.dim] || sp.dim, rowField: sp.dim, colField: sp.dim2 });
     const metricTxt = sp.metric === 'revenue' ? 'ราคาสุทธิ (บาท)' : sp.metric === 'units' ? 'จำนวนเครื่อง' : 'จำนวนงาน';
 
     let h = pgHead(name, data);
@@ -915,9 +924,9 @@
     h += kpiCard(3, 'Revenue (ราคาสุทธิ)', baht(rev), C.orange, 'ตามสูตรในไฟล์');
     h += kpiCard(3, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
     h += kpiCard(3, 'รายการในหน้านี้', num(data.length), C.violet, sp.filter ? 'ตามเงื่อนไขหน้านี้' : 'ทั้งเดือน');
-    h += card(8, sp.title + ' · ตาม ' + sp.dim, chart, { hint: isTime ? 'รายแกนเวลา' : 'เรียงจากมากไปน้อย' });
-    h += card(4, sp.dim + ' · สัดส่วน', donut(dData, { field: sp.dim }));
-    h += card(12, sp.dim + ' × ' + sp.dim2, pv, { hint: metricTxt });
+    h += card(8, sp.title + ' · ตาม ' + (FIELD_TH[sp.dim] || sp.dim), chart, { hint: isTime ? 'รายแกนเวลา' : 'เรียงจากมากไปน้อย' });
+    h += card(4, (FIELD_TH[sp.dim] || sp.dim) + ' · สัดส่วน', donut(dData, { field: sp.dim }));
+    h += card(12, (FIELD_TH[sp.dim] || sp.dim) + ' × ' + (FIELD_TH[sp.dim2] || sp.dim2), pv, { hint: metricTxt });
     return h + '</div>';
   }
 

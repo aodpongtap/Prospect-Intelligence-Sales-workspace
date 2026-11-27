@@ -293,7 +293,7 @@ table.pbi.st td.c-pend { color: #8A6D00; }
 table.pbi.st td.c-canc { color: #B42318; }
 
 /* ---------------- การ์ดสรุป 3 ค่า (Total / Done / Cancel) ---------------- */
-.kpi3 { border-left: 4px solid var(--k, #118DFF); justify-content: center; gap: 4px; }
+.kpi3 { border-left: 4px solid var(--k, #118DFF); justify-content: center; gap: 2px; min-height: 92px; }
 .k3-title { font-size: 11.5px; color: #667085; font-weight: 600; margin-bottom: 2px; }
 .k3-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .k3-row span { font-size: 11px; color: #98A2B3; }
