@@ -1515,34 +1515,50 @@
     }).sort((a, b) => b.total - a.total);
 
     const sumBy = k => plan.reduce((a, r) => a + r[k], 0);
+    const fold = (title, inner) => '<details class="fold"><summary>' + esc(title) + '</summary>' + inner + '</details>';
+
+    /* ตารางหลัก — เฉพาะตัวเลขที่ผู้บริหารใช้ตัดสินใจ */
     let planTbl = '<div class="tbl"><table class="pbi plan"><thead><tr>' +
       '<th>กลุ่มสินค้า</th>' +
-      '<th class="num">จอง</th><th class="num">1.Done</th><th class="num">2.Pending</th><th class="num">3.Cancel</th>' +
-      '<th class="num">รวม backlog</th><th class="num">ยกมาจากก่อน</th><th class="num">เดือนก่อนยกมา</th>' +
-      '<th class="num">Done เดือนก่อน·ติดเดือนนี้</th><th class="num">Backlog &lt;1Jan26</th>' +
-      '<th class="num">Total</th><th class="num">Unit</th><th class="num">คาดติดได้เดือนนี้</th><th class="num">%ปิดได้</th>' +
+      '<th class="num">1.Done</th><th class="num">2.Pending</th><th class="num">3.Cancel</th>' +
+      '<th class="num">Total</th><th class="num">Unit</th>' +
+      '<th class="num">คาดติดได้เดือนนี้</th><th class="num">%ปิดได้</th>' +
       '</tr></thead><tbody>';
     plan.forEach(r => {
       planTbl += '<tr><td>' + esc(r.g) + '</td>' +
-        '<td class="num">' + num(r.booking) + '</td>' +
         '<td class="num c-done">' + num(r.done) + '</td>' +
         '<td class="num c-pend">' + num(r.pend) + '</td>' +
         '<td class="num c-canc">' + num(r.canc) + '</td>' +
-        '<td class="num">' + num(r.booking) + '</td>' +
-        '<td class="num">' + num(r.carryBefore) + '</td>' +
-        '<td class="num">' + num(r.carryPrev) + '</td>' +
-        '<td class="num">' + num(r.prevDoneInst) + '</td>' +
-        '<td class="num">' + num(r.backlogOld) + '</td>' +
         '<td class="num total">' + num(r.total) + '</td>' +
         '<td class="num">' + num(r.unit) + '</td>' +
         '<td class="num">' + num(r.expInst) + '</td>' +
         '<td class="num c-done">' + (r.total ? (r.done / r.total * 100).toFixed(0) : 0) + '%</td></tr>';
     });
     planTbl += '<tr class="grand"><td>Total</td>' +
-      ['booking', 'done', 'pend', 'canc', 'booking', 'carryBefore', 'carryPrev', 'prevDoneInst', 'backlogOld', 'total', 'unit', 'expInst']
+      ['done', 'pend', 'canc', 'total', 'unit', 'expInst']
         .map(k => '<td class="num">' + num(sumBy(k)) + '</td>').join('') +
       '<td class="num">' + (sumBy('total') ? (sumBy('done') / sumBy('total') * 100).toFixed(0) : 0) + '%</td></tr>';
     planTbl += '</tbody></table></div>';
+
+    /* ตารางเชิงลึก — ซ่อนไว้ ไม่ให้รกหน้าจอ */
+    let planDeep = '<div class="tbl"><table class="pbi plan"><thead><tr>' +
+      '<th>กลุ่มสินค้า</th><th class="num">จอง</th><th class="num">รวม backlog</th>' +
+      '<th class="num">ยกมาจากก่อน</th><th class="num">เดือนก่อนยกมา</th>' +
+      '<th class="num">Done เดือนก่อน·ติดเดือนนี้</th><th class="num">Backlog &lt;1Jan26</th>' +
+      '</tr></thead><tbody>';
+    plan.forEach(r => {
+      planDeep += '<tr><td>' + esc(r.g) + '</td>' +
+        '<td class="num">' + num(r.booking) + '</td>' +
+        '<td class="num">' + num(r.booking) + '</td>' +
+        '<td class="num">' + num(r.carryBefore) + '</td>' +
+        '<td class="num">' + num(r.carryPrev) + '</td>' +
+        '<td class="num">' + num(r.prevDoneInst) + '</td>' +
+        '<td class="num">' + num(r.backlogOld) + '</td></tr>';
+    });
+    planDeep += '<tr class="grand"><td>Total</td>' +
+      ['booking', 'booking', 'carryBefore', 'carryPrev', 'prevDoneInst', 'backlogOld']
+        .map(k => '<td class="num">' + num(sumBy(k)) + '</td>').join('') + '</tr>';
+    planDeep += '</tbody></table></div>';
 
     /* ===== ประมาณการ “ปิดจริง” (Done) ณ สิ้นเดือน ===== */
     const backlogByTeam = new Map();
@@ -1571,16 +1587,13 @@
     const fcDoneIncl = fcDoneExcl + backlogClosable; /* ปิดจริง รวม Backlog */
     const maxDoneFc = Math.max.apply(null, doneRows.map(x => Math.max(x.fc + x.bpc, x.fc)).concat([1]));
 
-    let doneTbl = '<div class="fc" style="margin-bottom:10px">' +
-      '<div><div class="big" style="color:#059669">' + num(fcDoneExcl) + '</div><small>คาดปิดจริง ไม่รวม Backlog</small></div>' +
-      '<div><div class="big" style="color:#0E7490">' + num(fcDoneIncl) + '</div><small>คาดปิดจริง รวม Backlog (+' + num(backlogClosable) + ')</small></div>' +
-      '<div style="flex:1 1 220px"><small>Done ถึงวันนี้ <b>' + num(nDone) + '</b> ใบ · อัตราปิด <b>' + (closeRate * 100).toFixed(0) +
-      '%</b> · อีก ' + left + ' วันคาดปิดเพิ่ม <b>+' + num(totAdd) + '</b> ใบ<br>Backlog ค้างเดือนก่อนที่ยัง Pending <b>' + num(backlogPend) +
-      '</b> ใบ → คาดปิดทัน <b>' + num(backlogClosable) + '</b> ใบ</small></div></div>';
+    let doneTbl = '<div style="margin-bottom:8px;font-size:11.5px;color:#667085;line-height:1.5">' +
+      'Done ถึงวันนี้ <b>' + num(nDone) + '</b> ใบ · อัตราปิด <b>' + (closeRate * 100).toFixed(0) +
+      '%</b> · อีก ' + left + ' วันคาดปิดเพิ่ม <b>+' + num(totAdd) + '</b> ใบ<br>' +
+      'Backlog ค้างเดือนก่อนที่ยัง Pending <b>' + num(backlogPend) + '</b> ใบ → คาดปิดทัน <b>' + num(backlogClosable) + '</b> ใบ</div>';
     doneTbl += '<div class="tbl"><table class="pbi"><thead><tr>' +
       '<th>ทีมขาย</th><th class="num">SO</th><th class="num">Done</th><th class="num">Pending</th>' +
-      '<th class="num">อัตราปิด</th><th class="num">คาดปิดเพิ่ม</th>' +
-      '<th class="num">ปิดจริง·ไม่รวม Backlog</th><th class="num">Backlog ค้าง</th><th class="num">ปิดจริง·รวม Backlog</th>' +
+      '<th class="num">อัตราปิด</th><th class="num">Backlog ค้าง</th><th class="num">คาดปิดสิ้นเดือน</th>' +
       '</tr></thead><tbody>';
     doneRows.forEach(x => {
       doneTbl += '<tr><td>' + esc(stripNum(x.name)) + '</td>' +
@@ -1588,20 +1601,16 @@
         '<td class="num c-done">' + num(x.d) + '</td>' +
         '<td class="num c-pend">' + num(x.p) + '</td>' +
         '<td class="num">' + (x.r * 100).toFixed(0) + '%</td>' +
-        '<td class="num">+' + num(x.add) + '</td>' +
-        '<td><div class="tbcell"><span class="tbar"><i style="width:' + (x.fc / maxDoneFc * 100).toFixed(0) + '%;background:linear-gradient(90deg,#12B76A,#6CE9A6)"></i></span><b>' + num(x.fc) + '</b></div></td>' +
         '<td class="num">' + num(x.bp) + '</td>' +
-        '<td class="num total">' + num(x.fc + x.bpc) + '</td></tr>';
+        '<td><div class="tbcell"><span class="tbar"><i style="width:' + (x.fc + x.bpc) / maxDoneFc * 100 + '%;background:linear-gradient(90deg,#12B76A,#6CE9A6)"></i></span><b>' + num(x.fc + x.bpc) + '</b></div></td></tr>';
     });
     doneTbl += '<tr class="grand"><td>Total</td>' +
       '<td class="num">' + num(so) + '</td>' +
       '<td class="num">' + num(nDone) + '</td>' +
       '<td class="num">' + num(nPend) + '</td>' +
       '<td class="num">' + (closeRate * 100).toFixed(0) + '%</td>' +
-      '<td class="num">+' + num(totAdd) + '</td>' +
-      '<td class="num">' + num(fcDoneExcl) + '</td>' +
       '<td class="num">' + num(backlogPend) + '</td>' +
-      '<td class="num">' + num(fcDoneIncl) + '</td></tr>';
+      '<td class="num total">' + num(fcDoneIncl) + '</td></tr>';
     doneTbl += '</tbody></table></div>';
 
     const pctOfMonth = Math.round(elapsed / dim * 100);
@@ -1609,15 +1618,13 @@
     let h = pgHead('End of Mth', rs);
     h += '<div class="g">';
     h += '<div class="kpirow">';
-    h += kpiCard(3, 'ประมาณการ SO สิ้นเดือน', num(fcSo), C.violet, 'อีก ' + left + ' วัน · +' + num(Math.max(fcSo - so, 0)) + ' ใบ');
-    h += kpiCard(3, 'SO ถึงวันนี้', num(so), C.navy, 'Done ' + num(nDone) + ' · Pending ' + num(nPend) + ' · Cancel ' + num(nCanc));
-    h += kpiCard(3, 'Pending คงค้าง', num(nPend), C.gold,
-      'คาดปิดทัน ' + num(pendClosable) + ' ใบ (อัตราปิด ' + (closeRate * 100).toFixed(0) + '%)');
+    h += kpiCard(3, 'ประมาณการ SO สิ้นเดือน', num(fcSo), C.violet,
+      'ถึงวันนี้ ' + num(so) + ' ใบ · อีก ' + left + ' วัน +' + num(Math.max(fcSo - so, 0)));
     h += kpiCard(3, 'ประมาณการ Revenue', baht(fcRev), C.orange, 'เดือนก่อน ' + baht(prevRev));
-    h += kpiCard(3, 'ประมาณการปิดจริง · ไม่รวม Backlog', num(fcDoneExcl), C.green,
-      'Done ' + num(nDone) + ' + คาดปิดเพิ่ม ' + num(totAdd) + ' ใบ');
-    h += kpiCard(3, 'ประมาณการปิดจริง · รวม Backlog', num(fcDoneIncl), C.teal,
-      'Backlog คาดปิดได้อีก ' + num(backlogClosable) + ' จาก ' + num(backlogPend) + ' ใบ');
+    h += kpiCard(3, 'คาดปิดจริง · ไม่รวม Backlog', num(fcDoneExcl), C.green,
+      'Done ' + num(nDone) + ' + คาดปิดเพิ่ม ' + num(totAdd));
+    h += kpiCard(3, 'คาดปิดจริง · รวม Backlog', num(fcDoneIncl), C.teal,
+      'บวกงานค้างที่คาดปิดทัน +' + num(backlogClosable) + ' จาก ' + num(backlogPend));
     h += '</div>';
     h += card(12, 'SO รายวัน แยกสถานะ · แท่งลาย = ประมาณการวันเหลือ',
       '<div class="fc" style="margin-bottom:10px">' +
@@ -1625,12 +1632,12 @@
       '<div class="track"><i style="width:' + pctOfMonth + '%"></i><u style="left:' + pctOfMonth + '%"></u></div>' +
       '<small>จริง ' + num(so) + ' ใบ · ผ่านไป ' + elapsed + '/' + dim + ' วัน (' + pctOfMonth + '%) · เฉลี่ย ' + rateSo.toFixed(1) + ' ใบ/วัน</small>' +
       '</div>' + estBars(labels, { done: doneD, pend: pendD, canc: cancD, proj: projD }), { hint: 'คลิกแท่งเพื่อกรองวัน' });
-    h += card(12, 'ประมาณการ “ปิดจริง” (Done) ณ สิ้นเดือน · แยกทีมขาย', doneTbl,
-      { hint: 'ไม่รวม Backlog = นับเฉพาะงานที่เปิด SO เดือนนี้ · รวม Backlog = บวกงานค้างเดือนก่อนที่คาดปิดทัน' });
-    h += card(12, 'ประมาณการตามทีมขาย · แยก Done / Pending', teamTbl, { hint: 'SO / Done / Pending / ประมาณการ / เทียบเดือนก่อน' });
-    h += card(12, 'แผนงานตามกลุ่มสินค้า (จอง · Done · Backlog · ยกมา · คาดติดได้)',
-      planTbl, { hint: 'เลื่อนแนวนอนได้ · นิยามอยู่ในการ์ดถัดไป' });
-    h += card(12, 'นิยามคอลัมน์',
+    h += card(12, 'คาดปิดจริง ณ สิ้นเดือน · แยกทีมขาย',
+      doneTbl + fold('ประมาณการ SO ต่อทีม · เทียบเดือนก่อน', teamTbl),
+      { hint: 'อัตราปิด = Done ÷ (Done + Pending) · คาดปิดสิ้นเดือนรวมงานค้างที่คาดว่าจะปิดทัน' });
+    h += card(12, 'แผนงานตามกลุ่มสินค้า',
+      planTbl + fold('ข้อมูลเชิงลึก (จอง · ยกมา · Backlog เก่า)', planDeep), { hint: 'กด “ข้อมูลเชิงลึก” เมื่อต้องการดูรายละเอียด' });
+    h += card(12, 'อัตราและสมมติฐานที่ใช้คำนวณ', fold('นิยามคอลัมน์ทั้งหมด',
       '<ul class="note">' +
       '<li><b>จอง</b> = งานที่ยังไม่ปิด (2.Pending + 3.Cancel) ในเดือนนี้</li>' +
       '<li><b>รวม backlog</b> = ยอดจองคงค้างของเดือนนี้</li>' +
@@ -1641,9 +1648,9 @@
       '<li><b>Total</b> = จำนวน SO ทั้งหมดของกลุ่มในเดือนนี้ · <b>Unit</b> = จำนวนเครื่อง</li>' +
       '<li><b>คาดติดได้เดือนนี้</b> = ติดตั้งแล้ว ÷ วันที่ผ่านไป × วันในเดือน</li>' +
       '<li><b>อัตราปิด</b> = 1.Done ÷ (1.Done + 2.Pending) ของเดือนนี้</li>' +
-      '<li><b>ประมาณการปิดจริง · ไม่รวม Backlog</b> = Done ถึงวันนี้ + (Pending เดือนนี้ × อัตราปิด) + (SO ที่คาดว่าจะเข้ามาอีก × อัตราปิด) — <i>นับเฉพาะงานที่เปิด SO ในเดือนนี้ ไม่เอางานค้างจากเดือนก่อนมาใส่</i></li>' +
-      '<li><b>ประมาณการปิดจริง · รวม Backlog</b> = ค่าข้างต้น + (งานค้างเดือนก่อนที่ยัง 2.Pending × อัตราปิด)</li>' +
-      '</ul>');
+      '<li><b>คาดปิดจริง · ไม่รวม Backlog</b> = Done ถึงวันนี้ + (Pending เดือนนี้ × อัตราปิด) + (SO ที่คาดว่าจะเข้ามาอีก × อัตราปิด) — <i>นับเฉพาะงานที่เปิด SO ในเดือนนี้</i></li>' +
+      '<li><b>คาดปิดจริง · รวม Backlog</b> = ค่าข้างต้น + (งานค้างเดือนก่อนที่ยัง 2.Pending × อัตราปิด)</li>' +
+      '</ul>'));
     return h + '</div>';
   }
 
