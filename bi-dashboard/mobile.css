@@ -1,0 +1,109 @@
+/* =========================================================================
+   MOBILE.CSS — แก้ปัญหาข้อความถูกตัด (…) และข้อความทับกันบนจอแคบ
+   โหลดเป็นไฟล์สุดท้าย เพื่อให้ override ได้ทุกไฟล์ก่อนหน้า
+   ========================================================================= */
+
+/* ── 1) หัวการ์ด: ให้ตัดบรรทัดแทนการย่อเป็น "…" ───────────────────────── */
+@media (max-width: 900px) {
+  .card-h {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    row-gap: 2px;
+    column-gap: 8px;
+  }
+  .card-h h3 {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.35;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .card-h .hint {
+    flex: 1 0 100%;
+    margin-left: 0 !important;
+    max-width: 100%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    text-align: left;
+    line-height: 1.35;
+    opacity: .9;
+  }
+}
+
+/* ── 2) ป้ายชื่อในแท่งซ้อน: ไม่ตัดชื่อทีม/พื้นที่ ─────────────────────── */
+@media (max-width: 900px) {
+  .stk-row {
+    grid-template-columns: minmax(0, 40%) minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+  .stk-lab {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.2;
+    font-size: 11.5px;
+    text-align: left;
+    word-break: break-word;
+  }
+  .stk-val { font-size: 11.5px; }
+}
+
+/* ── 3) Legend โดนัท/กราฟ: ไม่ตัดชื่อกลุ่มสินค้า ─────────────────────── */
+@media (max-width: 900px) {
+  .lg {
+    grid-template-columns: 10px minmax(0, 1fr) auto auto;
+    gap: 7px;
+  }
+  .lg span {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+  .chart-legend { row-gap: 6px; }
+  .chart-legend span { white-space: normal; }
+}
+
+/* ── 4) กราฟแท่ง: ซ่อนตัวเลขบนแท่ง (ทับกันเมื่อคอลัมน์แคบ) ──────────── */
+@media (max-width: 900px) {
+  .bar-in { display: none; }
+  .col-bar { max-width: 26px; }
+  .col-x { font-size: 9.5px; }
+}
+
+/* ── 5) ตารางกว้าง: หัวคอลัมน์แรกตรึงต้องทึบ ไม่งั้นตัวอักษรทับกัน ───── */
+@media (max-width: 1024px) {
+  .plan th:first-child,
+  .plan td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #fff;
+    box-shadow: 8px 0 10px -8px rgba(16, 24, 40, .25);
+  }
+  .plan thead th:first-child { z-index: 4; background: #F9FAFB; }
+  .plan tbody tr:nth-child(even) td:first-child { background: #FCFCFD; }
+  .plan tbody tr:hover td:first-child { background: #F5F9FF; }
+  .plan tbody tr.grand td:first-child { background: #EFF8FF; }
+}
+
+/* ── 6) การ์ด KPI 3 บรรทัด: ให้ค่าตกบรรทัดแทนการถูกตัด ───────────────── */
+@media (max-width: 560px) {
+  .k3-row {
+    flex-wrap: wrap;
+    gap: 3px 10px;
+    align-items: baseline;
+  }
+  .k3-row b { font-size: 16px; }
+  .kpi3 { min-height: 84px; }
+}
+
+/* ── 7) ตาราง: ระยะห่างในมือถือให้หายใจได้ ─────────────────────────── */
+@media (max-width: 560px) {
+  table.pbi thead th { padding: 6px 8px; }
+  table.pbi tbody td { padding: 6px 8px; }
+  .tbl { -webkit-overflow-scrolling: touch; }
+}

@@ -2202,25 +2202,38 @@
       }
       /* ไม่มีแคชในเครื่องนี้ → ลองใช้ snapshot ที่ฝังมากับเว็บ (สำหรับมือถือ/ผู้บริหาร) */
       return loadSnapshot().then(snap => {
-        if (!snap || S.data) return;
-        S.data = snap.data.map(des);
-        S.meta = Object.assign({}, snap.meta, { snapshot: true });
-        const ps = periods();
-        S.period = ps.length ? ps[ps.length - 1] : null;
-        applyView();
-        syncHeader(); render(); fit();
+        if (snap && !S.data) return applySnapshot(snap);
+        if (!snap && !S.data) waitSnapshot(24);   /* เน็ตช้า: รอต่ออีก ~17 วินาที */
       });
     });
   }
 
   /* ---------- snapshot ที่ฝังมากับเว็บ (อ่านอย่างเดียว) ---------- */
+  function applySnapshot(snap) {
+    if (!snap || !snap.data || S.data) return;
+    S.data = snap.data.map(des);
+    S.meta = Object.assign({}, snap.meta, { snapshot: true });
+    const ps = periods();
+    S.period = ps.length ? ps[ps.length - 1] : null;
+    applyView();
+    syncHeader(); render(); fit();
+  }
+
+  /* เผื่อกรณีสคริปต์ snapshot มาถึงช้ากว่าที่ retry รอ → คอยดูแล้ววาดใหม่ให้เอง */
+  function waitSnapshot(tries) {
+    if (S.data) return;
+    if (window.BI_SNAPSHOT) return applySnapshot(window.BI_SNAPSHOT);
+    if (tries <= 0) return;
+    setTimeout(() => waitSnapshot(tries - 1), 700);
+  }
+
   function loadSnapshot(attempt) {
     attempt = attempt || 0;
     return new Promise(res => {
       if (window.BI_SNAPSHOT) return res(window.BI_SNAPSHOT);
       const s = document.createElement('script');
       /* ลองซ้ำสูงสุด 3 ครั้ง — กันกรณีเน็ตมือถือหลุด/GitHub Pages เพิ่ง deploy ยังไม่ propagate */
-      s.src = 'data-snapshot.js?v=1130c' + (attempt ? '&r=' + attempt : '');
+      s.src = 'data-snapshot.js?v=1131a' + (attempt ? '&r=' + attempt : '');
       s.async = true;
       s.onload = () => res(window.BI_SNAPSHOT || null);
       s.onerror = () => {
