@@ -20,7 +20,7 @@
 
   /* 21 หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) */
   const PBI_PAGES = [
-    'Daily Admin', '2.SO Order Status', '1.Unit / Revenue', 'SML', 'Pack สด/ผ่อน',
+    'Daily Admin', 'Estm. End of Mth', '2.SO Order Status', '1.Unit / Revenue', 'SML', 'Pack สด/ผ่อน',
     '2.Pending', '2.1.Pending-Detail', 'Map', 'Performance/TAT', '3.Cancel',
     '3.1.Cancel-Detail', 'P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape',
     'P5.Transport', 'P6.Technician', 'Aging (21 Day)', 'Report ติดตั้ง', 'ยกเลิก / มัดจำ', 'วัน'
@@ -893,6 +893,109 @@
     dayLabel: 'วันที่', monthLabel: 'เดือน', area: 'พื้นที่'
   };
 
+  /* ===== Estm. End of Mth — ประมาณการสิ้นเดือน ===== */
+  function monthRowsOf(mthKey) {
+    if (!S.data) return [];
+    const fT = S.filter.team, fC = S.filter.channel, fG = S.filter.group;
+    return S.data.filter(d => {
+      if (!isKeepGroup(d.group)) return false;
+      if (String(d.mth) !== String(mthKey)) return false;
+      if (fT.size && !fT.has(String(d.team == null ? '' : d.team))) return false;
+      if (fC.size && !fC.has(String(d.channel == null ? '' : d.channel))) return false;
+      if (fG.size && !fG.has(String(d.group == null ? '' : d.group))) return false;
+      return true;
+    });
+  }
+
+  function pageEstimate(rs) {
+    const sum = (arr, f) => arr.reduce((a, d) => a + (d[f] || 0), 0);
+    const now = new Date();
+    const parts = String(S.period || '').split('-').map(Number);
+    const yy = parts[0] || now.getFullYear(), mm = parts[1] || (now.getMonth() + 1);
+    const dim = new Date(yy, mm, 0).getDate();          /* จำนวนวันในเดือน */
+    const isCur = (yy === now.getFullYear() && mm === (now.getMonth() + 1));
+    const maxDay = rs.reduce((a, d) => (d.dateSO ? Math.max(a, d.dateSO.getDate()) : a), 0);
+    const elapsed = Math.min(dim, Math.max(1, isCur ? Math.max(now.getDate(), maxDay) : dim));
+    const left = dim - elapsed;
+
+    const so = rs.length, rev = sum(rs, 'revenue'), units = sum(rs, 'units');
+    const rateSo = so / elapsed, rateRev = rev / elapsed, rateUnit = units / elapsed;
+    const fcSo = Math.round(rateSo * dim), fcRev = rateRev * dim, fcUnit = Math.round(rateUnit * dim);
+
+    /* เดือนก่อนหน้า เพื่อเทียบ */
+    const pm = (mm === 1) ? { y: yy - 1, m: 12 } : { y: yy, m: mm - 1 };
+    const prevRows = monthRowsOf(pm.y * 100 + pm.m);
+    const prevSo = prevRows.length, prevRev = sum(prevRows, 'revenue'), prevUnits = sum(prevRows, 'units');
+    const delta = (a, b) => (b ? ((a - b) / b * 100) : 0);
+
+    /* เส้นสะสม: จริง vs ประมาณการ */
+    const byDay = new Map();
+    rs.forEach(d => { if (d.dateSO) { const k = d.dateSO.getDate(); byDay.set(k, (byDay.get(k) || 0) + 1); } });
+    const labels = [], act = [], fc = [];
+    let acc = 0;
+    for (let d = 1; d <= dim; d++) {
+      labels.push(String(d));
+      acc += byDay.get(d) || 0;
+      act.push(d <= elapsed ? acc : null);
+      fc.push(d <= elapsed ? acc : Math.round(acc + rateSo * (d - elapsed)));
+    }
+    const actSeries = act.map(v => (v == null ? (act[elapsed - 1] || 0) : v));   /* ให้เส้นจริงจบที่วันนี้ */
+    const fcSeries = fc;
+
+    /* ตารางตามทีม */
+    const teamMap = new Map();
+    rs.forEach(d => {
+      const k = d.team || '(ไม่ระบุ)';
+      const o = teamMap.get(k) || { so: 0, rev: 0, unit: 0 };
+      o.so++; o.rev += d.revenue || 0; o.unit += d.units || 0;
+      teamMap.set(k, o);
+    });
+    const prevTeam = new Map();
+    prevRows.forEach(d => {
+      const k = d.team || '(ไม่ระบุ)';
+      prevTeam.set(k, (prevTeam.get(k) || 0) + 1);
+    });
+    let teamTbl = '<div class="tbl"><table class="pbi"><thead><tr>' +
+      '<th>ทีมขาย</th><th class="num">SO วันนี้</th><th class="num">ต่อวัน</th>' +
+      '<th class="num">ประมาณการ</th><th class="num">เดือนก่อน</th><th class="num">ต่าง %</th></tr></thead><tbody>';
+    [...teamMap.entries()].sort((a, b) => b[1].so - a[1].so).forEach(e => {
+      const t = e[1], fcs = Math.round(t.so / elapsed * dim), pv = prevTeam.get(e[0]) || 0;
+      const dd = pv ? ((fcs - pv) / pv * 100) : 0;
+      teamTbl += '<tr><td>' + esc(e[0]) + '</td><td class="num">' + num(t.so) + '</td><td class="num">' +
+        (t.so / elapsed).toFixed(1) + '</td><td class="num total">' + num(fcs) + '</td><td class="num">' +
+        num(pv) + '</td><td class="num ' + (dd >= 0 ? 'c-done' : 'c-canc') + '">' +
+        (pv ? (dd >= 0 ? '+' : '') + dd.toFixed(0) + '%' : '–') + '</td></tr>';
+    });
+    teamTbl += '<tr class="grand"><td>Total</td><td class="num">' + num(so) + '</td><td class="num">' +
+      rateSo.toFixed(1) + '</td><td class="num">' + num(fcSo) + '</td><td class="num">' + num(prevSo) +
+      '</td><td class="num">' + (prevSo ? (delta(fcSo, prevSo) >= 0 ? '+' : '') + delta(fcSo, prevSo).toFixed(0) + '%' : '–') +
+      '</td></tr>';
+    teamTbl += '</tbody></table></div>';
+
+    const pctOfMonth = Math.round(elapsed / dim * 100);
+
+    let h = pgHead('Estm. End of Mth', rs);
+    h += '<div class="g">';
+    h += '<div class="kpirow">';
+    h += kpiCard(2, 'SO ถึงวันนี้', num(so), C.navy, 'ณ วันที่ ' + elapsed + '/' + dim);
+    h += kpiCard(2, 'เฉลี่ยต่อวัน', rateSo.toFixed(1), C.blue, 'ใบ/วัน');
+    h += kpiCard(2, 'ประมาณการ SO สิ้นเดือน', num(fcSo), C.violet, 'อีก ' + left + ' วัน · +' + num(Math.max(fcSo - so, 0)) + ' ใบ');
+    h += kpiCard(3, 'ประมาณการ Revenue', baht(fcRev), C.orange, 'เดือนก่อน ' + baht(prevRev));
+    h += kpiCard(3, 'ประมาณการ Unit', num(fcUnit), C.teal, 'เดือนก่อน ' + num(prevUnits));
+    h += '</div>';
+    h += card(12, 'SO สะสม · จริง vs ประมาณการ',
+      '<div class="fc" style="margin-bottom:10px"><div><div class="big">' + num(fcSo) +
+      '</div><small>ประมาณการสิ้นเดือน</small></div>' +
+      '<div class="track"><i style="width:' + pctOfMonth + '%"></i><u style="left:' + pctOfMonth + '%"></u></div>' +
+      '<small>' + num(so) + ' ใบ · ผ่านไป ' + elapsed + '/' + dim + ' วัน (' + pctOfMonth + '%)</small></div>' +
+      multiLine(labels, [
+        { name: 'SO สะสม (จริง)', values: actSeries, color: C.blue },
+        { name: 'ประมาณการ', values: fcSeries, color: C.violet, dashed: true }
+      ], { height: 210 }), { hint: 'run-rate ' + rateSo.toFixed(1) + ' ใบ/วัน' });
+    h += card(12, 'ประมาณการตามทีมขาย', teamTbl, { hint: 'SO / ต่อวัน / ประมาณการ / เทียบเดือนก่อน' });
+    return h + '</div>';
+  }
+
   function pageGeneric(name, rs) {
     const sp = SPECS[name] || { dim: 'team', dim2: 'status3', metric: 'count', title: name };
     const pick = rws => (sp.filter ? rws.filter(sp.filter) : rws);
@@ -963,6 +1066,7 @@
       : S.page === 'tat' ? pageTat(rs)
       : S.page === 'data' ? pageData(rs)
       : S.page === 'SML' ? pageSml(rs)
+      : S.page === 'Estm. End of Mth' ? pageEstimate(rs)
       : S.page === '1.Unit / Revenue' ? pageUnitRevenue(rs)
       : S.page === '2.SO Order Status' ? pageOrderStatus(rs)
       : SPECS[S.page] ? pageGeneric(S.page, rs)
@@ -1023,7 +1127,7 @@
   }
 
   const NAV_GROUPS = [
-    { label: 'ภาพรวม', pages: ['Daily Admin', '1.Revenue', '1.Unit / Revenue', '1.Unit / Revenue New', 'Performance/TAT'] },
+    { label: 'ภาพรวม', pages: ['Daily Admin', 'Estm. End of Mth', '1.Revenue', '1.Unit / Revenue', '1.Unit / Revenue New', 'Performance/TAT'] },
     { label: 'สถานะงาน', pages: ['Status (New)', 'Status (Back log)', '2.SO Order Status', '2.Pending', '2.1.Pending-Detail', '3.Cancel', '3.1.Cancel-Detail'] },
     { label: 'ขั้นตอนทำงาน', pages: ['P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape', 'P5.Transport', 'P6.Technician', 'Report ติดตั้ง', 'Report สัญญา'] },
     { label: 'สินค้า & พื้นที่', pages: ['SML', 'Pack สด/ผ่อน', 'Map', 'Product end2end-Detail'] },

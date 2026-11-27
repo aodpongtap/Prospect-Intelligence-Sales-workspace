@@ -320,6 +320,30 @@ table.pbi.st td.c-canc { color: #B42318; }
 /* drag hint แบบเบา ๆ */
 .drop-card.slim { background: none; border: none; box-shadow: none; padding: 0; }
 
+/* ---------------- แถว KPI แบบยืดหยุ่น ---------------- */
+.kpirow {
+  grid-column: span 12;
+  display: grid; gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+}
+.kpirow > .card { grid-column: auto !important; }
+
+/* ---------------- แถบประมาณการ (ใช้ในหน้า Estm.) ---------------- */
+.fc {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: linear-gradient(120deg, #EEF0FF, transparent 65%);
+  border: 1px solid #CDD3FB; border-radius: 10px; padding: 10px 14px;
+}
+.fc .big { font-size: 22px; font-weight: 800; letter-spacing: -.6px; color: #4F46E5; line-height: 1.1; }
+.fc small { color: #475467; font-size: 11.5px; }
+.fc > div:first-child { flex: 0 0 auto; }
+.fc .track {
+  flex: 1 1 200px; min-width: 140px; height: 8px; border-radius: 999px;
+  background: #DFE3FB; position: relative;
+}
+.fc .track i { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: #4F46E5; }
+.fc .track u { position: absolute; top: -3px; bottom: -3px; width: 2px; background: #94A3B8; border-radius: 2px; }
+
 /* ---------------- misc ---------------- */
 .empty {
   display: grid; place-items: center; min-height: 120px;
