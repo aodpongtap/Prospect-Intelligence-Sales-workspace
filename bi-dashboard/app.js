@@ -304,6 +304,15 @@
       '<div class="card-b' + (o.pad ? ' pad' : '') + '">' + body + '</div></section>';
   }
 
+  /* การ์ดคู่มือ “นิยาม & วิธีอ่านหน้านี้” — พับเก็บไว้ กดที่แถบเพื่อเปิดอ่าน */
+  function defCard(body) {
+    return '<section class="card s12 def-card">' +
+      '<details class="fold def-fold">' +
+        '<summary>นิยาม &amp; วิธีอ่านหน้านี้</summary>' +
+        '<div class="def-body">' + body + '</div>' +
+      '</details></section>';
+  }
+
   function kpiCard(span, label, value, color, sub) {
     return '<section class="card s' + span + ' kpi2" style="--k:' + color + '">' +
       '<div class="k-lab">' + esc(label) + '</div>' +
@@ -1033,7 +1042,7 @@
     h += card(4, 'สถานะตรวจสอบ (Admin)', donut(adm, { field: 'admGroup' }));
     h += card(12, 'Grp ทีมขาย × สถานะ Admin', stM, { hint: 'จำนวนงาน' });
     h += card(12, 'กลุ่มสินค้า × ทีมขาย · Revenue', revM, { hint: 'ราคาสุทธิ (บาท)' });
-    h += card(12, 'นิยาม & วิธีอ่านหน้านี้',
+    h += defCard(
       '<ul class="note">' +
       '<li><b>กราฟ SO ต่อวัน</b> = แท่งน้ำเงินคือจำนวน SO ที่เปิดในวันนั้น · แดง (เส้น) คือจำนวนงานที่ติดตั้งในวันนั้น</li>' +
       '<li><b>สถานะ Admin</b> = 1.ผ่าน / 2.Pening (รอตรวจสอบ·ระหว่างแก้ไข) / 3.ไม่ผ่าน — ตามกลุ่มในโมเดล PBI</li>' +
@@ -1062,7 +1071,7 @@
     h += card(12, 'สถานะใบงาน3 × Grp ทีมขาย', statusTable(rs), { hint: 'SO / %SO' });
     h += card(6, 'สถานะ Admin', hbars(admData, num, { field: 'admGroup', pct: true }), { hint: 'จำนวนงาน · % ของทั้งหมด' });
     h += card(6, 'สถานะใบงาน3 · สัดส่วน', donut(st3Data, { field: 'status3' }));
-    h += card(12, 'นิยาม & วิธีอ่านหน้านี้',
+    h += defCard(
       '<ul class="note">' +
       '<li><b>Total SO</b> = จำนวนใบสั่งซื้อในเดือนนี้ (นับทุกสถานะ รวมที่ยังไม่มีสถานะ)</li>' +
       '<li><b>Rev (ราคาสุทธิ)</b> / <b>Total Unit</b> = คิดเฉพาะงานที่มีสถานะ 1.Done / 2.Pending / 3.Cancel ตาม measure ใน PBI</li>' +
@@ -1122,7 +1131,7 @@
     h += card(12, 'SLA ปิดงาน เฉลี่ยรายวัน (วัน)', colsChart(daily, { field: 'day' }), { hint: 'เฉลี่ยต่อวัน' });
     h += card(6, 'SLA เฉลี่ยตามทีม (วัน)', hbars(teamData, v => v.toFixed(1), { field: 'team' }));
     h += card(6, 'อายุงานคงค้าง (Aging) · งานที่ยังไม่ปิด', hbars(agingData, num, { pct: true }), { hint: 'นับจากวันที่เปิด SO ถึงวันนี้' });
-    h += card(12, 'นิยามที่ใช้คำนวณ',
+    h += defCard(
       '<ul class="note"><li>SLA Admin = MAX(Date Admin − Date SO, 0)</li>' +
       '<li>SLA ปิดงาน = วันที่ปิดงาน − Date SO (งาน 1.Done / 3.Cancel)</li>' +
       '<li>งานที่ยังไม่ปิด = วันนี้ − Date SO</li>' +
@@ -2038,7 +2047,7 @@
     h += card(6, 'สถานะงาน × ' + dimTh, stRows.length ? stackedBars(stRows) + statusLegend() : empty(),
       { hint: 'จำนวน SO' });
     h += card(6, dim2Th + ' · Top 10', bars2.length ? hbars(bars2, fmt, { field: sp.dim2, pct: sp.metric === 'revenue' ? rev : sp.metric === 'units' ? units : data.length }) : empty(), { hint: metricTxt + ' · % ของทั้งหมด' });
-    h += card(12, 'นิยาม & วิธีใช้',
+    h += defCard(
       '<ul class="note">' +
       '<li><b>ตัววัดหลัก</b> = ' + metricTxt + ' · <b>มิติ</b> = ' + dimTh + ' × ' + dim2Th + '</li>' +
       '<li><b>Revenue</b> = IF(เงินสดว่าง, ราคาตั้ง, ราคาเงินสด) − ส่วนลด ÷ 1.07 (สูตรคอลัมน์ DW)</li>' +
