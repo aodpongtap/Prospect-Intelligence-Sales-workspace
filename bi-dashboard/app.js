@@ -975,6 +975,65 @@
         s: 'ค้างเกิน 21 วัน ' + num(old21) + ' ใบ (' + (openAll.length ? (old21 / openAll.length * 100).toFixed(0) : 0) + '% ของ backlog) · ไม่จำกัดเดือน' }
     ];
 
+    /* ===== เทียบเดือนแบบรายงานเดิม (ภาพ Excel): สรุป SO/Rev/Unit + แยกทีม + แยกสินค้า ===== */
+    const curMtd = rs.filter(d => !(d.dateSO instanceof Date) || isNaN(d.dateSO) || d.dateSO.getDate() <= elapsed);
+    const prevMtd = prevTD;                     /* เดือนที่เทียบ: นับถึงวันเดียวกัน + ผ่านตัวกรอง */
+    const TB = s => { const x = String(s || ''); if (/S1/.test(x)) return 'S1'; if (/CRD/.test(x)) return 'CRD'; if (/Tele/.test(x)) return 'Tele'; return 'BU อื่นๆ'; };
+    const TORDER = ['S1', 'CRD', 'Tele', 'BU อื่นๆ'];
+    const GB = s => {
+      const x = String(s || '');
+      if (/กาแฟ/.test(x)) return 'กาแฟ';
+      if (/ซักผ้า/.test(x)) return 'เครื่องซักผ้า';
+      if (/น้ำแข็ง/.test(x)) return 'น้ำแข็ง';
+      if (/vending|ตู้กดสินค้า/i.test(x)) return 'Vending';
+      if (/ตู้กดน้ำ|ตู้น้ำ|น้ำดื่ม/.test(x)) return 'ตู้กดน้ำ';
+      return 'อื่น ๆ';
+    };
+    const GORDER = ['กาแฟ', 'เครื่องซักผ้า', 'น้ำแข็ง', 'ตู้กดน้ำ', 'Vending', 'อื่น ๆ'];
+    const aggB = (list, keyFn) => {
+      const m = new Map();
+      list.forEach(d => {
+        const k = keyFn(d);
+        const o = m.get(k) || { so: 0, units: 0, rev: 0 };
+        o.so += 1; o.units += d.units || 0; o.rev += d.revenue || 0;
+        m.set(k, o);
+      });
+      return m;
+    };
+    const tcB = aggB(curMtd, d => TB(d.team)), tpB = aggB(prevMtd, d => TB(d.team));
+    const gcB = aggB(curMtd, d => GB(d.group)), gpB = aggB(prevMtd, d => GB(d.group));
+    const revFmt = v => (v / 1e6).toFixed(2) + ' ลบ.';
+    const dCell = (a, b, fmt) => {
+      const dv = a - b;
+      return '<td class="num ' + (dv >= 0 ? 'c-done' : 'c-canc') + '">' + (dv >= 0 ? '+' : '−') + fmt(Math.abs(dv)) + '</td>';
+    };
+    const miniCmp = (title, keys, cm, pm, field, fmt) => {
+      let body = '', ta = 0, tb = 0;
+      keys.forEach(k => {
+        const a = (cm.get(k) || {})[field] || 0, b = (pm.get(k) || {})[field] || 0;
+        ta += a; tb += b;
+        body += '<tr><td>' + esc(k) + '</td><td class="num">' + fmt(a) + '</td><td class="num">' + fmt(b) + '</td>' + dCell(a, b, fmt) + '</tr>';
+      });
+      body += '<tr class="grand"><td>Total</td><td class="num">' + fmt(ta) + '</td><td class="num">' + fmt(tb) + '</td>' + dCell(ta, tb, fmt) + '</tr>';
+      return '<div class="cmp-box"><div class="cmp-t">' + esc(title) + '</div><div class="tbl"><table class="pbi cmp"><thead><tr>' +
+        '<th>' + (field === 'so' ? 'ทีม' : 'สินค้า') + '</th><th class="num">' + esc(mthLabel(curKeyM)) + '</th>' +
+        '<th class="num">' + esc(mthLabel(c1)) + '</th><th class="num">Diff</th></tr></thead><tbody>' + body + '</tbody></table></div></div>';
+    };
+    const curU = curMtd.reduce((a, d) => a + (d.units || 0), 0);
+    const prevU = prevMtd.reduce((a, d) => a + (d.units || 0), 0);
+    const curR = sum(curMtd, 'revenue'), prevR = sum(prevMtd, 'revenue');
+    const sumRows = [['SO', curMtd.length, prevMtd.length, num], ['Rev', curR, prevR, revFmt], ['Units', curU, prevU, num]];
+    const cmpTop = '<div class="cmp-box cmp-top"><div class="cmp-t">สรุป · ' + esc(mthLabel(curKeyM)) + ' vs ' + esc(mthLabel(c1)) + '</div>' +
+      '<div class="tbl"><table class="pbi cmp"><thead><tr><th></th><th class="num">' + esc(mthLabel(curKeyM)) + '</th>' +
+      '<th class="num">' + esc(mthLabel(c1)) + '</th><th class="num">Diff</th></tr></thead><tbody>' +
+      sumRows.map(r => '<tr><td><b>' + r[0] + '</b></td><td class="num">' + r[3](r[1]) + '</td><td class="num">' + r[3](r[2]) + '</td>' + dCell(r[1], r[2], r[3]) + '</tr>').join('') +
+      '</tbody></table></div></div>';
+    const cmpBlock = '<div class="cmp-wrap">' + cmpTop +
+      miniCmp('SO · ตามทีม', TORDER, tcB, tpB, 'so', num) +
+      miniCmp('Units · ตามสินค้า', GORDER, gcB, gpB, 'units', num) +
+      miniCmp('Rev · ตามสินค้า', GORDER, gcB, gpB, 'rev', revFmt) +
+      '</div>';
+
     let h = pgHead('Summary', rs);
     h += '<div class="g">';
     h += hero;
@@ -993,6 +1052,8 @@
       (old21 ? '<div class="sum-risk-alert">⚠ ค้างเกิน 21 วัน ' + num(old21) + ' ใบ จากทั้งหมด ' + num(openAll.length) + ' ใบ (ทั้งระบบ ไม่จำกัดเดือน)</div>' : '') +
       rankList(BKL.map((k, i) => ({ label: k, value: bkc[i] })), num), { hint: 'ทั้งระบบ · นับจากวันเปิด SO ถึงวันนี้' });
     h += card(6, 'เทียบเดือนก่อน (Month over Month)', momTbl, { hint: 'เขียว = ดีขึ้น · แดง = แย่ลง' });
+    h += card(12, 'เทียบเดือน · ตามทีม / ตามสินค้า', cmpBlock,
+      { hint: 'นับถึงวันที่ ' + elapsed + ' ของทั้งสองเดือน' });
     return h + '</div>';
   }
 

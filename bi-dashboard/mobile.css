@@ -319,6 +319,36 @@ body.tab-edit-mode .pbi-tab.active { box-shadow: inset 0 0 0 1.5px #118DFF; }
   .kpi2.kpi-compact .k-val { font-size: 16px; }
 }
 
+/* ── 19) Summary: เทียบเดือนแบบตาราง (ตามทีม / ตามสินค้า) ──────────────── */
+.cmp-wrap {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+.cmp-wrap .cmp-top { grid-column: 1 / -1; max-width: 460px; }
+.cmp-box {
+  border: 1px solid #E7ECF3; border-radius: 10px; background: #fff;
+  padding: 8px 10px 10px; min-width: 0;
+}
+.cmp-t {
+  font-size: 11.6px; font-weight: 800; color: #0F172A;
+  margin-bottom: 6px; letter-spacing: -.1px;
+}
+.cmp-box .tbl { max-height: 260px; overflow: auto; }
+table.pbi.cmp { font-size: 11.5px; }
+table.pbi.cmp th { font-size: 10.8px; font-weight: 700; color: #667085; white-space: nowrap; }
+table.pbi.cmp td { padding: 4px 8px; }
+table.pbi.cmp td.c-done { color: #047857; font-weight: 800; }
+table.pbi.cmp td.c-canc { color: #BE123C; font-weight: 800; }
+table.pbi.cmp tr.grand td { background: #FFF9DB; font-weight: 800; }
+@media (max-width: 900px) {
+  .cmp-wrap { grid-template-columns: minmax(0, 1fr); }
+  .cmp-wrap .cmp-top { max-width: none; }
+  .cmp-box .tbl { max-height: none; }
+}
+
+
 
 
 
