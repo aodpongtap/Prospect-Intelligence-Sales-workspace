@@ -82,7 +82,7 @@
   const ymd = d => (d instanceof Date && !isNaN(d)) ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') : '';
 
   /* ---------- cache: จำชุดข้อมูลล่าสุดไว้ใน IndexedDB ---------- */
-  const DB_NAME = 'sale-order-bi', STORE = 'dataset', SCHEMA_VER = 4;
+  const DB_NAME = 'sale-order-bi', STORE = 'dataset', SCHEMA_VER = 5;
   function idb() {
     return new Promise((res, rej) => {
       const r = indexedDB.open(DB_NAME, 1);

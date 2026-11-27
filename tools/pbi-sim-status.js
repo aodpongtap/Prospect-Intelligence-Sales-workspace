@@ -10,6 +10,7 @@ const { StringDecoder } = require('string_decoder');
 const CSV = process.argv[2] || 'C:\\Users\\pongtap.p\\system-backup\\pbix-data\\Data saleOrder.csv';
 const MASTER = 'C:\\Users\\pongtap.p\\system-backup\\pbix-data\\master-status.json';
 const REPORT = 'C:\\Users\\pongtap.p\\system-backup\\pbix-data\\sim-report.json';
+const MODE = process.argv[4] || 'or';   /* or = C-code หรือมีคำว่ายกเลิก | code = C-code เท่านั้น */
 
 function parseRecord(line) {
   const out = []; let cur = '', q = false;
@@ -63,7 +64,8 @@ function main() {
       const cancelByNote = note.toLowerCase().indexOf('ยกเลิก') >= 0;
       let cancelByCode = false;
       if (note.length >= 3 && note.charAt(0) === 'C') cancelByCode = /^\d{2}$/.test(note.substr(1, 2));
-      if (cancelByNote || cancelByCode) { calc = '3.Cancel'; reason = 'svcancel'; }
+      const isCancel = MODE === 'code' ? cancelByCode : (cancelByNote || cancelByCode);
+      if (isCancel) { calc = '3.Cancel'; reason = 'svcancel'; }
       else {
         const v = LK[memo];
         calc = v == null ? '' : v;
