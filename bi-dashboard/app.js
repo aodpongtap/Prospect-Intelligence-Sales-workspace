@@ -111,12 +111,10 @@
       .catch(() => null);
   }
 
-  /* ---------- ขอบเขตข้อมูล: กลุ่ม "หยอดเหรียญ" (ไม่รวมเครื่องชงกาแฟ) ---------- */
+  /* ---------- ขอบเขตข้อมูล: กลุ่ม "หยอดเหรียญ" ทั้งหมด (รวมเครื่องชงกาแฟ) ---------- */
   const KEEP_GROUP_RE = /หยอดเหรียญ/;
-  const EXCLUDE_GROUP_RE = /ชงกาแฟ/;
   function isKeepGroup(g) {
-    const s2 = String(g == null ? '' : g);
-    return KEEP_GROUP_RE.test(s2) && !EXCLUDE_GROUP_RE.test(s2);
+    return KEEP_GROUP_RE.test(String(g == null ? '' : g));
   }
 
   /* ---------- data ---------- */
