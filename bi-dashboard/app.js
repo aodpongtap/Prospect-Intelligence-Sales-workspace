@@ -280,7 +280,7 @@
   /* การ์ดมาตรฐาน: span = จำนวนคอลัมน์ (1-12) */
   function card(span, title, body, o) {
     o = o || {};
-    const center = typeof body === 'string' && (body.indexOf('donut-wrap') >= 0 || body.indexOf('class="gauge"') >= 0);
+    const center = typeof body === 'string' && (body.indexOf('donut-wrap') >= 0 || body.indexOf('class="gauge"') >= 0 || body.indexOf('sum-comp') >= 0);
     return '<section class="card s' + span + (o.cls ? ' ' + o.cls : '') + (center ? ' center-b' : '') + '">' +
       (title ? '<div class="card-h"><h3>' + esc(title) + '</h3>' +
         (o.hint ? '<span class="hint">' + esc(o.hint) + '</span>' : '') + '</div>' : '') +
@@ -827,14 +827,15 @@
       bkc[age <= 3 ? 0 : age <= 7 ? 1 : age <= 14 ? 2 : 3]++;
     });
 
-    /* ---- ตัวช่วย: อันดับแบบแท่ง (คลิกกรองได้) ---- */
-    const rankList = (items, fmt, field) => {
+    /* ---- ตัวช่วย: อันดับแบบแท่ง (คลิกกรองได้ + แสดง %) ---- */
+    const rankList = (items, fmt, field, total) => {
       if (!items || !items.length) return empty();
       const mx = Math.max.apply(null, items.map(x => x.value)) || 1;
+      const tot = total || items.reduce((a, x) => a + x.value, 0) || 1;
       return '<div class="sum-rank">' + items.map(x =>
-        '<div class="sum-rank-row' + (field && xfHas(field, x.label) ? ' sel' : '') + '"' + (field ? xfAttr(field, x.label) : '') + ' title="' + esc(x.label) + ' · ' + fmt(x.value) + '">' +
+        '<div class="sum-rank-row' + (field && xfHas(field, x.label) ? ' sel' : '') + '"' + (field ? xfAttr(field, x.label) : '') + ' title="' + esc(x.label) + ' · ' + fmt(x.value) + ' (' + (x.value / tot * 100).toFixed(1) + '%)">' +
         '<span class="sum-rank-name">' + esc(x.label) + '</span>' +
-        '<span class="sum-rank-val">' + fmt(x.value) + '</span>' +
+        '<span class="sum-rank-val">' + fmt(x.value) + '<em>' + (x.value / tot * 100).toFixed(0) + '%</em></span>' +
         '<span class="sum-rank-track"><i style="width:' + (x.value / mx * 100).toFixed(1) + '%"></i></span></div>').join('') + '</div>';
     };
 
@@ -886,9 +887,9 @@
     h += card(7, 'ยอด SO สะสม · เดือนนี้เทียบเดือนก่อน', trendChart, { hint: 'ถึงวันที่ ' + elapsed });
     h += card(5, 'องค์ประกอบสถานะใบงาน', compHtml, { hint: 'สัดส่วน 100%' });
 
-    h += card(4, 'Top 5 ทีมขาย · Revenue', rankList(topTeam.slice(0, 5), baht, 'team'), { hint: 'ราคาสุทธิ' });
-    h += card(4, 'กลุ่มสินค้า · Unit', rankList(byGroup, num, 'group'), { hint: 'จำนวนเครื่อง' });
-    h += card(4, 'พื้นที่ · SO', rankList(byArea, num, 'gbkk'), { hint: 'จำนวนใบ' });
+    h += card(4, 'Top 5 ทีมขาย · Revenue', rankList(topTeam.slice(0, 5), baht, 'team', rev), { hint: 'ราคาสุทธิ' });
+    h += card(4, 'กลุ่มสินค้า · Unit', rankList(byGroup, num, 'group', units), { hint: 'จำนวนเครื่อง' });
+    h += card(4, 'พื้นที่ · SO', rankList(byArea, num, 'gbkk', so), { hint: 'จำนวนใบ' });
 
     h += card(6, 'ความเสี่ยงงานค้าง (Backlog)',
       (old21 ? '<div class="sum-risk-alert">⚠ ค้างเกิน 21 วัน ' + num(old21) + ' ใบ จากทั้งหมด ' + num(openAll.length) + ' ใบ</div>' : '') +
