@@ -1658,12 +1658,16 @@
   }
 
           /* ══════════════════════════════════════════════════════════════════════
-     Monitor Consult — เฉพาะงาน “เครื่องซักผ้าฝาหน้า” (ข้อมูลจาก ListBooking)
+     Monitor Consult — เฉพาะงาน “เครื่องซักผ้า 13/17 กก.” (ข้อมูลจาก ListBooking)
      + Cross-sell: ลูกค้าซื้อกี่กลุ่มสินค้า / คู่สินค้าที่ซื้อร่วม / ลิสต์โอกาส
      ══════════════════════════════════════════════════════════════════════ */
-  const FRONT_RE = /ฝาหน้า/;
-  const DRY_RE = /อบผ้า/;
-  const isFrontLoad = d => FRONT_RE.test(String(d.product || '')) && !DRY_RE.test(String(d.product || ''));
+  /* ขอบเขต: เครื่องซักผ้า 13 / 17 กก. ทุกแบบ (ฝาหน้า · Stack · Giant · Titan · ฝาบน) — ไม่รวมเครื่องอบผ้า */
+  const isFrontLoad = d => {
+    const p = String(d.product || '');
+    if (/อบผ้า/.test(p)) return false;
+    if (!/13|17/.test(p)) return false;
+    return /ซัก/.test(p) || /Stack|Giant|Titan/i.test(p);
+  };
   function prodCatOf(p) {
     const s = String(p || '');
     if (/Stack|ซ้อน/i.test(s)) return 'Stack (ซัก+อบ)';
@@ -1693,7 +1697,7 @@
   }
 
   function consultReal(data) {
-    const rows = (data || []).filter(isFrontLoad);          /* งานฝาหน้าในเดือน/ตัวกรองที่เลือก */
+    const rows = (data || []).filter(isFrontLoad);          /* งานซักผ้า 13/17 กก. ในเดือน/ตัวกรองที่เลือก */
     const all = S.data || [];
     const now = new Date();
     const nums = a => a.filter(v => typeof v === 'number' && isFinite(v));
@@ -1734,7 +1738,7 @@
     const scAvg = avgOf(sc);
     const overPct = sc.length ? (sc.filter(v => v > 15).length / sc.length * 100) : 0;
 
-    /* ── CROSS-SELL: ประวัติการซื้อทั้งหมดของลูกค้าที่เคยซื้อฝาหน้า ── */
+    /* ── CROSS-SELL: ประวัติการซื้อทั้งหมดของลูกค้าที่เคยซื้อเครื่องซักผ้า 13/17 กก. ── */
     const hist = new Map();     /* customer -> { cats:Set, rev, so, team, sales, prov, last } */
     all.forEach(d => {
       const c = String(d.customer || '').trim();
@@ -1852,10 +1856,13 @@
 
     const inner =
       '<div class="mon-2col">' +
-        '<div><div style="display:flex;align-items:center;gap:8px;margin:0 0 9px">' +
+        '<div><div style="display:flex;align-items:center;gap:8px;margin:0 0 9px;flex-wrap:wrap">' +
           '<b style="font-size:13px">สิ่งที่ผมต้องตามทีม</b>' +
           '<span style="font-size:10.5px;font-weight:800;color:#fff;background:#E11D48;border-radius:99px;padding:2px 8px">' + num(pend.length) + '</span>' +
-          '<span style="margin-left:auto;font-size:11px;color:#98A2B3">เรียงตามอายุงานมากสุด · กด “ตามแล้ว” เพื่อซ่อน</span></div>' +
+          (ackSet.size ? '<span style="font-size:10.5px;font-weight:800;color:#047857;background:#ECFDF5;border-radius:99px;padding:2px 8px">✓ ตามแล้ว ' + num(ackSet.size) + '</span>' : '') +
+          '<span style="margin-left:auto;font-size:11px;color:#98A2B3">เรียงตามอายุงานมากสุด · กด “ตามแล้ว” = ติ๊กคงอยู่ถึงสิ้นเดือน</span>' +
+          (ackSet.size ? '<button id="monAckClear" class="btn" style="height:24px;padding:0 9px;border-radius:7px;border:1px solid #E4E9F0;background:#fff;color:#64748B;font:inherit;font-size:10.8px;font-weight:700;cursor:pointer">↺ ล้างติ๊กเดือนนี้</button>' : '') +
+          '</div>' +
           '<div style="display:flex;flex-direction:column;gap:9px;max-height:600px;overflow:auto;padding-right:2px">' + board + '</div></div>' +
         '<div style="display:flex;flex-direction:column;gap:12px">' +
           '<div style="border:1px solid #E4E9F0;border-radius:12px;overflow:hidden">' +
@@ -1988,7 +1995,7 @@
     const filterNote = { '2.Pending': 'เฉพาะงาน 2.Pending', '2.1.Pending-Detail': 'เฉพาะงาน 2.Pending',
       '3.Cancel': 'เฉพาะงาน 3.Cancel', '3.1.Cancel-Detail': 'เฉพาะงาน 3.Cancel' }[name] || 'ตามเงื่อนไขหน้านี้';
 
-    /* ── Monitor Consult: เฉพาะงานเครื่องซักผ้าฝาหน้า (หัวหน้าต่างนับเฉพาะกลุ่มนี้) ── */
+    /* ── Monitor Consult: เฉพาะงานเครื่องซักผ้า 13/17 กก. (หัวหน้าต่างนับเฉพาะกลุ่มนี้) ── */
     if (name === 'P3.Consult') {
       const scoped = data.filter(isFrontLoad);
       let hc = '<div class="pg-head"><h1>' + esc(pageLabel(name)) + '</h1>' +
@@ -2148,20 +2155,25 @@
     if (wi) wi.onclick = () => { const f = $('fileInput'); if (f) f.click(); };
     const wr = $('welcomeReload');
     if (wr) wr.onclick = () => location.reload();
-    /* Monitor Consult: ปุ่ม “ตามแล้ว” → ซ่อนการ์ดงานนั้นในรอบนี้ */
+    /* Monitor Consult: “ตามแล้ว” = ติ๊กคงอยู่ (จำรายเดือน) กดซ้ำเพื่อยกเลิก */
     document.querySelectorAll('.mon-ack').forEach(b => {
       b.onclick = () => {
-        const c = b.closest('.mon-fu');
-        if (!c) return;
-        b.textContent = '✓ ตามแล้ว';
-        b.style.borderColor = '#A7F3D0';
-        b.style.background = '#ECFDF5';
-        b.style.color = '#047857';
-        c.style.transition = 'opacity .3s';
-        c.style.opacity = '.45';
-        setTimeout(() => { c.style.display = 'none'; }, 420);
+        const so = b.getAttribute('data-so');
+        if (!so) return;
+        toggleAck(String(S.period || ''), so);
+        S.keepScroll = true;
+        render();
       };
     });
+    /* ล้างรายการ “ตามแล้ว” ของเดือนนี้ */
+    const ackClr = $('monAckClear');
+    if (ackClr) ackClr.onclick = () => {
+      const o = loadAck();
+      delete o[String(S.period || '')];
+      try { localStorage.setItem(ACK_KEY, JSON.stringify(o)); } catch (e) {}
+      S.keepScroll = true;
+      render();
+    };
   }
 
   const NAV_GROUPS = [
