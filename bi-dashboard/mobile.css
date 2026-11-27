@@ -119,6 +119,19 @@
   .fsel > span { white-space: nowrap; }
 }
 
+/* ── 9) มือถือ: การ์ด KPI จับคู่ 2 ใบ/แถว (การ์ดกราฟ/ตารางยังเต็มความกว้าง) ─ */
+@media (max-width: 560px) {
+  .g { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g > .card { grid-column: 1 / -1; }
+  .g > .card.kpi2,
+  .g > .card.kpi3 { grid-column: span 1; }
+  .kpi2 .k-val,
+  .kpi3 .k3-row b { font-size: 18px; letter-spacing: -.2px; }
+  .kpi2 .k-lab { font-size: 11px; line-height: 1.25; }
+  .kpi2 .k-sub { font-size: 10.5px; line-height: 1.3; }
+  .card { min-width: 0; }
+}
+
 /* ── 7) ตาราง: ระยะห่างในมือถือให้หายใจได้ ─────────────────────────── */
 @media (max-width: 560px) {
   table.pbi thead th { padding: 6px 8px; }
