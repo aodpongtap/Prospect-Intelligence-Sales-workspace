@@ -129,6 +129,51 @@ function purgeTestDealsApi_(token) {
   return { ok: true, deleted: out, count: out.length };
 }
 
+/**
+ * แก้เลขดีลที่ซ้ำกัน (Admin เท่านั้น) — เก็บแถวแรกไว้ ให้แถวที่เหลือได้เลขใหม่
+ * ใช้หลังพบเลขซ้ำจากการบันทึกพร้อมกันหลายเครื่อง
+ */
+function fixDupDealNosApi_(token) {
+  var s = session_(token);
+  if (!s) throw new Error('กรุณาเข้าสู่ระบบใหม่');
+  if (!isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
+  var lock = LockService.getScriptLock();
+  var locked = false;
+  try { locked = lock.tryLock(30000); } catch (e) { locked = false; }
+  if (!locked) throw new Error('ระบบกำลังทำงานอื่นอยู่ กรุณาลองใหม่');
+  try {
+    var sh = dealSheet_();
+    var map = dealColMap_(sh);
+    if (!map.no) throw new Error('แท็บ Deals ยังไม่มีคอลัมน์ no');
+    var last = sh.getLastRow();
+    var fixed = [];
+    if (last < 2) return { ok: true, fixed: fixed };
+    var rows = sh.getRange(2, 1, last - 1, sh.getLastColumn()).getValues();
+    var seen = {};
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      if (map.deleted && Number(r[map.deleted - 1]) === 1) continue;
+      var no = String(r[map.no - 1] || '').trim();
+      if (!no) continue;
+      if (!seen[no]) { seen[no] = true; continue; }
+      var yr = map.year ? (Number(r[map.year - 1]) || new Date().getFullYear()) : new Date().getFullYear();
+      var newNo = nextDealNo_(yr, sh);
+      sh.getRange(i + 2, map.no).setValue(newNo);
+      if (map.updatedAt) sh.getRange(i + 2, map.updatedAt).setValue(new Date().toISOString());
+      fixed.push(no + '→' + newNo);
+    }
+    try {
+      appendTab_('Logs', {
+        ts: new Date().toISOString(), action: 'deal.fixDup',
+        ref: String(fixed.length) + ' ดีล', detail: fixed.join(' ; '), by: String(s.email).toLowerCase()
+      });
+    } catch (e) {}
+    return { ok: true, fixed: fixed, count: fixed.length };
+  } finally {
+    try { lock.releaseLock(); } catch (e2) {}
+  }
+}
+
 /** รายการเลขดีลที่ถูกลบแล้ว (ให้ client ลบสำเนาในเครื่องทิ้ง ไม่ให้ดันกลับขึ้นมาฟื้นคืน) */
 function deletedDealNos_(s) {
   var out = [];
@@ -169,8 +214,21 @@ function nextDealNo_(year, sh) {
 /**
  * บันทึก/แก้ไขดีล (upsert ตาม no)
  * payload: { no?, customer, job, so, docNo, quoteDate, year, month, product, amount, payment, status, prob, drRef, note, saleId? }
+ * ใช้ LockService กันการออกเลขดีลซ้ำเมื่อมีผู้ใช้บันทึกพร้อมกันหลายคน
  */
 function saveDealV2(token, payload) {
+  var lock = LockService.getScriptLock();
+  var locked = false;
+  try {
+    try { locked = lock.tryLock(30000); } catch (e) { locked = false; }
+    if (!locked) throw new Error('ระบบกำลังบันทึกดีลอื่นอยู่ กรุณากดบันทึกอีกครั้ง');
+    return saveDealV2_(token, payload);
+  } finally {
+    if (locked) { try { lock.releaseLock(); } catch (e) {} }
+  }
+}
+
+function saveDealV2_(token, payload) {
   var s = session_(token);
   if (!s) throw new Error('กรุณาเข้าสู่ระบบใหม่');
   if (!canSell_(s.level)) throw new Error('บัญชีนี้ไม่มีสิทธิ์บันทึกดีล');

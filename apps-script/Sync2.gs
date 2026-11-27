@@ -162,7 +162,20 @@ function nextDailyRef_(dateStr, sh) {
   return prefix + String(max + 1).padStart(2, '0');
 }
 
+/** บันทึกกิจกรรม — ใช้ LockService กันการออกเลข ref ซ้ำเมื่อบันทึกพร้อมกันหลายคน */
 function saveDailyApi_(token, p) {
+  var lock = LockService.getScriptLock();
+  var locked = false;
+  try { locked = lock.tryLock(30000); } catch (e) { locked = false; }
+  if (!locked) throw new Error('ระบบกำลังบันทึกข้อมูลอื่นอยู่ กรุณากดบันทึกอีกครั้ง');
+  try {
+    return saveDailyApiCore_(token, p);
+  } finally {
+    if (locked) { try { lock.releaseLock(); } catch (e2) {} }
+  }
+}
+
+function saveDailyApiCore_(token, p) {
   var s = session_(token);
   if (!s) throw new Error('กรุณาเข้าสู่ระบบใหม่');
   if (!canSell_(s.level)) throw new Error('บัญชีนี้ไม่มีสิทธิ์บันทึกกิจกรรม');
