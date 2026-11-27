@@ -1895,7 +1895,10 @@
       (t[1].r / maxT * 100).toFixed(0) + '%;background:linear-gradient(90deg,#7EA6FF,#118DFF)"></i></div>').join('')
       : empty('ยังไม่มีข้อมูลในเดือนนี้');
 
-    let h = pgHead('Monthly Monitor', []);
+    let h = '<div class="pg-head"><h1>Monthly Monitor</h1>' +
+      '<span class="sub">' + esc(mthLabel(sel)) + ' · ' + num(so) + ' รายการ</span>' +
+      '<span class="field-scope">' + esc(scope.label) + '</span>' +
+      '<span class="grow"></span></div>';
     h += '<div class="g">';
     h += ctl;
     h += kpiCard(3, 'SO เดือนนี้ · ' + scope.label, num(so), C.navy,
