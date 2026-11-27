@@ -84,8 +84,8 @@ function apiResponse_(p) {
     else if (action === 'logs') out = listLogsApi_(p.token, p.q, p.kind, p.by, p.limit);
     else if (action === 'logsClear') out = clearLogsApi_(p.token);
     else if (action === 'backupNow') out = backupNowApi_(p.token, p.mode);
-    else if (action === 'backupCron') out = backupCronApi_(p.key, p.mode);
-    else if (action === 'backupDaily') out = backupDailyApi_();
+    else if (action === 'backupCron') out = backupCronApi_(p.key, p.mode, p.k2);
+    else if (action === 'backupDaily') out = backupDailyApi_(p.key);
     else if (action === 'projectsV2') out = listProjectsApi_(p.token);
     else if (action === 'saveProject') out = saveProjectApi_(p.token, p.project ? JSON.parse(p.project) : {});
     else if (action === 'delProject') out = deleteProjectApi_(p.token, p.no);

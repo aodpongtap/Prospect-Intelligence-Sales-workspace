@@ -375,12 +375,24 @@ function backupCronUrl_() {
   return base + '?api=1&action=backupCron&key=' + backupKey_();
 }
 
-/** เรียกจากภายนอก: สำรองข้อมูลถ้ายังไม่ได้ทำใน 20 ชั่วโมงที่ผ่านมา (mode=force บังคับทำเลย) */
-function backupCronApi_(key, mode) {
+/** คีย์ลับสำหรับสั่ง force backup (ไม่ถูกเปิดเผยที่ไหน — ใช้ผ่านหน้า Admin หรือ editor เท่านั้น) */
+function backupForceKey_() {
+  var props = PropertiesService.getScriptProperties();
+  var k = props.getProperty('BACKUP_FORCE_KEY');
+  if (!k) {
+    k = (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '').slice(0, 32);
+    props.setProperty('BACKUP_FORCE_KEY', k);
+  }
+  return k;
+}
+
+/** เรียกจากภายนอก: สำรองข้อมูลถ้ายังไม่ได้ทำใน 20 ชั่วโมงที่ผ่านมา */
+function backupCronApi_(key, mode, forceKey) {
   if (String(key || '') !== backupKey_()) return { ok: false, error: 'key ไม่ถูกต้อง' };
   var props = PropertiesService.getScriptProperties();
+  var forced = String(mode || '').toLowerCase() === 'force' && String(forceKey || '') === backupForceKey_();
   var last = props.getProperty('LAST_BACKUP_AT');
-  if (mode !== 'force' && last && (Date.now() - new Date(last).getTime()) < 20 * 3600 * 1000) {
+  if (!forced && last && (Date.now() - new Date(last).getTime()) < 20 * 3600 * 1000) {
     return { ok: true, skipped: true, lastAt: last, lastName: props.getProperty('LAST_BACKUP_NAME') || '' };
   }
   var r = dailyBackup_();
@@ -414,8 +426,9 @@ function clearLogsApi_(token) {
   return { ok: true, cleared: n, archived: archived };
 }
 
-/** เรียกจากภายนอกแบบไม่ต้องมี key: ทำได้ไม่เกิน 1 ครั้ง / 20 ชั่วโมง และไม่เปิดเผยข้อมูลไฟล์ */
-function backupDailyApi_() {
+/** เรียกจากภายนอก: ต้องมี key เท่านั้น (กันคนอื่นยิงเล่น) — ทำได้ไม่เกิน 1 ครั้ง / 20 ชั่วโมง */
+function backupDailyApi_(key) {
+  if (String(key || '') !== backupKey_()) return { ok: false, error: 'key ไม่ถูกต้อง' };
   var props = PropertiesService.getScriptProperties();
   var last = props.getProperty('LAST_BACKUP_AT');
   if (last && (Date.now() - new Date(last).getTime()) < 20 * 3600 * 1000) {

@@ -576,6 +576,13 @@
       else done();
     } catch (e) {}
   }
+  /* ซิงก์คิวอัตโนมัติ: กลับมาออนไลน์ / เปิดหน้าใหม่ / ตรวจทุก 60 วินาที */
+  try {
+    global.addEventListener('online', function () { flushQueue(); });
+    setTimeout(function () { flushQueue(); }, 4000);
+    setInterval(function () { if (syncQueue().length) flushQueue(); }, 60000);
+  } catch (e) {}
+
   /** บันทึกดีลขึ้นคลาวด์ (ล้มเหลว → เข้าคิว) · isNew = ดีลใหม่ → ให้เซิร์ฟเวอร์ออกเลขดีลเอง */
   function cloudSave(d, isNew) {
     if (!cloudReady() || !global.PIAuth.saveDealV2) return;

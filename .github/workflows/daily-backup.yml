@@ -1,7 +1,8 @@
 name: daily-sheet-backup
 
 # สำรอง Google Sheet อัตโนมัติทุกวัน ~02:00 (Asia/Bangkok = 19:00 UTC ของวันก่อน)
-# ไม่ต้องตั้ง secret: endpoint ฝั่ง Apps Script จำกัดการทำงานไม่เกิน 1 ครั้ง / 20 ชั่วโมง
+# ใช้ key ของ endpoint backupCron (guard 20 ชม. — เรียกซ้ำปลอดภัย และ key นี้สั่ง force ไม่ได้)
+# กดรันเองได้ที่ Actions → daily-sheet-backup → Run workflow
 
 on:
   schedule:
@@ -14,6 +15,10 @@ jobs:
     steps:
       - name: Trigger Apps Script backup
         run: |
-          URL="https://script.google.com/macros/s/AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-/exec?api=1&action=backupDaily"
+          URL="https://script.google.com/macros/s/AKfycbwHKKd0IlCKNylIjK2LilDkeisbIbqaqiIkmuodlp3ZgWortsO9HLY4jNjCjMmAphW-/exec?api=1&action=backupCron&key=a1b532a66eb843999104c64a89b123aa"
           curl -sS -L --max-time 180 "$URL" -o /tmp/backup.json -w "HTTP %{http_code}\n"
-          head -c 300 /tmp/backup.json || true
+          head -c 500 /tmp/backup.json || true
+          echo
+          grep -q '"ok":true' /tmp/backup.json || { echo "::error::Backup failed"; exit 1; }
+          grep -q '"skipped":true' /tmp/backup.json && echo "Skipped - already backed up within 20h"
+          exit 0
