@@ -578,6 +578,26 @@
     }));
     const instLine = dayKeys.map(k => instByDay.get(k) || 0);
     const pct = rs.length ? pass / rs.length * 100 : 0;
+
+    /* ประมาณการจำนวน SO เมื่อสิ้นเดือน (run-rate ตามวันที่ผ่านไป) */
+    const fc = (function () {
+      const saveXf = S.xf; S.xf = {};
+      const all = rows();                 /* ไม่รวมตัวกรองคลิก (cross-filter) */
+      S.xf = saveXf;
+      const now = new Date();
+      const parts = String(S.period || '').split('-').map(Number);
+      const yy = parts[0], mm = parts[1];
+      const dim = (yy && mm) ? new Date(yy, mm, 0).getDate() : 30;
+      const maxDay = dayKeys.length ? Math.max.apply(null, dayKeys) : 0;
+      const isCur = S.period === (now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));
+      const elapsed = Math.min(dim, isCur ? Math.max(now.getDate(), maxDay) : dim);
+      const so = all.length;
+      const est = Math.round(so / Math.max(elapsed, 1) * dim);
+      const left = Math.max(dim - elapsed, 0);
+      const note = 'ณ วันที่ ' + elapsed + '/' + dim + ' · ' + num(so) + ' ใบ' +
+        (left > 0 ? ' · เหลือ ' + left + ' วัน (≈' + Math.max(est - so, 0) + ' ใบ)' : ' · ครบเดือน');
+      return { so: est, note: note };
+    })();
     const adm = ['1.ผ่าน', '2.Pening', '3.ไม่ผ่าน', '(Blank)'].map(k => ({
       label: k === '(Blank)' ? '(ว่าง)' : k,
       value: rsAdm.filter(d => String(d.admGroup || '(Blank)') === k).length
@@ -588,10 +608,11 @@
 
     let h = pgHead('Daily Admin', rs);
     h += '<div class="g">';
-    h += kpiCard(3, 'จำนวน SO', num(rs.length), C.navy, 'ใบสั่งซื้อในเดือนนี้');
+    h += kpiCard(2, 'จำนวน SO', num(rs.length), C.navy, 'ใบสั่งซื้อในเดือนนี้');
     h += kpiCard(3, 'Revenue (ราคาสุทธิ)', baht(rev), C.orange, 'หักส่วนลด ÷1.07 แล้ว');
-    h += kpiCard(3, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
-    h += kpiCard(3, 'ผ่านการตรวจสอบ', pct.toFixed(0) + '%', C.green, num(pass) + ' / ' + num(rs.length) + ' รายการ');
+    h += kpiCard(2, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
+    h += kpiCard(2, 'ผ่านการตรวจสอบ', pct.toFixed(0) + '%', C.green, num(pass) + ' / ' + num(rs.length));
+    h += kpiCard(3, 'ประมาณการ SO ปิดเดือน', num(fc.so), C.violet, fc.note);
     h += card(8, 'SO ต่อวัน', colsChart(daily, { line: instLine, barLabel: 'จำนวน SO', lineLabel: 'การติดตั้ง', field: 'day' }));
     h += card(4, 'สถานะตรวจสอบ (Admin)', donut(adm, { field: 'admGroup' }));
     h += card(12, 'Grp ทีมขาย × สถานะ Admin', stM, { hint: 'จำนวนงาน' });
