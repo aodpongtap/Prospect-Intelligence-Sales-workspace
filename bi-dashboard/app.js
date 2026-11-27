@@ -1654,6 +1654,93 @@
     return h + '</div>';
   }
 
+  /* ══════════════════════════════════════════════════════════════════════
+     ตัวอย่าง (PREVIEW) — หน้า Consult: 4 การ์ดตาม Flow งานขาย SHOP
+     *** ใช้ “ข้อมูลจำลอง” ทั้งหมด ยังไม่เชื่อมข้อมูลจริง ***
+     SLA อ้างจาก Flowchart: พื้นที่พร้อมติดตั้ง SLA 15 วัน · ไม่พร้อม 14–21 วัน
+     ══════════════════════════════════════════════════════════════════════ */
+  function consultFlowPreview() {
+    const TAG = '<span style="display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:5px;' +
+      'background:#FEF3C7;color:#92400E;font-size:10px;font-weight:800;letter-spacing:.2px">ตัวอย่าง</span>';
+    const big = (v, color, sub) => '<div style="font-size:26px;font-weight:800;letter-spacing:-.8px;line-height:1.15;color:' +
+      (color || '#101828') + '">' + v + '</div><div style="font-size:11px;color:#98A2B3;margin-top:2px">' + sub + '</div>';
+    const pill = (txt, bg, fg) => '<span style="display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:6px;' +
+      'background:' + bg + ';color:' + fg + ';font-size:10.5px;font-weight:800">' + txt + '</span>';
+
+    /* ── การ์ด 1: SLA รายขั้นตอน (เลยกำหนดหรือยัง) ── */
+    const steps = [
+      ['1. เปิดใบจอง SO', '0 วัน', 0.2, 3],
+      ['2. Admin ตรวจสอบ', '0 วัน', 0.8, 12],
+      ['3. ตรวจสอบเครดิต', '0.5 วัน', 1.4, 38],
+      ['4. แจ้งงานทีมช่าง', '2 วัน', 2.6, 41],
+      ['5. ประสานงานเข้าพื้นที่', '5 วัน', 4.1, 22],
+      ['6. ตรวจสอบพื้นที่', '2 วัน', 3.3, 47],
+      ['7. มัดจำ / ชำระเงิน', '30 วัน', 26.5, 31],
+      ['8. สั่งของ / จัดส่ง', '21 วัน', 18.2, 26],
+      ['9. ติดตั้งงาน', '5 วัน', 6.4, 52],
+      ['10. ส่งมอบ / สัญญา', '15 วัน', 12.8, 18]
+    ];
+    const maxLate = Math.max.apply(null, steps.map(s => s[3]));
+    let slaTbl = '<div class="tbl"><table class="pbi"><thead><tr>' +
+      '<th>ขั้นตอน</th><th class="num">SLA เป้า</th><th class="num">เฉลี่ยจริง</th>' +
+      '<th class="num">เกินกำหนด (ใบ)</th><th>สถานะ</th></tr></thead><tbody>';
+    steps.forEach(s => {
+      const late = s[3], over = late > 25;
+      slaTbl += '<tr><td>' + esc(s[0]) + '</td><td class="num">' + s[1] + '</td>' +
+        '<td class="num">' + s[2].toFixed(1) + ' วัน</td>' +
+        '<td class="num"><div class="tbcell"><span class="tbar"><i style="width:' + (late / maxLate * 100).toFixed(0) +
+        '%;background:' + (over ? 'linear-gradient(90deg,#F97066,#FDA29B)' : 'linear-gradient(90deg,#12B76A,#6CE9A6)') +
+        '"></i></span><b>' + late + '</b></div></td>' +
+        '<td>' + (over ? pill('เลยกำหนด', '#FEF3F2', '#B42318') : pill('ทันกำหนด', '#ECFDF3', '#027A48')) + '</td></tr>';
+    });
+    slaTbl += '</tbody></table></div>';
+
+    /* ── การ์ด 2: จ่ายมัดจำหรือยัง ── */
+    const dep = [
+      { label: 'จ่ายแล้ว', value: 284, color: 'linear-gradient(90deg,#12B76A,#6CE9A6)' },
+      { label: 'ค้างจ่าย', value: 133, color: 'linear-gradient(90deg,#F79009,#FDB022)' }
+    ];
+    const depHtml = big('317 / 417', '#101828', 'ใบที่ต้องมัดจำ · คิดเป็น 76%') +
+      '<div style="margin-top:10px">' + hbars(dep, v => num(v) + ' ใบ', { pct: true }) + '</div>' +
+      '<div style="margin-top:10px;font-size:11.5px;color:#667085;line-height:1.6">' +
+      'มัดจำที่รับแล้ว <b>฿8.4 ลบ.</b> · ค้าง <b>฿3.9 ลบ.</b><br>' +
+      'ค้างเกิน 30 วัน <b>31 ใบ</b> ( Pens) </div>';
+
+    /* ── การ์ด 3: สั่งของหรือยัง ── */
+    const ord = [
+      { label: 'สั่งของแล้ว', value: 246, color: 'linear-gradient(90deg,#1570EF,#53B1FD)' },
+      { label: 'รอสั่ง', value: 98, color: 'linear-gradient(90deg,#F79009,#FDB022)' },
+      { label: 'ยังไม่ถึงขั้น', value: 73, color: 'linear-gradient(90deg,#98A2B3,#D0D5DD)' }
+    ];
+    const ordHtml = big('246 / 344', '#101828', 'ใบที่ถึงขั้นสั่งของแล้ว · 72%') +
+      '<div style="margin-top:10px">' + hbars(ord, v => num(v) + ' ใบ', { pct: true }) + '</div>' +
+      '<div style="margin-top:10px;font-size:11.5px;color:#667085;line-height:1.6">' +
+      'รอของเข้าเฉลี่ย <b>6.2 วัน</b> · เกิน 21 วัน <b>26 ใบ</b><br>' +
+      'ของเข้าแล้วแต่ยังไม่นัดติดตั้ง <b>18 ใบ</b></div>';
+
+    /* ── การ์ด 4: สรุป SLA รวม + ทีมที่เลยกำหนดมากสุด ── */
+    const teamLate = [
+      { label: 'S2-CRD', value: 38, color: 'linear-gradient(90deg,#F97066,#FDA29B)' },
+      { label: 'S1', value: 31, color: 'linear-gradient(90deg,#F97066,#FDA29B)' },
+      { label: 'S3-BU', value: 22, color: 'linear-gradient(90deg,#FDB022,#FEC84B)' },
+      { label: 'BU/Dealer', value: 14, color: 'linear-gradient(90deg,#FDB022,#FEC84B)' },
+      { label: 'Online/E-Com', value: 9, color: 'linear-gradient(90deg,#98A2B3,#D0D5DD)' }
+    ];
+    const lateHtml = big('136 / 417', '#B42318', 'ใบเลยกำหนดอย่างน้อย 1 ขั้น · 33%') +
+      '<div style="margin-top:10px">' + hbars(teamLate, v => num(v) + ' ใบ', { pct: 417 }) + '</div>' +
+      '<div style="margin-top:10px;font-size:11.5px;color:#667085;line-height:1.6">' +
+      'เฉลี่ยเลยกำหนด <b>4.8 วัน/ใบ</b> · ขั้นที่หลุดบ่อยสุด <b>ติดตั้งงาน</b></div>';
+
+    return '<div style="grid-column:1/-1;display:flex;align-items:center;gap:9px;flex-wrap:wrap;' +
+      'padding:10px 13px;border-radius:12px;background:#FFFAEB;border:1px solid #FEDF89;color:#92400E;' +
+      'font-size:12px;line-height:1.5;font-weight:600">' + TAG +
+      '<span>4 การ์ดด้านล่างเป็น <b>ตัวอย่าง</b> — ยังไม่เชื่อมข้อมูลจริง · SLA อ้าง Flowchart: พื้นที่พร้อมติดตั้ง 15 วัน / ไม่พร้อม 14–21 วัน</span></div>' +
+      card(12, 'เลยกำหนดหรือยัง · SLA รายขั้นตอน', slaTbl, { hint: '🔸 ข้อมูลตัวอย่าง' }) +
+      card(4, 'จ่ายมัดจำหรือยัง', depHtml, { hint: '🔸 ตัวอย่าง' }) +
+      card(4, 'สั่งของหรือยัง', ordHtml, { hint: '🔸 ตัวอย่าง' }) +
+      card(4, 'สรุป SLA · ทีมที่เลยกำหนด', lateHtml, { hint: '🔸 ตัวอย่าง' });
+  }
+
   function pageGeneric(name, rs) {
     const sp = SPECS[name] || { dim: 'team', dim2: 'status3', metric: 'count', title: name };
     const pick = rws => (sp.filter ? rws.filter(sp.filter) : rws);
@@ -1741,6 +1828,7 @@
     h += kpiCard(3, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
     h += kpiCard(3, 'Done / Pending / Cancel', num(nD) + ' / ' + num(nP) + ' / ' + num(nC), C.violet,
       'อัตราปิดงาน ' + (closeR * 100).toFixed(0) + '% · รายการในหน้านี้ ' + num(data.length));
+    if (name === 'P3.Consult') h += consultFlowPreview();   /* ★ ตัวอย่าง 4 การ์ด — ยังไม่เชื่อมข้อมูลจริง */
     h += card(8, sp.title + ' · ตาม ' + dimTh, chart, { hint: isTime ? 'รายแกนเวลา' : 'เรียงจากมากไปน้อย' });
     h += card(4, dimTh + ' · สัดส่วน', donut(dData, { field: sp.dim }));
     h += card(12, dimTh + ' × ' + dim2Th, pv, { hint: metricTxt });
