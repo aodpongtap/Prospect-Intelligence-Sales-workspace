@@ -1676,6 +1676,22 @@
   }
   const sizeOfRev = v => v > 1000000 ? 'L' : v > 500000 ? 'M' : v > 300000 ? 'S' : v > 100000 ? 'SS' : '-';
 
+  const ACK_KEY = 'bi.monAck';
+  function loadAck() {
+    try { const o = JSON.parse(localStorage.getItem(ACK_KEY) || '{}'); return (o && typeof o === 'object') ? o : {}; }
+    catch (e) { return {}; }
+  }
+  function ackList(mth) { const o = loadAck(); return Array.isArray(o[mth]) ? o[mth] : []; }
+  function toggleAck(mth, so) {
+    const o = loadAck();
+    const arr = Array.isArray(o[mth]) ? o[mth].slice() : [];
+    const i = arr.indexOf(so);
+    if (i >= 0) arr.splice(i, 1); else arr.push(so);
+    o[mth] = arr;
+    try { localStorage.setItem(ACK_KEY, JSON.stringify(o)); } catch (e) {}
+    return i < 0;
+  }
+
   function consultReal(data) {
     const rows = (data || []).filter(isFrontLoad);          /* งานฝาหน้าในเดือน/ตัวกรองที่เลือก */
     const all = S.data || [];
@@ -1785,7 +1801,12 @@
             esc(String(x.d.so || '').slice(0, 14) + ' · ' + String(x.d.customer || '-').slice(0, 26)) + '</span>' +
           '<span style="display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:99px;font-size:10.8px;font-weight:800;' + v.b + '">ค้าง ' + x.age + ' วัน</span>' +
           '<span style="font-size:11.5px;color:#475569">' + esc(stripNum(x.d.team || '-')) + ' · ' + esc(String(x.d.salesperson || '-').slice(0, 16)) + '</span>' +
-          '<span style="margin-left:auto"><button class="btn mon-ack" style="height:26px;padding:0 10px;border-radius:8px;border:1px solid #E4E9F0;background:#fff;color:#475569;font:inherit;font-size:11px;font-weight:700;cursor:pointer">ตามแล้ว</button></span>' +
+          (acked
+            ? '<span style="display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:99px;font-size:10.8px;font-weight:800;background:#ECFDF5;color:#047857">✓ ตามแล้ว</span>'
+            : '') +
+          '<span style="margin-left:auto"><button class="btn mon-ack" data-so="' + esc(String(x.d.so || '')) + '" style="height:26px;padding:0 10px;border-radius:8px;border:1px solid ' +
+            (acked ? '#A7F3D0;background:#ECFDF5;color:#047857' : '#E4E9F0;background:#fff;color:#475569') +
+            ';font:inherit;font-size:11px;font-weight:700;cursor:pointer">' + (acked ? 'ยกเลิก' : 'ตามแล้ว') + '</button></span>' +
         '</div>' +
         '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:11.8px;color:#475569">' +
           '<span>มัดจำ ' + depTxt(x.d) + '</span>' +
@@ -1968,7 +1989,7 @@
       const scoped = data.filter(isFrontLoad);
       let hc = '<div class="pg-head"><h1>' + esc(pageLabel(name)) + '</h1>' +
         '<span class="sub">' + esc(S.period ? S.period.replace('-', ' · ') : 'ทุกเดือน') + ' · ' + num(scoped.length) + ' รายการ</span>' +
-        '<span class="field-scope">เครื่องซักผ้าฝาหน้า</span>' + xfChips() +
+        '<span class="field-scope">เครื่องซักผ้า 13/17 กก.</span>' + xfChips() +
         '<span class="grow"></span></div>';
       return hc + '<div class="g">' + consultReal(data) + '</div>';
     }
