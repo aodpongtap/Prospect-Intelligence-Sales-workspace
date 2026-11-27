@@ -136,6 +136,19 @@ console.log('computed rows:', data.length);
 const keep = data.filter(d => /หยอดเหรียญ|vending/i.test(String(d.group == null ? '' : d.group)));
 console.log('coin-op rows:', keep.length);
 
+/* กรองลูกค้าที่เป็นข้อมูลทดสอบออก (เช่น "ทดสอบ ไอที", "Test", "ตัวอย่าง")
+   ใช้เฉพาะชื่อลูกค้า — ไม่กรองชื่องาน เพราะงานจริงมีขั้นตอนชื่อ "ทดสอบ/Testing" */
+const TEST_CUST_RE = /ทดสอบ|^\s*(test|testing)\s*$/i;
+const isTestCustomer = v => {
+  const t = String(v == null ? '' : v).trim();
+  if (!t) return false;
+  if (t === 'ตัวอย่าง') return true;
+  return TEST_CUST_RE.test(t);
+};
+const beforeCount = keep.length;
+const clean = keep.filter(d => !isTestCustomer(d.customer));
+console.log('test rows dropped:', beforeCount - clean.length, '| remaining:', clean.length);
+
 const ser = d => {
   const o = {};
   for (const k in d) { const v = d[k]; o[k] = v instanceof Date ? { __d: v.toISOString() } : v; }
@@ -145,7 +158,7 @@ const stamp = (path.basename(XLSX).match(/(\d{14})/) || [])[1] || '';
 const payload = {
   ver: 9,
   meta: { file: path.basename(XLSX), rows: data.length, at: new Date().toISOString(), stamp: stamp },
-  data: keep.map(ser)
+  data: clean.map(ser)
 };
 const js = '/* snapshot ข้อมูลหยอดเหรียญสำหรับโหมดอ่านอย่างเดียว (สร้างโดย tools/build-snapshot.js) */\n' +
   'window.BI_SNAPSHOT = ' + JSON.stringify(payload) + ';\n';

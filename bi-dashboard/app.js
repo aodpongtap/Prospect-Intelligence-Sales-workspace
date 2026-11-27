@@ -2592,10 +2592,21 @@
     return arr;
   }
 
+  /* กรองแถวที่เป็นข้อมูลทดสอบออกจากรายงาน (เช่น "ทดสอบ ไอที", "Test", "ตัวอย่าง")
+     ใช้เฉพาะชื่อลูกค้า — ไม่กรองชื่องาน เพราะงานจริงมีขั้นตอนชื่อ "ทดสอบ/Testing" */
+  const TEST_CUST_RE = /ทดสอบ|^\s*(test|testing)\s*$/i;
+  function isTestCustomer(v) {
+    const t = String(v == null ? '' : v).trim();
+    if (!t) return false;
+    if (t === 'ตัวอย่าง') return true;
+    return TEST_CUST_RE.test(t);
+  }
+
   function applySnapshot(snap) {
     if (!snap || !snap.data || S.data) return;
-    S.data = fixTeams(snap.data.map(des));
-    S.meta = Object.assign({}, snap.meta, { snapshot: true });
+    const clean = snap.data.filter(d => !isTestCustomer(d && d.customer));
+    S.data = fixTeams(clean.map(des));
+    S.meta = Object.assign({}, snap.meta, { snapshot: true, filteredTest: snap.data.length - clean.length });
     const ps = periods();
     S.period = ps.length ? ps[ps.length - 1] : null;
     applyView();
