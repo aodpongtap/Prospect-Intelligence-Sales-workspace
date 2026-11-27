@@ -134,6 +134,31 @@
 .sum-comp-row b { color: #101828; font-weight: 700; font-variant-numeric: tabular-nums; }
 .sum-comp-row em { color: #98A2B3; font-style: normal; text-align: right; font-variant-numeric: tabular-nums; }
 
+/* ---------------- MoM control ---------------- */
+.mom-ctl {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.seg {
+  display: inline-flex; border: 1px solid #E4E7EC; border-radius: 9px;
+  overflow: hidden; background: #fff;
+}
+.seg button {
+  border: 0; background: #fff; cursor: pointer; font-family: inherit;
+  font-size: 11.5px; font-weight: 650; color: #475467; padding: 6px 12px;
+}
+.seg button + button { border-left: 1px solid #E4E7EC; }
+.seg button:hover { background: #F9FAFB; }
+.seg button.on { background: #EFF8FF; color: #0B5CAB; }
+.mom-ctl label {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-size: 11.5px; font-weight: 650; color: #475467;
+}
+.mom-ctl .pbi-select { height: 30px; font-size: 11.5px; }
+.mom-note { font-size: 11px; color: #98A2B3; }
+table.pbi th.cur { color: #0B5CAB; background: #F4F8FF; }
+table.pbi td.cur { background: #F9FBFF; font-weight: 700; color: #0B4A8F; }
+
 /* ---------------- RISK ---------------- */
 .sum-risk-alert {
   display: flex; align-items: center; gap: 9px;

@@ -16,7 +16,7 @@
   const COLS = Array.from({ length: 90 }, (_, i) => i);
   const DATE_COLS = [2, 32, 47, 54];
 
-  const S = { raw: null, data: null, meta: null, page: 'summary', period: null, q: '', pageIdx: 0, xf: {}, filter: { team: new Set(), channel: new Set(), group: new Set() } };
+  const S = { raw: null, data: null, meta: null, page: 'summary', period: null, q: '', pageIdx: 0, xf: {}, filter: { team: new Set(), channel: new Set(), group: new Set() }, momMth: null, momN: 1, keepScroll: false };
 
   /* หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) — เพิ่ม Summary เป็นหน้าแรก */
   const PBI_PAGES = [
@@ -701,27 +701,74 @@
     const openAll = all.filter(d => d.status3 === '2.Pending');
     const old21 = openAll.filter(d => d.dateSO instanceof Date && !isNaN(d.dateSO) && (now - d.dateSO) / 86400000 > 21).length;
 
-    /* ตารางเทียบเดือนก่อน */
-    const mom = [
-      { k: 'จำนวน SO (ใบ)', a: so, b: pTSo, f: num, better: 1 },
-      { k: 'Revenue สุทธิ', a: rev, b: pTRev, f: baht, better: 1 },
-      { k: 'Unit (เครื่อง)', a: units, b: pTUnit, f: num, better: 1 },
-      { k: 'ปิดจริง (1.Done)', a: nD, b: pTD, f: num, better: 1 },
-      { k: 'ยกเลิก (3.Cancel)', a: nC, b: pTC, f: num, better: -1 },
-      { k: 'ยอดเฉลี่ยต่อใบ', a: so ? rev / so : 0, b: pTSo ? pTRev / pTSo : 0, f: baht, better: 1 }
+    /* ===== เทียบเดือนก่อน (Month over Month) — เลือกเดือนได้ + โหมด 3 เดือน ===== */
+    const mthList = periods();                       /* เรียงเก่า -> ใหม่ */
+    const mthLabel = k => { const y = +String(k).slice(0, 4), m = +String(k).slice(5, 7); return TH_M[m - 1] + ' ' + (y + 543); };
+    const shiftMth = (k, n) => { const y = +String(k).slice(0, 4), m = +String(k).slice(5, 7); const d = new Date(y, m - 1 + n, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+    const statOf = k => {
+      const list = monthRowsOf(Number(String(k).replace('-', '')))
+        .filter(d => d.dateSO instanceof Date && !isNaN(d.dateSO) && d.dateSO.getDate() <= elapsed);
+      const n = list.length, rv = sum(list, 'revenue');
+      return {
+        so: n, rev: rv, unit: sum(list, 'units'),
+        done: list.filter(d => d.status3 === '1.Done').length,
+        canc: list.filter(d => d.status3 === '3.Cancel').length,
+        avg: n ? rv / n : 0
+      };
+    };
+    const curKeyM = S.period || mthList[mthList.length - 1] || '';
+    let cmpKey = S.momMth;
+    if (!cmpKey || mthList.indexOf(cmpKey) < 0 || cmpKey === curKeyM) cmpKey = shiftMth(curKeyM, -1);
+    if (mthList.indexOf(cmpKey) < 0) {
+      const older = mthList.filter(k => k < curKeyM);
+      cmpKey = older.length ? older[older.length - 1] : curKeyM;
+    }
+    const nMode = S.momN === 3 ? 3 : 1;
+    const cmpKeys = (nMode === 3 ? [cmpKey, shiftMth(cmpKey, -1)] : [cmpKey])
+      .filter(k => mthList.indexOf(k) >= 0 && k !== curKeyM);
+
+    const curStat = { so: so, rev: rev, unit: units, done: nD, canc: nC, avg: so ? rev / so : 0 };
+    const momRows = [
+      { k: 'จำนวน SO (ใบ)', f: 'so', fmt: num, better: 1 },
+      { k: 'Revenue สุทธิ', f: 'rev', fmt: baht, better: 1 },
+      { k: 'Unit (เครื่อง)', f: 'unit', fmt: num, better: 1 },
+      { k: 'ปิดจริง (1.Done)', f: 'done', fmt: num, better: 1 },
+      { k: 'ยกเลิก (3.Cancel)', f: 'canc', fmt: num, better: -1 },
+      { k: 'ยอดเฉลี่ยต่อใบ', f: 'avg', fmt: baht, better: 1 }
     ];
-    let momTbl = '<div class="tbl"><table class="pbi"><thead><tr>' +
+    const cmpStats = cmpKeys.map(k => ({ k: k, s: statOf(k) }));
+    const base = cmpStats.length ? cmpStats[0] : null;
+
+    let momTbl = '<div class="mom-ctl">' +
+      '<div class="seg" id="momMode">' +
+        '<button data-mode="1" class="' + (nMode === 1 ? 'on' : '') + '">เดือน × เดือน</button>' +
+        '<button data-mode="3" class="' + (nMode === 3 ? 'on' : '') + '">เทียบ 3 เดือน</button>' +
+      '</div>' +
+      '<label>เทียบกับ <select id="momSel" class="pbi-select">' +
+        mthList.slice().reverse().filter(k => k !== curKeyM).map(k =>
+          '<option value="' + k + '"' + (k === cmpKey ? ' selected' : '') + '>' + esc(mthLabel(k)) + '</option>').join('') +
+      '</select></label>' +
+      '<span class="mom-note">นับถึงวันที่ ' + elapsed + ' ของทุกเดือน</span>' +
+      '</div>';
+    momTbl += '<div class="tbl"><table class="pbi"><thead><tr>' +
       '<th class="rowhead">ตัวชี้วัด</th>' +
-      '<th class="num">' + esc(curMthTh) + '<br><small>ถึงวันที่ ' + elapsed + '</small></th>' +
-      '<th class="num">' + esc(prevMthTh) + '<br><small>ถึงวันที่ ' + elapsed + '</small></th>' +
-      '<th class="num">ต่าง</th><th class="num">%</th></tr></thead><tbody>';
-    mom.forEach(r => {
-      const d0 = r.a - r.b, p0 = dl(r.a, r.b);
+      '<th class="num cur">' + esc(mthLabel(curKeyM)) + '<br><small>ถึงวันที่ ' + elapsed + '</small></th>' +
+      cmpStats.map(c => '<th class="num">' + esc(mthLabel(c.k)) + '<br><small>ถึงวันที่ ' + elapsed + '</small></th>').join('') +
+      (base ? '<th class="num">ต่าง vs ' + esc(mthLabel(base.k)) + '</th><th class="num">%</th>' : '') +
+      '</tr></thead><tbody>';
+    momRows.forEach(r => {
+      const a = curStat[r.f];
+      const b0 = base ? base.s[r.f] : null;
+      const d0 = b0 == null ? null : a - b0;
+      const p0 = b0 == null ? null : dl(a, b0);
       const good = p0 == null ? '' : ((p0 * r.better) >= 0 ? 'c-done' : 'c-canc');
       momTbl += '<tr><td class="rowhead">' + esc(r.k) + '</td>' +
-        '<td class="num">' + r.f(r.a) + '</td><td class="num">' + r.f(r.b) + '</td>' +
-        '<td class="num ' + good + '">' + (d0 >= 0 ? '+' : '−') + r.f(Math.abs(d0)) + '</td>' +
-        '<td class="num ' + good + '">' + (p0 == null ? '–' : (p0 >= 0 ? '+' : '−') + Math.abs(p0).toFixed(0) + '%') + '</td></tr>';
+        '<td class="num cur">' + r.fmt(a) + '</td>' +
+        cmpStats.map(c => '<td class="num">' + r.fmt(c.s[r.f]) + '</td>').join('') +
+        (base ?
+          '<td class="num ' + good + '">' + (d0 >= 0 ? '+' : '−') + r.fmt(Math.abs(d0)) + '</td>' +
+          '<td class="num ' + good + '">' + (p0 == null ? '–' : (p0 >= 0 ? '+' : '−') + Math.abs(p0).toFixed(0) + '%') + '</td>' : '') +
+        '</tr>';
     });
     momTbl += '</tbody></table></div>';
 
@@ -1650,7 +1697,7 @@
     el.innerHTML = html;
     el.classList.add('active');
     setActiveNav();
-    scrollTopPage();
+    if (S.keepScroll) S.keepScroll = false; else scrollTopPage();
     bind();
   }
 
@@ -1695,6 +1742,13 @@
     });
     const rst = $('fReset');
     if (rst) rst.onclick = () => { S.filter.team.clear(); S.filter.channel.clear(); S.filter.group.clear(); render(); };
+
+    /* Summary — เทียบเดือน (โหมด / เดือนที่เลือก) */
+    document.querySelectorAll('#momMode button').forEach(b => {
+      b.onclick = () => { S.momN = Number(b.dataset.mode) || 1; S.keepScroll = true; render(); };
+    });
+    const ms = $('momSel');
+    if (ms) ms.onchange = () => { S.momMth = ms.value; S.keepScroll = true; render(); };
   }
 
   const NAV_GROUPS = [
