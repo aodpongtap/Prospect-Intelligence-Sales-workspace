@@ -116,17 +116,13 @@
     return 'on process';
   }
 
-  // col 130 DZ  Check SV. Cancel
+  // col 130 DZ  Check SV. Cancel — ตรวจจากรหัส C + เลข 2 หลักที่ต้นหมายเหตุเท่านั้น
+  // (เดิมใช้ OR กับ "มีคำว่ายกเลิกที่ไหนก็ได้" ทำให้แถวที่ Excel ปล่อยว่างถูกบังคับเป็น 3.Cancel)
   function fCheckSVCancel(r) {
     if (trim(r[C.contract]) !== '') return '';
-    const note = s(r[C.closeNote]);
-    const cancelByNote = search('ยกเลิก', note) >= 0;
-    let cancelByCode = false;
-    if (note.length >= 3 && note.charAt(0) === 'C') {
-      const mid = note.substr(1, 2);
-      cancelByCode = /^\d{2}$/.test(mid);
-    }
-    return (cancelByNote || cancelByCode) ? 'Cancel' : '';
+    const note = trim(r[C.closeNote]);
+    const cancelByCode = note.length >= 3 && note.charAt(0) === 'C' && /^\d{2}$/.test(note.substr(1, 2));
+    return cancelByCode ? 'Cancel' : '';
   }
 
   // col 103 CY  MapStutus  = CONCAT(ผู้รับผิดชอบ, สถานะ ALL, สถานะใบงาน)

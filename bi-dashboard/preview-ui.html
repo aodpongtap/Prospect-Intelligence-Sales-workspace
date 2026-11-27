@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sale Order BI — UI Preview</title>
+<style>
+:root{
+  --bg:#F6F7F9; --panel:#FFFFFF; --ink:#0F172A; --ink2:#475569; --ink3:#94A3B8;
+  --line:#E6E9EF; --line2:#EFF2F6;
+  --accent:#4F46E5; --accent-soft:#EEF0FF;
+  --done:#059669; --pend:#D97706; --canc:#E11D48;
+  --r:14px; --r-sm:10px;
+  --shadow:0 1px 2px rgba(15,23,42,.04), 0 8px 24px -12px rgba(15,23,42,.10);
+  --mono:'SF Mono',ui-monospace,Consolas,monospace;
+}
+html[data-theme="dark"]{
+  --bg:#0B1120; --panel:#111A2E; --ink:#E7ECF5; --ink2:#9FB0C9; --ink3:#6B7C96;
+  --line:#1E2A44; --line2:#182338;
+  --accent:#7C8BFF; --accent-soft:#1B2550;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Inter","Segoe UI","Leelawadee UI",Tahoma,sans-serif;
+  font-size:13px; -webkit-font-smoothing:antialiased;
+}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+
+/* ───────── top bar ───────── */
+.top{
+  position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:10px;
+  height:56px; padding:0 16px; background:color-mix(in srgb, var(--panel) 88%, transparent);
+  backdrop-filter:saturate(1.4) blur(10px); border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px;letter-spacing:-.2px}
+.logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#9333EA);
+  box-shadow:0 4px 12px -4px color-mix(in srgb,var(--accent) 70%, transparent)}
+.sep{width:1px;height:22px;background:var(--line)}
+
+.pill{
+  display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 11px;
+  border:1px solid var(--line);border-radius:9px;background:var(--panel);
+  color:var(--ink2);font-size:12.5px;cursor:pointer;white-space:nowrap;transition:.15s;
+}
+.pill:hover{border-color:var(--ink3);color:var(--ink)}
+.pill b{color:var(--ink);font-weight:600}
+.pill.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.spacer{flex:1}
+.icon-btn{
+  width:32px;height:32px;display:grid;place-items:center;border-radius:9px;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink2);cursor:pointer;
+}
+.icon-btn:hover{color:var(--ink);border-color:var(--ink3)}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-weight:700;font-size:12px}
+
+/* ───────── layout ───────── */
+.layout{display:flex;min-height:calc(100% - 56px)}
+.rail{
+  width:212px;flex:0 0 212px;border-right:1px solid var(--line);padding:14px 10px 24px;
+  background:var(--panel);
+}
+.rail h4{margin:14px 8px 6px;font-size:10.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--ink3)}
+.rail a{
+  display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:8px;
+  color:var(--ink2);text-decoration:none;font-size:12.5px;margin-bottom:1px;
+}
+.rail a:hover{background:var(--line2);color:var(--ink)}
+.rail a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.rail .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5}
+
+.main{flex:1;min-width:0;padding:18px 20px 32px;display:flex;flex-direction:column;gap:14px}
+.head{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.head h1{margin:0;font-size:21px;letter-spacing:-.5px}
+.head .meta{color:var(--ink3);font-size:12px}
+.tag{font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);
+  padding:3px 9px;border-radius:999px}
+
+/* ───────── KPI ───────── */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:12px}
+.kpi{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:12px 14px 10px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.kpi .lab{font-size:11.5px;color:var(--ink3);font-weight:500}
+.kpi .val{font-size:25px;font-weight:700;letter-spacing:-.8px;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .val small{font-size:13px;font-weight:600;color:var(--ink3);letter-spacing:0}
+.kpi .foot{display:flex;align-items:center;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--ink3);position:relative;z-index:2}
+.delta{font-weight:700;font-size:11px;padding:1px 6px;border-radius:6px}
+.up{color:var(--done);background:color-mix(in srgb,var(--done) 12%,transparent)}
+.down{color:var(--canc);background:color-mix(in srgb,var(--canc) 12%,transparent)}
+.kpi .spark{position:absolute;right:0;bottom:0;left:0;height:34px;opacity:.5}
+
+/* ───────── cards ───────── */
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:14px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px 16px}
+.card h3{margin:0;font-size:12.5px;font-weight:650;color:var(--ink)}
+.card .sub{font-size:11px;color:var(--ink3)}
+.card-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.card-h .right{margin-left:auto;display:flex;gap:6px}
+.seg{display:flex;gap:2px;background:var(--line2);padding:2px;border-radius:8px}
+.seg button{border:none;background:none;font:inherit;font-size:11.5px;color:var(--ink2);padding:4px 10px;border-radius:6px;cursor:pointer}
+.seg button.on{background:var(--panel);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.08)}
+
+/* column chart */
+.chart{position:relative;height:230px;margin-top:6px}
+.plot{position:absolute;inset:0 0 20px 34px}
+.grid-lines{position:absolute;inset:0}
+.grid-lines i{position:absolute;left:0;right:0;border-top:1px dashed var(--line2)}
+.axis-y{position:absolute;top:0;bottom:20px;left:0;width:30px;font-size:10px;color:var(--ink3)}
+.axis-y span{position:absolute;right:4px;transform:translateY(-50%)}
+.bars{position:absolute;inset:0;display:flex;align-items:flex-end;gap:3px}
+.bar{flex:1 1 0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative}
+.bar i{width:100%;max-width:26px;border-radius:5px 5px 0 0;background:linear-gradient(180deg,var(--accent),color-mix(in srgb,var(--accent) 62%, #0B1120));position:relative;transition:.2s}
+.bar:hover i{filter:brightness(1.08)}
+.bar i b{position:absolute;top:2px;left:0;right:0;text-align:center;font-size:9.5px;color:#fff;font-weight:700}
+.bar span{position:absolute;bottom:-19px;font-size:10px;color:var(--ink3)}
+.line{position:absolute;inset:0;pointer-events:none}
+.line svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+
+/* legend */
+.legend{display:flex;gap:14px;font-size:11px;color:var(--ink2);margin-top:12px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:6px;vertical-align:-1px}
+.legend .l{height:3px;border-radius:2px;vertical-align:3px}
+
+/* status list */
+.stlist{display:flex;flex-direction:column;gap:9px;margin-top:4px}
+.strow{display:grid;grid-template-columns:10px 1fr auto auto;gap:10px;align-items:center;font-size:12px}
+.strow i{width:10px;height:10px;border-radius:3px}
+.strow span{color:var(--ink2)}
+.strow b{font-variant-numeric:tabular-nums}
+.strow em{font-style:normal;color:var(--ink3);font-size:11px;min-width:34px;text-align:right}
+.donut{width:112px;height:112px;border-radius:50%;position:relative;margin:6px auto 12px}
+.donut::after{content:'';position:absolute;inset:30%;border-radius:50%;background:var(--panel)}
+.donut b{position:absolute;inset:0;display:grid;place-content:center;text-align:center;font-size:18px;z-index:1;letter-spacing:-.5px}
+.donut b small{display:block;font-size:10px;color:var(--ink3);font-weight:500;letter-spacing:0}
+
+/* top team bars */
+.rank{display:flex;flex-direction:column;gap:8px}
+.rank .r{display:grid;grid-template-columns:16px 1fr 62px;gap:9px;align-items:center;font-size:12px}
+.rank .n{color:var(--ink3);font-size:11px;font-variant-numeric:tabular-nums}
+.rank .t{position:relative;height:22px;border-radius:6px;background:var(--line2);overflow:hidden}
+.rank .t i{position:absolute;inset:0 auto 0 0;border-radius:6px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%, #22D3EE))}
+.rank .t b{position:relative;z-index:1;display:block;line-height:22px;padding-left:8px;font-size:11px;color:var(--ink);font-weight:600}
+.rank .v{text-align:right;font-weight:650;font-variant-numeric:tabular-nums}
+
+/* table */
+.tbl{border:1px solid var(--line);border-radius:12px;overflow:auto;max-height:330px;margin-top:4px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+thead th{position:sticky;top:0;background:var(--panel);color:var(--ink3);font-size:10.5px;font-weight:650;
+  letter-spacing:.4px;text-transform:uppercase;padding:9px 12px;text-align:right;border-bottom:1px solid var(--line)}
+thead th:first-child{text-align:left}
+tbody td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--line2);font-variant-numeric:tabular-nums;color:var(--ink2)}
+tbody td:first-child{text-align:left;color:var(--ink);font-weight:550}
+tbody tr:hover td{background:var(--line2)}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:650;padding:2px 8px;border-radius:999px}
+.b-done{color:var(--done);background:color-mix(in srgb,var(--done) 12%,transparent)}
+.b-pend{color:var(--pend);background:color-mix(in srgb,var(--pend) 14%,transparent)}
+.b-canc{color:var(--canc);background:color-mix(in srgb,var(--canc) 12%,transparent)}
+
+/* forecast strip */
+.fc{display:flex;align-items:center;gap:16px;background:linear-gradient(120deg,var(--accent-soft),transparent 65%);
+  border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:var(--r);padding:12px 16px}
+.fc .big{font-size:24px;font-weight:800;letter-spacing:-.8px;color:var(--accent)}
+.fc .track{flex:1;height:8px;border-radius:999px;background:color-mix(in srgb,var(--accent) 18%,transparent);position:relative}
+.fc .track i{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--accent)}
+.fc .track u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink3);border-radius:2px}
+.fc small{color:var(--ink2);font-size:11.5px}
+@media(max-width:1100px){.grid{grid-template-columns:1fr}}
+@media(max-width:900px){.rail{display:none}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="brand"><div class="logo"></div>Sale Order BI</div>
+  <div class="sep"></div>
+  <button class="pill"><b>2026 · 11</b> ▾</button>
+  <button class="pill">ทีมขาย · ทั้งหมด ▾</button>
+  <button class="pill">ช่องทาง · ทั้งหมด ▾</button>
+  <button class="pill on">กลุ่มสินค้า · หยอดเหรียญ ✕</button>
+  <div class="spacer"></div>
+  <button class="icon-btn" id="theme" title="สลับธีม">◐</button>
+  <button class="icon-btn" title="นำเข้า">⇪</button>
+  <button class="icon-btn" title="ส่งออก">⤓</button>
+  <div class="avatar">A</div>
+</div>
+
+<div class="layout">
+  <nav class="rail">
+    <h4>ภาพรวม</h4>
+    <a href="#" class="on"><i class="dot"></i>Daily Admin</a>
+    <a href="#"><i class="dot"></i>1.Unit / Revenue</a>
+    <a href="#"><i class="dot"></i>Performance / TAT</a>
+    <h4>สถานะงาน</h4>
+    <a href="#"><i class="dot"></i>2.SO Order Status</a>
+    <a href="#"><i class="dot"></i>2.Pending</a>
+    <a href="#"><i class="dot"></i>3.Cancel</a>
+    <h4>ขั้นตอนทำงาน</h4>
+    <a href="#"><i class="dot"></i>P1–P6</a>
+    <a href="#"><i class="dot"></i>Report ติดตั้ง</a>
+    <h4>สินค้า & พื้นที่</h4>
+    <a href="#"><i class="dot"></i>SML</a>
+    <a href="#"><i class="dot"></i>Map</a>
+  </nav>
+
+  <main class="main">
+    <div class="head">
+      <h1>Daily Admin</h1>
+      <span class="tag">เฉพาะกลุ่มหยอดเหรียญ</span>
+      <span class="meta">415 รายการ · อัปเดต 27/11/2026 05:00</span>
+    </div>
+
+    <!-- KPI -->
+    <div class="kpis">
+      <div class="kpi">
+        <div class="lab">จำนวน SO</div>
+        <div class="val">415</div>
+        <div class="foot"><span class="delta up">▲ 12%</span><span>vs เดือนก่อน</span></div>
+        <svg class="spark" viewBox="0 0 100 34" preserveAspectRatio="none">
+          <polyline points="0,26 10,22 20,24 30,16 40,19 50,12 60,15 70,10 80,13 90,7 100,9"
+            fill="none" stroke="#4F46E5" stroke-width="2" vector-effect="non-scaling-stroke"/>
+        </svg>
+      </div>
+      <div class="kpi">
+        <div class="lab">Revenue (ราคาสุทธิ)</div>
+        <div class="val">฿27.8<small> ลบ.</small></div>
+        <div class="foot"><span class="delta up">▲ 6.4%</span><span>vs เดือนก่อน</span></div>
+        <svg class="spark" viewBox="0 0 100 34" preserveAspectRatio="none">
+          <polyline points="0,20 10,24 20,18 30,22 40,14 50,17 60,11 70,14 80,9 90,12 100,6"
+            fill="none" stroke="#059669" stroke-width="2" vector-effect="non-scaling-stroke"/>
+        </svg>
+      </div>
+      <div class="kpi">
+        <div class="lab">Unit (จำนวนเครื่อง)</div>
+        <div class="val">434</div>
+        <div class="foot"><span class="delta up">▲ 4.1%</span><span>vs เดือนก่อน</span></div>
+        <svg class="spark" viewBox="0 0 100 34" preserveAspectRatio="none">
+          <polyline points="0,24 10,20 20,23 30,17 40,20 50,13 60,16 70,11 80,14 90,8 100,10"
+            fill="none" stroke="#0EA5E9" stroke-width="2" vector-effect="non-scaling-stroke"/>
+        </svg>
+      </div>
+      <div class="kpi">
+        <div class="lab">ผ่านการตรวจสอบ</div>
+        <div class="val">93<small>%</small></div>
+        <div class="foot"><span class="delta down">▼ 1%</span><span>388 / 415 รายการ</span></div>
+        <svg class="spark" viewBox="0 0 100 34" preserveAspectRatio="none">
+          <polyline points="0,10 10,12 20,9 30,13 40,11 50,14 60,12 70,15 80,13 90,16 100,14"
+            fill="none" stroke="#F59E0B" stroke-width="2" vector-effect="non-scaling-stroke"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- forecast strip -->
+    <div class="fc">
+      <div><div class="big">461</div><small>ประมาณการ SO สิ้นเดือน</small></div>
+      <div class="track"><i style="width:90%"></i><u style="left:90%"></u></div>
+      <small>415 ใบ ณ วันที่ 27 · run-rate 15.4 ใบ/วัน · เป้า 500</small>
+    </div>
+
+    <!-- chart + side -->
+    <div class="grid">
+      <section class="card">
+        <div class="card-h">
+          <div><h3>SO ต่อวัน</h3><div class="sub">แท่ง = จำนวน SO · เส้น = การติดตั้ง</div></div>
+          <div class="right seg">
+            <button class="on">วัน</button><button>สัปดาห์</button>
+          </div>
+        </div>
+        <div class="chart">
+          <div class="axis-y">
+            <span style="top:0">30</span><span style="top:25%">22</span>
+            <span style="top:50%">15</span><span style="top:75%">7</span><span style="top:100%">0</span>
+          </div>
+          <div class="plot">
+            <div class="grid-lines">
+              <i style="top:0"></i><i style="top:25%"></i><i style="top:50%"></i><i style="top:75%"></i><i style="top:100%"></i>
+            </div>
+            <div class="bars" id="bars"></div>
+            <div class="line"><svg viewBox="0 0 100 100" preserveAspectRatio="none" id="line"></svg></div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><i style="background:var(--accent)"></i>จำนวน SO</span>
+          <span><i class="l" style="background:#F43F5E"></i>การติดตั้ง</span>
+        </div>
+      </section>
+
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <section class="card">
+          <div class="card-h"><h3>สถานะใบงาน</h3><span class="sub" style="margin-left:auto">415 งาน</span></div>
+          <div class="donut" style="background:conic-gradient(#059669 0 43.4%, #F59E0B 43.4% 86.3%, #E11D48 86.3% 100%)">
+            <b>415<small>รวม</small></b>
+          </div>
+          <div class="stlist">
+            <div class="strow"><i style="background:#059669"></i><span>1.Done</span><b>180</b><em>43%</em></div>
+            <div class="strow"><i style="background:#F59E0B"></i><span>2.Pending</span><b>178</b><em>43%</em></div>
+            <div class="strow"><i style="background:#E11D48"></i><span>3.Cancel</span><b>57</b><em>14%</em></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-h"><h3>Top 5 ทีมขาย</h3><span class="sub" style="margin-left:auto">ตามยอดขาย</span></div>
+          <div class="rank">
+            <div class="r"><span class="n">1</span><div class="t"><i style="width:100%"></i><b>2. S2-CRD</b></div><span class="v">฿5.8 ลบ.</span></div>
+            <div class="r"><span class="n">2</span><div class="t"><i style="width:92%"></i><b>1. S1</b></div><span class="v">฿5.3 ลบ.</span></div>
+            <div class="r"><span class="n">3</span><div class="t"><i style="width:47%"></i><b>5. S3-BU</b></div><span class="v">฿2.7 ลบ.</span></div>
+            <div class="r"><span class="n">4</span><div class="t"><i style="width:33%"></i><b>8. BU/Dealer</b></div><span class="v">฿1.9 ลบ.</span></div>
+            <div class="r"><span class="n">5</span><div class="t"><i style="width:14%"></i><b>9. Online/E-Com</b></div><span class="v">฿0.8 ลบ.</span></div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- table -->
+    <section class="card">
+      <div class="card-h">
+        <div><h3>สถานะใบงาน3 × Grp ทีมขาย</h3><div class="sub">คลิกแถวเพื่อกรองทั้งหน้า</div></div>
+        <div class="right"><button class="pill">ส่งออก CSV</button></div>
+      </div>
+      <div class="tbl">
+        <table>
+          <thead><tr><th>Grp ทีมขาย</th><th>SO</th><th>%SO</th><th>สถานะ</th><th>Revenue</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const days = [7,10,26,14,16,17,10,10,15,14,27,20,10,15,8,14,18,14,16,8,11,11,18,18,16,16,8];
+const inst = [1,4,4,13,6,2,2,13,10,6,18,10,19,8,6,8,11,13,20,12,8,12,7,17,12,11];
+const max = Math.max(...days);
+const bars = document.getElementById('bars');
+days.forEach((v,i)=>{
+  const d=document.createElement('div'); d.className='bar';
+  d.innerHTML = `<i style="height:${(v/max*100).toFixed(1)}%"><b>${v}</b></i><span>${i+1}</span>`;
+  bars.appendChild(d);
+});
+const svg = document.getElementById('line');
+const n = days.length;
+const pts = inst.map((v,i)=>{
+  const x = ((i+0.5)/n*100).toFixed(2);
+  const y = (100 - v/Math.max(...inst)*100).toFixed(2);
+  return `${x},${y}`;
+}).join(' ');
+svg.innerHTML = `<polyline points="${pts}" fill="none" stroke="#F43F5E" stroke-width="2"
+  vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+const rows = [
+  ['1. S1',156,'60%','done','฿5.3 ลบ.'],
+  ['2. S2-CRD',152,'58%','pend','฿5.8 ลบ.'],
+  ['8. BU/Dealer',39,'15%','done','฿1.9 ลบ.'],
+  ['5. S3-BU',35,'13%','pend','฿2.7 ลบ.'],
+  ['9. Online/E-Com',16,'6%','done','฿0.8 ลบ.'],
+  ['6. S3-OEM',7,'3%','canc','฿0.2 ลบ.'],
+  ['7. S3-Horeca & Project',5,'2%','done','฿0.4 ลบ.']
+];
+const badge = { done:['b-done','Done'], pend:['b-pend','Pending'], canc:['b-canc','Cancel'] };
+document.getElementById('rows').innerHTML = rows.map(r=>{
+  const [c,t] = badge[r[3]];
+  return `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>
+    <td><span class="badge ${c}">${t}</span></td><td>${r[4]}</td></tr>`;
+}).join('');
+
+document.getElementById('theme').onclick = () => {
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme === 'dark' ? '' : 'dark';
+};
+</script>
+</body>
+</html>
