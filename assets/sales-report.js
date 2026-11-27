@@ -571,7 +571,17 @@
     var op = q[0];
     var done = function () { var rest = syncQueue(); rest.shift(); setQueue(rest); flushQueue(); };
     try {
-      if (op.op === 'save' && global.PIAuth.saveDealV2) global.PIAuth.saveDealV2(op.deal).then(done).catch(function () {});
+      if (op.op === 'save' && global.PIAuth.saveDealV2) {
+        global.PIAuth.saveDealV2(op.deal).then(function (res) {
+          /* เซิร์ฟเวอร์อาจให้เลขใหม่ — อัปเดตในเครื่องทันที กันการส่งซ้ำรอบหน้า */
+          if (res && res.no && op.deal && op.deal.no && res.no !== op.deal.no) {
+            for (var i = 0; i < DEALS.length; i++) {
+              if (DEALS[i].no === op.deal.no) { DEALS[i].no = res.no; saveDeals(); break; }
+            }
+          }
+          done();
+        }).catch(function () {});
+      }
       else if (op.op === 'del' && global.PIAuth.deleteDealV2) global.PIAuth.deleteDealV2(op.no).then(done).catch(function () {});
       else done();
     } catch (e) {}
@@ -644,9 +654,11 @@
           var cu = Date.parse(remote.updatedAt || '') || 0;
           if (cu > lu) { for (var k in remote) if (Object.prototype.hasOwnProperty.call(remote, k)) loc[k] = remote[k]; changed = true; }
         });
-        /* ดีลในเครื่องที่ยังไม่เคยขึ้นคลาวด์ → ดันขึ้นครั้งแรก (ข้ามใบที่ถูกลบไปแล้ว) */
-        DEALS.filter(function (d) { return !cloudNos[d.no] && !deleted[d.no]; }).slice(0, 200).forEach(function (d) {
-          cloudSave(d);
+        /* ดีลในเครื่องที่ยังไม่เคยขึ้นคลาวด์ → ดันขึ้นครั้งแรก (ข้ามใบที่ถูกลบไปแล้ว และใบที่ยังอยู่ในคิว) */
+        var queued = {};
+        syncQueue().forEach(function (o) { if (o.op === 'save' && o.deal && o.deal.no) queued[o.deal.no] = 1; });
+        DEALS.filter(function (d) { return !cloudNos[d.no] && !deleted[d.no] && !queued[d.no]; }).slice(0, 200).forEach(function (d) {
+          cloudSave(d, true);   /* ให้เซิร์ฟเวอร์ออกเลขใหม่ — กันเลขซ้ำ/สร้างซ้ำ */
         });
         if (changed) saveDeals();
         flushQueue();
