@@ -1005,12 +1005,14 @@
     const revFmt = v => (v / 1e6).toFixed(2) + ' ลบ.';
     const dCell = (a, b, fmt) => {
       const dv = a - b;
-      return '<td class="num ' + (dv >= 0 ? 'c-done' : 'c-canc') + '">' + (dv >= 0 ? '+' : '−') + fmt(Math.abs(dv)) + '</td>';
+      if (Math.abs(dv) < 0.005) return '<td class="num">0</td>';
+      return '<td class="num ' + (dv > 0 ? 'c-done' : 'c-canc') + '">' + (dv > 0 ? '+' : '−') + fmt(Math.abs(dv)) + '</td>';
     };
     const miniCmp = (title, keys, cm, pm, field, fmt) => {
       let body = '', ta = 0, tb = 0;
       keys.forEach(k => {
         const a = (cm.get(k) || {})[field] || 0, b = (pm.get(k) || {})[field] || 0;
+        if (!a && !b) return;                       /* ไม่มีข้อมูลทั้งสองเดือน = ไม่ต้องแสดง */
         ta += a; tb += b;
         body += '<tr><td>' + esc(k) + '</td><td class="num">' + fmt(a) + '</td><td class="num">' + fmt(b) + '</td>' + dCell(a, b, fmt) + '</tr>';
       });
