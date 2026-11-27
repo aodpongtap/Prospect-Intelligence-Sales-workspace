@@ -367,7 +367,10 @@ table.pbi.cmp tbody tr:nth-child(even) td { background: #FAFBFD; }
 table.pbi.cmp td.c-done { color: #047857; font-weight: 800; }
 table.pbi.cmp td.c-canc { color: #BE123C; font-weight: 800; }
 table.pbi.cmp tr.grand td { background: #FFF9DB; font-weight: 800; border-top: 1px solid #F2E9A8; }
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
+  .cmp-wrap { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
   .cmp-wrap { grid-template-columns: minmax(0, 1fr); }
   .cmp-box .tbl { max-height: none; }
 }
