@@ -2229,16 +2229,21 @@
   }
 
   /* ---------- snapshot ที่ฝังมากับเว็บ (อ่านอย่างเดียว) ---------- */
-  /* แก้เลขทีมที่ซ้ำในข้อมูลเก่า (master data เดิมให้ Employee/E-Com เป็น 9 ทั้งคู่) */
-  const TEAM_ALIAS = {
-    '9. Employee': '10. Employee', '9. Online/E-Com': '11. Online/E-Com',
-    'Service/Credit': '12. Service/Credit'
-  };
+  /* แก้เลขทีมที่ซ้ำ/ขาดในข้อมูลเก่า (master data เดิมให้ Employee/E-Com เป็น 9 ทั้งคู่ และ Service/Credit ไม่มีเลข) */
+  const TEAM_FIX = [
+    [/^9\.\s*Employee/, '10. Employee'],
+    [/^9\.\s*Online\/E-Com/, '11. Online/E-Com'],
+    [/^Service\/Credit/, '12. Service/Credit']
+  ];
   function fixTeams(arr) {
     if (!arr || !arr.length) return arr;
     for (let i = 0; i < arr.length; i++) {
       const d = arr[i];
-      if (d && TEAM_ALIAS[d.team]) d.team = TEAM_ALIAS[d.team];
+      if (!d || !d.team) continue;
+      const t = String(d.team);
+      for (let k = 0; k < TEAM_FIX.length; k++) {
+        if (TEAM_FIX[k][0].test(t)) { d.team = t.replace(TEAM_FIX[k][0], TEAM_FIX[k][1]); break; }
+      }
     }
     return arr;
   }
