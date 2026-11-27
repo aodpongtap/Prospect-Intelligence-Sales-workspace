@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sale Order BI · Prospect Intelligence</title>
-<link rel="stylesheet" href="bi.css?v=1127h">
-<link rel="stylesheet" href="polish.css?v=1127h">
-<link rel="stylesheet" href="nav.css?v=1127h">
-<link rel="stylesheet" href="viz.css?v=1127h">
-<link rel="stylesheet" href="tabs.css?v=1127h">
-<link rel="stylesheet" href="ui.css?v=1127h">
+<link rel="stylesheet" href="bi.css?v=1127i">
+<link rel="stylesheet" href="polish.css?v=1127i">
+<link rel="stylesheet" href="nav.css?v=1127i">
+<link rel="stylesheet" href="viz.css?v=1127i">
+<link rel="stylesheet" href="tabs.css?v=1127i">
+<link rel="stylesheet" href="ui.css?v=1127i">
 </head>
 <body class="nav-off">
 <div class="pbi-shell">
@@ -18,7 +18,8 @@
   <div class="pbi-topbar">
     <div class="pbi-brand"><span class="dot"></span> Sale Order BI</div>
     <button class="nav-toggle" id="navToggle" title="ย่อ/ขยายเมนู">☰</button>
-    <button class="btn primary" id="btnImport">⇪ Import ListBooking</button>
+    <button class="btn primary" id="btnImport"
+      title="เลือกไฟล์ *_ListBooking.xlsx ที่ IT สร้างให้ทุกเช้า · ไฟล์ถูกอ่านในเบราว์เซอร์เท่านั้น ไม่มีการอัปโหลด · หรือลากไฟล์มาวางที่หน้าเว็บได้เลย">⇪ Import ListBooking</button>
     <button class="btn" id="btnExport" disabled>⤓ Export CSV</button>
     <div class="pbi-filters" id="filterBar"></div>
     <div class="spacer"></div>
@@ -46,34 +47,29 @@
   <div class="pbi-pagetabs" id="pageTabs"></div>
 </div>
 
-<!-- ===== import overlay ===== -->
-<div class="drop" id="dropOverlay">
-  <div class="drop-card">
-    <h2>Import ไฟล์ ListBooking</h2>
-    <p>
-      เลือกไฟล์ <b>*_ListBooking.xlsx</b> ที่ IT สร้างให้ทุกเช้า<br>
-      ข้อมูลถูกอ่านในเบราว์เซอร์ของคุณเท่านั้น — <b>ไม่มีการอัปโหลดขึ้นเซิร์ฟเวอร์</b>
-    </p>
+<!-- ===== drag hint (แสดงเฉพาะตอนลากไฟล์มาวาง) ===== -->
+<div class="drop hidden" id="dropOverlay">
+  <div class="drop-card slim">
     <div class="drop-zone" id="dropZone">
-      <div class="big">ลากไฟล์มาวางที่นี่</div>
-      <div class="small">หรือคลิกเพื่อเลือกไฟล์ (.xlsx)</div>
-    </div>
-    <input type="file" id="fileInput" accept=".xlsx" hidden>
-    <div class="progress" id="progress"><i id="progressBar"></i></div>
-    <div class="status" id="importStatus"></div>
-    <div class="drop-note">
-      รูปแบบที่รองรับ: ชีต “Data” · แถว 1 = หัวเรื่อง · <b>แถว 2 = ชื่อคอลัมน์</b> · ข้อมูลเริ่มแถว 3
+      <div class="big">วางไฟล์เพื่อนำเข้า</div>
+      <div class="small">*_ListBooking.xlsx · อ่านในเบราว์เซอร์ ไม่มีการอัปโหลด</div>
     </div>
   </div>
-
-  <!-- ===== page tabs (ด้านล่าง) ===== -->
-  <div class="pbi-pagetabs" id="pageTabs"></div>
 </div>
 
-<script src="xlsx-lite.js?v=1127h"></script>
-<script src="lookups.js?v=1127h"></script>
-<script src="master-status.js?v=1127h"></script>
-<script src="schema.js?v=1127h"></script>
-<script src="app.js?v=1127h"></script>
+<!-- ===== import progress toast ===== -->
+<div class="toast hidden" id="importToast">
+  <div class="toast-head">Import ListBooking</div>
+  <div class="progress" id="progress"><i id="progressBar"></i></div>
+  <div class="status" id="importStatus"></div>
+</div>
+
+<input type="file" id="fileInput" accept=".xlsx" hidden>
+
+<script src="xlsx-lite.js?v=1127i"></script>
+<script src="lookups.js?v=1127i"></script>
+<script src="master-status.js?v=1127i"></script>
+<script src="schema.js?v=1127i"></script>
+<script src="app.js?v=1127i"></script>
 </body>
 </html>

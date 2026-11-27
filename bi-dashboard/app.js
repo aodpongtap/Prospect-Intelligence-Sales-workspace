@@ -1089,6 +1089,7 @@
   /* ---------- import ---------- */
   async function handleFile(file) {
     const st = $('importStatus'), pr = $('progress'), bar = $('progressBar');
+    const toast = $('importToast'); if (toast) toast.classList.remove('hidden');
     pr.classList.add('on'); bar.style.width = '4%'; st.textContent = 'เปิดไฟล์…';
     const t0 = Date.now();
     try {
@@ -1114,7 +1115,7 @@
       cacheSave();
       bar.style.width = '100%';
       st.textContent = '✅ เสร็จแล้ว · ' + num(data.length) + ' รายการ (' + Math.round((Date.now() - t0) / 1000) + ' วินาที)';
-      setTimeout(() => $('dropOverlay').classList.add('hidden'), 700);
+      setTimeout(() => { const t = $('importToast'); if (t) t.classList.add('hidden'); }, 3000);
     } catch (e) {
       pr.classList.remove('on');
       st.textContent = '❌ ' + (e && e.message ? e.message : e);
@@ -1284,13 +1285,19 @@
     } catch (e) {}
     const tg = $('navToggle');
     if (tg) tg.onclick = toggleNav;
-    $('btnImport').onclick = () => $('dropOverlay').classList.remove('hidden');
-    const zone = $('dropZone'), input = $('fileInput');
-    zone.onclick = () => input.click();
+    const input = $('fileInput');
+    $('btnImport').onclick = () => input.click();
     input.onchange = () => { if (input.files[0]) handleFile(input.files[0]); };
-    zone.ondragover = e => { e.preventDefault(); zone.classList.add('hover'); };
-    zone.ondragleave = () => zone.classList.remove('hover');
-    zone.ondrop = e => { e.preventDefault(); zone.classList.remove('hover'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); };
+    const showDrop = on => { const o = $('dropOverlay'); if (o) o.classList.toggle('hidden', !on); };
+    let dragDepth = 0;
+    window.addEventListener('dragenter', e => { if (!e.dataTransfer) return; dragDepth++; showDrop(true); });
+    window.addEventListener('dragover', e => e.preventDefault());
+    window.addEventListener('dragleave', () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) showDrop(false); });
+    window.addEventListener('drop', e => {
+      e.preventDefault(); dragDepth = 0; showDrop(false);
+      const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) handleFile(f);
+    });
     $('btnExport').onclick = exportCsv;
     render(); fit();
 
@@ -1303,7 +1310,7 @@
       syncHeader(); render(); fit();
       const info = $('datasetInfo');
       if (info) info.insertAdjacentHTML('beforeend', '<br><span style="color:#0F7CD9">ข้อมูลที่บันทึกไว้ · กด Import เพื่ออัปเดต</span>');
-      $('dropOverlay').classList.add('hidden');
+      const ov = $('dropOverlay'); if (ov) ov.classList.add('hidden');
     });
   }
 
