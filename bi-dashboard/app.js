@@ -415,16 +415,16 @@
     const pc = v => (v / n * 100).toFixed(0) + '% ของทั้งหมด';
     const other = rs.length - valid.length;
     let h = '';
-    h += kpiCard(6, 'Total SO', num(rs.length), C.navy,
+    h += kpiCard(4, 'Total SO', num(rs.length), C.navy,
       other > 0 ? 'ไม่รวมสถานะว่าง ' + num(other) + ' ใบ ในยอดเงิน' : 'ใบสั่งซื้อในงวดนี้');
-    h += kpiCard(6, 'Rev (ราคาสุทธิ)', baht(rev), C.purple, 'Rev.Total = SUM(revenue) เฉพาะ 3 สถานะ');
+    h += kpiCard(4, 'Rev (ราคาสุทธิ)', baht(rev), C.purple, 'Rev.Total = SUM(revenue) เฉพาะ 3 สถานะ');
+    h += kpiCard(4, 'Total Unit', num(units), C.teal, 'SUM(จำนวนเครื่องซักผ้า) เฉพาะ 3 สถานะ');
     h += kpiCard(4, 'Done', num(sp['1.Done'].length), C.green, pc(sp['1.Done'].length));
     h += kpiCard(4, 'Pending', num(sp['2.Pending'].length), C.gold, pc(sp['2.Pending'].length));
     h += kpiCard(4, 'Cancel', num(sp['3.Cancel'].length), C.red, pc(sp['3.Cancel'].length));
     h += kpiCard(4, 'Done Rev', baht(sumRev(sp['1.Done'])), C.green);
     h += kpiCard(4, 'Pending Rev', baht(sumRev(sp['2.Pending'])), C.gold);
     h += kpiCard(4, 'Cancel Rev', baht(sumRev(sp['3.Cancel'])), C.red);
-    h += kpiCard(12, 'Total Unit', num(units), C.teal, 'SUM(จำนวนเครื่องซักผ้า) เฉพาะ 3 สถานะ (Total Unit ใน .pbix)');
     return h;
   }
 
@@ -494,6 +494,49 @@
   function statusLegend() {
     return '<div class="chart-legend">' + ST.map(s =>
       '<span><i class="sw" style="background:' + s.color + '"></i>' + esc(s.name) + '</span>').join('') + '</div>';
+  }
+
+  /* ---------- กราฟเส้นหลายชุด (HTML + SVG บาง ๆ ไม่ยืดตัวหนังสือ) ---------- */
+  function multiLine(labels, series, o) {
+    o = o || {};
+    const n = labels.length;
+    if (!n) return empty();
+    const all = series.reduce((a, s) => a.concat(s.values), []);
+    const max = Math.max.apply(null, all) || 1;
+    const every = n > 16 ? Math.ceil(n / 12) : 1;
+    const line = s => s.values.map((v, i) =>
+      ((i + 0.5) / n * 100).toFixed(2) + ',' + (100 - (v / max) * 100).toFixed(2)).join(' ');
+    let h = '<div class="ml" style="height:' + (o.height || 190) + 'px">';
+    h += '<div class="ml-plot">';
+    series.forEach(s => {
+      h += '<svg viewBox="0 0 100 100" preserveAspectRatio="none">' +
+        '<polyline points="' + line(s) + '" fill="none" stroke="' + s.color + '" stroke-width="2"' +
+        (s.dashed ? ' stroke-dasharray="5 4"' : '') +
+        ' vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+    });
+    h += '</div><div class="ml-x">';
+    labels.forEach((l, i) => { h += '<span>' + ((i % every === 0 || i === n - 1) ? esc(l) : '') + '</span>'; });
+    h += '</div></div>';
+    h += '<div class="chart-legend">' + series.map(s =>
+      '<span><i class="sw" style="background:' + s.color + '"></i>' + esc(s.name) + '</span>').join('') + '</div>';
+    return h;
+  }
+
+  /* การ์ดสรุป 3 ค่า (Revenue / Unit / SO) */
+  function kpiTriple(span, title, rev, units, so, color) {
+    return '<section class="card s' + span + ' kpi3" style="--k:' + color + '">' +
+      '<div class="k3-title">' + esc(title) + '</div>' +
+      '<div class="k3-row"><span>Revenue</span><b>' + baht(rev) + '</b></div>' +
+      '<div class="k3-row"><span>Unit</span><b>' + num(units) + '</b></div>' +
+      '<div class="k3-row"><span>SO</span><b>' + num(so) + '</b></div></section>';
+  }
+
+  /* ตารางสัดส่วน % (ใช้กับ Lead O2O / Status / Area) */
+  function pctRows(items, opts) {
+    opts = opts || {};
+    const tot = items.reduce((a, b) => a + b.value, 0) || 1;
+    const rows = items.slice().sort((a, b) => b.value - a.value);
+    return hbars(rows.map(r => ({ label: r.label, value: r.value })), v => Math.round(v / tot * 100) + '%', opts);
   }
 
   /* ---------- pages ---------- */
@@ -722,6 +765,106 @@
     return h + '</div>';
   }
 
+  /* ===== 1.Unit / Revenue (ตามหน้า 3 ของรายงานเดิม) ===== */
+  function pageUnitRevenue(rs) {
+    const sum = (arr, f) => arr.reduce((a, d) => a + (d[f] || 0), 0);
+    const done = rs.filter(d => d.status3 === '1.Done');
+    const cancel = rs.filter(d => d.status3 === '3.Cancel');
+
+    const rsDay = rows('day'), rsCh = rows('channel'), rsSt = rows('status3');
+    const rsA = rows('gbkk'), rsP = rows('group'), rsT = rows('team'), rsPkg = rows('pkg');
+
+    // ---- ต่อวัน: ปิดงาน / ยังเปิด / ยอดเงิน
+    const dayKeys = [...new Set(rsDay.map(d => d.dateSO ? d.dateSO.getDate() : 0))].filter(Boolean).sort((a, b) => a - b);
+    const closeArr = [], openArr = [], revArr = [];
+    dayKeys.forEach(k => {
+      const list = rsDay.filter(d => d.dateSO && d.dateSO.getDate() === k);
+      closeArr.push(list.filter(d => d.status3 === '1.Done').length);
+      openArr.push(list.filter(d => d.status3 === '2.Pending' || d.status3 === '3.Cancel').length);
+      revArr.push(sum(list, 'revenue') / 1e6);
+    });
+
+    // ---- ช่องทาง (Lead O2O)
+    const chMap = new Map();
+    rsCh.forEach(d => { const k = d.channel || '(ว่าง)'; chMap.set(k, (chMap.get(k) || 0) + 1); });
+    const lead = [...chMap.entries()].map(e => ({ label: e[0], value: e[1] }));
+
+    // ---- สถานะ
+    const stMap = new Map();
+    rsSt.forEach(d => { const k = d.status3 || '(ว่าง)'; stMap.set(k, (stMap.get(k) || 0) + 1); });
+    const status = ['1.Done', '2.Pending', '3.Cancel'].map(k => ({ label: k, value: stMap.get(k) || 0 })).filter(x => x.value);
+
+    // ---- พื้นที่
+    const areaMap = new Map();
+    rsA.forEach(d => { const k = d.gbkk || '(ว่าง)'; areaMap.set(k, (areaMap.get(k) || 0) + 1); });
+    const area = [...areaMap.entries()].map(e => ({ label: e[0], value: e[1] }));
+
+    // ---- กลุ่มสินค้า (Unit)
+    const grpMap = new Map();
+    rsP.forEach(d => { const k = d.group || '(ว่าง)'; grpMap.set(k, (grpMap.get(k) || 0) + (d.units || 0)); });
+    const byProduct = [...grpMap.entries()].map(e => ({ label: e[0], value: e[1] })).filter(x => x.value > 0)
+      .sort((a, b) => b.value - a.value);
+
+    // ---- Top 5 ทีมตามยอดขาย
+    const teamMap = new Map();
+    rsT.forEach(d => { const k = d.team || '(ไม่ระบุ)'; teamMap.set(k, (teamMap.get(k) || 0) + (d.revenue || 0)); });
+    const topTeam = [...teamMap.entries()].map(e => ({ label: e[0], value: e[1] }))
+      .sort((a, b) => b.value - a.value).slice(0, 5);
+
+    // ---- เงินสด / ผ่อน ต่อวัน
+    const cashArr = [], instArr = [];
+    dayKeys.forEach(k => {
+      const list = rsPkg.filter(d => d.dateSO && d.dateSO.getDate() === k);
+      cashArr.push(list.filter(d => d.pkg === 'เงินสด').length);
+      instArr.push(list.filter(d => d.pkg !== 'เงินสด').length);
+    });
+    const pkgMap = new Map();
+    rsPkg.forEach(d => { const k = d.pkg || '(ว่าง)'; pkgMap.set(k, (pkgMap.get(k) || 0) + 1); });
+    const byPkg = [...pkgMap.entries()].map(e => ({ label: e[0], value: e[1] }));
+
+    // ---- ลูกค้า
+    const cusMap = new Map();
+    rs.forEach(d => {
+      const k = d.customer || '(ไม่ระบุ)';
+      const o = cusMap.get(k) || { u: 0, r: 0 };
+      o.u += d.units || 0; o.r += d.revenue || 0;
+      cusMap.set(k, o);
+    });
+    const cus = [...cusMap.entries()].sort((a, b) => b[1].r - a[1].r).slice(0, 15);
+    let cusTbl = '<div class="tbl"><table class="pbi"><thead><tr><th>ชื่อลูกค้า</th><th class="num">Unit</th><th class="num">Revenue</th></tr></thead><tbody>';
+    cus.forEach(e => {
+      cusTbl += '<tr><td>' + esc(String(e[0]).slice(0, 34)) + '</td><td class="num">' + num(e[1].u) + '</td><td class="num">' + baht(e[1].r) + '</td></tr>';
+    });
+    cusTbl += '<tr class="grand"><td>Total</td><td class="num">' + num(sum(rs, 'units')) + '</td><td class="num">' + baht(sum(rs, 'revenue')) + '</td></tr></tbody></table></div>';
+
+    let h = pgHead('1.Unit / Revenue', rs);
+    h += '<div class="g">';
+    h += kpiTriple(4, 'Total', sum(rs, 'revenue'), sum(rs, 'units'), rs.length, C.navy);
+    h += kpiTriple(4, 'Revenue (Done)', sum(done, 'revenue'), sum(done, 'units'), done.length, C.green);
+    h += kpiTriple(4, 'Cancel', sum(cancel, 'revenue'), sum(cancel, 'units'), cancel.length, C.red);
+    h += card(4, 'Lead O2O · %SO', pctRows(lead, { field: 'channel' }));
+    h += card(4, 'Status · %', pctRows(status, { field: 'status3' }));
+    h += card(4, 'Area · %', pctRows(area, { field: 'gbkk' }));
+    h += card(8, 'Total Close Sales · Total Open Sales · Rev (ล้านบาท)',
+      multiLine(dayKeys.map(String), [
+        { name: 'Total Close Sales', values: closeArr, color: C.green },
+        { name: 'Total Open Sales', values: openArr, color: C.blue },
+        { name: 'Rev (ล้านบาท)', values: revArr, color: C.gold, dashed: true }
+      ]), { hint: 'รายวัน' });
+    h += card(4, 'Product / Unit', donut(byProduct.slice(0, 6), { field: 'group' }));
+    h += card(6, 'เงินสด / ผ่อน (รายวัน)',
+      multiLine(dayKeys.map(String), [
+        { name: 'ผ่อน', values: instArr, color: C.navy },
+        { name: 'เงินสด', values: cashArr, color: C.cyan }
+      ]) + donut(byPkg, { field: 'pkg' }));
+    h += card(6, 'Top 5 (Team)', hbars(topTeam, baht, { field: 'team' }));
+    h += card(7, 'ลูกค้า (Top 15 ตามยอดขาย)', cusTbl);
+    h += card(5, 'หน่วยตามทีม', hbars([...new Map(rsT.map(d => [d.team || '(ไม่ระบุ)', 0])).keys()].map(k => ({
+      label: k, value: rsT.filter(d => (d.team || '(ไม่ระบุ)') === k).reduce((a, d) => a + (d.units || 0), 0)
+    })).sort((a, b) => b.value - a.value).slice(0, 10), num, { field: 'team' }));
+    return h + '</div>';
+  }
+
   function pageGeneric(name, rs) {
     const sp = SPECS[name] || { dim: 'team', dim2: 'status3', metric: 'count', title: name };
     const pick = rws => (sp.filter ? rws.filter(sp.filter) : rws);
@@ -792,6 +935,7 @@
       : S.page === 'tat' ? pageTat(rs)
       : S.page === 'data' ? pageData(rs)
       : S.page === 'SML' ? pageSml(rs)
+      : S.page === '1.Unit / Revenue' ? pageUnitRevenue(rs)
       : S.page === '2.SO Order Status' ? pageOrderStatus(rs)
       : SPECS[S.page] ? pageGeneric(S.page, rs)
       : pageSoon();
