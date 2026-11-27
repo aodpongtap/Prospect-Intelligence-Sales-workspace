@@ -1657,104 +1657,120 @@
     return h + '</div>';
   }
 
-    /* ══════════════════════════════════════════════════════════════════════
-     P3.Consult — ของจริง (ใช้ข้อมูลในระบบเท่านั้น)
-     1) SLA ปิดงาน vs เป้า Flowchart   2) ติดที่ Admin   3) สถานะติดตั้ง
-     4) ลิสต์งานที่ต้องตาม (งานค้าง เรียงตามอายุงาน)
+      /* ══════════════════════════════════════════════════════════════════════
+     Monitor Consult — บอร์ดตามงาน (layout แบบ Monthly Monitor) · ข้อมูลจริง
+     ซ้าย: การ์ดงานที่ต้องตาม  |  ขวา: สรุป 1 นาที + SLA + ทีมที่ต้องตาม
      ══════════════════════════════════════════════════════════════════════ */
   function consultReal(data) {
     const rows = data || [];
     const now = new Date();
     const nums = a => a.filter(v => typeof v === 'number' && isFinite(v));
     const avgOf = a => { const x = nums(a); return x.length ? x.reduce((p, c) => p + c, 0) / x.length : 0; };
-    const big = (v, color, sub) => '<div style="font-size:26px;font-weight:800;letter-spacing:-.8px;line-height:1.15;color:' +
-      (color || '#101828') + '">' + v + '</div><div style="font-size:11px;color:#98A2B3;margin-top:2px">' + sub + '</div>';
 
-    /* ── 1) SLA ปิดงาน (Done/Cancel ที่มีค่า > 0) เทียบเป้า 15 วัน ── */
+    /* ── งานค้าง เรียงตามอายุงาน (ใช้เป็นบอร์ดตามงาน) ── */
+    const pend = rows.filter(d => d.status3 === '2.Pending' && d.dateSO instanceof Date && !isNaN(d.dateSO))
+      .map(d => ({ d: d, age: Math.max(0, Math.floor((now - d.dateSO) / 86400000)) }))
+      .sort((a, b) => b.age - a.age);
+    const pendVal = pend.reduce((a, x) => a + (x.d.revenue || 0), 0);
+    const old21 = pend.filter(x => x.age > 21).length;
+    const old15 = pend.filter(x => x.age > 15 && x.age <= 21).length;
+
+    /* ── SLA ปิดงาน ── */
     const closed = rows.filter(d => (d.status3 === '1.Done' || d.status3 === '3.Cancel') && typeof d.slaClose === 'number' && d.slaClose > 0);
     const sc = closed.map(d => d.slaClose);
     const scAvg = avgOf(sc);
     const over15 = sc.filter(v => v > 15).length;
-    const over21 = sc.filter(v => v > 21).length;
-    const scMax = sc.length ? Math.max.apply(null, sc) : 0;
-    const admAvg = avgOf(rows.map(d => d.slaAdmin));
-    const bk = [0, 0, 0, 0];
-    sc.forEach(v => { bk[v <= 7 ? 0 : v <= 15 ? 1 : v <= 21 ? 2 : 3]++; });
-    const bkLab = ['0–7 วัน', '8–15 วัน', '16–21 วัน', 'เกิน 21 วัน'];
-    const bkSum = bk.reduce((a, b) => a + b, 0) || 1;
-    const slaHtml = big(scAvg.toFixed(1) + ' <span style="font-size:14px;font-weight:700">วัน</span>',
-      scAvg > 15 ? '#B42318' : '#047857',
-      'เฉลี่ยจาก ' + num(closed.length) + ' งานที่ปิดแล้ว · เป้า 15 วัน') +
-      '<div style="display:flex;gap:14px;margin-top:9px;font-size:11.5px;color:#475569;flex-wrap:wrap">' +
-        '<span>เกิน 15 วัน <b style="color:#B42318">' + num(over15) + '</b> (' + (sc.length ? (over15 / sc.length * 100).toFixed(0) : 0) + '%)</span>' +
-        '<span>เกิน 21 วัน <b style="color:#B42318">' + num(over21) + '</b></span>' +
-        '<span>นานสุด <b>' + num(scMax) + '</b> วัน</span>' +
-      '</div>' +
-      '<div style="margin-top:11px">' + bkLab.map((l, i) =>
-        '<div style="display:flex;justify-content:space-between;font-size:11.4px;color:#475569;padding:4px 0">' +
-        '<span>' + l + '</span><b>' + num(bk[i]) + '</b></div>' +
-        '<div style="height:5px;border-radius:99px;background:#EDF0F5;overflow:hidden"><i style="display:block;height:100%;border-radius:99px;width:' +
-        (bk[i] / bkSum * 100).toFixed(0) + '%;background:' + (i >= 2 ? 'linear-gradient(90deg,#F97066,#FDA29B)' : 'linear-gradient(90deg,#12B76A,#6CE9A6)') + '"></i></div>').join('') +
-      '</div>' +
-      '<div style="margin-top:10px;font-size:11.5px;color:#667085">SLA Admin เฉลี่ย <b>' + admAvg.toFixed(1) + ' วัน</b> (เป้า 0 วัน)</div>';
+    const overPct = sc.length ? (over15 / sc.length * 100) : 0;
 
-    /* ── 2) ติดที่ Admin ── */
-    const adm = { '1.ผ่าน': 0, '2.Pening': 0, '3.ไม่ผ่าน': 0 };
-    rows.forEach(d => { const k = String(d.admGroup || ''); if (adm[k] != null) adm[k]++; });
-    const admTot = (adm['1.ผ่าน'] + adm['2.Pening'] + adm['3.ไม่ผ่าน']) || 1;
-    const admHtml = big(num(adm['2.Pening'] + adm['3.ไม่ผ่าน']), (adm['2.Pening'] + adm['3.ไม่ผ่าน']) ? '#B42318' : '#047857',
-      'งานที่ยังไม่ผ่าน Admin · จาก ' + num(rows.length) + ' ใบ') +
-      '<div style="margin-top:11px">' + [
-        ['1.ผ่าน', adm['1.ผ่าน'], 'linear-gradient(90deg,#12B76A,#6CE9A6)'],
-        ['2.Pening (รอตรวจ)', adm['2.Pening'], 'linear-gradient(90deg,#F79009,#FDB022)'],
-        ['3.ไม่ผ่าน', adm['3.ไม่ผ่าน'], 'linear-gradient(90deg,#F97066,#FDA29B)']
-      ].map(x =>
-        '<div style="display:flex;justify-content:space-between;font-size:11.5px;color:#475569;padding:4px 0">' +
-        '<span>' + x[0] + '</span><b>' + num(x[1]) + ' · ' + (x[1] / admTot * 100).toFixed(0) + '%</b></div>' +
-        '<div style="height:6px;border-radius:99px;background:#EDF0F5;overflow:hidden"><i style="display:block;height:100%;border-radius:99px;width:' +
-        (x[1] / admTot * 100).toFixed(0) + '%;background:' + x[2] + '"></i></div>').join('') +
-      '</div>' +
-      '<div style="margin-top:10px;font-size:11.5px;color:#667085">อัตราผ่าน Admin <b>' + (adm['1.ผ่าน'] / admTot * 100).toFixed(0) + '%</b></div>';
+    /* ── สถานะ Admin ── */
+    const admBad = rows.filter(d => d.admGroup === '2.Pening' || d.admGroup === '3.ไม่ผ่าน').length;
+    const admPend = rows.filter(d => d.admGroup === '2.Pening').length;
+    const admFail = rows.filter(d => d.admGroup === '3.ไม่ผ่าน').length;
 
-    /* ── 3) สถานะติดตั้ง / ส่งมอบ ── */
-    const instMap = new Map();
-    rows.forEach(d => {
-      const k = String(d.installStatus || '').trim() || '(ยังไม่ระบุ)';
-      instMap.set(k, (instMap.get(k) || 0) + 1);
-    });
-    const instArr = [...instMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 7);
-    const instDone = (instMap.get('ปิด Ticket แล้ว') || 0) + (instMap.get('ปิดงานแล้ว') || 0);
-    const instHtml = big(num(instDone), '#047857', 'ติดตั้ง/ปิดงานแล้ว · จาก ' + num(rows.length) + ' ใบ') +
-      '<div style="margin-top:11px">' + (instArr.length ? instArr.map(x =>
-        '<div style="display:flex;justify-content:space-between;font-size:11.5px;color:#475569;padding:4px 0">' +
-        '<span>' + esc(x[0]) + '</span><b>' + num(x[1]) + '</b></div>' +
-        '<div style="height:5px;border-radius:99px;background:#EDF0F5;overflow:hidden"><i style="display:block;height:100%;border-radius:99px;width:' +
-        (x[1] / (rows.length || 1) * 100).toFixed(0) + '%;background:linear-gradient(90deg,#7EA6FF,#118DFF)"></i></div>').join('')
-        : '<div style="font-size:11.5px;color:#98A2B3">ไม่มีข้อมูลสถานะติดตั้ง</div>') + '</div>';
+    /* ── คาดปิดสิ้นเดือน ── */
+    const parts = String(S.period || '').split('-').map(Number);
+    const yy = parts[0] || now.getFullYear(), mm = parts[1] || (now.getMonth() + 1);
+    const dim = new Date(yy, mm, 0).getDate();
+    const isCur = yy === now.getFullYear() && mm === now.getMonth() + 1;
+    const elapsed = isCur ? Math.min(now.getDate(), dim) : dim;
+    const fcSo = elapsed ? Math.round(rows.length / elapsed * dim) : rows.length;
+    const rev = rows.reduce((a, d) => a + (d.revenue || 0), 0);
 
-    /* ── 4) ลิสต์งานที่ต้องตาม (งานค้าง เรียงตามอายุ) ── */
-    const pend = rows
-      .filter(d => d.status3 === '2.Pending' && d.dateSO instanceof Date && !isNaN(d.dateSO))
-      .map(d => ({ d: d, age: Math.floor((now - d.dateSO) / 86400000) }))
-      .sort((a, b) => b.age - a.age)
-      .slice(0, 15);
-    let pendTbl = pend.length
-      ? '<div class="tbl"><table class="pbi"><thead><tr>' +
-        '<th>SO / ลูกค้า</th><th>ทีม · เซลล์</th><th>สถานะ Admin</th>' +
-        '<th class="num">ค้าง (วัน)</th><th class="num">มูลค่า</th></tr></thead><tbody>' +
-        pend.map(x => '<tr><td>' + esc(String(x.d.so || '').slice(0, 14)) + ' · ' + esc(String(x.d.customer || '').slice(0, 22)) + '</td>' +
-          '<td>' + esc(stripNum(x.d.team || '-')) + ' · ' + esc(String(x.d.salesperson || '-').slice(0, 14)) + '</td>' +
-          '<td>' + esc(x.d.admGroup || '-') + '</td>' +
-          '<td class="num ' + (x.age > 21 ? 'c-canc' : x.age > 15 ? 'c-pend' : '') + '" style="font-weight:800">' + num(x.age) + '</td>' +
-          '<td class="num">' + baht(x.d.revenue || 0) + '</td></tr>').join('') +
-        '</tbody></table></div>'
-      : empty('ไม่มีงานค้างในเงื่อนไขนี้');
+    /* ── บอร์ดการ์ดงาน ── */
+    const LV = x => x.age > 21 ? { c: '#E11D48', b: 'background:#FFF1F3;color:#BE123C', t: 'ค้าง ' + x.age + ' วัน' }
+      : x.age > 15 ? { c: '#F59E0B', b: 'background:#FFF8EB;color:#B45309', t: 'ค้าง ' + x.age + ' วัน' }
+      : { c: '#0EA5E9', b: 'background:#F0F9FF;color:#0369A1', t: 'ค้าง ' + x.age + ' วัน' };
+    const board = pend.length ? pend.slice(0, 15).map(x => {
+      const v = LV(x);
+      return '<div class="mon-fu" style="border:1px solid #E4E9F0;border-left:4px solid ' + v.c +
+        ';border-radius:12px;padding:11px 13px;background:#fff">' +
+        '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">' +
+          '<span style="font-weight:800;font-size:13px;letter-spacing:-.2px">' +
+            esc(String(x.d.so || '').slice(0, 14) + ' · ' + String(x.d.customer || '-').slice(0, 26)) + '</span>' +
+          '<span style="display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:99px;font-size:10.8px;font-weight:800;' + v.b + '">' + v.t + '</span>' +
+          '<span style="font-size:11.5px;color:#475569">' + esc(stripNum(x.d.team || '-')) + ' · ' + esc(String(x.d.salesperson || '-').slice(0, 16)) + '</span>' +
+          '<span style="margin-left:auto"><button class="btn mon-ack" style="height:26px;padding:0 10px;border-radius:8px;border:1px solid #E4E9F0;background:#fff;color:#475569;font:inherit;font-size:11px;font-weight:700;cursor:pointer">ตามแล้ว</button></span>' +
+        '</div>' +
+        '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:11.8px;color:#475569">' +
+          '<span>สถานะ Admin <b style="color:' + (/ไม่ผ่าน/.test(String(x.d.admGroup)) ? '#B42318' : /Pening/.test(String(x.d.admGroup)) ? '#B45309' : '#047857') + '">' + esc(x.d.admGroup || '-') + '</b></span>' +
+          '<span>ติดตั้ง <b style="color:#0F172A">' + esc(String(x.d.installStatus || '(ยังไม่ระบุ)')) + '</b></span>' +
+          '<span>มูลค่า <b style="color:#0F172A">' + baht(x.d.revenue || 0) + '</b></span>' +
+        '</div></div>';
+    }).join('') : empty('ไม่มีงานค้างในเงื่อนไขนี้');
 
-    return card(4, 'SLA ปิดงาน vs เป้า 15 วัน', slaHtml, { hint: 'จากวันที่เปิด SO ถึงปิดงาน' }) +
-      card(4, 'ติดที่ Admin', admHtml, { hint: 'สถานะ Admin ของงานในหน้านี้' }) +
-      card(4, 'สถานะติดตั้ง / ส่งมอบ', instHtml, { hint: 'จาก Ticket งานติดตั้ง' }) +
-      card(12, 'งานที่ต้องตาม · เรียงตามอายุงาน',
-        pendTbl, { hint: pend.length ? 'แสดง ' + pend.length + ' ใบที่ค้างนานสุด (จาก ' + num(rows.filter(d => d.status3 === '2.Pending').length) + ' ใบ)' : '' });
+    /* ── rail: สรุป 1 นาที (คำนวณจริง) ── */
+    const teamCnt = new Map();
+    pend.forEach(x => { const k2 = stripNum(x.d.team || '(ไม่ระบุ)'); teamCnt.set(k2, (teamCnt.get(k2) || 0) + 1); });
+    const teamTop = [...teamCnt.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const worstTeam = teamTop.length ? teamTop[0][0] : '-';
+    const bullets = [
+      'ต้องตาม <b>' + num(pend.length) + ' งาน</b> มูลค่า <b>' + baht(pendVal) + '</b>',
+      'ค้างเกิน 21 วัน <b>' + num(old21) + ' งาน</b>' + (teamTop.length ? ' · ทีมที่มากสุด <b>' + esc(worstTeam) + '</b>' : ''),
+      'คาดปิดสิ้นเดือน <b>' + num(fcSo) + ' ใบ</b> จาก <b>' + num(rows.length) + ' ใบ</b> ที่เปิดมาแล้ว',
+      'SLA ปิดงานเฉลี่ย <b>' + scAvg.toFixed(1) + ' วัน</b> (เป้า 15) · เกินกำหนด <b>' + overPct.toFixed(0) + '%</b>',
+      'ติดที่ Admin <b>' + num(admBad) + ' ใบ</b> (รอตรวจ ' + num(admPend) + ' · ไม่ผ่าน ' + num(admFail) + ')'
+    ];
+    const railSum = '<div style="display:flex;flex-direction:column;gap:9px">' + bullets.map((x, i2) =>
+      '<div style="display:flex;gap:9px;font-size:11.9px;color:#475569;line-height:1.55">' +
+      '<span style="flex:0 0 auto;width:20px;height:20px;border-radius:7px;background:#EEF0FF;color:#4F46E5;' +
+      'font-weight:800;font-size:10.5px;display:grid;place-items:center">' + (i2 + 1) + '</span><span>' + x + '</span></div>').join('') + '</div>';
+
+    /* ── rail: SLA อ้างอิง Flowchart ── */
+    const slas = [['พื้นที่พร้อมติดตั้ง — รวมทั้งหมด', '15 วัน'], ['พื้นที่ไม่พร้อมติดตั้ง — รวมทั้งหมด', '14–21 วัน'],
+      ['Admin ตรวจสอบ', '0 วัน'], ['ตรวจสอบเครดิต', '12 ชม.'], ['แจ้งงานทีมช่าง', '1–2 วัน'],
+      ['สั่งของ / จัดส่ง', '21 วัน'], ['ติดตั้งงาน', '5 วัน']];
+    const railSla = '<div style="display:flex;flex-direction:column;gap:2px">' + slas.map(s =>
+      '<div style="display:flex;justify-content:space-between;font-size:11.6px;color:#475569;padding:4px 0"><span>' + esc(s[0]) + '</span><b>' + s[1] + '</b></div>').join('') + '</div>';
+
+    /* ── rail: ทีมที่ต้องตามมากสุด (จริง) ── */
+    const maxT = teamTop.length ? teamTop[0][1] : 1;
+    const railTeam = teamTop.length ? teamTop.map((x, i2) =>
+      '<div style="display:flex;justify-content:space-between;font-size:11.6px;color:#475569;padding:4px 0"><span>' + esc(x[0]) + '</span><b>' + num(x[1]) + ' งาน</b></div>' +
+      '<div style="height:5px;border-radius:99px;background:#EDF0F5;overflow:hidden"><i style="display:block;height:100%;border-radius:99px;width:' +
+      (x[1] / maxT * 100).toFixed(0) + '%;background:' + (i2 === 0 ? 'linear-gradient(90deg,#F97066,#FDA29B)' : i2 < 3 ? 'linear-gradient(90deg,#FDB022,#FEC84B)' : 'linear-gradient(90deg,#98A2B3,#D0D5DD)') + '"></i></div>').join('')
+      : '<div style="font-size:11.6px;color:#98A2B3">ไม่มีงานค้าง</div>';
+
+    const inner =
+      '<div style="display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);gap:14px;align-items:start">' +
+        '<div><div style="display:flex;align-items:center;gap:8px;margin:0 0 9px">' +
+          '<b style="font-size:13px">สิ่งที่ผมต้องตามทีม</b>' +
+          '<span style="font-size:10.5px;font-weight:800;color:#fff;background:#E11D48;border-radius:99px;padding:2px 8px">' + num(pend.length) + '</span>' +
+          '<span style="margin-left:auto;font-size:11px;color:#98A2B3">เรียงตามอายุงานมากสุด · กด “ตามแล้ว” เพื่อซ่อน</span></div>' +
+          '<div style="display:flex;flex-direction:column;gap:9px;max-height:620px;overflow:auto;padding-right:2px">' + board + '</div></div>' +
+        '<div style="display:flex;flex-direction:column;gap:12px">' +
+          '<div style="border:1px solid #E4E9F0;border-radius:12px;overflow:hidden">' +
+            '<div style="padding:9px 12px;border-bottom:1px solid #EEF2F7;font-weight:800;font-size:12px">📌 สรุป 1 นาที (สำหรับหัวหน้า)</div>' +
+            '<div style="padding:11px 12px">' + railSum + '</div></div>' +
+          '<div style="border:1px solid #E4E9F0;border-radius:12px;overflow:hidden">' +
+            '<div style="padding:9px 12px;border-bottom:1px solid #EEF2F7;font-weight:800;font-size:12px">⏱ SLA ที่ใช้ตัดสิน</div>' +
+            '<div style="padding:9px 12px">' + railSla + '</div></div>' +
+          '<div style="border:1px solid #E4E9F0;border-radius:12px;overflow:hidden">' +
+            '<div style="padding:9px 12px;border-bottom:1px solid #EEF2F7;font-weight:800;font-size:12px">👥 ทีมที่ต้องตามมากสุด</div>' +
+            '<div style="padding:9px 12px">' + railTeam + '</div></div>' +
+        '</div>' +
+      '</div>';
+
+    return card(12, '', inner, { hint: '' });
   }
 
   function pageGeneric(name, rs) {
