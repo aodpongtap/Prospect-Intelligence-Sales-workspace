@@ -121,10 +121,10 @@
 
 /* ── 9) มือถือ: การ์ด KPI จับคู่ 2 ใบ/แถว (การ์ดกราฟ/ตารางยังเต็มความกว้าง) ─ */
 @media (max-width: 560px) {
-  .g { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .g > .card { grid-column: 1 / -1; }
+  .g { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .g > .card { grid-column: 1 / -1 !important; }
   .g > .card.kpi2,
-  .g > .card.kpi3 { grid-column: span 1; }
+  .g > .card.kpi3 { grid-column: span 1 !important; }
   .kpi2 .k-val,
   .kpi3 .k3-row b { font-size: 18px; letter-spacing: -.2px; }
   .kpi2 .k-lab { font-size: 11px; line-height: 1.25; }
