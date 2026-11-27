@@ -125,6 +125,9 @@
   .g > .card { grid-column: 1 / -1 !important; }
   .g > .card.kpi2,
   .g > .card.kpi3 { grid-column: span 1 !important; }
+  /* การ์ด KPI ที่อยู่ใน .kpirow ก็ให้จับคู่ 2 ใบ/แถวเหมือนกัน */
+  .kpirow { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .kpirow > .card { grid-column: span 1 !important; min-height: 0; }
   .kpi2 .k-val,
   .kpi3 .k3-row b { font-size: 18px; letter-spacing: -.2px; }
   .kpi2 .k-lab { font-size: 11px; line-height: 1.25; }
