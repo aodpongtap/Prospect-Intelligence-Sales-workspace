@@ -2089,7 +2089,11 @@
     h += kpiCard(3, 'Done / Pending / Cancel', num(nD) + ' / ' + num(nP) + ' / ' + num(nC), C.violet,
       'อัตราปิดงาน ' + (closeR * 100).toFixed(0) + '% · รายการในหน้านี้ ' + num(data.length));
     h += card(8, sp.title + ' · ตาม ' + dimTh, chart, { hint: isTime ? 'รายแกนเวลา' : 'เรียงจากมากไปน้อย' });
-    h += card(4, dimTh + ' · สัดส่วน', donut(dData, { field: sp.dim }));
+    /* สัดส่วน: ใช้แท่งจัดอันดับ อ่านตัวเลข/หน่วยเงินได้ชัดกว่าวงกลม+legend ในพื้นที่แคบ */
+    const dTot = dData.reduce((a, b) => a + b.value, 0);
+    h += card(4, dimTh + ' · สัดส่วน', dData.length
+      ? hbars(dData, fmt, { field: sp.dim, pct: true, palette: true })
+      : empty(), { hint: 'รวม ' + fmt(dTot) });
     h += card(12, dimTh + ' × ' + dim2Th, pv, { hint: metricTxt });
     h += card(6, 'สถานะงาน × ' + dimTh, stRows.length ? '<div class="stk-wrap">' + stackedBars(stRows) + statusLegend() + '</div>' : empty(),
       { hint: 'จำนวน SO' });
