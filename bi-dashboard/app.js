@@ -1699,13 +1699,45 @@
       card(12, '', '<div class="empty">หน้านี้ยังไม่ได้ทำในเวอร์ชันนี้</div>') + '</div>';
   }
 
+  /* ---------- หน้าแรกเมื่อเครื่องนี้ยังไม่มีข้อมูล ---------- */
+  function pageWelcome() {
+    const vo = document.body.classList.contains('view-only');
+    return pgHead('ยินดีต้อนรับ', []) + '<div class="g">' +
+      card(12, '',
+        '<div class="welcome">' +
+        '<div class="w-ico">▤</div>' +
+        '<h2>' + (vo ? 'ยังไม่มีข้อมูล' : 'เครื่อง/เบราว์เซอร์นี้ยังไม่มีข้อมูล') + '</h2>' +
+        (vo
+          ? '<p>กรุณาติดต่อผู้ดูแลระบบเพื่ออัปเดตข้อมูล</p>'
+          : '<p>ข้อมูลทั้งหมดถูกอ่านและเก็บไว้ในเบราว์เซอร์ของอุปกรณ์นั้น ๆ ไม่มีการอัปโหลดขึ้นเซิร์ฟเวอร์<br>' +
+            'ดังนั้นถ้าเปิดจากมือถือ/เครื่องอื่น ต้องกด Import ไฟล์ <b>*_ListBooking.xlsx</b> 1 ครั้งก่อน' +
+            '<br><span class="w-note">ปุ่ม ✓ Save จำเฉพาะ “หน้าที่เปิดอยู่ + ตัวกรอง” ไม่ได้ส่งข้อมูลข้ามเครื่อง</span></p>' +
+            '<button class="btn primary w-btn" id="welcomeImport">⇪ Import ListBooking</button>') +
+        '</div>') + '</div>';
+  }
+
+  /* ---------- สร้างไฟล์ snapshot สำหรับฝังไปกับเว็บ (ใช้ตอน deploy) ---------- */
+  window.__downloadSnapshot = function () {
+    if (!S.data) return 'no data';
+    const keep = S.data.filter(d => isKeepGroup(d.group));
+    const payload = { ver: SCHEMA_VER, meta: S.meta, data: keep.map(ser) };
+    const js = '/* snapshot ข้อมูลหยอดเหรียญสำหรับโหมดอ่านอย่างเดียว (สร้างอัตโนมัติ) */\nwindow.BI_SNAPSHOT = ' + JSON.stringify(payload) + ';\n';
+    const blob = new Blob([js], { type: 'text/javascript;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'data-snapshot.js';
+    a.click();
+    return 'rows=' + keep.length + ' bytes=' + js.length;
+  };
+
   /* ---------- render ---------- */
   function render() {
     const rs = rows();
     const stage = document.querySelector('.pbi-stage');
     const prevY = stage ? stage.scrollTop : 0;
     renderFilterBar();
-    const html = S.page === 'summary' ? pageSummary(rs)
+    const html = !S.data ? pageWelcome()
+      : S.page === 'summary' ? pageSummary(rs)
       : S.page === 'overview' ? pageOverview(rs)
       : S.page === 'status' ? pageStatus(rs)
       : S.page === 'tat' ? pageTat(rs)
@@ -1781,6 +1813,9 @@
     if (ms) ms.onchange = () => { S.momMth = ms.value; S.keepScroll = true; render(); };
     const ms2 = $('momSel2');
     if (ms2) ms2.onchange = () => { S.momMth2 = ms2.value; S.keepScroll = true; render(); };
+
+    const wi = $('welcomeImport');
+    if (wi) wi.onclick = () => { const f = $('fileInput'); if (f) f.click(); };
   }
 
   const NAV_GROUPS = [
@@ -1916,7 +1951,8 @@
     const stamp = m.stamp ? m.stamp.replace(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$3/$2/$1 $4:$5') : '';
     $('datasetInfo').innerHTML = '<b>' + esc(m.file) + '</b>' +
       '<span>' + num(m.rows) + ' รายการ · ' + esc(stamp || '-') +
-      (m.cached ? ' <em>· ข้อมูลที่บันทึกไว้</em>' : '') + '</span>';
+      (m.cached ? ' <em>· ข้อมูลที่บันทึกไว้</em>' : '') +
+      (m.snapshot ? ' <em>· ชุดข้อมูลที่ฝังมากับเว็บ</em>' : '') + '</span>';
     $('btnExport').disabled = false;
   }
 
@@ -2089,7 +2125,8 @@
     applyView();            /* ★ คืนหน้ามุมมองที่บันทึกไว้ก่อนวาดครั้งแรก */
     buildNav();
     buildTabs();
-    window.addEventListener('resize', fit);
+    applyViewOnly();
+    window.addEventListener('resize', () => { applyViewOnly(); fit(); });
     try {
       const v = localStorage.getItem('bi.navOff');
       if (v === '1' || v === null) document.body.classList.add('nav-off');
@@ -2123,14 +2160,49 @@
 
     // ถ้ามีข้อมูลที่บันทึกไว้ ให้แสดงทันทีโดยไม่ต้อง import ใหม่
     cacheLoad().then(c => {
-      if (!c || S.data) return;
-      S.data = c.data; S.meta = Object.assign({}, c.meta, { cached: true });
-      const ps = periods();
-      S.period = ps.length ? ps[ps.length - 1] : null;
-      applyView();          /* ★ คืนมุมมองที่บันทึก (หน้า/เดือน/ตัวกรอง) */
-      syncHeader(); render(); fit();
-      const ov = $('dropOverlay'); if (ov) ov.classList.add('hidden');
+      if (c && c.data && !S.data) {
+        S.data = c.data; S.meta = Object.assign({}, c.meta, { cached: true });
+        const ps = periods();
+        S.period = ps.length ? ps[ps.length - 1] : null;
+        applyView();          /* ★ คืนมุมมองที่บันทึก (หน้า/เดือน/ตัวกรอง) */
+        syncHeader(); render(); fit();
+        const ov = $('dropOverlay'); if (ov) ov.classList.add('hidden');
+        return;
+      }
+      /* ไม่มีแคชในเครื่องนี้ → ลองใช้ snapshot ที่ฝังมากับเว็บ (สำหรับมือถือ/ผู้บริหาร) */
+      return loadSnapshot().then(snap => {
+        if (!snap || S.data) return;
+        S.data = snap.data.map(des);
+        S.meta = Object.assign({}, snap.meta, { snapshot: true });
+        const ps = periods();
+        S.period = ps.length ? ps[ps.length - 1] : null;
+        applyView();
+        syncHeader(); render(); fit();
+      });
     });
+  }
+
+  /* ---------- snapshot ที่ฝังมากับเว็บ (อ่านอย่างเดียว) ---------- */
+  function loadSnapshot() {
+    return new Promise(res => {
+      if (window.BI_SNAPSHOT) return res(window.BI_SNAPSHOT);
+      const s = document.createElement('script');
+      s.src = 'data-snapshot.js';
+      s.async = true;
+      s.onload = () => res(window.BI_SNAPSHOT || null);
+      s.onerror = () => res(null);
+      document.head.appendChild(s);
+    });
+  }
+
+  /* ---------- โหมดดูอย่างเดียว (มือถือ/แท็บเล็ต) ---------- */
+  function applyViewOnly() {
+    let on = false;
+    try {
+      on = window.matchMedia('(max-width: 820px)').matches ||
+        (window.matchMedia('(pointer: coarse)').matches && window.matchMedia('(max-width: 1180px)').matches);
+    } catch (e) { on = false; }
+    document.body.classList.toggle('view-only', on);
   }
 
   document.addEventListener('DOMContentLoaded', boot);

@@ -206,6 +206,33 @@ table.pbi thead th { color: #52504E; }
 .card.center-b .donut-c b { font-size: 19px; }
 .card.center-b .legend { flex: 1 1 150px; gap: 9px; }
 
+/* ---------------- โหมดดูอย่างเดียว (มือถือ / ผู้บริหาร) ---------------- */
+body.view-only #btnImport,
+body.view-only #btnExport,
+body.view-only #btnSaveView,
+body.view-only #btnSaveClear,
+body.view-only .pbi-dataset,
+body.view-only #morePages,
+body.view-only .tb-sep { display: none !important; }
+body.view-only .pbi-topbar { min-height: 48px; padding: 6px 12px; gap: 8px; }
+body.view-only .pbi-filters { flex: 1 1 auto; overflow-x: auto; }
+
+/* ---------------- หน้าแรกตอนยังไม่มีข้อมูล ---------------- */
+.welcome {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; text-align: center; padding: 38px 20px 42px;
+}
+.welcome .w-ico {
+  width: 64px; height: 64px; border-radius: 18px;
+  display: grid; place-items: center; font-size: 26px;
+  background: linear-gradient(135deg, #EAF4FF, #F2F3FF); color: #118DFF;
+  box-shadow: inset 0 0 0 1px #D6E4FF;
+}
+.welcome h2 { margin: 0; font-size: 17px; font-weight: 800; color: #101828; letter-spacing: -.3px; }
+.welcome p { margin: 0; max-width: 560px; font-size: 12.5px; line-height: 1.75; color: #475467; }
+.welcome .w-note { color: #98A2B3; font-size: 11.5px; }
+.welcome .w-btn { height: 38px; padding: 0 20px; font-size: 13px; border-radius: 10px; margin-top: 6px; }
+
 /* ---------------- สถานะว่าง ---------------- */
 .empty {
   display: grid; place-items: center; gap: 6px; min-height: 110px;
