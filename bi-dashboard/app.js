@@ -16,7 +16,7 @@
   const COLS = Array.from({ length: 90 }, (_, i) => i);
   const DATE_COLS = [2, 32, 47, 54];
 
-  const S = { raw: null, data: null, meta: null, page: 'overview', period: null, q: '', pageIdx: 0, xf: null, filter: { team: new Set(), channel: new Set(), group: new Set() } };
+  const S = { raw: null, data: null, meta: null, page: 'overview', period: null, q: '', pageIdx: 0, xf: {}, filter: { team: new Set(), channel: new Set(), group: new Set() } };
 
   /* 21 หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) */
   const PBI_PAGES = [
@@ -124,7 +124,7 @@
     S.data.forEach(d => { if (d.mth) set.add(String(d.mth).slice(0, 4) + '-' + String(d.mth).slice(4).padStart(2, '0')); });
     return [...set].sort();
   }
-  function rows() {
+  function rows(except) {
     if (!S.data) return [];
     const fT = S.filter.team, fC = S.filter.channel, fG = S.filter.group;
     return S.data.filter(d => {
@@ -137,11 +137,16 @@
       if (fC.size && !fC.has(String(d.channel == null ? '' : d.channel))) return false;
       if (fG.size && !fG.has(String(d.group == null ? '' : d.group))) return false;
       if (S.xf) {
-        if (S.xf.f === 'day') {
-          if (!d.dateSO || d.dateSO.getDate() !== +S.xf.v) return false;
-        } else if (S.xf.f === 'monthLabel') {
-          if (String(d.mth) !== String(S.xf.v)) return false;
-        } else if (String(d[S.xf.f] == null ? '' : d[S.xf.f]) !== S.xf.v) return false;
+        for (const f in S.xf) {
+          if (f === except) continue;      /* visual ของตัวเองต้องเห็นทุกหมวด */
+          const set = S.xf[f];
+          if (!set || !set.size) continue;
+          if (f === 'day') {
+            if (!d.dateSO || !set.has(String(d.dateSO.getDate()))) return false;
+          } else if (f === 'monthLabel') {
+            if (!set.has(String(d.mth))) return false;
+          } else if (!set.has(String(d[f] == null ? '' : d[f]))) return false;
+        }
       }
       return true;
     });
@@ -218,9 +223,28 @@
     salesperson: 'พนักงาน', prodCat: 'ประเภทสินค้า', jobStage: 'ขั้นตอนงาน',
     channel: 'ช่องทาง', monthLabel: 'เดือน', area: 'พื้นที่'
   };
-  function xfLabel() {
-    if (!S.xf) return '';
-    return (XF_NAME[S.xf.f] || S.xf.f) + ' = ' + S.xf.v;
+  function xfHas(f, v) {
+    const s = S.xf && S.xf[f];
+    return !!(s && s.has(String(v)));
+  }
+  function xfToggle(f, v) {
+    if (!S.xf) S.xf = {};
+    const k = String(v);
+    if (!S.xf[f]) S.xf[f] = new Set();
+    if (S.xf[f].has(k)) S.xf[f].delete(k); else S.xf[f].add(k);
+    if (!S.xf[f].size) delete S.xf[f];
+  }
+  function xfActive() { return !!(S.xf && Object.keys(S.xf).length); }
+  function xfChips() {
+    if (!xfActive()) return '';
+    const keys = Object.keys(S.xf);
+    let h = keys.map(f =>
+      '<span class="xf-chip">' + esc(XF_NAME[f] || f) + ' = ' + esc([...S.xf[f]].join(', ')) +
+      ' <button data-xfc="' + esc(f) + '" title="ล้างตัวกรองนี้">✕</button></span>').join('');
+    if (keys.length > 1 || keys.some(f => S.xf[f].size > 1)) {
+      h += '<button class="xf-clearall" id="xfClearAll">ล้างทั้งหมด</button>';
+    }
+    return h;
   }
   function xfAttr(field, value) {
     return field ? ' data-xf="' + esc(field + '|' + value) + '"' : '';
@@ -238,7 +262,7 @@
     data.forEach((d, i) => {
       const p = Math.max(1.2, Math.min(100, d.value / max * 100));
       const col = d.color || PALETTE[i % PALETTE.length];
-      const sel = S.xf && S.xf.f === o.field && S.xf.v === String(d.label);
+      const sel = xfHas(o.field, d.label);
       h += '<div class="hbar' + (sel ? ' sel' : '') + '"' + xfAttr(o.field, d.label) +
         ' title="' + esc(d.label) + ' · ' + f(d.value) + '">' +
         '<span class="hb-lab">' + esc(d.label) + '</span>' +
@@ -262,7 +286,7 @@
       const p = Math.max(1.5, Math.min(100, d.value / max * 100));
       const inside = p >= 10;            /* แท่งสูงพอ -> ใส่เลขในแท่ง */
       const xv = d.xv != null ? String(d.xv) : String(d.label);
-      const sel = S.xf && S.xf.f === o.field && S.xf.v === xv;
+      const sel = xfHas(o.field, xv);
       h += '<div class="col' + (sel ? ' sel' : '') + '"' + xfAttr(o.field, xv) +
         ' title="' + esc(d.label) + ' · ' + num(d.value) +
         (lineArr ? ' · ติดตั้ง ' + num(lineArr[i]) : '') +
@@ -309,7 +333,7 @@
       acc += d.value;
     });
     const leg = list.map((d, i) =>
-      '<div class="lg' + (S.xf && S.xf.f === o.field && S.xf.v === String(d.label) ? ' sel' : '') + '"' + xfAttr(o.field, d.label) + '>' +
+      '<div class="lg' + (xfHas(o.field, d.label) ? ' sel' : '') + '"' + xfAttr(o.field, d.label) + '>' +
       '<i style="background:' + PALETTE[i % PALETTE.length] + '"></i>' +
       '<span title="' + esc(d.label) + '">' + esc(d.label) + '</span>' +
       '<b>' + num(d.value) + '</b><em>' + (d.value / tot * 100).toFixed(0) + '%</em></div>').join('');
@@ -352,12 +376,12 @@
     if (o.maxCols) cks = cks.slice(0, o.maxCols);
     let h = '<div class="tbl"><table class="pbi"><thead><tr><th class="rowhead">' + esc(o.rowTitle || '') + '</th>';
     cks.forEach(c => {
-      const selC = S.xf && S.xf.f === o.colField && S.xf.v === String(c);
+      const selC = xfHas(o.colField, c);
       h += '<th class="num' + (selC ? ' sel' : '') + '"' + xfAttr(o.colField, c) + '>' + esc(c) + '</th>';
     });
     h += '<th class="num total">Total</th></tr></thead><tbody>';
     rks.forEach(rk => {
-      const selR = S.xf && S.xf.f === o.rowField && S.xf.v === String(rk);
+      const selR = xfHas(o.rowField, rk);
       h += '<tr><td class="rowhead' + (selR ? ' sel' : '') + '"' + xfAttr(o.rowField, rk) + '>' + esc(rk) + '</td>';
       cks.forEach(ck => { const v = cell.get(rk + '\u0001' + ck); h += '<td class="num">' + (v ? fmt(v) : '') + '</td>'; });
       h += '<td class="num total">' + fmt(rm.get(rk) || 0) + '</td></tr>';
@@ -474,22 +498,22 @@
 
   /* ---------- pages ---------- */
   function pgHead(title, rs, extra) {
-    const chip = S.xf
-      ? '<span class="xf-chip">กรอง: ' + esc(xfLabel()) + ' <button id="xfClear" title="ล้างตัวกรองนี้">✕</button></span>'
-      : '';
     return '<div class="pg-head"><h1>' + esc(title) + '</h1>' +
       '<span class="sub">' + esc(S.period ? S.period.replace('-', ' · ') : 'ทุกงวด') + ' · ' + num(rs ? rs.length : 0) + ' รายการ</span>' +
-      '<span class="field-scope">เฉพาะกลุ่มหยอดเหรียญ</span>' + chip +
+      '<span class="field-scope">เฉพาะกลุ่มหยอดเหรียญ</span>' + xfChips() +
       '<span class="grow"></span>' + (extra || '') + '</div>';
   }
 
   function pageOverview(rs) {
+    const rsDay = rows('day'), rsAdm = rows('admGroup'), rsTeam = rows('team'), rsGrp = rows('group');
     let rev = 0, units = 0, pass = 0, installs = 0;
     const byDay = new Map(), instByDay = new Map();
     rs.forEach(d => {
       rev += d.revenue || 0;
       units += d.units || 0;
       if (d.admGroup === '1.ผ่าน') pass++;
+    });
+    rsDay.forEach(d => {
       if (d.dateSO) {
         const k = d.dateSO.getDate();
         const a = byDay.get(k) || { n: 0, u: 0 };
@@ -512,11 +536,11 @@
     const pct = rs.length ? pass / rs.length * 100 : 0;
     const adm = ['1.ผ่าน', '2.Pening', '3.ไม่ผ่าน', '(Blank)'].map(k => ({
       label: k === '(Blank)' ? '(ว่าง)' : k,
-      value: rs.filter(d => String(d.admGroup || '(Blank)') === k).length
+      value: rsAdm.filter(d => String(d.admGroup || '(Blank)') === k).length
     })).filter(d => d.value > 0);
 
-    const stM = matrix(rs, d => d.team || '(ไม่ระบุ)', d => d.admGroup, () => 1, num, { sortRows: 1, rowTitle: 'Grp ทีมขาย', rowField: 'team', colField: 'admGroup' });
-    const revM = matrix(rs, d => d.group, d => d.team, d => d.revenue, baht, { sortRows: 1, maxRows: 10, rowTitle: 'กลุ่มสินค้า', rowField: 'group', colField: 'team' });
+    const stM = matrix(rsTeam, d => d.team || '(ไม่ระบุ)', d => d.admGroup, () => 1, num, { sortRows: 1, rowTitle: 'Grp ทีมขาย', rowField: 'team', colField: 'admGroup' });
+    const revM = matrix(rsGrp, d => d.group, d => d.team, d => d.revenue, baht, { sortRows: 1, maxRows: 10, rowTitle: 'กลุ่มสินค้า', rowField: 'group', colField: 'team' });
 
     let h = pgHead('Daily Admin', rs);
     h += '<div class="g">';
@@ -532,9 +556,12 @@
   }
 
   function pageStatus(rs) {
+    const rsAdm2 = rows('admGroup'), rsSt3 = rows('status3');
     const byAdm = new Map(), bySt3 = new Map();
-    rs.forEach(d => {
+    rsAdm2.forEach(d => {
       byAdm.set(d.admGroup || '(ว่าง)', (byAdm.get(d.admGroup || '(ว่าง)') || 0) + 1);
+    });
+    rsSt3.forEach(d => {
       bySt3.set(d.status3 || '(ไม่ระบุ)', (bySt3.get(d.status3 || '(ไม่ระบุ)') || 0) + 1);
     });
     const admData = [...byAdm.entries()].sort((a, b) => b[1] - a[1]).map(e => ({ label: e[0], value: e[1] }));
@@ -550,19 +577,26 @@
   }
 
   function pageTat(rs) {
+    const rsDay = rows('day'), rsT = rows('team');
     let nA = 0, sA = 0, nC = 0, sC = 0;
     const byDay = new Map(), byTeam = new Map();
     rs.forEach(d => {
       if (d.slaAdmin != null) { sA += d.slaAdmin; nA++; }
+    });
+    rsDay.forEach(d => {
       if (d.slaClose != null && (d.status3 === '1.Done' || d.status3 === '3.Cancel')) {
         sC += d.slaClose; nC++;
-        const tk = d.team || '(ไม่ระบุ)';
-        const b = byTeam.get(tk) || [0, 0]; b[0] += d.slaClose; b[1]++; byTeam.set(tk, b);
         if (d.dateSO) {
           const k2 = d.dateSO.getDate();
           const a = byDay.get(k2) || [0, 0]; a[0] += d.slaClose; a[1]++;
           byDay.set(k2, a);
         }
+      }
+    });
+    rsT.forEach(d => {
+      if (d.slaClose != null && (d.status3 === '1.Done' || d.status3 === '3.Cancel')) {
+        const tk = d.team || '(ไม่ระบุ)';
+        const b = byTeam.get(tk) || [0, 0]; b[0] += d.slaClose; b[1]++; byTeam.set(tk, b);
       }
     });
     const daily = [...byDay.entries()].sort((a, b) => a[0] - b[0])
@@ -690,7 +724,9 @@
 
   function pageGeneric(name, rs) {
     const sp = SPECS[name] || { dim: 'team', dim2: 'status3', metric: 'count', title: name };
-    const data = sp.filter ? rs.filter(sp.filter) : rs;
+    const pick = rws => (sp.filter ? rws.filter(sp.filter) : rws);
+    const data = pick(rs);
+    const dataX = pick(rows(sp.dim));      /* คงทุกหมวดของตัวเองไว้ เพื่อคลิกหลายค่าได้ */
     const valOf = d => sp.metric === 'revenue' ? (d.revenue || 0) : sp.metric === 'units' ? (d.units || 0) : 1;
     const fmt = sp.metric === 'revenue' ? baht : num;
 
@@ -711,7 +747,7 @@
     const soCount = new Set(data.map(d => String(d.so))).size;
 
     const g = new Map();
-    data.forEach(d => { const k = labelOf(d); g.set(k, (g.get(k) || 0) + valOf(d)); });
+    dataX.forEach(d => { const k = labelOf(d); g.set(k, (g.get(k) || 0) + valOf(d)); });
     let bars = [...g.entries()].map(e => ({ label: e[0], value: e[1] }));
     const isTime = sp.dim === 'dayLabel' || sp.dim === 'monthLabel';
     if (isTime) bars.sort((a, b) => (parseFloat(a.label) || 0) - (parseFloat(b.label) || 0));
@@ -785,14 +821,19 @@
         const raw2 = el.getAttribute('data-xf') || '';
         const i = raw2.indexOf('|');
         if (i < 0) return;
-        const f = raw2.slice(0, i), v = raw2.slice(i + 1);
-        if (S.xf && S.xf.f === f && S.xf.v === v) S.xf = null;   /* คลิกซ้ำ = ยกเลิก */
-        else S.xf = { f: f, v: v };
+        xfToggle(raw2.slice(0, i), raw2.slice(i + 1));   /* คลิกซ้ำ = ยกเลิก, คลิกหลายแท่ง = รวมหลายค่า */
         render();
       };
     });
-    const xc = $('xfClear');
-    if (xc) xc.onclick = e => { e.stopPropagation(); S.xf = null; render(); };
+    document.querySelectorAll('[data-xfc]').forEach(b => {
+      b.onclick = e => {
+        e.stopPropagation();
+        delete S.xf[b.getAttribute('data-xfc')];
+        render();
+      };
+    });
+    const xa = $('xfClearAll');
+    if (xa) xa.onclick = () => { S.xf = {}; render(); };
 
     document.querySelectorAll('input[data-f]').forEach(cb => {
       cb.onchange = () => {

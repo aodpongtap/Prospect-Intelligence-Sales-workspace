@@ -53,6 +53,12 @@
   display: inline-flex; align-items: center; justify-content: center; padding: 0;
 }
 .xf-chip button:hover { background: #FDA29B; color: #fff; }
+.xf-clearall {
+  border: 1px solid #FDA29B; background: #fff; color: #B42318;
+  font-size: 11px; font-weight: 600; border-radius: 999px; padding: 2px 9px;
+  cursor: pointer; white-space: nowrap;
+}
+.xf-clearall:hover { background: #FEF3F2; }
 
 [data-xf] { cursor: pointer; }
 .hbar.sel .hb-lab, .lg.sel span, table.pbi td.rowhead.sel, table.pbi th.sel { color: #0B4C8C; }
