@@ -4,29 +4,35 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sale Order BI · Prospect Intelligence</title>
-<link rel="stylesheet" href="bi.css?v=1127n">
-<link rel="stylesheet" href="polish.css?v=1127n">
-<link rel="stylesheet" href="nav.css?v=1127n">
-<link rel="stylesheet" href="viz.css?v=1127n">
-<link rel="stylesheet" href="tabs.css?v=1127n">
-<link rel="stylesheet" href="ui.css?v=1127n">
+<link rel="stylesheet" href="bi.css?v=1127t">
+<link rel="stylesheet" href="polish.css?v=1127t">
+<link rel="stylesheet" href="nav.css?v=1127t">
+<link rel="stylesheet" href="viz.css?v=1127t">
+<link rel="stylesheet" href="tabs.css?v=1127t">
+<link rel="stylesheet" href="ui.css?v=1127t">
+<link rel="stylesheet" href="polish2.css?v=1127t">
 </head>
 <body class="nav-off">
 <div class="pbi-shell">
 
   <!-- ===== top bar ===== -->
   <div class="pbi-topbar">
-    <div class="pbi-brand"><span class="dot"></span> Sale Order BI</div>
-    <button class="nav-toggle" id="navToggle" title="ย่อ/ขยายเมนู">☰</button>
-    <button class="btn primary" id="btnImport"
-      title="เลือกไฟล์ *_ListBooking.xlsx ที่ IT สร้างให้ทุกเช้า · ไฟล์ถูกอ่านในเบราว์เซอร์เท่านั้น ไม่มีการอัปโหลด · หรือลากไฟล์มาวางที่หน้าเว็บได้เลย">⇪ Import ListBooking</button>
-    <button class="btn" id="btnExport" disabled>⤓ Export CSV</button>
-    <button class="btn" id="btnSaveView" title="บันทึกมุมมองปัจจุบัน (หน้า + ช่วงเดือน + ตัวกรอง) แล้วเปิดใหม่จะแสดงแบบนี้ทันที">✓ Save</button>
-    <button class="btn" id="btnSaveClear" title="ล้างมุมมองที่บันทึกไว้">⟲</button>
+    <div class="tb-group">
+      <div class="pbi-brand"><span class="dot"></span> Sale Order BI</div>
+      <button class="nav-toggle" id="navToggle" title="ย่อ/ขยายเมนู">☰</button>
+    </div>
+    <div class="tb-group tb-actions">
+      <button class="btn primary" id="btnImport"
+        title="เลือกไฟล์ *_ListBooking.xlsx ที่ IT สร้างให้ทุกเช้า · ไฟล์ถูกอ่านในเบราว์เซอร์เท่านั้น ไม่มีการอัปโหลด · หรือลากไฟล์มาวางที่หน้าเว็บได้เลย">⇪ Import</button>
+      <button class="btn" id="btnExport" disabled>⤓ Export</button>
+      <button class="btn" id="btnSaveView" title="บันทึกมุมมองปัจจุบัน (หน้า + ช่วงเดือน + ตัวกรอง) แล้วเปิดใหม่จะแสดงแบบนี้ทันที">✓ Save</button>
+      <button class="btn icon" id="btnSaveClear" title="ล้างมุมมองที่บันทึกไว้">⟲</button>
+    </div>
+    <div class="tb-sep"></div>
     <div class="pbi-filters" id="filterBar"></div>
     <div class="spacer"></div>
     <div class="pbi-dataset" id="datasetInfo">
-      <b>ยังไม่มีข้อมูล</b><br>กด Import ListBooking (.xlsx) เพื่อเริ่ม
+      <b>ยังไม่มีข้อมูล</b><span>กด Import ListBooking (.xlsx) เพื่อเริ่ม</span>
     </div>
   </div>
 
@@ -74,10 +80,10 @@
 
 <input type="file" id="fileInput" accept=".xlsx" hidden>
 
-<script src="xlsx-lite.js?v=1127n"></script>
-<script src="lookups.js?v=1127n"></script>
-<script src="master-status.js?v=1127n"></script>
-<script src="schema.js?v=1127n"></script>
-<script src="app.js?v=1127n"></script>
+<script src="xlsx-lite.js?v=1127t"></script>
+<script src="lookups.js?v=1127t"></script>
+<script src="master-status.js?v=1127t"></script>
+<script src="schema.js?v=1127t"></script>
+<script src="app.js?v=1127t"></script>
 </body>
 </html>

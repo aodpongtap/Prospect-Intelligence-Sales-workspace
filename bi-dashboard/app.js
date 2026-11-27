@@ -341,17 +341,18 @@
     const dense = data.length > 18;
     let h = '<div class="cols-wrap"><div class="cols">';
     data.forEach((d, i) => {
-      const p = Math.max(1.5, Math.min(100, d.value / max * 100));
-      const inside = p >= 10;            /* แท่งสูงพอ -> ใส่เลขในแท่ง */
+      const p = Math.max(1.5, Math.min(88, d.value / max * 88));
+      const inside = p >= 12;            /* แท่งสูงพอ -> ใส่เลขในแท่ง */
       const xv = d.xv != null ? String(d.xv) : String(d.label);
       const sel = xfHas(o.field, xv);
       h += '<div class="col' + (sel ? ' sel' : '') + '"' + xfAttr(o.field, xv) +
         ' title="' + esc(d.label) + ' · ' + num(d.value) +
         (lineArr ? ' · ติดตั้ง ' + num(lineArr[i]) : '') +
         (d.sub ? ' · ' + esc(d.sub) : '') + '">' +
-        '<span class="col-v"' + (dense ? ' style="font-size:9.5px"' : '') + '>' + (showVal && !inside ? shortNum(d.value) : '') + '</span>' +
         '<span class="col-bar-wrap"><i class="col-bar" style="height:' + p.toFixed(1) + '%">' +
-          (showVal && inside ? '<b class="bar-in">' + shortNum(d.value) + '</b>' : '') + '</i></span>' +
+          (showVal && inside ? '<b class="bar-in">' + shortNum(d.value) + '</b>' : '') +
+          (showVal && !inside && !dense ? '<b class="bar-out">' + shortNum(d.value) + '</b>' : '') +
+        '</i></span>' +
         '<span class="col-x">' + esc(d.label) + '</span></div>';
     });
     h += '</div>';
@@ -412,6 +413,14 @@
       '<option value="' + p + '"' + (p === S.period ? ' selected' : '') + '>' + p.replace('-', ' · ') + '</option>').join('') + '</select>';
   }
 
+  /* เรียงแบบ natural: 1., 2., 3. … 10. (ไม่ให้ 10 มาก่อน 9) และค่า (Blank)/(ว่าง) ไปท้ายสุด */
+  function natCmp(a, b) {
+    const isBlank = v => /^\(?\s*(blank|ว่าง|ไม่ระบุ)\s*\)?$/i.test(String(v).trim());
+    const ba = isBlank(a), bb = isBlank(b);
+    if (ba !== bb) return ba ? 1 : -1;
+    return String(a).localeCompare(String(b), 'th', { numeric: true, sensitivity: 'base' });
+  }
+
   function matrix(rowsIn, rowFn, colFn, valFn, fmt, o) {
     o = o || {};
     const rm = new Map(), cm = new Map(), cell = new Map();
@@ -425,8 +434,8 @@
       cm.set(ck, (cm.get(ck) || 0) + v);
     });
     let rks = [...rm.keys()], cks = [...cm.keys()];
-    if (o.sortRows) rks.sort((a, b) => rm.get(b) - rm.get(a));
-    if (o.sortCols) cks.sort((a, b) => cm.get(b) - cm.get(a));
+    if (o.sortRows) rks.sort((a, b) => rm.get(b) - rm.get(a)); else rks.sort(natCmp);
+    if (o.sortCols) cks.sort((a, b) => cm.get(b) - cm.get(a)); else cks.sort(natCmp);
     // ยอดรวมต้องคิดจากข้อมูลทั้งหมด ก่อนตัดคอลัมน์/แถวที่จะแสดง
     let grandTotal = 0;
     cell.forEach(v => { grandTotal += v; });
@@ -1495,7 +1504,9 @@
   function syncHeader() {
     const m = S.meta;
     const stamp = m.stamp ? m.stamp.replace(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$3/$2/$1 $4:$5') : '';
-    $('datasetInfo').innerHTML = '<b>' + esc(m.file) + '</b><br>' + num(m.rows) + ' รายการ · ไฟล์วันที่ ' + esc(stamp || '-');
+    $('datasetInfo').innerHTML = '<b>' + esc(m.file) + '</b>' +
+      '<span>' + num(m.rows) + ' รายการ · ' + esc(stamp || '-') +
+      (m.cached ? ' <em>· ข้อมูลที่บันทึกไว้</em>' : '') + '</span>';
     $('btnExport').disabled = false;
   }
 
@@ -1682,13 +1693,11 @@
     // ถ้ามีข้อมูลที่บันทึกไว้ ให้แสดงทันทีโดยไม่ต้อง import ใหม่
     cacheLoad().then(c => {
       if (!c || S.data) return;
-      S.data = c.data; S.meta = c.meta;
+      S.data = c.data; S.meta = Object.assign({}, c.meta, { cached: true });
       const ps = periods();
       S.period = ps.length ? ps[ps.length - 1] : null;
       applyView();          /* ★ คืนมุมมองที่บันทึก (หน้า/เดือน/ตัวกรอง) */
       syncHeader(); render(); fit();
-      const info = $('datasetInfo');
-      if (info) info.insertAdjacentHTML('beforeend', '<br><span style="color:#0F7CD9">ข้อมูลที่บันทึกไว้ · กด Import เพื่ออัปเดต</span>');
       const ov = $('dropOverlay'); if (ov) ov.classList.add('hidden');
     });
   }

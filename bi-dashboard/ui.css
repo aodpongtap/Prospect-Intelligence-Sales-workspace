@@ -430,3 +430,111 @@ table.pbi.st td.c-canc { color: #B42318; }
   .g { grid-template-columns: minmax(0, 1fr); }
   .s1, .s2, .s3, .s4, .s5, .s6, .s7, .s8, .s9, .s10, .s11, .s12 { grid-column: span 1; }
 }
+
+/* =========================================================================
+   LAYOUT POLISH v5 — จัดช่องไฟ/ระยะห่างให้เท่ากันทุกหน้า
+   ========================================================================= */
+
+/* ---------------- top bar: จัดกลุ่ม + ไม่ตัดคำ ---------------- */
+.pbi-topbar {
+  height: auto; min-height: 54px; flex: 0 0 auto;
+  display: flex; align-items: center; flex-wrap: nowrap;
+  gap: 10px; padding: 8px 16px;
+  background: #fff;
+  border-bottom: 1px solid #E4E7EC;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+}
+.tb-group { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; min-width: 0; }
+.tb-sep { width: 1px; height: 24px; background: #EAECF0; flex: 0 0 1px; margin: 0 2px; }
+.pbi-brand { flex: 0 0 auto; white-space: nowrap; font-size: 14px; font-weight: 700; letter-spacing: -.2px; color: #101828; }
+.pbi-topbar .nav-toggle { flex: 0 0 auto; }
+.pbi-topbar .btn {
+  height: 32px; padding: 0 12px; flex: 0 0 auto;
+  white-space: nowrap; border-radius: 8px; border: 1px solid #E4E7EC;
+  background: #fff; color: #344054;
+  font-family: inherit; font-size: 12px; font-weight: 650;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+}
+.pbi-topbar .btn:hover { background: #F9FAFB; border-color: #D0D5DD; }
+.pbi-topbar .btn.primary {
+  background: #118DFF; border-color: #118DFF; color: #fff;
+  box-shadow: 0 1px 2px rgba(17, 141, 255, .35);
+}
+.pbi-topbar .btn.primary:hover { background: #0F7CD9; border-color: #0F7CD9; }
+.pbi-topbar .btn.icon { padding: 0 9px; color: #667085; }
+.pbi-topbar .btn:disabled { background: #F9FAFB; color: #98A2B3; }
+.pbi-topbar .btn:disabled:hover { border-color: #E4E7EC; }
+
+/* ---------- ตัวกรองใน top bar ---------- */
+.pbi-filters { display: flex; align-items: center; gap: 8px; margin-left: 0; flex: 0 1 auto; min-width: 0; }
+.pbi-filters .btn { height: 32px; }
+.fsel { display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto; white-space: nowrap; }
+.fsel > span { font-size: 11.5px; font-weight: 650; color: #667085; }
+.pbi-select {
+  height: 32px; border: 1px solid #E4E7EC; border-radius: 8px; background: #fff;
+  font-family: inherit; font-size: 12px; font-weight: 650; color: #101828;
+  padding: 0 28px 0 11px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23667085' d='M0 0h10L5 6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+.pbi-select:hover { border-color: #D0D5DD; }
+.pbi-select:focus { outline: none; border-color: #118DFF; box-shadow: 0 0 0 3px rgba(17, 141, 255, .14); }
+.fdrop > summary {
+  height: 32px; padding: 0 11px; border-radius: 8px; border-color: #E4E7EC;
+  font-weight: 650; color: #344054;
+}
+.fdrop .flist { top: 36px; border-radius: 10px; min-width: 220px; padding: 7px; }
+
+/* ---------- ข้อมูลชุดที่โหลด ---------- */
+.pbi-dataset {
+  flex: 0 1 auto; min-width: 0; max-width: 290px;
+  font-size: 11px; line-height: 1.5; color: #667085; text-align: right;
+}
+.pbi-dataset b {
+  display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 11.5px; font-weight: 700; color: #101828;
+}
+.pbi-dataset span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------------- หัวหน้า + ตารางกริด ---------------- */
+.pg-head { padding: 16px 18px 0; gap: 10px; align-items: center; }
+.pg-head h1 { font-size: 17px; }
+.pg-head .sub { font-size: 11.5px; }
+.g { gap: 10px; padding: 10px 18px 24px; }
+.card { padding: 11px 13px 13px; border-radius: 12px; }
+.card-h { margin-bottom: 9px; gap: 10px; }
+.card-h h3 { font-size: 12.5px; }
+.card-h .hint { font-size: 10.5px; }
+.kpirow { gap: 10px; }
+.kpi2 { min-height: 64px; padding: 9px 12px; border-radius: 10px; }
+.kpi2 .k-val { font-size: 21px; }
+
+/* ---------------- ตาราง: ระยะห่างอ่านง่ายขึ้น ---------------- */
+table.pbi thead th { padding: 7px 10px; }
+table.pbi tbody td { padding: 6px 10px; }
+table.pbi tbody tr.grand td { background: #EFF8FF; }
+.tbl { border-radius: 10px; }
+.tbl table.pbi { border-spacing: 0; }
+.plan th, .plan td { padding: 6px 9px; }
+
+/* ---------------- แถบแท็บล่าง ---------------- */
+.pbi-pagetabs { height: 36px; flex: 0 0 36px; padding: 0 10px; gap: 2px; }
+.pbi-tab { padding: 0 13px; font-size: 11.5px; }
+
+/* ---------------- เล็กจอ: ให้พับได้ ไม่ล้น ---------------- */
+@media (max-width: 1320px) {
+  .pbi-topbar { gap: 8px; padding: 8px 12px; }
+  .pbi-dataset { max-width: 200px; }
+}
+@media (max-width: 1120px) {
+  .pbi-dataset { display: none; }
+}
+@media (max-width: 900px) {
+  .pbi-topbar { flex-wrap: wrap; }
+  .tb-sep { display: none; }
+  .pbi-filters { order: 9; flex: 1 1 100%; overflow-x: auto; padding: 2px 0 1px; }
+  .pg-head { padding: 12px 12px 0; }
+  .g { padding: 10px 12px 20px; gap: 8px; }
+}

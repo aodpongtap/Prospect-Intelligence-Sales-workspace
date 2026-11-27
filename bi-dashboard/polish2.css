@@ -1,0 +1,201 @@
+/* =========================================================================
+   polish2.css — UX/UI fine-tuning (โหลดเป็นไฟล์สุดท้าย ชนะทุกไฟล์ก่อนหน้า)
+   ปรับเฉพาะความสวย/ระยะห่าง/สถานะ ไม่แตะโครงสร้างข้อมูล
+   ========================================================================= */
+
+:root {
+  --ink:   #0F172A;
+  --ink2:  #475467;
+  --ink3:  #98A2B3;
+  --line:  #E4E7EC;
+  --brand: #118DFF;
+  --brand-dk: #0F7CD9;
+}
+
+body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+::selection { background: rgba(17, 141, 255, .18); }
+
+/* ---------------- focus ring (คีย์บอร์ด) ---------------- */
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+summary:focus-visible,
+[data-xf]:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ---------------- scrollbar บาง เนียน ---------------- */
+.pbi-stage::-webkit-scrollbar,
+.tbl::-webkit-scrollbar,
+.fdrop .flist::-webkit-scrollbar { width: 10px; height: 10px; }
+.pbi-stage::-webkit-scrollbar-thumb,
+.tbl::-webkit-scrollbar-thumb,
+.fdrop .flist::-webkit-scrollbar-thumb {
+  background: #D0D5DD; border-radius: 99px;
+  border: 2px solid transparent; background-clip: padding-box;
+}
+.pbi-stage::-webkit-scrollbar-thumb:hover,
+.tbl::-webkit-scrollbar-thumb:hover { background: #98A2B3; background-clip: padding-box; }
+.pbi-stage::-webkit-scrollbar-track,
+.tbl::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------------- หัวหน้าเพจ: ติดบนเวลาศึกษา (sticky) ---------------- */
+.pg-head {
+  position: sticky; top: 0; z-index: 30;
+  padding: 12px 18px 10px;
+  background: #F2F4F7;
+}
+.pg-head::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -12px; height: 12px;
+  background: linear-gradient(180deg, rgba(242, 244, 247, .95), rgba(242, 244, 247, 0));
+  pointer-events: none;
+}
+.pg-head h1 { position: relative; padding-left: 13px; color: var(--ink); }
+.pg-head h1::before {
+  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 4px; height: 17px; border-radius: 99px;
+  background: linear-gradient(180deg, #118DFF, #12239E);
+}
+.pg-head .sub { color: var(--ink2); }
+.pg-head .field-scope { background: #EFF8FF; border-color: #B2DDFF; color: #0B4A8F; font-weight: 700; }
+
+/* ---------------- การ์ด ---------------- */
+.card {
+  transition: box-shadow .18s ease, border-color .18s ease;
+}
+.card:hover {
+  border-color: #D0D5DD;
+  box-shadow: 0 6px 18px -8px rgba(16, 24, 40, .18), 0 1px 2px rgba(16, 24, 40, .05);
+}
+.card-h h3 { font-weight: 700; color: var(--ink); }
+.card-h .hint { color: var(--ink3); }
+
+/* KPI: วงกลมสีจางมุมขวา + ตัวเลขคมชัด */
+.kpi2 { position: relative; overflow: hidden; }
+.kpi2::after {
+  content: ''; position: absolute; right: -16px; top: -20px; width: 64px; height: 64px;
+  border-radius: 50%; background: var(--k, #118DFF); opacity: .07; pointer-events: none;
+}
+.kpi2 .k-lab { color: var(--ink2); letter-spacing: .1px; }
+.kpi2 .k-val { color: var(--ink); }
+.kpi2 .k-sub { color: var(--ink3); }
+
+/* ---------------- ตาราง ---------------- */
+.tbl { background: #fff; }
+table.pbi tbody tr:last-child td { border-bottom: none; }
+table.pbi thead th { color: #52504E; }
+
+/* ตารางกว้าง (แผนงาน): หัวคอลัมน์แรกตรึงไว้ */
+.plan th:first-child, .plan td:first-child {
+  position: sticky; left: 0; z-index: 1; background: #fff;
+  box-shadow: 1px 0 0 #EAECF0;
+}
+.plan thead th:first-child { z-index: 3; background: #F9FAFB; }
+.plan tbody tr:nth-child(even) td:first-child { background: #FCFCFD; }
+.plan tbody tr:hover td:first-child { background: #F5F9FF; }
+.plan tbody tr.grand td:first-child { background: #EFF8FF; }
+
+/* ---------------- แถบแท็บด้านล่าง ---------------- */
+.pbi-pagetabs { background: #fff; box-shadow: 0 -1px 0 var(--line); }
+.pbi-tab {
+  border-radius: 8px 8px 0 0; margin-top: 5px;
+  color: #667085; font-weight: 600; letter-spacing: .1px;
+}
+.pbi-tab:hover { background: #F2F4F7; color: var(--ink); }
+.pbi-tab.active {
+  background: #EFF8FF; color: #0B5CAB; font-weight: 700;
+  box-shadow: none;
+}
+.pbi-tab.active::after {
+  content: ''; position: absolute; left: 9px; right: 9px; bottom: 0; height: 3px;
+  border-radius: 99px 99px 0 0; background: var(--brand);
+}
+
+/* ---------------- เมนูซ้าย ---------------- */
+.pbi-nav { padding: 12px 10px 22px; }
+.nav-group { margin-bottom: 14px; }
+.nav-group > h4 {
+  font-size: 10px; font-weight: 700; letter-spacing: .9px;
+  color: var(--ink3); margin: 0 0 6px 10px;
+}
+.nav-item {
+  border-radius: 8px; padding: 7px 10px; font-size: 12.5px;
+  color: #344054; transition: background .12s, color .12s;
+}
+.nav-item:hover { background: #F2F4F7; }
+.nav-item.active {
+  background: #EFF8FF; color: #0B5CAB; font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--brand);
+}
+.nav-item .ico { border-radius: 5px; background: #F2F4F7; color: #667085; font-size: 9.5px; }
+.nav-item.active .ico { background: var(--brand); color: #fff; }
+
+/* ---------------- ตัวควบคุมใน top bar ให้สูงเท่ากันหมด ---------------- */
+.fsel .pbi-select { height: 32px; }
+.pbi-filters .fdrop > summary { line-height: 1; }
+.pbi-input { height: 32px; }
+
+/* ข้อมูลชุดที่โหลด: 2 บรรทัดเป๊ะ ไม่ดัน top bar ให้สูง */
+.pbi-dataset { max-width: 270px; line-height: 1.45; }
+.pbi-dataset > * { display: block; }
+.pbi-dataset em {
+  font-style: normal; font-weight: 700; color: #0B5CAB;
+  background: #EFF8FF; border-radius: 6px; padding: 0 5px;
+}
+
+/* ---------------- กราฟ/legend ---------------- */
+.chart-legend { color: var(--ink2); font-weight: 600; }
+.chart-legend .sw { box-shadow: inset 0 0 0 1px rgba(16, 24, 40, .08); }
+.fc { border-radius: 12px; }
+.fc .big { letter-spacing: -.8px; }
+
+/* แท่งตั้ง: ไม่มีแถวเลขลอยด้านบนแล้ว → พื้นที่แท่งสูงขึ้น ปรับเส้น overlay ให้ตรง */
+.cols-line { top: 0; bottom: 17px; }
+.col-bar { position: relative; }
+.bar-out {
+  position: absolute; bottom: 100%; left: 0; right: 0; margin-bottom: 1px;
+  text-align: center; font-size: 10px; font-weight: 700; font-style: normal;
+  color: #475467; white-space: nowrap; pointer-events: none;
+  font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.col.sel .bar-out, .col:hover .bar-out { color: #0B4C8C; }
+
+/* ค่าเส้นการติดตั้ง: ป้ายขาวทึบ อ่านแยกจากเลขในแท่ง */
+.cols-line .pt-v {
+  transform: translate(-50%, -180%);
+  background: #fff; border: 1px solid #FDA29B; border-radius: 6px;
+  padding: 0 3px; box-shadow: 0 1px 2px rgba(16, 24, 40, .10);
+}
+
+/* ---------------- สถานะว่าง ---------------- */
+.empty {
+  display: grid; place-items: center; gap: 6px; min-height: 110px;
+  color: var(--ink3); font-size: 12.5px;
+}
+.empty::before { content: '▤'; font-size: 22px; opacity: .28; line-height: 1; }
+
+/* ---------------- เข้าหน้าใหม่แบบนุ่ม ๆ ---------------- */
+@keyframes pgIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.pbi-page.active { animation: pgIn .18s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .pbi-page.active { animation: none; }
+  .card { transition: none; }
+}
+
+/* ---------------- chip ตัวกรองที่เลือกไว้ ---------------- */
+.xf-chip { background: #FEF3F2; }
+.xf-clearall:hover { background: #FEF3F2; }
+
+/* ---------------- ปุ่มในเนื้อหา ---------------- */
+.toolbar .btn, .card .btn {
+  height: 30px; border-radius: 7px; border-color: var(--line);
+  font-size: 12px; font-weight: 600; color: #344054;
+}
+.card .btn:hover, .toolbar .btn:hover { background: #F9FAFB; border-color: #D0D5DD; }
+
+/* ---------------- จอเล็ก ---------------- */
+@media (max-width: 900px) {
+  .pg-head { padding: 10px 12px 8px; }
+  .pg-head h1 { font-size: 15.5px; }
+}
