@@ -297,5 +297,18 @@ body.tab-edit-mode .pbi-tab.active { box-shadow: inset 0 0 0 1.5px #118DFF; }
   justify-content: flex-start; width: 100%;
 }
 
+/* ป้ายสรุปเงินสด/ผ่อน เหนือกราฟรายวัน */
+.pkg-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pkg-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid #E4E9F0; background: #FBFCFE; border-radius: 99px;
+  padding: 3px 10px 3px 8px; font-size: 11.4px; color: #475569; font-weight: 650;
+  white-space: nowrap;
+}
+.pkg-pill i { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 auto; }
+.pkg-pill b { color: #0F172A; font-weight: 800; }
+.pkg-pill em { font-style: normal; font-size: 10.5px; color: #98A2B3; font-weight: 700; }
+
+
 
 

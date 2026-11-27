@@ -1340,11 +1340,17 @@
         { name: 'Rev (ล้านบาท)', values: revArr, color: C.gold, dashed: true }
       ]), { hint: 'รายวัน' });
     h += card(4, 'Product / Unit', donut(byProduct.slice(0, 6), { field: 'group' }));
+    const pkgTot = byPkg.reduce((a, b) => a + b.value, 0) || 1;
+    const pkgPills = '<div class="pkg-pills">' + byPkg.slice().sort((a, b) => b.value - a.value).map((p, i) =>
+      '<span class="pkg-pill"><i style="background:' + (p.label === 'เงินสด' ? C.cyan : C.navy) + '"></i>' +
+      esc(stripNum(p.label)) + ' <b>' + num(p.value) + '</b><em>' + Math.round(p.value / pkgTot * 100) + '%</em></span>').join('') + '</div>';
     h += card(6, 'เงินสด / ผ่อน (รายวัน)',
-      multiLine(dayKeys.map(String), [
-        { name: 'ผ่อน', values: instArr, color: C.navy },
-        { name: 'เงินสด', values: cashArr, color: C.cyan }
-      ]) + donut(byPkg, { field: 'pkg' }));
+      '<div class="stk-wrap">' + pkgPills +
+        multiLine(dayKeys.map(String), [
+          { name: 'ผ่อน', values: instArr, color: C.navy },
+          { name: 'เงินสด', values: cashArr, color: C.cyan }
+        ], { height: 168 }) +
+      '</div>', { hint: 'จำนวน SO ต่อวัน' });
     h += card(6, 'Top 5 (Team)', hbars(topTeam, baht, { field: 'team', pct: sum(rs, 'revenue') }), { hint: 'ราคาสุทธิ · % ของทั้งหมด' });
     h += card(7, 'ลูกค้า (Top 15 ตามยอดขาย)', cusTbl);
     h += card(5, 'หน่วยตามทีม', hbars([...new Map(rsT.map(d => [d.team || '(ไม่ระบุ)', 0])).keys()].map(k => ({
