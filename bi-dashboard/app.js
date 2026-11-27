@@ -2014,6 +2014,20 @@
     if (wi) wi.onclick = () => { const f = $('fileInput'); if (f) f.click(); };
     const wr = $('welcomeReload');
     if (wr) wr.onclick = () => location.reload();
+    /* Monitor Consult: ปุ่ม “ตามแล้ว” → ซ่อนการ์ดงานนั้นในรอบนี้ */
+    document.querySelectorAll('.mon-ack').forEach(b => {
+      b.onclick = () => {
+        const c = b.closest('.mon-fu');
+        if (!c) return;
+        b.textContent = '✓ ตามแล้ว';
+        b.style.borderColor = '#A7F3D0';
+        b.style.background = '#ECFDF5';
+        b.style.color = '#047857';
+        c.style.transition = 'opacity .3s';
+        c.style.opacity = '.45';
+        setTimeout(() => { c.style.display = 'none'; }, 420);
+      };
+    });
   }
 
   const NAV_GROUPS = [
