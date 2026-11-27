@@ -1317,12 +1317,15 @@
       cusMap.set(k, o);
     });
     const cus = [...cusMap.entries()].sort((a, b) => b[1].r - a[1].r).slice(0, 15);
-    let cusTbl = '<div class="tbl"><table class="pbi"><thead><tr><th>ชื่อลูกค้า</th><th class="num">Unit</th><th class="num">Revenue</th></tr></thead><tbody>';
+    let cusTbl = '<div class="tbl"><table class="pbi"><thead><tr><th>ชื่อลูกค้า</th><th class="num">Unit</th>' +
+      '<th class="num">Revenue <span style="font-size:9px;color:#0B5CAB">▼</span></th></tr></thead><tbody>';
     cus.forEach(e => {
-      cusTbl += '<tr><td>' + esc(String(e[0]).slice(0, 34)) + '</td><td class="num">' + num(e[1].u) + '</td><td class="num">' + baht(e[1].r) + '</td></tr>';
+      cusTbl += '<tr><td>' + esc(String(e[0]).slice(0, 34)) + '</td><td class="num">' + num(e[1].u) + '</td>' +
+        '<td class="num"><b>' + baht(e[1].r) + '</b></td></tr>';
     });
     cusTbl += '<tr class="grand"><td>Total</td><td class="num">' + num(sum(rs, 'units')) + '</td><td class="num">' + baht(sum(rs, 'revenue')) + '</td></tr></tbody></table></div>' +
       '<div style="padding:6px 9px 2px;font-size:10.5px;color:#98A2B3;line-height:1.45">' +
+      'เรียงตาม <b style="color:#475569">Revenue มาก → น้อย</b> (Unit จึงไม่เรียงตามลำดับ เพราะบางราย Unit น้อยแต่ราคาต่อเครื่องสูง) · ' +
       'แสดง ' + cus.length + ' จาก ' + cusMap.size + ' ราย · ยอด Total คิดจากลูกค้าทั้งหมด</div>';
 
     let h = pgHead('1.Unit / Revenue', rs);
@@ -1352,7 +1355,7 @@
         ], { height: 168, legend: false }) +
       '</div>', { hint: 'จำนวน SO ต่อวัน' });
     h += card(6, 'Top 5 (Team)', hbars(topTeam, baht, { field: 'team', pct: sum(rs, 'revenue') }), { hint: 'ราคาสุทธิ · % ของทั้งหมด' });
-    h += card(7, 'ลูกค้า (Top 15 ตามยอดขาย)', cusTbl);
+    h += card(7, 'ลูกค้า (Top 15 ตามยอดขาย)', cusTbl, { hint: 'เรียงตาม Revenue ▼' });
     h += card(5, 'หน่วยตามทีม', hbars([...new Map(rsT.map(d => [d.team || '(ไม่ระบุ)', 0])).keys()].map(k => ({
       label: k, value: rsT.filter(d => (d.team || '(ไม่ระบุ)') === k).reduce((a, d) => a + (d.units || 0), 0)
     })).sort((a, b) => b.value - a.value).slice(0, 10), num, { field: 'team', pct: sum(rs, 'units') }), { hint: 'จำนวนเครื่อง · % ของทั้งหมด' });
