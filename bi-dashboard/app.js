@@ -26,8 +26,16 @@
     '3.1.Cancel-Detail', 'P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape',
     'P5.Transport', 'P6.Technician', 'Aging (21 Day)', 'Report ติดตั้ง', 'ยกเลิก / มัดจำ', 'วัน'
   ];
-  /* หน้าที่มีเพิ่มในเว็บ (ไม่มีใน PBI) — เปิดจากเมนู ☰ เท่านั้น */
-  const EXTRA_PAGES = ['1.Unit / Revenue New', 'Product end2end-Detail', 'All Job/Close', '1.Revenue', 'Status (Back log)', 'Status (New)', 'Report สัญญา'];
+  /* หน้าที่มีเพิ่มในเว็บ (ไม่มีใน PBI) — เปิดจากเมนู "⋯ เพิ่มเติม" เท่านั้น */
+  const EXTRA_PAGES = ['1.Unit / Revenue New', 'Product end2end-Detail', 'All Job/Close', 'Report สัญญา'];
+  /* ชื่อที่แสดงในเมนู/หัวหน้า (อ่านง่ายกว่าชื่อคีย์เดิม) */
+  const EXTRA_LABEL = {
+    '1.Unit / Revenue New': 'ยอดขาย / Unit รายเดือน',
+    'Product end2end-Detail': 'สินค้า end-to-end',
+    'All Job/Close': 'ตารางรายละเอียดทุกใบงาน',
+    'Report สัญญา': 'รายงานสัญญา ตามทีม / สถานะ Admin'
+  };
+  const EXTRA_TITLE_OF = p => EXTRA_LABEL[p] || p;
   const IMPLEMENTED = {
     'Summary': 'summary',
     'Daily Admin': 'overview', 'Status (New)': 'status',
@@ -53,8 +61,8 @@
     'P5.Transport': { dim: 'province', dim2: 'team', metric: 'count', title: 'P5 · Transport (ขนส่ง)' },
     'P6.Technician': { dim: 'team', dim2: 'prodCat', metric: 'count', title: 'P6 · Technician' },
     'Aging (21 Day)': { dim: 'team', dim2: 'status3', metric: 'count', filter: d => d.slaClose != null && d.slaClose > 21, title: 'งานค้างเกิน 21 วัน' },
-    '1.Unit / Revenue New': { dim: 'monthLabel', dim2: 'team', metric: 'revenue', title: 'Unit / Revenue รายเดือน' },
-    'Product end2end-Detail': { dim: 'group', dim2: 'prodCat', metric: 'units', title: 'สินค้าแบบ end-to-end' },
+    '1.Unit / Revenue New': { dim: 'monthLabel', dim2: 'team', metric: 'revenue', title: 'ยอดขายรายเดือน' },
+    'Product end2end-Detail': { dim: 'group', dim2: 'prodCat', metric: 'units', title: 'สินค้า end-to-end' },
     '1.Revenue': { dim: 'team', dim2: 'group', metric: 'revenue', title: 'Revenue ตามทีม / กลุ่มสินค้า' },
     'Status (Back log)': { dim: 'status3', dim2: 'team', metric: 'count', title: 'Backlog ตามสถานะ' },
     'Report ติดตั้ง': { dim: 'team', dim2: 'province', metric: 'units', title: 'รายงานการติดตั้ง' },
@@ -1014,7 +1022,7 @@
     });
     body += '</tbody></table></div>';
 
-    return pgHead('All Job / Close · รายละเอียด', rs) + '<div class="g">' +
+    return pgHead('ตารางรายละเอียดทุกใบงาน', rs) + '<div class="g">' +
       card(12, 'รายละเอียด (ค่าที่คำนวณตามสูตรจริง)', body, { cls: 'fill' }) + '</div>';
   }
 
@@ -1590,7 +1598,7 @@
     const filterNote = { '2.Pending': 'เฉพาะงาน 2.Pending', '2.1.Pending-Detail': 'เฉพาะงาน 2.Pending',
       '3.Cancel': 'เฉพาะงาน 3.Cancel', '3.1.Cancel-Detail': 'เฉพาะงาน 3.Cancel' }[name] || 'ตามเงื่อนไขหน้านี้';
 
-    let h = pgHead(name, data);
+    let h = pgHead(EXTRA_TITLE_OF(name), data);
     h += '<div class="g">';
     h += kpiCard(3, 'จำนวน SO', num(soCount), C.navy, 'ไม่นับซ้ำ');
     h += kpiCard(3, 'Revenue (ราคาสุทธิ)', baht(rev), C.orange, 'ตามสูตรในไฟล์');
@@ -1705,7 +1713,7 @@
     if (list) {
       list.innerHTML = EXTRA_PAGES.map(p => {
         const k = pageKey(p);
-        return '<button class="more-item' + (k === S.page ? ' active' : '') + '" data-page="' + esc(k) + '">' + esc(p) + '</button>';
+        return '<button class="more-item' + (k === S.page ? ' active' : '') + '" data-page="' + esc(k) + '" title="' + esc(p) + '">' + esc(EXTRA_TITLE_OF(p)) + '</button>';
       }).join('');
       list.querySelectorAll('.more-item').forEach(b => {
         b.onclick = () => {
