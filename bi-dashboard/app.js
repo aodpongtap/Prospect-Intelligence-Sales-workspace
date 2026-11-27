@@ -36,6 +36,9 @@
     'Report สัญญา': 'รายงานสัญญา ตามทีม / สถานะ Admin'
   };
   const EXTRA_TITLE_OF = p => EXTRA_LABEL[p] || p;
+  /* ชื่อที่แสดงของหน้า PBI (คีย์เดิมคงไว้เพื่อไม่ให้กระทบ snapshot/ลิงก์) */
+  const PAGE_LABEL = { 'P3.Consult': 'Monitor Consult' };
+  const pageLabel = p => PAGE_LABEL[p] || p;
   const IMPLEMENTED = {
     'Summary': 'summary',
     'Daily Admin': 'overview', 'Status (New)': 'status',
@@ -1834,7 +1837,7 @@
     const filterNote = { '2.Pending': 'เฉพาะงาน 2.Pending', '2.1.Pending-Detail': 'เฉพาะงาน 2.Pending',
       '3.Cancel': 'เฉพาะงาน 3.Cancel', '3.1.Cancel-Detail': 'เฉพาะงาน 3.Cancel' }[name] || 'ตามเงื่อนไขหน้านี้';
 
-    let h = pgHead(EXTRA_TITLE_OF(name), data);
+    let h = pgHead(pageLabel(name), data);
     h += '<div class="g">';
     h += kpiCard(3, 'จำนวน SO', num(soCount), C.navy, 'ไม่นับซ้ำ');
     h += kpiCard(3, 'Revenue (ราคาสุทธิ)', baht(rev), C.orange, 'ตามสูตรในไฟล์');
@@ -2024,7 +2027,7 @@
         n++;
         const k = pageKey(p);
         return '<button class="nav-item' + (k === S.page ? ' active' : '') + '" data-page="' + esc(k) + '" title="' + esc(p) + '">' +
-          '<span class="ico">' + n + '</span><span class="lbl">' + esc(p) + '</span></button>';
+          '<span class="ico">' + n + '</span><span class="lbl">' + esc(pageLabel(p)) + '</span></button>';
       }).join('') + '</div>'
     ).join('');
     nav.querySelectorAll('.nav-item').forEach(b => {
@@ -2070,7 +2073,7 @@
     tabs.innerHTML = items.map((it, i) =>
       '<button class="pbi-tab' + (it.k === S.page ? ' active' : '') + '" data-page="' + esc(it.k) + '">' +
       (editOn ? '<i class="tab-mv" data-mv="-1" data-i="' + i + '" title="เลื่อนไปทางซ้าย">◀</i>' : '') +
-      '<span class="tab-tx">' + esc(it.n) + '</span>' +
+      '<span class="tab-tx">' + esc(pageLabel(it.n)) + '</span>' +
       (editOn ? '<i class="tab-mv" data-mv="1" data-i="' + i + '" title="เลื่อนไปทางขวา">▶</i>' : '') +
       '</button>').join('') +
       '<button class="pbi-tab tab-edit' + (editOn ? ' on' : '') + '" id="tabEdit" title="จัดลำดับหน้าเอง (บันทึกไว้ในเครื่องนี้)">' +
