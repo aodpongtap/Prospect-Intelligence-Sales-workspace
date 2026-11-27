@@ -1863,7 +1863,7 @@
           '<span style="margin-left:auto;font-size:11px;color:#98A2B3">เรียงตามอายุงานมากสุด · กด “ตามแล้ว” = ติ๊กคงอยู่ถึงสิ้นเดือน</span>' +
           (ackSet.size ? '<button id="monAckClear" class="btn" style="height:24px;padding:0 9px;border-radius:7px;border:1px solid #E4E9F0;background:#fff;color:#64748B;font:inherit;font-size:10.8px;font-weight:700;cursor:pointer">↺ ล้างติ๊กเดือนนี้</button>' : '') +
           '</div>' +
-          '<div style="display:flex;flex-direction:column;gap:9px;max-height:600px;overflow:auto;padding-right:2px">' + board +
+          '<div id="monBoard" style="display:flex;flex-direction:column;gap:9px;max-height:600px;overflow:auto;padding-right:2px">' + board +
             (pend.length > 15 ? '<div style="font-size:11px;color:#98A2B3;text-align:center;padding:6px 0">แสดง 15 จาก ' + num(pend.length) + ' งาน (เรียงตามอายุงานมากสุด)</div>' : '') +
             '</div></div>' +
         '<div style="display:flex;flex-direction:column;gap:12px">' +
@@ -2157,24 +2157,32 @@
     if (wi) wi.onclick = () => { const f = $('fileInput'); if (f) f.click(); };
     const wr = $('welcomeReload');
     if (wr) wr.onclick = () => location.reload();
-    /* Monitor Consult: “ตามแล้ว” = ติ๊กคงอยู่ (จำรายเดือน) กดซ้ำเพื่อยกเลิก */
+    /* Monitor Consult: “ตามแล้ว” = ติ๊กคงอยู่ (จำรายเดือน) กดซ้ำเพื่อยกเลิก · คงตำแหน่งเลื่อนไว้ */
     document.querySelectorAll('.mon-ack').forEach(b => {
       b.onclick = () => {
         const so = b.getAttribute('data-so');
         if (!so) return;
+        const bd = $('monBoard');
+        const sy = bd ? bd.scrollTop : 0;
         toggleAck(String(S.period || ''), so);
         S.keepScroll = true;
         render();
+        const nb = $('monBoard');
+        if (nb) nb.scrollTop = sy;
       };
     });
     /* ล้างรายการ “ตามแล้ว” ของเดือนนี้ */
     const ackClr = $('monAckClear');
     if (ackClr) ackClr.onclick = () => {
+      const bd = $('monBoard');
+      const sy = bd ? bd.scrollTop : 0;
       const o = loadAck();
       delete o[String(S.period || '')];
       try { localStorage.setItem(ACK_KEY, JSON.stringify(o)); } catch (e) {}
       S.keepScroll = true;
       render();
+      const nb = $('monBoard');
+      if (nb) nb.scrollTop = sy;
     };
   }
 
