@@ -1165,7 +1165,7 @@
       if (!q) return true;
       return (d.customer + ' ' + d.job + ' ' + d.no + ' ' + d.so + ' ' + (d.docNo || '')).toLowerCase().indexOf(q) >= 0;
     });
-    if (!rows.length) return '<tr><td colspan="12" class="sr-empty">ไม่พบดีลที่ตรงกับเงื่อนไข</td></tr>';
+    if (!rows.length) return '<tr><td colspan="13" class="sr-empty">ไม่พบดีลที่ตรงกับเงื่อนไข</td></tr>';
     return rows.map(function (d, i) {
       var s = st(d.status), p = product(d.product), pay = payment(d.payment), ci = cashInOf(d);
       return '<tr class="sr-row" data-sr-deal="' + esc(d.no) + '">'
@@ -1178,7 +1178,8 @@
         + (d.docNo ? '<div class="sr-s2" style="color:#0E9384;font-family:ui-monospace,Menlo,Consolas,monospace"><i class="fa-solid fa-file-invoice"></i> ' + esc(d.docNo) + '</div>' : '') + '</td>'
         + '<td class="sr-num">' + shortDate(d.quoteDate) + '</td>'
         + '<td class="sr-num">' + String(d.month).padStart(2, '0') + '.' + TH_MONTHS[d.month - 1] + ' ' + String(d.year + 543).slice(-2) + '</td>'
-        + '<td><div class="sr-nm">' + esc(sale(d.saleId).name) + '</div><div class="sr-s2">' + esc(teamByCode(sale(d.saleId).team).name) + '</div></td>'
+        + '<td><div class="sr-nm">' + esc(aeNameOf(d) || '-') + '</div><div class="sr-s2">' + esc([d.saleId, teamByCode(sale(d.saleId).team).name].filter(Boolean).join(' · ')) + '</div></td>'
+        + '<td><div class="sr-nm">' + esc(userNameOf(d.ownerEmail) || '-') + '</div><div class="sr-s2">' + esc(d.createdAt ? shortDate(String(d.createdAt).slice(0, 10)) : '') + '</div></td>'
         + '<td><span class="sr-dot" style="background:' + p.color + '"></span>' + esc(p.short) + '</td>'
         + '<td class="sr-num sr-strong">' + money(d.amount) + '</td>'
         + '<td>' + esc(pay.name) + '</td>'
@@ -1186,6 +1187,33 @@
         + '<td class="sr-note-cell">' + esc(String(d.note).slice(0, 46)) + (String(d.note).length > 46 ? '…' : '') + '</td>'
         + '</tr>';
     }).join('');
+  }
+
+  /* ---------- ชื่อจริงจากชีต Users (AE ผู้รับผิดชอบ / ผู้บันทึก) ---------- */
+  var USERS_BY_MAIL = {};
+  function loadUsersMap(done) {
+    if (!global.PIAuth || !global.PIAuth.seed) { if (done) done(); return; }
+    try {
+      global.PIAuth.seed().then(function (list) {
+        (list || []).forEach(function (u) {
+          var m = String((u && u.email) || '').toLowerCase();
+          if (m) USERS_BY_MAIL[m] = u;
+        });
+        if (done) done();
+      }).catch(function () { if (done) done(); });
+    } catch (e) { if (done) done(); }
+  }
+  function userNameOf(email) {
+    var u = USERS_BY_MAIL[String(email || '').toLowerCase()];
+    return u ? String(u.name || u.email || '') : '';
+  }
+  /** ชื่อ AE ผู้รับผิดชอบ — ใช้ชื่อจริงของเจ้าของดีลก่อน ถ้าไม่มีค่อยใช้รายชื่อ AE */
+  function aeNameOf(d) {
+    var n = userNameOf(d && d.ownerEmail);
+    if (n) return n;
+    var s = sale(d && d.saleId);
+    if (s && s.name && s.name !== s.id) return s.name;
+    return String((d && d.saleId) || '');
   }
 
   function renderDealsTable(list) {
@@ -1204,7 +1232,7 @@
       + '  <div class="sr-tablewrap"><table class="sr-table sr-deals"><thead><tr>'
       + th('no', 'เลขดีล', 'sr-num') + th('status', 'สถานะงาน') + th('customer', 'ชื่องาน / ลูกค้า') + th('so', 'เลข QT / อ้างอิง')
       + th('quoteDate', 'วันที่สร้างใบเสนอราคา', 'sr-num') + th('month', 'เดือนที่คาดว่าจะปิด', 'sr-num')
-      + th('saleId', 'AE ผู้รับผิดชอบ') + th('product', 'สินค้า') + th('amount', 'มูลค่างานประมาณ', 'sr-num')
+      + th('saleId', 'AE ผู้รับผิดชอบ') + '<th>ผู้บันทึก</th>' + th('product', 'สินค้า') + th('amount', 'มูลค่างานประมาณ', 'sr-num')
       + th('payment', 'รูปแบบการซื้อ') + th('cashIn', 'Cash In', 'sr-num') + '<th>หมายเหตุ</th>'
       + '  </tr></thead><tbody id="srDealBody">' + dealRowsHtml(list) + '</tbody></table></div>'
       + '  <div class="sr-foot" id="srDealCount">แสดง ' + sortRows(list).filter(function (d) {
@@ -2532,7 +2560,8 @@
       + '  <div><small>สถานะงาน</small><strong><span class="sr-badge ' + s.cls + '">' + d.status + ' · ' + esc(s.label) + '</span></strong></div>'
       + '  <div><small>มูลค่างานประมาณ</small><strong>' + money(d.amount) + '</strong></div>'
       + '  <div><small>Cash In คาดรับ</small><strong>' + (cashInOf(d) ? money(cashInOf(d)) : '—') + '</strong></div>'
-      + '  <div><small>AE ผู้รับผิดชอบ</small><strong>' + esc(sale(d.saleId).name) + '</strong></div>'
+      + '  <div><small>AE ผู้รับผิดชอบ</small><strong>' + esc(aeNameOf(d) || '-') + '</strong></div>'
+      + '  <div><small>ผู้บันทึก</small><strong>' + esc(userNameOf(d.ownerEmail) || '-') + '</strong></div>'
       + '  <div><small>สินค้า</small><strong>' + esc(p.name) + '</strong></div>'
       + '  <div><small>รูปแบบการซื้อ</small><strong>' + esc(pay.name) + '</strong></div>'
       + '  <div><small>วันที่สร้างใบเสนอราคา</small><strong>' + shortDate(d.quoteDate) + '</strong></div>'
@@ -3349,4 +3378,11 @@
     getDeals: function () { return DEALS; },
     calc: { summarize: summarize, kpis: kpis, filtered: filteredDeals, cashIn: cashInOf }
   };
+
+  /* โหลดชื่อจริงของผู้ใช้ (AE / ผู้บันทึก) แล้ววาดหน้าใหม่ให้แสดงชื่อ */
+  try {
+    loadUsersMap(function () {
+      if (typeof global.render === 'function') { try { global.render(); } catch (e) {} }
+    });
+  } catch (e) {}
 })(window);
