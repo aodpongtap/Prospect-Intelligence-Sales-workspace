@@ -241,9 +241,7 @@
     let h = keys.map(f =>
       '<span class="xf-chip">' + esc(XF_NAME[f] || f) + ' = ' + esc([...S.xf[f]].join(', ')) +
       ' <button data-xfc="' + esc(f) + '" title="ล้างตัวกรองนี้">✕</button></span>').join('');
-    if (keys.length > 1 || keys.some(f => S.xf[f].size > 1)) {
-      h += '<button class="xf-clearall" id="xfClearAll">ล้างทั้งหมด</button>';
-    }
+    h += '<button class="xf-clearall" id="xfClearAll">ล้างทั้งหมด</button>';
     return h;
   }
   function xfAttr(field, value) {
