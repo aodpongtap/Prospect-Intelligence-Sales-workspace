@@ -21,9 +21,9 @@
   /* หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) — เพิ่ม Summary เป็นหน้าแรก */
   const PBI_PAGES = [
     'Summary',
-    'Daily Admin', 'End of Mth', '2.SO Order Status', '1.Unit / Revenue', 'SML', 'Pack สด/ผ่อน',
+    'Daily Admin', 'End of Mth', '2.SO Order Status', '1.Unit / Revenue', 'SML', 'P3.Consult', 'Pack สด/ผ่อน',
     '2.Pending', '2.1.Pending-Detail', 'Map', 'Performance/TAT', '3.Cancel',
-    '3.1.Cancel-Detail', 'P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape',
+    '3.1.Cancel-Detail', 'P1.Sale/Admin', 'P2.Checker', 'P4.Sale Scape',
     'P5.Transport', 'P6.Technician', 'Aging (21 Day)', 'Report ติดตั้ง', 'ยกเลิก / มัดจำ', 'วัน'
   ];
   /* หน้าที่มีเพิ่มในเว็บ (ไม่มีใน PBI) — เปิดจากเมนู "⋯ เพิ่มเติม" เท่านั้น */
@@ -1933,21 +1933,66 @@
     if (fold) fold.onclick = toggleNav;
   }
 
+  /* ---------- ลำดับแท็บที่ผู้ใช้จัดเอง (จำไว้ใน localStorage) ---------- */
+  const TAB_ORDER_KEY = 'bi.tabOrder';
+  let TAB_EDIT = false;
+  function loadTabOrder() {
+    try { const a = JSON.parse(localStorage.getItem(TAB_ORDER_KEY) || '[]'); return Array.isArray(a) ? a : []; }
+    catch (e) { return []; }
+  }
+  function saveTabOrder(arr) {
+    try { localStorage.setItem(TAB_ORDER_KEY, JSON.stringify(arr || [])); } catch (e) {}
+  }
+  /* คืนรายการแท็บตามลำดับที่บันทึกไว้ + หน้าที่เพิ่มใหม่ต่อท้าย */
+  function orderedTabs() {
+    const all = PBI_PAGES.map(n => ({ k: pageKey(n), n: n }));
+    const keys = all.map(x => x.k);
+    const saved = loadTabOrder().filter(k => keys.indexOf(k) >= 0 && keys.indexOf(k) === keys.lastIndexOf(k));
+    const out = saved.map(k => all.find(x => x.k === k));
+    all.forEach(x => { if (saved.indexOf(x.k) < 0) out.push(x); });
+    return out;
+  }
+  function moveTab(i, dir) {
+    const keys = orderedTabs().map(x => x.k);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= keys.length) return;
+    const t = keys[i]; keys[i] = keys[j]; keys[j] = t;
+    saveTabOrder(keys);
+    buildTabs();
+  }
+
   function buildTabs() {
     const tabs = $('pageTabs');
     if (!tabs) return;
-    tabs.innerHTML = PBI_PAGES.map(name => {
-      const k = pageKey(name);
-      return '<button class="pbi-tab' + (k === S.page ? ' active' : '') + '" data-page="' + esc(k) + '">' + esc(name) + '</button>';
-    }).join('');
-    tabs.querySelectorAll('.pbi-tab').forEach(b => {
+    const items = orderedTabs();
+    const editOn = TAB_EDIT;
+    tabs.innerHTML = items.map((it, i) =>
+      '<button class="pbi-tab' + (it.k === S.page ? ' active' : '') + '" data-page="' + esc(it.k) + '">' +
+      (editOn ? '<i class="tab-mv" data-mv="-1" data-i="' + i + '" title="เลื่อนไปทางซ้าย">◀</i>' : '') +
+      '<span class="tab-tx">' + esc(it.n) + '</span>' +
+      (editOn ? '<i class="tab-mv" data-mv="1" data-i="' + i + '" title="เลื่อนไปทางขวา">▶</i>' : '') +
+      '</button>').join('') +
+      '<button class="pbi-tab tab-edit' + (editOn ? ' on' : '') + '" id="tabEdit" title="จัดลำดับหน้าเอง (บันทึกไว้ในเครื่องนี้)">' +
+      (editOn ? '✓ เสร็จ' : '⇄ ย้ายหน้า') + '</button>' +
+      (editOn ? '<button class="pbi-tab tab-edit" id="tabReset" title="คืนลำดับเริ่มต้น">↺ คืนค่าเดิม</button>' : '');
+
+    tabs.querySelectorAll('.pbi-tab[data-page]').forEach(b => {
       b.onclick = () => {
+        if (TAB_EDIT) return;                 /* โหมดย้ายหน้า: คลิกแท็บไม่เปลี่ยนหน้า */
         S.page = b.dataset.page; S.pageIdx = 0; render();
         b.scrollIntoView({ block: 'nearest', inline: 'center' });
       };
     });
+    tabs.querySelectorAll('.tab-mv').forEach(el => {
+      el.onclick = e => { e.stopPropagation(); moveTab(Number(el.dataset.i), Number(el.dataset.mv)); };
+    });
+    const ed = $('tabEdit');
+    if (ed) ed.onclick = () => { TAB_EDIT = !TAB_EDIT; buildTabs(); };
+    const rs = $('tabReset');
+    if (rs) rs.onclick = () => { saveTabOrder([]); buildTabs(); };
+
     const act = tabs.querySelector('.pbi-tab.active');
-    if (act) act.scrollIntoView({ block: 'nearest', inline: 'center' });
+    if (act && !TAB_EDIT) act.scrollIntoView({ block: 'nearest', inline: 'center' });
   }
 
   function toggleNav() {
