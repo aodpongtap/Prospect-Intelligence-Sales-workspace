@@ -352,13 +352,27 @@
     return field ? ' data-xf="' + esc(field + '|' + value) + '"' : '';
   }
 
+  /* ป้าย '(ว่าง)' ให้อ่านรู้เรื่องเป็น 'ไม่ระบุ' (ใช้เฉพาะตอนแสดงผล ไม่กระทบตัวกรอง) */
+  const BLANK_LAB = /^\(?\s*(ว่าง|ไม่ระบุ|-)\s*\)?$/;
+  function dispLab(v) {
+    const t = String(v == null ? '' : v).trim();
+    return BLANK_LAB.test(t) ? 'ไม่ระบุ' : t;
+  }
+
   /* แท่งแนวนอน: label | track | value  (ไม่ทับกันเด็ดขาด) */
   function hbars(data, fmt, o) {
     o = o || {};
     if (!data || !data.length) return empty();
-    const f = fmt || num;
+    /* ตัดรายการค่า 0 ออก (แท่งเปล่าไม่ได้บอกอะไร) เว้นแต่ขอเก็บ */
+    if (!o.keepZero) { const nz = data.filter(d => Math.abs(Number(d.value) || 0) > 0); if (nz.length) data = nz; }
+    let f = fmt || num;
+    /* เงิน: ใช้หน่วยเดียวกันทั้งลิสต์ (ลบ. หรือ บาท) ไม่ให้ปนกัน */
+    if (o.money || f === baht) {
+      const mx = Math.max.apply(null, data.map(d => Math.abs(d.value) || 0));
+      f = mx >= 1e6 ? (v => (v / 1e6).toFixed(2) + ' ลบ.') : baht;
+    }
     const max = Math.max.apply(null, data.map(d => d.value)) || 1;
-    const chars = Math.max.apply(null, data.map(d => String(d.label).length));
+    const chars = Math.max.apply(null, data.map(d => String(dispLab(d.label)).length));
     const lw = o.labelW || Math.min(230, Math.max(96, Math.round(chars * 7.2) + 8));
     const totPct = o.pct === true ? (data.reduce((a, x) => a + x.value, 0) || 1)
       : (typeof o.pct === 'number' && o.pct > 0 ? o.pct : 0);
@@ -367,12 +381,12 @@
       const p = Math.max(1.2, Math.min(100, d.value / max * 100));
       const col = d.color || (o.palette ? PALETTE[i % PALETTE.length] : 'linear-gradient(90deg,#7EA6FF,#118DFF)');
       const sel = xfHas(o.field, d.label);
-      const lab = o.keepNum ? String(d.label) : stripNum(d.label);
+      const lab = dispLab(o.keepNum ? String(d.label) : stripNum(d.label));
       h += '<div class="hbar' + (sel ? ' sel' : '') + '"' + xfAttr(o.field, d.label) +
         ' title="' + esc(lab) + ' · ' + f(d.value) + (totPct ? ' (' + (d.value / totPct * 100).toFixed(1) + '%)' : '') + '">' +
         '<span class="hb-lab">' + esc(lab) + '</span>' +
         '<span class="hb-track"><i class="hb-fill" style="width:' + p.toFixed(1) + '%;background:' + col + '"></i></span>' +
-        '<span class="hb-val">' + f(d.value) + (totPct ? '<em>' + (d.value / totPct * 100).toFixed(0) + '%</em>' : '') + '</span></div>';
+        '<span class="hb-val">' + f(d.value) + (totPct ? ' <em>' + (d.value / totPct * 100).toFixed(0) + '%</em>' : '') + '</span></div>';
     });
     return h + '</div>';
   }
@@ -441,7 +455,7 @@
     const leg = list.map((d, i) =>
       '<div class="lg' + (xfHas(o.field, d.label) ? ' sel' : '') + '"' + xfAttr(o.field, d.label) + '>' +
       '<i style="background:' + PALETTE[i % PALETTE.length] + '"></i>' +
-      '<span title="' + esc(d.label) + '">' + esc(d.label) + '</span>' +
+      '<span title="' + esc(dispLab(d.label)) + '">' + esc(dispLab(d.label)) + '</span>' +
       '<b>' + num(d.value) + '</b><em>' + (d.value / tot * 100).toFixed(0) + '%</em></div>').join('');
     return '<div class="donut-wrap"><div class="donut" style="background:conic-gradient(' + stops.join(',') + ')">' +
       '<div class="donut-c"><b>' + num(tot) + '</b><span>รวม</span></div></div>' +
@@ -609,8 +623,8 @@
     const max = Math.max.apply(null, totals) || 1;
     let h = '<div class="stk">';
     rows.forEach((r, i) => {
-      h += '<div class="stk-row" title="' + esc(r.label) + ' · รวม ' + f(totals[i]) + '">' +
-        '<span class="stk-lab">' + esc(r.label) + '</span><span class="stk-track">';
+      h += '<div class="stk-row" title="' + esc(dispLab(r.label)) + ' · รวม ' + f(totals[i]) + '">' +
+        '<span class="stk-lab">' + esc(dispLab(r.label)) + '</span><span class="stk-track">';
       r.segs.forEach(s => {
         if (s.v > 0) h += '<i style="width:' + (s.v / max * 100).toFixed(2) + '%;background:' + s.color + '" title="' +
           esc(s.name) + ' · ' + f(s.v) + '"></i>';
@@ -1354,7 +1368,7 @@
           { name: 'เงินสด', values: cashArr, color: C.cyan }
         ], { height: 168, legend: false }) +
       '</div>', { hint: 'จำนวน SO ต่อวัน' });
-    h += card(6, 'Top 5 (Team)', hbars(topTeam, baht, { field: 'team', pct: sum(rs, 'revenue') }), { hint: 'ราคาสุทธิ · % ของทั้งหมด' });
+    h += card(6, 'Top 5 (Team)', hbars(topTeam, baht, { field: 'team', pct: sum(rs, 'revenue'), money: true }), { hint: 'ราคาสุทธิ · % ของทั้งหมด' });
     h += card(7, 'ลูกค้า (Top 15 ตามยอดขาย)', cusTbl, { hint: 'เรียงตาม Revenue ▼' });
     h += card(5, 'หน่วยตามทีม', hbars([...new Map(rsT.map(d => [d.team || '(ไม่ระบุ)', 0])).keys()].map(k => ({
       label: k, value: rsT.filter(d => (d.team || '(ไม่ระบุ)') === k).reduce((a, d) => a + (d.units || 0), 0)
