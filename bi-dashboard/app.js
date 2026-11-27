@@ -189,7 +189,7 @@
   }
 
   /* ============ UI helpers — HTML/CSS ล้วน (คมชัด ไม่ยืด ไม่ตัดข้อความ) ============ */
-  function empty(msg) { return '<div class="empty">' + esc(msg || 'ไม่มีข้อมูลในงวดนี้') + '</div>'; }
+  function empty(msg) { return '<div class="empty">' + esc(msg || 'ไม่มีข้อมูลในเดือนนี้') + '</div>'; }
 
   function shortNum(v) {
     const a = Math.abs(v || 0);
@@ -416,7 +416,7 @@
     const other = rs.length - valid.length;
     let h = '';
     h += kpiCard(4, 'Total SO', num(rs.length), C.navy,
-      other > 0 ? 'ไม่รวมสถานะว่าง ' + num(other) + ' ใบ ในยอดเงิน' : 'ใบสั่งซื้อในงวดนี้');
+      other > 0 ? 'ไม่รวมสถานะว่าง ' + num(other) + ' ใบ ในยอดเงิน' : 'ใบสั่งซื้อในเดือนนี้');
     h += kpiCard(4, 'Rev (ราคาสุทธิ)', baht(rev), C.purple, 'Rev.Total = SUM(revenue) เฉพาะ 3 สถานะ');
     h += kpiCard(4, 'Total Unit', num(units), C.teal, 'SUM(จำนวนเครื่องซักผ้า) เฉพาะ 3 สถานะ');
     h += kpiCard(4, 'Done', num(sp['1.Done'].length), C.green, pc(sp['1.Done'].length));
@@ -587,7 +587,7 @@
 
     let h = pgHead('Daily Admin', rs);
     h += '<div class="g">';
-    h += kpiCard(3, 'จำนวน SO', num(rs.length), C.navy, 'ใบสั่งซื้อในงวดนี้');
+    h += kpiCard(3, 'จำนวน SO', num(rs.length), C.navy, 'ใบสั่งซื้อในเดือนนี้');
     h += kpiCard(3, 'Revenue (ราคาสุทธิ)', baht(rev), C.orange, 'หักส่วนลด ÷1.07 แล้ว');
     h += kpiCard(3, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
     h += kpiCard(3, 'ผ่านการตรวจสอบ', pct.toFixed(0) + '%', C.green, num(pass) + ' / ' + num(rs.length) + ' รายการ');
@@ -914,7 +914,7 @@
     h += kpiCard(3, 'จำนวน SO', num(soCount), C.navy, 'ไม่นับซ้ำ');
     h += kpiCard(3, 'Revenue (ราคาสุทธิ)', baht(rev), C.orange, 'ตามสูตรในไฟล์');
     h += kpiCard(3, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
-    h += kpiCard(3, 'รายการในหน้านี้', num(data.length), C.violet, sp.filter ? 'ตามเงื่อนไขหน้านี้' : 'ทั้งงวด');
+    h += kpiCard(3, 'รายการในหน้านี้', num(data.length), C.violet, sp.filter ? 'ตามเงื่อนไขหน้านี้' : 'ทั้งเดือน');
     h += card(8, sp.title + ' · ตาม ' + sp.dim, chart, { hint: isTime ? 'รายแกนเวลา' : 'เรียงจากมากไปน้อย' });
     h += card(4, sp.dim + ' · สัดส่วน', donut(dData, { field: sp.dim }));
     h += card(12, sp.dim + ' × ' + sp.dim2, pv, { hint: metricTxt });
