@@ -1714,17 +1714,22 @@
 
     /* ── มัดจำ ── */
     const openJobs = rows.filter(d => d.status3 !== '3.Cancel');
-    const depOk = d => String(d.depositStatus || '').indexOf('เรียบร้อย') >= 0 || (d.paidAmount || 0) > 0;
+    const depOk = d => {
+      const s = String(d.depositStatus || '').trim();
+      return (/เรียบร้อย/.test(s) && !/ไม่/.test(s)) || (d.paidAmount || 0) > 0;
+    };
     const depWait = openJobs.filter(d => !depOk(d));
     const depWaitVal = depWait.reduce((a, d) => a + (d.revenue || 0), 0);
     const paidSum = openJobs.reduce((a, d) => a + (d.paidAmount || 0), 0);
 
     /* ── ส่งของ ── */
-    const SHIP_DONE = /จัดส่งแล้ว|ได้รับแล้ว/;
+    const SHIP_DONE = /จัดส่ง|ได้รับแล้ว/;
     const SHIP_MID = /รอตรวจสอบ|รอนัดลูกค้า|นัดลูกค้าแล้ว|ลูกค้าไม่พร้อม/;
     const shipDone = openJobs.filter(d => SHIP_DONE.test(String(d.shipStatus || ''))).length;
     const shipMid = openJobs.filter(d => SHIP_MID.test(String(d.shipStatus || ''))).length;
     const shipNone = openJobs.filter(d => !String(d.shipStatus || '').trim()).length;
+    const shipOpen = openJobs.length - shipDone;                       /* ยังไม่ส่ง = งานเปิดทั้งหมด − ส่งแล้ว */
+    const shipOther = Math.max(0, openJobs.length - shipDone - shipMid - shipNone);
 
     /* ── Consult ── */
     const cOpen = rows.filter(d => dOnly(d.consultStart) && !dOnly(d.consultEnd));
@@ -1832,7 +1837,7 @@
       'ต้องตาม <b>' + num(pend.length) + ' งาน</b> มูลค่า <b>' + baht(pendVal) + '</b>',
       'ค้างเกิน 21 วัน <b>' + num(old21) + ' งาน</b>' + (teamTop.length ? ' · ทีมที่มากสุด <b>' + esc(teamTop[0][0]) + '</b>' : ''),
       'มัดจำยังไม่จ่าย <b>' + num(depWait.length) + ' ใบ</b> · มูลค่า <b>' + baht(depWaitVal) + '</b>',
-      'ยังไม่ส่งของ <b>' + num(shipMid) + ' ใบ</b> · ยังไม่ถึงขั้น <b>' + num(shipNone) + ' ใบ</b>',
+      'ยังไม่ส่งของ <b>' + num(shipOpen) + ' ใบ</b> · ส่งแล้ว <b>' + num(shipDone) + '</b> · รอส่ง <b>' + num(shipMid) + '</b> · ยังไม่ถึงขั้น <b>' + num(shipNone) + '</b>',
       'Cross-sell: ลูกค้า <b>' + num(csTotal) + '</b> ราย ซื้อหลายกลุ่มแค่ <b>' + num(csMulti) + '</b> (' + csPct.toFixed(1) + '%)',
       'SLA ปิดงานเฉลี่ย <b>' + scAvg.toFixed(1) + ' วัน</b> (เป้า 15) · เกินกำหนด <b>' + overPct.toFixed(0) + '%</b>'
     ];
@@ -1909,10 +1914,12 @@
     return kpiCard(3, 'ต้องตามวันนี้', num(pend.length) + ' งาน', C.red, 'มูลค่า ' + baht(pendVal)) +
       kpiCard(3, 'มัดจำยังไม่จ่าย', num(depWait.length) + ' ใบ', depWait.length ? C.gold : C.green,
         'จ่ายแล้ว ' + baht(paidSum) + ' · ค้าง ' + baht(depWaitVal)) +
-      kpiCard(3, 'ยังไม่ส่งของ', num(shipMid) + ' ใบ', shipMid ? C.orange : C.green,
-        'ส่งแล้ว ' + num(shipDone) + ' · ยังไม่ถึงขั้น ' + num(shipNone)) +
+      kpiCard(3, 'ยังไม่ส่งของ', num(shipOpen) + ' ใบ', shipOpen ? C.orange : C.green,
+        'ส่งแล้ว ' + num(shipDone) + ' · รอส่ง ' + num(shipMid) +
+        (shipNone ? ' · ยังไม่ถึงขั้น ' + num(shipNone) : '') +
+        (shipOther ? ' · อื่น ๆ ' + num(shipOther) : '')) +
       kpiCard(3, 'Cross-sell', csPct.toFixed(1) + ' %', csPct >= 20 ? C.green : C.gold,
-        'ซื้อหลายกลุ่ม ' + num(csMulti) + ' จาก ' + num(csTotal) + ' ราย') +
+        'ซื้อหลายกลุ่ม ' + num(csMulti) + ' จาก ' + num(csTotal) + ' ราย (สะสมทุกเดือน)') +
       card(12, '', inner, { hint: '' }) +
       csCard;
   }
