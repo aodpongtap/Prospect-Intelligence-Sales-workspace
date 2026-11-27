@@ -479,8 +479,16 @@
     // ยอดรวมต้องคิดจากข้อมูลทั้งหมด ก่อนตัดคอลัมน์/แถวที่จะแสดง
     let grandTotal = 0;
     cell.forEach(v => { grandTotal += v; });
+    const allR = rks.length, allC = cks.length;
     if (o.maxRows) rks = rks.slice(0, o.maxRows);
     if (o.maxCols) cks = cks.slice(0, o.maxCols);
+    const cutR = allR - rks.length, cutC = allC - cks.length;
+    const cutNote = (cutR > 0 || cutC > 0)
+      ? '<div style="padding:6px 9px 2px;font-size:10.5px;color:#98A2B3;line-height:1.45">' +
+        'แสดง' + (cutR > 0 ? ' ' + rks.length + ' จาก ' + allR + ' แถว' : '') +
+        (cutC > 0 ? (cutR > 0 ? ' · ' : ' ') + cks.length + ' จาก ' + allC + ' คอลัมน์' : '') +
+        ' · ยอด Total คิดจากข้อมูลทั้งหมด ไม่ใช่ผลรวมของแถว/คอลัมน์ที่แสดง</div>'
+      : '';
     let h = '<div class="tbl"><table class="pbi"><thead><tr><th class="rowhead">' + esc(o.rowTitle || '') + '</th>';
     cks.forEach(c => {
       const selC = xfHas(o.colField, c);
@@ -496,7 +504,7 @@
     });
     h += '<tr class="grand"><td class="rowhead">Total</td>';
     cks.forEach(ck => { const v = cm.get(ck); h += '<td class="num">' + (v ? fmt(v) : '') + '</td>'; });
-    h += '<td class="num total">' + fmt(grandTotal) + '</td></tr></tbody></table></div>';
+    h += '<td class="num total">' + fmt(grandTotal) + '</td></tr></tbody></table></div>' + cutNote;
     return h;
   }
 
@@ -1290,7 +1298,9 @@
     cus.forEach(e => {
       cusTbl += '<tr><td>' + esc(String(e[0]).slice(0, 34)) + '</td><td class="num">' + num(e[1].u) + '</td><td class="num">' + baht(e[1].r) + '</td></tr>';
     });
-    cusTbl += '<tr class="grand"><td>Total</td><td class="num">' + num(sum(rs, 'units')) + '</td><td class="num">' + baht(sum(rs, 'revenue')) + '</td></tr></tbody></table></div>';
+    cusTbl += '<tr class="grand"><td>Total</td><td class="num">' + num(sum(rs, 'units')) + '</td><td class="num">' + baht(sum(rs, 'revenue')) + '</td></tr></tbody></table></div>' +
+      '<div style="padding:6px 9px 2px;font-size:10.5px;color:#98A2B3;line-height:1.45">' +
+      'แสดง ' + cus.length + ' จาก ' + cusMap.size + ' ราย · ยอด Total คิดจากลูกค้าทั้งหมด</div>';
 
     let h = pgHead('1.Unit / Revenue', rs);
     h += '<div class="g">';
