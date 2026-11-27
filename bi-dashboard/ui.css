@@ -143,6 +143,12 @@
   position: absolute; width: 6px; height: 6px; margin: -3px 0 0 -3px;
   border-radius: 50%; background: #E5484D; box-shadow: 0 0 0 1.5px #fff;
 }
+.cols-line .pt-v {
+  position: absolute; transform: translate(-50%, -155%);
+  font-size: 10px; font-weight: 700; color: #C0272D; font-style: normal;
+  background: rgba(255, 255, 255, .9); padding: 0 2px; border-radius: 3px;
+  line-height: 1.25; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
 
 /* legend ใต้กราฟ */
 .chart-legend {

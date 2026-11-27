@@ -252,7 +252,10 @@
         '<polyline points="' + pts + '" fill="none" stroke="#E5484D" stroke-width="2" ' +
         'vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>';
       lineArr.forEach((v, i) => {
-        h += '<i class="pt" style="left:' + ((i + 0.5) / n * 100).toFixed(2) + '%;top:' + (100 - (v / lineMax) * 100).toFixed(2) + '%"></i>';
+        const lx = ((i + 0.5) / n * 100).toFixed(2);
+        const ly = (100 - (v / lineMax) * 100).toFixed(2);
+        h += '<i class="pt" style="left:' + lx + '%;top:' + ly + '%"></i>';
+        if (v > 0) h += '<b class="pt-v" style="left:' + lx + '%;top:' + ly + '%">' + num(v) + '</b>';
       });
       h += '</div>';
     }
