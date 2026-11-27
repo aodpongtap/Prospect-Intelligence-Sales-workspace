@@ -20,7 +20,7 @@
 
   /* 21 หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) */
   const PBI_PAGES = [
-    'Daily Admin', 'Estm. End of Mth', '2.SO Order Status', '1.Unit / Revenue', 'SML', 'Pack สด/ผ่อน',
+    'Daily Admin', 'End of Mth', '2.SO Order Status', '1.Unit / Revenue', 'SML', 'Pack สด/ผ่อน',
     '2.Pending', '2.1.Pending-Detail', 'Map', 'Performance/TAT', '3.Cancel',
     '3.1.Cancel-Detail', 'P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape',
     'P5.Transport', 'P6.Technician', 'Aging (21 Day)', 'Report ติดตั้ง', 'ยกเลิก / มัดจำ', 'วัน'
@@ -893,13 +893,67 @@
     dayLabel: 'วันที่', monthLabel: 'เดือน', area: 'พื้นที่'
   };
 
-  /* ===== Estm. End of Mth — ประมาณการสิ้นเดือน ===== */
+  /* กราฟแท่งรายวัน แยกสถานะ (Done/Pending/Cancel) + แท่งประมาณการ + แกน Y */
+  function estBars(labels, data) {
+    const n = labels.length;
+    if (!n) return empty();
+    const tot = i => (data.done[i] || 0) + (data.pend[i] || 0) + (data.canc[i] || 0) + (data.proj[i] || 0);
+    let max = 1;
+    for (let i = 0; i < n; i++) max = Math.max(max, tot(i));
+    const step = Math.max(1, Math.ceil(max / 4));
+    const top = step * 4;
+    const showX = n > 20 ? 2 : 1;
+    let h = '<div class="est"><div class="est-y">';
+    for (let i = 4; i >= 0; i--) h += '<span style="top:' + ((4 - i) / 4 * 100) + '%">' + (step * i) + '</span>';
+    h += '</div><div class="est-plot">';
+    for (let i = 0; i <= 4; i++) h += '<i class="gl" style="top:' + (i / 4 * 100) + '%"></i>';
+    h += '<div class="est-bars">';
+    labels.forEach((lb, i) => {
+      const d0 = data.done[i] || 0, p0 = data.pend[i] || 0, c0 = data.canc[i] || 0, f0 = data.proj[i] || 0;
+      const t = tot(i), hh = t / top * 100;
+      const pctOf = v => (t ? (v / t * 100) : 0);
+      h += '<div class="eb" ' + xfAttr('day', lb) + ' title="วันที่ ' + esc(lb) + ' · รวม ' + num(t) +
+        ' · Done ' + num(d0) + ' · Pending ' + num(p0) + ' · Cancel ' + num(c0) +
+        (f0 ? ' · ประมาณการ ' + num(Math.round(f0)) : '') + '">';
+      if (t) {
+        h += '<div class="stack" style="height:' + hh.toFixed(1) + '%">';
+        if (d0) h += '<i class="s-done" style="height:' + pctOf(d0).toFixed(1) + '%"></i>';
+        if (p0) h += '<i class="s-pend" style="height:' + pctOf(p0).toFixed(1) + '%"></i>';
+        if (c0) h += '<i class="s-canc" style="height:' + pctOf(c0).toFixed(1) + '%"></i>';
+        if (f0) h += '<i class="s-proj" style="height:' + pctOf(f0).toFixed(1) + '%"></i>';
+        h += '</div>';
+      }
+      h += '<span>' + ((i % showX === 0 || i === n - 1) ? esc(lb) : '') + '</span></div>';
+    });
+    h += '</div></div></div>';
+    h += '<div class="chart-legend">' +
+      '<span><i class="sw" style="background:#059669"></i>Done</span>' +
+      '<span><i class="sw" style="background:#F59E0B"></i>Pending</span>' +
+      '<span><i class="sw" style="background:#E11D48"></i>Cancel</span>' +
+      '<span><i class="sw" style="background:repeating-linear-gradient(45deg,#C7CBF7 0 4px,#E7E9FC 4px 8px)"></i>ประมาณการ</span>' +
+      '</div>';
+    return h;
+  }
+
+  /* ===== End of Mth — ประมาณการสิ้นเดือน ===== */
   function monthRowsOf(mthKey) {
     if (!S.data) return [];
     const fT = S.filter.team, fC = S.filter.channel, fG = S.filter.group;
     return S.data.filter(d => {
       if (!isKeepGroup(d.group)) return false;
       if (String(d.mth) !== String(mthKey)) return false;
+      if (fT.size && !fT.has(String(d.team == null ? '' : d.team))) return false;
+      if (fC.size && !fC.has(String(d.channel == null ? '' : d.channel))) return false;
+      if (fG.size && !fG.has(String(d.group == null ? '' : d.group))) return false;
+      return true;
+    });
+  }
+
+  function allFiltered() {
+    if (!S.data) return [];
+    const fT = S.filter.team, fC = S.filter.channel, fG = S.filter.group;
+    return S.data.filter(d => {
+      if (!isKeepGroup(d.group)) return false;
       if (fT.size && !fT.has(String(d.team == null ? '' : d.team))) return false;
       if (fC.size && !fC.has(String(d.channel == null ? '' : d.channel))) return false;
       if (fG.size && !fG.has(String(d.group == null ? '' : d.group))) return false;
@@ -928,26 +982,34 @@
     const prevSo = prevRows.length, prevRev = sum(prevRows, 'revenue'), prevUnits = sum(prevRows, 'units');
     const delta = (a, b) => (b ? ((a - b) / b * 100) : 0);
 
-    /* เส้นสะสม: จริง vs ประมาณการ */
-    const byDay = new Map();
-    rs.forEach(d => { if (d.dateSO) { const k = d.dateSO.getDate(); byDay.set(k, (byDay.get(k) || 0) + 1); } });
-    const labels = [], act = [], fc = [];
-    let acc = 0;
+    /* ข้อมูลรายวันแยกสถานะ + ประมาณการ */
+    const doneD = [], pendD = [], cancD = [], projD = [];
     for (let d = 1; d <= dim; d++) {
-      labels.push(String(d));
-      acc += byDay.get(d) || 0;
-      act.push(d <= elapsed ? acc : null);
-      fc.push(d <= elapsed ? acc : Math.round(acc + rateSo * (d - elapsed)));
+      const list = rs.filter(x => x.dateSO && x.dateSO.getDate() === d);
+      doneD.push(d <= elapsed ? list.filter(x => x.status3 === '1.Done').length : 0);
+      pendD.push(d <= elapsed ? list.filter(x => x.status3 === '2.Pending').length : 0);
+      cancD.push(d <= elapsed ? list.filter(x => x.status3 === '3.Cancel').length : 0);
+      projD.push(d <= elapsed ? 0 : rateSo);
     }
-    const actSeries = act.map(v => (v == null ? (act[elapsed - 1] || 0) : v));   /* ให้เส้นจริงจบที่วันนี้ */
-    const fcSeries = fc;
+    const labels = [];
+    for (let d = 1; d <= dim; d++) labels.push(String(d));
 
-    /* ตารางตามทีม */
+    /* สถานะปัจจุบัน */
+    const nDone = rs.filter(x => x.status3 === '1.Done').length;
+    const nPend = rs.filter(x => x.status3 === '2.Pending').length;
+    const nCanc = rs.filter(x => x.status3 === '3.Cancel').length;
+    const closeRate = (nDone + nPend) ? nDone / (nDone + nPend) : 0;
+    const pendClosable = Math.round(nPend * Math.max(closeRate, 0.5));
+
+    /* ตารางตามทีม (มี Done/Pending) */
     const teamMap = new Map();
     rs.forEach(d => {
       const k = d.team || '(ไม่ระบุ)';
-      const o = teamMap.get(k) || { so: 0, rev: 0, unit: 0 };
-      o.so++; o.rev += d.revenue || 0; o.unit += d.units || 0;
+      const o = teamMap.get(k) || { so: 0, d: 0, p: 0, c: 0 };
+      o.so++;
+      if (d.status3 === '1.Done') o.d++;
+      else if (d.status3 === '2.Pending') o.p++;
+      else if (d.status3 === '3.Cancel') o.c++;
       teamMap.set(k, o);
     });
     const prevTeam = new Map();
@@ -955,44 +1017,117 @@
       const k = d.team || '(ไม่ระบุ)';
       prevTeam.set(k, (prevTeam.get(k) || 0) + 1);
     });
+    const teamList = [...teamMap.entries()].sort((a, b) => b[1].so - a[1].so);
+    const maxFc = Math.max.apply(null, teamList.map(e => Math.round(e[1].so / elapsed * dim)).concat([1]));
     let teamTbl = '<div class="tbl"><table class="pbi"><thead><tr>' +
-      '<th>ทีมขาย</th><th class="num">SO วันนี้</th><th class="num">ต่อวัน</th>' +
-      '<th class="num">ประมาณการ</th><th class="num">เดือนก่อน</th><th class="num">ต่าง %</th></tr></thead><tbody>';
-    [...teamMap.entries()].sort((a, b) => b[1].so - a[1].so).forEach(e => {
+      '<th>ทีมขาย</th><th class="num">SO</th><th class="num">Done</th><th class="num">Pending</th>' +
+      '<th>ประมาณการ</th><th class="num">เดือนก่อน</th><th class="num">ต่าง</th></tr></thead><tbody>';
+    teamList.forEach(e => {
       const t = e[1], fcs = Math.round(t.so / elapsed * dim), pv = prevTeam.get(e[0]) || 0;
-      const dd = pv ? ((fcs - pv) / pv * 100) : 0;
-      teamTbl += '<tr><td>' + esc(e[0]) + '</td><td class="num">' + num(t.so) + '</td><td class="num">' +
-        (t.so / elapsed).toFixed(1) + '</td><td class="num total">' + num(fcs) + '</td><td class="num">' +
-        num(pv) + '</td><td class="num ' + (dd >= 0 ? 'c-done' : 'c-canc') + '">' +
-        (pv ? (dd >= 0 ? '+' : '') + dd.toFixed(0) + '%' : '–') + '</td></tr>';
+      const dd = pv ? ((fcs - pv) / pv * 100) : null;
+      teamTbl += '<tr><td>' + esc(e[0]) + '</td><td class="num">' + num(t.so) + '</td>' +
+        '<td class="num c-done">' + num(t.d) + '</td><td class="num c-pend">' + num(t.p) + '</td>' +
+        '<td><div class="tbcell"><span class="tbar"><i style="width:' + (fcs / maxFc * 100).toFixed(0) + '%"></i></span>' +
+        '<b>' + num(fcs) + '</b></div></td>' +
+        '<td class="num">' + num(pv) + '</td><td class="num ' + (dd == null ? '' : (dd >= 0 ? 'c-done' : 'c-canc')) + '">' +
+        (dd == null ? '–' : (dd >= 0 ? '▲ ' : '▼ ') + Math.abs(dd).toFixed(0) + '%') + '</td></tr>';
     });
-    teamTbl += '<tr class="grand"><td>Total</td><td class="num">' + num(so) + '</td><td class="num">' +
-      rateSo.toFixed(1) + '</td><td class="num">' + num(fcSo) + '</td><td class="num">' + num(prevSo) +
-      '</td><td class="num">' + (prevSo ? (delta(fcSo, prevSo) >= 0 ? '+' : '') + delta(fcSo, prevSo).toFixed(0) + '%' : '–') +
+    teamTbl += '<tr class="grand"><td>Total</td><td class="num">' + num(so) + '</td>' +
+      '<td class="num">' + num(nDone) + '</td><td class="num">' + num(nPend) + '</td>' +
+      '<td><div class="tbcell"><b>' + num(fcSo) + '</b></div></td>' +
+      '<td class="num">' + num(prevSo) + '</td><td class="num">' +
+      (prevSo ? (delta(fcSo, prevSo) >= 0 ? '▲ ' : '▼ ') + Math.abs(delta(fcSo, prevSo)).toFixed(0) + '%' : '–') +
       '</td></tr>';
     teamTbl += '</tbody></table></div>';
 
+    /* ===== ตารางวางแผนตามสินค้า (แบบเดียวกับ Excel) ===== */
+    const all = allFiltered();
+    const curMth = yy * 100 + mm, prevMth = pm.y * 100 + pm.m;
+    const isDone = d => d.status3 === '1.Done';
+    const inCurMonth = dt => dt instanceof Date && !isNaN(dt) && dt.getFullYear() === yy && (dt.getMonth() + 1) === mm;
+
+    const grpNames = [...new Set(rs.map(d => d.group || '(ไม่ระบุ)'))];
+    const plan = grpNames.map(g => {
+      const gcur = rs.filter(d => (d.group || '(ไม่ระบุ)') === g);
+      const gall = all.filter(d => (d.group || '(ไม่ระบุ)') === g);
+      const total = gcur.length;
+      const done = gcur.filter(isDone).length;
+      const pend = gcur.filter(d => d.status3 === '2.Pending').length;
+      const canc = gcur.filter(d => d.status3 === '3.Cancel').length;
+      const booking = pend + canc;                                  /* จอง = ยังไม่ปิดงาน */
+      const carryBefore = gall.filter(d => !isDone(d) && String(d.mth) < String(curMth)).length;
+      const carryPrev = gall.filter(d => !isDone(d) && String(d.mth) === String(prevMth)).length;
+      const prevDoneInst = gall.filter(d => isDone(d) && String(d.mth) === String(prevMth) && inCurMonth(d.installDate)).length;
+      const backlogOld = gall.filter(d => !isDone(d) && Number(d.mth) < 202601).length;
+      const unit = gcur.reduce((a, d) => a + (d.units || 0), 0);
+      const instNow = gcur.filter(d => inCurMonth(d.installDate)).length;
+      return {
+        g: g, total: total, done: done, pend: pend, canc: canc, booking: booking,
+        carryBefore: carryBefore, carryPrev: carryPrev, prevDoneInst: prevDoneInst,
+        backlogOld: backlogOld, unit: unit, instNow: instNow,
+        expInst: Math.round(instNow / elapsed * dim)
+      };
+    }).sort((a, b) => b.total - a.total);
+
+    const sumBy = k => plan.reduce((a, r) => a + r[k], 0);
+    let planTbl = '<div class="tbl"><table class="pbi plan"><thead><tr>' +
+      '<th>กลุ่มสินค้า</th>' +
+      '<th class="num">จอง</th><th class="num">1.Done</th><th class="num">2.Pending</th><th class="num">3.Cancel</th>' +
+      '<th class="num">รวม backlog</th><th class="num">ยกมาจากก่อน</th><th class="num">เดือนก่อนยกมา</th>' +
+      '<th class="num">Done เดือนก่อน·ติดเดือนนี้</th><th class="num">Backlog &lt;1Jan26</th>' +
+      '<th class="num">Total</th><th class="num">Unit</th><th class="num">คาดติดได้เดือนนี้</th>' +
+      '</tr></thead><tbody>';
+    plan.forEach(r => {
+      planTbl += '<tr><td>' + esc(r.g) + '</td>' +
+        '<td class="num">' + num(r.booking) + '</td>' +
+        '<td class="num c-done">' + num(r.done) + '</td>' +
+        '<td class="num c-pend">' + num(r.pend) + '</td>' +
+        '<td class="num c-canc">' + num(r.canc) + '</td>' +
+        '<td class="num">' + num(r.booking) + '</td>' +
+        '<td class="num">' + num(r.carryBefore) + '</td>' +
+        '<td class="num">' + num(r.carryPrev) + '</td>' +
+        '<td class="num">' + num(r.prevDoneInst) + '</td>' +
+        '<td class="num">' + num(r.backlogOld) + '</td>' +
+        '<td class="num total">' + num(r.total) + '</td>' +
+        '<td class="num">' + num(r.unit) + '</td>' +
+        '<td class="num">' + num(r.expInst) + '</td></tr>';
+    });
+    planTbl += '<tr class="grand"><td>Total</td>' +
+      ['booking', 'done', 'pend', 'canc', 'booking', 'carryBefore', 'carryPrev', 'prevDoneInst', 'backlogOld', 'total', 'unit', 'expInst']
+        .map(k => '<td class="num">' + num(sumBy(k)) + '</td>').join('') + '</tr>';
+    planTbl += '</tbody></table></div>';
+
     const pctOfMonth = Math.round(elapsed / dim * 100);
 
-    let h = pgHead('Estm. End of Mth', rs);
+    let h = pgHead('End of Mth', rs);
     h += '<div class="g">';
     h += '<div class="kpirow">';
-    h += kpiCard(2, 'SO ถึงวันนี้', num(so), C.navy, 'ณ วันที่ ' + elapsed + '/' + dim);
-    h += kpiCard(2, 'เฉลี่ยต่อวัน', rateSo.toFixed(1), C.blue, 'ใบ/วัน');
-    h += kpiCard(2, 'ประมาณการ SO สิ้นเดือน', num(fcSo), C.violet, 'อีก ' + left + ' วัน · +' + num(Math.max(fcSo - so, 0)) + ' ใบ');
+    h += kpiCard(3, 'ประมาณการ SO สิ้นเดือน', num(fcSo), C.violet, 'อีก ' + left + ' วัน · +' + num(Math.max(fcSo - so, 0)) + ' ใบ');
+    h += kpiCard(3, 'SO ถึงวันนี้', num(so), C.navy, 'Done ' + num(nDone) + ' · Pending ' + num(nPend) + ' · Cancel ' + num(nCanc));
+    h += kpiCard(3, 'Pending คงค้าง', num(nPend), C.gold,
+      'คาดปิดทัน ' + num(pendClosable) + ' ใบ (อัตราปิด ' + (closeRate * 100).toFixed(0) + '%)');
     h += kpiCard(3, 'ประมาณการ Revenue', baht(fcRev), C.orange, 'เดือนก่อน ' + baht(prevRev));
-    h += kpiCard(3, 'ประมาณการ Unit', num(fcUnit), C.teal, 'เดือนก่อน ' + num(prevUnits));
     h += '</div>';
-    h += card(12, 'SO สะสม · จริง vs ประมาณการ',
-      '<div class="fc" style="margin-bottom:10px"><div><div class="big">' + num(fcSo) +
-      '</div><small>ประมาณการสิ้นเดือน</small></div>' +
+    h += card(12, 'SO รายวัน แยกสถานะ · แท่งลาย = ประมาณการวันเหลือ',
+      '<div class="fc" style="margin-bottom:10px">' +
+      '<div><div class="big">' + num(fcSo) + '</div><small>ประมาณการสิ้นเดือน</small></div>' +
       '<div class="track"><i style="width:' + pctOfMonth + '%"></i><u style="left:' + pctOfMonth + '%"></u></div>' +
-      '<small>' + num(so) + ' ใบ · ผ่านไป ' + elapsed + '/' + dim + ' วัน (' + pctOfMonth + '%)</small></div>' +
-      multiLine(labels, [
-        { name: 'SO สะสม (จริง)', values: actSeries, color: C.blue },
-        { name: 'ประมาณการ', values: fcSeries, color: C.violet, dashed: true }
-      ], { height: 210 }), { hint: 'run-rate ' + rateSo.toFixed(1) + ' ใบ/วัน' });
-    h += card(12, 'ประมาณการตามทีมขาย', teamTbl, { hint: 'SO / ต่อวัน / ประมาณการ / เทียบเดือนก่อน' });
+      '<small>จริง ' + num(so) + ' ใบ · ผ่านไป ' + elapsed + '/' + dim + ' วัน (' + pctOfMonth + '%) · เฉลี่ย ' + rateSo.toFixed(1) + ' ใบ/วัน</small>' +
+      '</div>' + estBars(labels, { done: doneD, pend: pendD, canc: cancD, proj: projD }), { hint: 'คลิกแท่งเพื่อกรองวัน' });
+    h += card(12, 'ประมาณการตามทีมขาย · แยก Done / Pending', teamTbl, { hint: 'SO / Done / Pending / ประมาณการ / เทียบเดือนก่อน' });
+    h += card(12, 'แผนงานตามกลุ่มสินค้า (จอง · Done · Backlog · ยกมา · คาดติดได้)',
+      planTbl, { hint: 'เลื่อนแนวนอนได้ · นิยามอยู่ในการ์ดถัดไป' });
+    h += card(12, 'นิยามคอลัมน์',
+      '<ul class="note">' +
+      '<li><b>จอง</b> = งานที่ยังไม่ปิด (2.Pending + 3.Cancel) ในเดือนนี้</li>' +
+      '<li><b>รวม backlog</b> = ยอดจองคงค้างของเดือนนี้</li>' +
+      '<li><b>ยกมาจากก่อน</b> = งานที่ยังไม่ปิดและเปิด SO ก่อนเดือนนี้</li>' +
+      '<li><b>เดือนก่อนยกมา</b> = งานที่ยังไม่ปิดและเปิด SO ในเดือนก่อน</li>' +
+      '<li><b>Done เดือนก่อน·ติดเดือนนี้</b> = ปิดงานเดือนก่อน แต่วันติดตั้งอยู่ในเดือนนี้</li>' +
+      '<li><b>Backlog &lt;1Jan26</b> = งานค้างที่เปิด SO ก่อน 1 ม.ค. 2026</li>' +
+      '<li><b>Total</b> = จำนวน SO ทั้งหมดของกลุ่มในเดือนนี้ · <b>Unit</b> = จำนวนเครื่อง</li>' +
+      '<li><b>คาดติดได้เดือนนี้</b> = ติดตั้งแล้ว ÷ วันที่ผ่านไป × วันในเดือน</li>' +
+      '</ul>');
     return h + '</div>';
   }
 
@@ -1066,7 +1201,7 @@
       : S.page === 'tat' ? pageTat(rs)
       : S.page === 'data' ? pageData(rs)
       : S.page === 'SML' ? pageSml(rs)
-      : S.page === 'Estm. End of Mth' ? pageEstimate(rs)
+      : S.page === 'End of Mth' ? pageEstimate(rs)
       : S.page === '1.Unit / Revenue' ? pageUnitRevenue(rs)
       : S.page === '2.SO Order Status' ? pageOrderStatus(rs)
       : SPECS[S.page] ? pageGeneric(S.page, rs)
@@ -1127,7 +1262,7 @@
   }
 
   const NAV_GROUPS = [
-    { label: 'ภาพรวม', pages: ['Daily Admin', 'Estm. End of Mth', '1.Revenue', '1.Unit / Revenue', '1.Unit / Revenue New', 'Performance/TAT'] },
+    { label: 'ภาพรวม', pages: ['Daily Admin', 'End of Mth', '1.Revenue', '1.Unit / Revenue', '1.Unit / Revenue New', 'Performance/TAT'] },
     { label: 'สถานะงาน', pages: ['Status (New)', 'Status (Back log)', '2.SO Order Status', '2.Pending', '2.1.Pending-Detail', '3.Cancel', '3.1.Cancel-Detail'] },
     { label: 'ขั้นตอนทำงาน', pages: ['P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape', 'P5.Transport', 'P6.Technician', 'Report ติดตั้ง', 'Report สัญญา'] },
     { label: 'สินค้า & พื้นที่', pages: ['SML', 'Pack สด/ผ่อน', 'Map', 'Product end2end-Detail'] },
