@@ -1670,12 +1670,11 @@
      Monitor Consult — เฉพาะงาน “เครื่องซักผ้า 13/17 กก.” (ข้อมูลจาก ListBooking)
      + Cross-sell: ลูกค้าซื้อกี่กลุ่มสินค้า / คู่สินค้าที่ซื้อร่วม / ลิสต์โอกาส
      ══════════════════════════════════════════════════════════════════════ */
-  /* ขอบเขต: เครื่องซักผ้า 13 / 17 กก. ทุกแบบ (ฝาหน้า · Stack · Giant · Titan · ฝาบน) — ไม่รวมเครื่องอบผ้า */
+  /* ขอบเขต: เครื่องซักผ้า LG Stack 13/17 Kg & ซัก/อบ เดี่ยว 13/17 Kg (ไม่รวมเครื่องซักผ้าฝาบน) */
   const isFrontLoad = d => {
     const p = String(d.product || '');
-    if (/อบผ้า/.test(p)) return false;
-    if (!/13|17/.test(p)) return false;
-    return /ซัก/.test(p) || /Stack|Giant|Titan/i.test(p);
+    if (/ฝาบน/.test(p)) return false;
+    return /13|17/.test(p);
   };
   function prodCatOf(p) {
     const s = String(p || '');
@@ -1924,7 +1923,7 @@
           '</div>').join('') + '</div>'
       : '';
 
-    const csCard = card(12, 'โอกาส Cross-sell · เฉพาะลูกค้าที่เคยซื้อเครื่องซักผ้า 13/17 กก.',
+    const csCard = card(12, 'โอกาส Cross-sell · เฉพาะลูกค้าที่เคยซื้อเครื่องซักผ้า LG Stack 13/17 Kg & ซัก/อบ เดี่ยว 13/17 Kg',
       '<div class="mon-2col" style="grid-template-columns:minmax(0,1fr) minmax(0,1.9fr)">' +
         '<div><div style="font-size:11.5px;color:#667085;margin-bottom:6px">คู่สินค้าที่ลูกค้าซื้อร่วม</div>' + pairHtml + '</div>' +
         '<div><div style="font-size:11.5px;color:#667085;margin-bottom:6px">ลูกค้าที่ซื้อกลุ่มเดียว แต่ยอดสะสม ≥ ฿300,000 (' + num(frontCust.filter(e => e[1].cats.size === 1 && e[1].rev >= 300000).length) + ' ราย)</div>' + oppTbl + oppCards + '</div>' +
@@ -2024,13 +2023,17 @@
     const filterNote = { '2.Pending': 'เฉพาะงาน 2.Pending', '2.1.Pending-Detail': 'เฉพาะงาน 2.Pending',
       '3.Cancel': 'เฉพาะงาน 3.Cancel', '3.1.Cancel-Detail': 'เฉพาะงาน 3.Cancel' }[name] || 'ตามเงื่อนไขหน้านี้';
 
-    /* ── Monitor Consult: เฉพาะงานเครื่องซักผ้า 13/17 กก. (หัวหน้าต่างนับเฉพาะกลุ่มนี้) ── */
+    /* ── Monitor Consult: เฉพาะงานเครื่องซักผ้า LG Stack 13/17 Kg & ซัก/อบ เดี่ยว 13/17 Kg ── */
     if (name === 'P3.Consult') {
       const scoped = data.filter(isFrontLoad);
       let hc = '<div class="pg-head"><h1>' + esc(pageLabel(name)) + '</h1>' +
         '<span class="sub">' + esc(S.period ? S.period.replace('-', ' · ') : 'ทุกเดือน') + ' · ' + num(scoped.length) + ' รายการ</span>' +
-        '<span class="field-scope">เครื่องซักผ้า 13/17 กก.</span>' + xfChips() +
-        '<span class="grow"></span></div>';
+        '<span class="field-scope">เครื่องซักผ้า LG Stack 13/17 Kg &amp; ซัก/อบ เดี่ยว 13/17 Kg</span>' + xfChips() +
+        '<span class="grow"></span>' +
+        '<label class="fsel"><span>เดือน</span><select id="consultMth" class="pbi-select">' +
+          periods().slice().reverse().map(p =>
+            '<option value="' + p + '"' + (p === S.period ? ' selected' : '') + '>' + p.replace('-', ' · ') + '</option>').join('') +
+        '</select></label></div>';
       return hc + '<div class="g">' + consultReal(data) + '</div>';
     }
 
@@ -2179,6 +2182,9 @@
     if (ms) ms.onchange = () => { S.momMth = ms.value; S.keepScroll = true; render(); };
     const ms2 = $('momSel2');
     if (ms2) ms2.onchange = () => { S.momMth2 = ms2.value; S.keepScroll = true; render(); };
+    /* Monitor Consult: เลือกเดือนบนหัวหน้าได้เอง */
+    const cmSel = $('consultMth');
+    if (cmSel) cmSel.onchange = () => { S.period = cmSel.value; S.pageIdx = 0; S.keepScroll = true; render(); };
 
     const wi = $('welcomeImport');
     if (wi) wi.onclick = () => { const f = $('fileInput'); if (f) f.click(); };
