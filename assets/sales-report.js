@@ -49,17 +49,25 @@
   /* สินค้าที่เพิ่มภายหลัง แต่ต้องมีในเครื่องเดิมด้วย (migrate ให้อัตโนมัติ) */
   var PRODUCT_MIGRATE = ['P4'];
   var PRODUCT_COLORS = ['#2563EB', '#0EA5E9', '#8B5CF6', '#16A34A', '#F59E0B', '#DC2626', '#0E9384', '#7C3AED'];
+  /* รายชื่อที่ขึ้นต้น/มีคำว่า "ทดสอบ" = ข้อมูลทดสอบที่ตกค้ำจากตอน QC — ลบทิ้งอัตโนมัติเมื่อโหลด */
+  var TEST_NAME_RE = /ทดสอบ|^\s*test\b/i;
+  function dropTestItems(list, getter) {
+    var clean = (list || []).filter(function (x) { return !TEST_NAME_RE.test(String(getter(x) || '')); });
+    return { list: clean, changed: clean.length !== (list || []).length };
+  }
   var LS_PRODUCTS = 'pi_sr_products_v1';
   var PRODUCTS = loadProducts();
   function loadProducts() {
     try {
       var a = JSON.parse(localStorage.getItem(LS_PRODUCTS) || 'null');
       if (Object.prototype.toString.call(a) === '[object Array]' && a.length) {
+        var dt = dropTestItems(a, function (p) { return (p && p.name) || ''; });
+        a = dt.list;
         var list = a.map(function (p, i) {
           return { code: p.code, name: p.name, short: p.short || p.name, color: p.color || PRODUCT_COLORS[i % PRODUCT_COLORS.length] };
         });
         /* เครื่องเดิม: เติมสินค้าใหม่ที่ยังไม่มี ให้ตรงกับ PRODUCT_DEFAULT */
-        var added = false;
+        var added = dt.changed;
         PRODUCT_MIGRATE.forEach(function (code) {
           if (list.some(function (p) { return p.code === code; })) return;
           var def = null;
@@ -126,7 +134,11 @@
   function loadTeams() {
     try {
       var a = JSON.parse(localStorage.getItem('pi_sr_teams_v1') || 'null');
-      if (Object.prototype.toString.call(a) === '[object Array]' && a.length) return a;
+      if (Object.prototype.toString.call(a) === '[object Array]' && a.length) {
+        var dt = dropTestItems(a, function (t) { return (t && (t.name || t.code)) || ''; });
+        if (dt.changed) { try { localStorage.setItem('pi_sr_teams_v1', JSON.stringify(dt.list)); } catch (e) {} }
+        if (dt.list.length) return dt.list;
+      }
     } catch (e) {}
     return JSON.parse(JSON.stringify(TEAM_DEFAULT));
   }
@@ -342,7 +354,12 @@
   function loadSales() {
     try {
       var a = JSON.parse(localStorage.getItem(LS_SALES) || 'null');
-      if (Object.prototype.toString.call(a) === '[object Array]') return a;
+      if (Object.prototype.toString.call(a) === '[object Array]') {
+        /* ลบรายชื่อ AE ที่เป็นข้อมูลทดสอบค้างในเครื่อง เช่น "ทดสอบ AE 1" */
+        var dt = dropTestItems(a, function (s) { return (s && s.name) || ''; });
+        if (dt.changed) { try { localStorage.setItem(LS_SALES, JSON.stringify(dt.list)); } catch (e) {} }
+        return dt.list;
+      }
     } catch (e) {}
     return [];                             /* เริ่มต้นว่าง — ผู้ใช้เพิ่มรายชื่อเอง */
   }
