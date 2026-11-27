@@ -456,9 +456,9 @@
       '<div class="lg' + (xfHas(o.field, d.label) ? ' sel' : '') + '"' + xfAttr(o.field, d.label) + '>' +
       '<i style="background:' + PALETTE[i % PALETTE.length] + '"></i>' +
       '<span title="' + esc(dispLab(d.label)) + '">' + esc(dispLab(d.label)) + '</span>' +
-      '<b>' + num(d.value) + '</b><em>' + (d.value / tot * 100).toFixed(0) + '%</em></div>').join('');
+      '<b>' + (o.fmt || num)(d.value) + '</b><em>' + (d.value / tot * 100).toFixed(0) + '%</em></div>').join('');
     return '<div class="donut-wrap"><div class="donut" style="background:conic-gradient(' + stops.join(',') + ')">' +
-      '<div class="donut-c"><b>' + num(tot) + '</b><span>รวม</span></div></div>' +
+      '<div class="donut-c"><b>' + (o.center || num(tot)) + '</b><span>' + esc(o.centerSub || 'รวม') + '</span></div></div>' +
       '<div class="legend">' + leg + '</div></div>';
   }
 
@@ -2089,11 +2089,20 @@
     h += kpiCard(3, 'Done / Pending / Cancel', num(nD) + ' / ' + num(nP) + ' / ' + num(nC), C.violet,
       'อัตราปิดงาน ' + (closeR * 100).toFixed(0) + '% · รายการในหน้านี้ ' + num(data.length));
     h += card(8, sp.title + ' · ตาม ' + dimTh, chart, { hint: isTime ? 'รายแกนเวลา' : 'เรียงจากมากไปน้อย' });
-    /* สัดส่วน: ใช้แท่งจัดอันดับ อ่านตัวเลข/หน่วยเงินได้ชัดกว่าวงกลม+legend ในพื้นที่แคบ */
+    /* สัดส่วน: โดนัท + legend แบบย่อหน่วย (ลบ.) เพื่อไม่ให้ตัวเลขยาวเกินพื้นที่ */
     const dTot = dData.reduce((a, b) => a + b.value, 0);
+    const dMax = dData.length ? Math.max.apply(null, dData.map(x => x.value)) : 0;
+    const moneyMode = sp.metric === 'revenue' && dMax >= 1e6;
+    const dFmt = sp.metric === 'revenue'
+      ? (moneyMode ? (v => (v / 1e6).toFixed(2) + ' ลบ.') : baht)
+      : num;
     h += card(4, dimTh + ' · สัดส่วน', dData.length
-      ? hbars(dData, fmt, { field: sp.dim, pct: true, palette: true })
-      : empty(), { hint: 'รวม ' + fmt(dTot) });
+      ? donut(dData, {
+        field: sp.dim, fmt: dFmt,
+        center: moneyMode ? (dTot / 1e6).toFixed(2) : num(dTot),
+        centerSub: moneyMode ? 'ลบ.' : 'รวม'
+      })
+      : empty(), { hint: 'รวม ' + dFmt(dTot) });
     h += card(12, dimTh + ' × ' + dim2Th, pv, { hint: metricTxt });
     h += card(6, 'สถานะงาน × ' + dimTh, stRows.length ? '<div class="stk-wrap">' + stackedBars(stRows) + statusLegend() + '</div>' : empty(),
       { hint: 'จำนวน SO' });
