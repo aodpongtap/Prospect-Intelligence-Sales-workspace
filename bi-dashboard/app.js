@@ -646,7 +646,7 @@
     h += '</div><div class="ml-x">';
     labels.forEach((l, i) => { h += '<span>' + ((i % every === 0 || i === n - 1) ? esc(l) : '') + '</span>'; });
     h += '</div></div>';
-    h += '<div class="chart-legend">' + series.map(s =>
+    if (o.legend !== false) h += '<div class="chart-legend">' + series.map(s =>
       '<span><i class="sw" style="background:' + s.color + '"></i>' + esc(s.name) + '</span>').join('') + '</div>';
     return h;
   }
@@ -1349,7 +1349,7 @@
         multiLine(dayKeys.map(String), [
           { name: 'ผ่อน', values: instArr, color: C.navy },
           { name: 'เงินสด', values: cashArr, color: C.cyan }
-        ], { height: 168 }) +
+        ], { height: 168, legend: false }) +
       '</div>', { hint: 'จำนวน SO ต่อวัน' });
     h += card(6, 'Top 5 (Team)', hbars(topTeam, baht, { field: 'team', pct: sum(rs, 'revenue') }), { hint: 'ราคาสุทธิ · % ของทั้งหมด' });
     h += card(7, 'ลูกค้า (Top 15 ตามยอดขาย)', cusTbl);
