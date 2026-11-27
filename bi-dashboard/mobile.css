@@ -235,3 +235,15 @@
 }
 body.tab-edit-mode .pbi-tab { background: #FBFCFE; }
 body.tab-edit-mode .pbi-tab.active { box-shadow: inset 0 0 0 1.5px #118DFF; }
+
+/* ── 14) Monitor Consult: บอร์ดตามงาน + rail ขวา ─────────────────────── */
+.mon-2col {
+  display: grid;
+  grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .mon-2col { grid-template-columns: minmax(0, 1fr); }
+}
+.mon-fu .mon-ack:hover { border-color: #118DFF; color: #0B5CAB; background: #F5F9FF; }

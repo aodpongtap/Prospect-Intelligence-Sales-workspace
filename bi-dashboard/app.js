@@ -1751,7 +1751,7 @@
       : '<div style="font-size:11.6px;color:#98A2B3">ไม่มีงานค้าง</div>';
 
     const inner =
-      '<div style="display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);gap:14px;align-items:start">' +
+      '<div class="mon-2col">' +
         '<div><div style="display:flex;align-items:center;gap:8px;margin:0 0 9px">' +
           '<b style="font-size:13px">สิ่งที่ผมต้องตามทีม</b>' +
           '<span style="font-size:10.5px;font-weight:800;color:#fff;background:#E11D48;border-radius:99px;padding:2px 8px">' + num(pend.length) + '</span>' +
