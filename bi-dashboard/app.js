@@ -313,8 +313,8 @@
       '</details></section>';
   }
 
-  function kpiCard(span, label, value, color, sub) {
-    return '<section class="card s' + span + ' kpi2" style="--k:' + color + '">' +
+  function kpiCard(span, label, value, color, sub, cls) {
+    return '<section class="card s' + span + ' kpi2' + (cls ? ' ' + cls : '') + '" style="--k:' + color + '">' +
       '<div class="k-lab">' + esc(label) + '</div>' +
       '<div class="k-val">' + value + '</div>' +
       (sub ? '<div class="k-sub">' + esc(sub) + '</div>' : '') + '</section>';
@@ -558,15 +558,15 @@
     const other = rs.length - valid.length;
     let h = '';
     h += kpiCard(4, 'Total SO', num(rs.length), C.navy,
-      other > 0 ? 'ไม่รวมสถานะว่าง ' + num(other) + ' ใบ ในยอดเงิน' : 'ใบสั่งซื้อในเดือนนี้');
-    h += kpiCard(4, 'Rev (ราคาสุทธิ)', baht(rev), C.purple, 'Rev.Total = SUM(revenue) เฉพาะ 3 สถานะ');
-    h += kpiCard(4, 'Total Unit', num(units), C.teal, 'SUM(จำนวนเครื่องซักผ้า) เฉพาะ 3 สถานะ');
-    h += kpiCard(4, 'Done', num(sp['1.Done'].length), C.green, pc(sp['1.Done'].length));
-    h += kpiCard(4, 'Pending', num(sp['2.Pending'].length), C.gold, pc(sp['2.Pending'].length));
-    h += kpiCard(4, 'Cancel', num(sp['3.Cancel'].length), C.red, pc(sp['3.Cancel'].length));
-    h += kpiCard(4, 'Done Rev', baht(sumRev(sp['1.Done'])), C.green);
-    h += kpiCard(4, 'Pending Rev', baht(sumRev(sp['2.Pending'])), C.gold);
-    h += kpiCard(4, 'Cancel Rev', baht(sumRev(sp['3.Cancel'])), C.red);
+      other > 0 ? 'ไม่รวมสถานะว่าง ' + num(other) + ' ใบ ในยอดเงิน' : 'ใบสั่งซื้อในเดือนนี้', 'kpi-compact');
+    h += kpiCard(4, 'Rev (ราคาสุทธิ)', baht(rev), C.purple, 'Rev.Total = SUM(revenue) เฉพาะ 3 สถานะ', 'kpi-compact');
+    h += kpiCard(4, 'Total Unit', num(units), C.teal, 'SUM(จำนวนเครื่องซักผ้า) เฉพาะ 3 สถานะ', 'kpi-compact');
+    h += kpiCard(4, 'Done', num(sp['1.Done'].length), C.green, pc(sp['1.Done'].length), 'kpi-compact');
+    h += kpiCard(4, 'Pending', num(sp['2.Pending'].length), C.gold, pc(sp['2.Pending'].length), 'kpi-compact');
+    h += kpiCard(4, 'Cancel', num(sp['3.Cancel'].length), C.red, pc(sp['3.Cancel'].length), 'kpi-compact');
+    h += kpiCard(4, 'Done Rev', baht(sumRev(sp['1.Done'])), C.green, null, 'kpi-compact');
+    h += kpiCard(4, 'Pending Rev', baht(sumRev(sp['2.Pending'])), C.gold, null, 'kpi-compact');
+    h += kpiCard(4, 'Cancel Rev', baht(sumRev(sp['3.Cancel'])), C.red, null, 'kpi-compact');
     return h;
   }
 
