@@ -669,8 +669,11 @@
       return v === '' || v === '-' || /^(n\/a|na|null|undefined)$/i.test(v) || /^\(?\s*(ว่าง|ไม่ระบุ)\s*\)?$/.test(v);
     };
     const keep = items.filter(r => !isBlank(r.label) && Number(r.value) > 0);
+    const totAll = keep.reduce((a, b) => a + b.value, 0) || 1;
+    /* ซ่อนแถวที่ปัดเป็น 0% ด้วย (เช่น 0.2%) — เหลือแต่รายการที่มองเห็นสัดส่วนจริง */
+    const shown = keep.filter(r => r.value / totAll * 100 >= 0.5);
+    const rows = (shown.length ? shown : keep).slice().sort((a, b) => b.value - a.value);
     const tot = keep.reduce((a, b) => a + b.value, 0) || 1;
-    const rows = keep.slice().sort((a, b) => b.value - a.value);
     return hbars(rows.map(r => ({ label: r.label, value: r.value })), v => Math.round(v / tot * 100) + '%', opts);
   }
 
