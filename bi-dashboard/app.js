@@ -1195,8 +1195,10 @@
         ? [{ name: 'Done', v: o.d, color: C.green }, { name: 'Pending', v: o.p, color: C.gold }, { name: 'Cancel', v: o.c, color: C.red }]
         : [{ name: 'Done', v: o.rd, color: C.green }, { name: 'Pending', v: o.rp, color: C.gold }, { name: 'Cancel', v: o.rc, color: C.red }];
     };
-    const soRows = keys.map(k => ({ label: k, segs: seg(k, 'so') }));
-    const revRows = keys.map(k => ({ label: k, segs: seg(k, 'rev') }));
+    const segTotal = r => r.segs.reduce((a, s) => a + s.v, 0);
+    /* เรียงจากมากไปน้อย เพื่อให้อ่านง่ายและตรงกันทั้งสองการ์ด */
+    const soRows = keys.map(k => ({ label: k, segs: seg(k, 'so') })).sort((a, b) => segTotal(b) - segTotal(a));
+    const revRows = keys.map(k => ({ label: k, segs: seg(k, 'rev') })).sort((a, b) => segTotal(b) - segTotal(a));
     const totalRev = sumRev(rs) || 1;
     const contRows = keys.map(k => {
       const o = byGrp.get(k);
@@ -1204,8 +1206,8 @@
     }).sort((a, b) => b.value - a.value);
 
     let h = '';
-    h += card(6, 'SO ตาม GRP SML', stackedBars(soRows) + statusLegend(), { hint: 'จำนวน SO' });
-    h += card(6, 'Revenue ตาม GRP SML', stackedBars(revRows, baht) + statusLegend(), { hint: 'ราคาสุทธิ' });
+    h += card(6, 'SO ตาม GRP SML', '<div class="stk-wrap">' + stackedBars(soRows) + statusLegend() + '</div>', { hint: 'จำนวน SO' });
+    h += card(6, 'Revenue ตาม GRP SML', '<div class="stk-wrap">' + stackedBars(revRows, baht) + statusLegend() + '</div>', { hint: 'ราคาสุทธิ' });
     h += card(6, 'Contribution % (Revenue)', hbars(contRows, v => v.toFixed(0) + '%'));
     h += card(6, 'เกณฑ์ GRP SML (ตามรายงานเดิม)',
       '<ul class="note"><li>SS : Revenue &lt; 60,000.-</li><li>S : Revenue &lt;= 100,000.-</li>' +
@@ -2057,7 +2059,7 @@
     h += card(8, sp.title + ' · ตาม ' + dimTh, chart, { hint: isTime ? 'รายแกนเวลา' : 'เรียงจากมากไปน้อย' });
     h += card(4, dimTh + ' · สัดส่วน', donut(dData, { field: sp.dim }));
     h += card(12, dimTh + ' × ' + dim2Th, pv, { hint: metricTxt });
-    h += card(6, 'สถานะงาน × ' + dimTh, stRows.length ? stackedBars(stRows) + statusLegend() : empty(),
+    h += card(6, 'สถานะงาน × ' + dimTh, stRows.length ? '<div class="stk-wrap">' + stackedBars(stRows) + statusLegend() + '</div>' : empty(),
       { hint: 'จำนวน SO' });
     h += card(6, dim2Th + ' · Top 10', bars2.length ? hbars(bars2, fmt, { field: sp.dim2, pct: sp.metric === 'revenue' ? rev : sp.metric === 'units' ? units : data.length }) : empty(), { hint: metricTxt + ' · % ของทั้งหมด' });
     h += defCard(
