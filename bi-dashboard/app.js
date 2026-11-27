@@ -1832,7 +1832,7 @@
     h += '<div class="s12" style="grid-column:1/-1;display:flex;align-items:center;gap:9px;flex-wrap:wrap;' +
       'padding:9px 13px;border-radius:11px;background:#FFFAEB;border:1px solid #FEDF89;color:#92400E;font-size:12px;font-weight:600">' +
       '<span style="display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:5px;background:#FEF3C7;color:#92400E;font-size:10px;font-weight:800">ตัวอย่าง</span>' +
-      'หน้านี้เป็น <b>UX/UI ใหม่</b> ที่ทำไว้ดูก่อน — ข้อมูลเป็น <b>ข้อมูลจำลอง</b> ยังไม่เชื่อมระบบจริง (ต้องมีฟิลด์ วันที่ผ่านแต่ละขั้น · สถานะมัดจำ · สถานะสั่งของ)</span>';
+      'หน้านี้เป็น <b>UX/UI ใหม่</b> ที่ทำไว้ดูก่อน — ข้อมูลเป็น <b>ข้อมูลจำลอง</b> ยังไม่เชื่อมระบบจริง (ต้องมีฟิลด์ วันที่ผ่านแต่ละขั้น · สถานะมัดจำ · สถานะสั่งของ)</div>';
     h += kpiCard(3, 'ต้องตามวันนี้', '8 งาน', C.red, 'มูลค่า ' + baht(value) + ' · เลยกำหนด >7 วัน 3 งาน');
     h += kpiCard(3, 'คาดปิดสิ้นเดือน', '463 / 450', C.green, 'เกินเป้า 13 ใบ · ปิด 5 งานแรกทัน = 468');
     h += kpiCard(3, 'งานค้างทั้งระบบ', '872 ใบ', C.gold, 'เกิน 21 วัน 722 ใบ (83%) · เดือนนี้ 180 ใบ');
