@@ -1770,7 +1770,13 @@
         '</div>' +
       '</div>';
 
-    return card(12, '', inner, { hint: '' });
+    return kpiCard(3, 'ต้องตามวันนี้', num(pend.length) + ' งาน', C.red, 'มูลค่า ' + baht(pendVal)) +
+      kpiCard(3, 'ค้างเกิน 21 วัน', num(old21) + ' งาน', C.gold, '16–21 วันอีก ' + num(old15) + ' งาน') +
+      kpiCard(3, 'SLA ปิดงานเฉลี่ย', scAvg.toFixed(1) + ' วัน', scAvg > 15 ? C.red : C.green,
+        'เป้า 15 วัน · เกินกำหนด ' + overPct.toFixed(0) + '%') +
+      kpiCard(3, 'ติดที่ Admin', num(admBad) + ' ใบ', admBad ? C.orange : C.green,
+        'รอตรวจ ' + num(admPend) + ' · ไม่ผ่าน ' + num(admFail)) +
+      card(12, '', inner, { hint: '' });
   }
 
   function pageGeneric(name, rs) {
@@ -1855,12 +1861,16 @@
 
     let h = pgHead(pageLabel(name), data);
     h += '<div class="g">';
+    if (name === 'P3.Consult') {
+      h += consultReal(data);
+      return h + '</div>';
+    }
     h += kpiCard(3, 'จำนวน SO', num(soCount), C.navy, 'ไม่นับซ้ำ');
     h += kpiCard(3, 'Revenue (ราคาสุทธิ)', baht(rev), C.orange, 'ตามสูตรในไฟล์');
     h += kpiCard(3, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
     h += kpiCard(3, 'Done / Pending / Cancel', num(nD) + ' / ' + num(nP) + ' / ' + num(nC), C.violet,
       'อัตราปิดงาน ' + (closeR * 100).toFixed(0) + '% · รายการในหน้านี้ ' + num(data.length));
-    if (name === 'P3.Consult') h += consultReal(data);
+    if (name === 'P3.Consult') h += consultReal(data);   /* หน้า Monitor Consult ใช้ layout บอร์ดตามงาน */
     h += card(8, sp.title + ' · ตาม ' + dimTh, chart, { hint: isTime ? 'รายแกนเวลา' : 'เรียงจากมากไปน้อย' });
     h += card(4, dimTh + ' · สัดส่วน', donut(dData, { field: sp.dim }));
     h += card(12, dimTh + ' × ' + dim2Th, pv, { hint: metricTxt });
