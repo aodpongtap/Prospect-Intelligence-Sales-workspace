@@ -2511,13 +2511,23 @@
     setTimeout(() => waitSnapshot(tries - 1), 700);
   }
 
+  /* ดึง token ?v= ของบิลด์ปัจจุบันจาก <script src="app.js?v=…">
+     เพื่อให้ data-snapshot.js เปลี่ยน token ตามทุกครั้งที่ deploy (กัน cache ค้ำ) */
+  function assetVer() {
+    try {
+      const s = [].slice.call(document.querySelectorAll('script[src]')).filter(x => /app\.js(\?|$)/.test(x.getAttribute('src') || ''))[0];
+      const m = s && String(s.getAttribute('src')).match(/\?v=([\w.]+)/);
+      return m ? '?v=' + m[1] : '';
+    } catch (e) { return ''; }
+  }
+
   function loadSnapshot(attempt) {
     attempt = attempt || 0;
     return new Promise(res => {
       if (window.BI_SNAPSHOT) return res(window.BI_SNAPSHOT);
       const s = document.createElement('script');
       /* ลองซ้ำสูงสุด 3 ครั้ง — กันกรณีเน็ตมือถือหลุด/GitHub Pages เพิ่ง deploy ยังไม่ propagate */
-      s.src = 'data-snapshot.js?v=1131a' + (attempt ? '&r=' + attempt : '');
+      s.src = 'data-snapshot.js' + assetVer() + (attempt ? (assetVer() ? '&' : '?') + 'r=' + attempt : '');
       s.async = true;
       s.onload = () => res(window.BI_SNAPSHOT || null);
       s.onerror = () => {
