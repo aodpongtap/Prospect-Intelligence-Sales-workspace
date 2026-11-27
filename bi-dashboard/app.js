@@ -1792,10 +1792,14 @@
       return '<b style="color:' + (open ? '#B45309' : '#047857') + '">' + esc(st) +
         (dOnly(d.consultStart) ? ' · ' + days(dOnly(d.consultStart), now) + ' วัน' : '') + '</b>';
     };
+    const ackSet = new Set(ackList(String(S.period || '')));
     const board = pend.length ? pend.slice(0, 15).map(x => {
       const v = LV(x);
+      const acked = ackSet.has(String(x.d.so || ''));
+      if (acked) v.c = '#059669';
       return '<div class="mon-fu" style="border:1px solid #E4E9F0;border-left:4px solid ' + v.c +
-        ';border-radius:12px;padding:11px 13px;background:#fff">' +
+        ';border-radius:12px;padding:11px 13px;background:' + (acked ? '#F7FCF9' : '#fff') + ';' +
+        (acked ? 'opacity:.85;' : '') + '">' +
         '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">' +
           '<span style="font-weight:800;font-size:13px;letter-spacing:-.2px">' +
             esc(String(x.d.so || '').slice(0, 14) + ' · ' + String(x.d.customer || '-').slice(0, 26)) + '</span>' +
