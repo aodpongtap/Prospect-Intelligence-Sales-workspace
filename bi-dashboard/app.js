@@ -16,7 +16,7 @@
   const COLS = Array.from({ length: 90 }, (_, i) => i);
   const DATE_COLS = [2, 32, 47, 54];
 
-  const S = { raw: null, data: null, meta: null, page: 'summary', period: null, q: '', pageIdx: 0, xf: {}, filter: { team: new Set(), channel: new Set(), group: new Set() }, momMth: null, momMth2: null, momN: 1, keepScroll: false };
+  const S = { raw: null, data: null, meta: null, page: 'summary', period: null, q: '', pageIdx: 0, xf: {}, filter: { team: new Set(), channel: new Set(), group: new Set() }, momMth: null, momMth2: null, momN: 1, keepScroll: false, cusSort: 'rev' };
 
   /* หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) — เพิ่ม Summary เป็นหน้าแรก */
   const PBI_PAGES = [
@@ -1395,24 +1395,38 @@
     rsPkg.forEach(d => { const k = d.pkg || '(ว่าง)'; pkgMap.set(k, (pkgMap.get(k) || 0) + 1); });
     const byPkg = [...pkgMap.entries()].map(e => ({ label: e[0], value: e[1] }));
 
-    // ---- ลูกค้า
+    /* ---- ลูกค้า (เลือกได้ว่าจะเรียงตามยอดขายหรือจำนวนเครื่อง) ---- */
     const cusMap = new Map();
     rs.forEach(d => {
       const k = d.customer || '(ไม่ระบุ)';
-      const o = cusMap.get(k) || { u: 0, r: 0 };
-      o.u += d.units || 0; o.r += d.revenue || 0;
+      const o = cusMap.get(k) || { u: 0, r: 0, n: 0 };
+      o.u += d.units || 0; o.r += d.revenue || 0; o.n += 1;
       cusMap.set(k, o);
     });
-    const cus = [...cusMap.entries()].sort((a, b) => b[1].r - a[1].r).slice(0, 15);
-    let cusTbl = '<div class="tbl"><table class="pbi"><thead><tr><th>ชื่อลูกค้า</th><th class="num">Unit</th>' +
-      '<th class="num">Revenue <span style="font-size:9px;color:#0B5CAB">▼</span></th></tr></thead><tbody>';
+    const byUnit = S.cusSort === 'unit';
+    const cusAll = [...cusMap.entries()].sort((a, b) => byUnit
+      ? (b[1].u - a[1].u || b[1].r - a[1].r)
+      : (b[1].r - a[1].r || b[1].u - a[1].u));
+    const cus = cusAll.slice(0, 15);
+    const arrow = k => (byUnit ? (k === 'u' ? ' ▼' : '') : (k === 'r' ? ' ▼' : ''));
+    let cusTbl = '<div class="cus-ctl"><span>เรียงตาม</span>' +
+      '<div class="seg cus-seg">' +
+        '<button data-cus="rev" class="' + (byUnit ? '' : 'on') + '">ยอดขาย</button>' +
+        '<button data-cus="unit" class="' + (byUnit ? 'on' : '') + '">จำนวนเครื่อง</button>' +
+      '</div></div>' +
+      '<div class="tbl"><table class="pbi"><thead><tr><th>ชื่อลูกค้า</th>' +
+      '<th class="num">Unit' + arrow('u') + '</th>' +
+      '<th class="num">Revenue' + arrow('r') + '</th><th class="num">SO</th></tr></thead><tbody>';
     cus.forEach(e => {
-      cusTbl += '<tr><td>' + esc(String(e[0]).slice(0, 34)) + '</td><td class="num">' + num(e[1].u) + '</td>' +
-        '<td class="num"><b>' + baht(e[1].r) + '</b></td></tr>';
+      cusTbl += '<tr><td>' + esc(String(e[0]).slice(0, 34)) + '</td>' +
+        '<td class="num"><b>' + num(e[1].u) + '</b></td>' +
+        '<td class="num">' + baht(e[1].r) + '</td>' +
+        '<td class="num">' + num(e[1].n) + '</td></tr>';
     });
-    cusTbl += '<tr class="grand"><td>Total</td><td class="num">' + num(sum(rs, 'units')) + '</td><td class="num">' + baht(sum(rs, 'revenue')) + '</td></tr></tbody></table></div>' +
+    cusTbl += '<tr class="grand"><td>Total</td><td class="num">' + num(sum(rs, 'units')) + '</td>' +
+      '<td class="num">' + baht(sum(rs, 'revenue')) + '</td><td class="num">' + num(rs.length) + '</td></tr></tbody></table></div>' +
       '<div style="padding:6px 9px 2px;font-size:10.5px;color:#98A2B3;line-height:1.45">' +
-      'เรียงตาม <b style="color:#475569">Revenue มาก → น้อย</b> (Unit จึงไม่เรียงตามลำดับ เพราะบางราย Unit น้อยแต่ราคาต่อเครื่องสูง) · ' +
+      'เรียงตาม <b style="color:#475569">' + (byUnit ? 'จำนวนเครื่อง' : 'ยอดขาย') + ' มาก → น้อย</b> · ' +
       'แสดง ' + cus.length + ' จาก ' + cusMap.size + ' ราย · ยอด Total คิดจากลูกค้าทั้งหมด</div>';
 
     let h = pgHead('1.Unit / Revenue', rs);
@@ -1442,7 +1456,7 @@
         ], { height: 168, legend: false }) +
       '</div>', { hint: 'จำนวน SO ต่อวัน' });
     h += card(6, 'Top 5 (Team)', hbars(topTeam, baht, { field: 'team', pct: sum(rs, 'revenue'), money: true }), { hint: 'ราคาสุทธิ · % ของทั้งหมด' });
-    h += card(7, 'ลูกค้า (Top 15 ตามยอดขาย)', cusTbl, { hint: 'เรียงตาม Revenue ▼' });
+    h += card(7, 'ลูกค้า (Top 15)', cusTbl, { hint: 'เลือกได้ว่าจะเรียงตามยอดขายหรือจำนวนเครื่อง' });
     h += card(5, 'หน่วยตามทีม', hbars([...new Map(rsT.map(d => [d.team || '(ไม่ระบุ)', 0])).keys()].map(k => ({
       label: k, value: rsT.filter(d => (d.team || '(ไม่ระบุ)') === k).reduce((a, d) => a + (d.units || 0), 0)
     })).sort((a, b) => b.value - a.value).slice(0, 10), num, { field: 'team', pct: sum(rs, 'units') }), { hint: 'จำนวนเครื่อง · % ของทั้งหมด' });
@@ -2332,6 +2346,14 @@
         render();
         const nb = $('monBoard');
         if (nb) nb.scrollTop = sy;
+      };
+    });
+    /* ลูกค้า: สลับการเรียง */
+    document.querySelectorAll('.cus-seg button').forEach(b => {
+      b.onclick = () => {
+        const v = b.getAttribute('data-cus') === 'unit' ? 'unit' : 'rev';
+        if (S.cusSort === v) return;
+        S.cusSort = v; S.keepScroll = true; render();
       };
     });
     /* ล้างรายการ “ตามแล้ว” ของเดือนนี้ */
