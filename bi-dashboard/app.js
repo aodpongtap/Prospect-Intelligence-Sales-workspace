@@ -233,14 +233,15 @@
     const max = Math.max.apply(null, data.map(d => d.value)) || 1;
     const lineArr = o.line && o.line.length === data.length ? o.line : null;
     const lineMax = lineArr ? (Math.max.apply(null, lineArr) || 1) : 1;
-    const showVal = data.length <= 16;
+    const showVal = true;               /* แสดงตัวเลขบนแท่งทุกแท่ง */
+    const dense = data.length > 18;
     let h = '<div class="cols-wrap"><div class="cols">';
     data.forEach((d, i) => {
       const p = Math.max(1.5, Math.min(100, d.value / max * 100));
       h += '<div class="col" title="' + esc(d.label) + ' · ' + num(d.value) +
         (lineArr ? ' · ติดตั้ง ' + num(lineArr[i]) : '') +
         (d.sub ? ' · ' + esc(d.sub) : '') + '">' +
-        '<span class="col-v">' + (showVal ? shortNum(d.value) : '') + '</span>' +
+        '<span class="col-v"' + (dense ? ' style="font-size:9.5px"' : '') + '>' + (showVal ? shortNum(d.value) : '') + '</span>' +
         '<span class="col-bar-wrap"><i class="col-bar" style="height:' + p.toFixed(1) + '%"></i></span>' +
         '<span class="col-x">' + esc(d.label) + '</span></div>';
     });
