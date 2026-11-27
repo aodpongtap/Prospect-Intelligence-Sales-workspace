@@ -16,7 +16,7 @@
   const COLS = Array.from({ length: 90 }, (_, i) => i);
   const DATE_COLS = [2, 32, 47, 54];
 
-  const S = { raw: null, data: null, meta: null, page: 'overview', period: null, q: '', pageIdx: 0, filter: { team: new Set(), channel: new Set(), group: new Set() } };
+  const S = { raw: null, data: null, meta: null, page: 'overview', period: null, q: '', pageIdx: 0, xf: null, filter: { team: new Set(), channel: new Set(), group: new Set() } };
 
   /* 21 หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) */
   const PBI_PAGES = [
@@ -136,6 +136,13 @@
       if (fT.size && !fT.has(String(d.team == null ? '' : d.team))) return false;
       if (fC.size && !fC.has(String(d.channel == null ? '' : d.channel))) return false;
       if (fG.size && !fG.has(String(d.group == null ? '' : d.group))) return false;
+      if (S.xf) {
+        if (S.xf.f === 'day') {
+          if (!d.dateSO || d.dateSO.getDate() !== +S.xf.v) return false;
+        } else if (S.xf.f === 'monthLabel') {
+          if (String(d.mth) !== String(S.xf.v)) return false;
+        } else if (String(d[S.xf.f] == null ? '' : d[S.xf.f]) !== S.xf.v) return false;
+      }
       return true;
     });
   }
@@ -204,6 +211,21 @@
       (sub ? '<div class="k-sub">' + esc(sub) + '</div>' : '') + '</section>';
   }
 
+  /* ชื่อฟิลด์ที่กรองได้ -> ชื่อไทย */
+  const XF_NAME = {
+    day: 'วันที่', team: 'Grp ทีมขาย', admGroup: 'สถานะ Admin', status3: 'สถานะใบงาน3',
+    group: 'กลุ่มสินค้า', province: 'จังหวัด', gbkk: 'โซน', pkg: 'การชำระ',
+    salesperson: 'พนักงาน', prodCat: 'ประเภทสินค้า', jobStage: 'ขั้นตอนงาน',
+    channel: 'ช่องทาง', monthLabel: 'เดือน', area: 'พื้นที่'
+  };
+  function xfLabel() {
+    if (!S.xf) return '';
+    return (XF_NAME[S.xf.f] || S.xf.f) + ' = ' + S.xf.v;
+  }
+  function xfAttr(field, value) {
+    return field ? ' data-xf="' + esc(field + '|' + value) + '"' : '';
+  }
+
   /* แท่งแนวนอน: label | track | value  (ไม่ทับกันเด็ดขาด) */
   function hbars(data, fmt, o) {
     o = o || {};
@@ -216,7 +238,9 @@
     data.forEach((d, i) => {
       const p = Math.max(1.2, Math.min(100, d.value / max * 100));
       const col = d.color || PALETTE[i % PALETTE.length];
-      h += '<div class="hbar" title="' + esc(d.label) + ' · ' + f(d.value) + '">' +
+      const sel = S.xf && S.xf.f === o.field && S.xf.v === String(d.label);
+      h += '<div class="hbar' + (sel ? ' sel' : '') + '"' + xfAttr(o.field, d.label) +
+        ' title="' + esc(d.label) + ' · ' + f(d.value) + '">' +
         '<span class="hb-lab">' + esc(d.label) + '</span>' +
         '<span class="hb-track"><i class="hb-fill" style="width:' + p.toFixed(1) + '%;background:' + col + '"></i></span>' +
         '<span class="hb-val">' + f(d.value) + '</span></div>';
@@ -237,7 +261,10 @@
     data.forEach((d, i) => {
       const p = Math.max(1.5, Math.min(100, d.value / max * 100));
       const inside = p >= 10;            /* แท่งสูงพอ -> ใส่เลขในแท่ง */
-      h += '<div class="col" title="' + esc(d.label) + ' · ' + num(d.value) +
+      const xv = d.xv != null ? String(d.xv) : String(d.label);
+      const sel = S.xf && S.xf.f === o.field && S.xf.v === xv;
+      h += '<div class="col' + (sel ? ' sel' : '') + '"' + xfAttr(o.field, xv) +
+        ' title="' + esc(d.label) + ' · ' + num(d.value) +
         (lineArr ? ' · ติดตั้ง ' + num(lineArr[i]) : '') +
         (d.sub ? ' · ' + esc(d.sub) : '') + '">' +
         '<span class="col-v"' + (dense ? ' style="font-size:9.5px"' : '') + '>' + (showVal && !inside ? shortNum(d.value) : '') + '</span>' +
@@ -269,7 +296,8 @@
   }
 
   /* โดนัท + legend */
-  function donut(data) {
+  function donut(data, o) {
+    o = o || {};
     const list = (data || []).filter(d => d.value > 0);
     const tot = list.reduce((a, b) => a + b.value, 0);
     if (!tot) return empty();
@@ -281,7 +309,8 @@
       acc += d.value;
     });
     const leg = list.map((d, i) =>
-      '<div class="lg"><i style="background:' + PALETTE[i % PALETTE.length] + '"></i>' +
+      '<div class="lg' + (S.xf && S.xf.f === o.field && S.xf.v === String(d.label) ? ' sel' : '') + '"' + xfAttr(o.field, d.label) + '>' +
+      '<i style="background:' + PALETTE[i % PALETTE.length] + '"></i>' +
       '<span title="' + esc(d.label) + '">' + esc(d.label) + '</span>' +
       '<b>' + num(d.value) + '</b><em>' + (d.value / tot * 100).toFixed(0) + '%</em></div>').join('');
     return '<div class="donut-wrap"><div class="donut" style="background:conic-gradient(' + stops.join(',') + ')">' +
@@ -322,10 +351,14 @@
     if (o.maxRows) rks = rks.slice(0, o.maxRows);
     if (o.maxCols) cks = cks.slice(0, o.maxCols);
     let h = '<div class="tbl"><table class="pbi"><thead><tr><th class="rowhead">' + esc(o.rowTitle || '') + '</th>';
-    cks.forEach(c => { h += '<th class="num">' + esc(c) + '</th>'; });
+    cks.forEach(c => {
+      const selC = S.xf && S.xf.f === o.colField && S.xf.v === String(c);
+      h += '<th class="num' + (selC ? ' sel' : '') + '"' + xfAttr(o.colField, c) + '>' + esc(c) + '</th>';
+    });
     h += '<th class="num total">Total</th></tr></thead><tbody>';
     rks.forEach(rk => {
-      h += '<tr><td class="rowhead">' + esc(rk) + '</td>';
+      const selR = S.xf && S.xf.f === o.rowField && S.xf.v === String(rk);
+      h += '<tr><td class="rowhead' + (selR ? ' sel' : '') + '"' + xfAttr(o.rowField, rk) + '>' + esc(rk) + '</td>';
       cks.forEach(ck => { const v = cell.get(rk + '\u0001' + ck); h += '<td class="num">' + (v ? fmt(v) : '') + '</td>'; });
       h += '<td class="num total">' + fmt(rm.get(rk) || 0) + '</td></tr>';
     });
@@ -441,9 +474,12 @@
 
   /* ---------- pages ---------- */
   function pgHead(title, rs, extra) {
+    const chip = S.xf
+      ? '<span class="xf-chip">กรอง: ' + esc(xfLabel()) + ' <button id="xfClear" title="ล้างตัวกรองนี้">✕</button></span>'
+      : '';
     return '<div class="pg-head"><h1>' + esc(title) + '</h1>' +
       '<span class="sub">' + esc(S.period ? S.period.replace('-', ' · ') : 'ทุกงวด') + ' · ' + num(rs ? rs.length : 0) + ' รายการ</span>' +
-      '<span class="field-scope">เฉพาะกลุ่มหยอดเหรียญ</span>' +
+      '<span class="field-scope">เฉพาะกลุ่มหยอดเหรียญ</span>' + chip +
       '<span class="grow"></span>' + (extra || '') + '</div>';
   }
 
@@ -479,8 +515,8 @@
       value: rs.filter(d => String(d.admGroup || '(Blank)') === k).length
     })).filter(d => d.value > 0);
 
-    const stM = matrix(rs, d => d.team || '(ไม่ระบุ)', d => d.admGroup, () => 1, num, { sortRows: 1, rowTitle: 'Grp ทีมขาย' });
-    const revM = matrix(rs, d => d.group, d => d.team, d => d.revenue, baht, { sortRows: 1, maxRows: 10, rowTitle: 'กลุ่มสินค้า' });
+    const stM = matrix(rs, d => d.team || '(ไม่ระบุ)', d => d.admGroup, () => 1, num, { sortRows: 1, rowTitle: 'Grp ทีมขาย', rowField: 'team', colField: 'admGroup' });
+    const revM = matrix(rs, d => d.group, d => d.team, d => d.revenue, baht, { sortRows: 1, maxRows: 10, rowTitle: 'กลุ่มสินค้า', rowField: 'group', colField: 'team' });
 
     let h = pgHead('Daily Admin', rs);
     h += '<div class="g">';
@@ -488,8 +524,8 @@
     h += kpiCard(3, 'Revenue (ราคาสุทธิ)', baht(rev), C.orange, 'หักส่วนลด ÷1.07 แล้ว');
     h += kpiCard(3, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
     h += kpiCard(3, 'ผ่านการตรวจสอบ', pct.toFixed(0) + '%', C.green, num(pass) + ' / ' + num(rs.length) + ' รายการ');
-    h += card(8, 'SO ต่อวัน', colsChart(daily, { line: instLine, barLabel: 'จำนวน SO', lineLabel: 'การติดตั้ง' }));
-    h += card(4, 'สถานะตรวจสอบ (Admin)', donut(adm));
+    h += card(8, 'SO ต่อวัน', colsChart(daily, { line: instLine, barLabel: 'จำนวน SO', lineLabel: 'การติดตั้ง', field: 'day' }));
+    h += card(4, 'สถานะตรวจสอบ (Admin)', donut(adm, { field: 'admGroup' }));
     h += card(12, 'Grp ทีมขาย × สถานะ Admin', stM, { hint: 'จำนวนงาน' });
     h += card(12, 'กลุ่มสินค้า × ทีมขาย · Revenue', revM, { hint: 'ราคาสุทธิ (บาท)' });
     return h + '</div>';
@@ -508,8 +544,8 @@
     h += '<div class="g">';
     h += statusKpi(rs);
     h += card(12, 'สถานะใบงาน3 × Grp ทีมขาย', statusTable(rs), { hint: 'SO / %SO' });
-    h += card(6, 'สถานะ Admin', hbars(admData), { hint: 'จำนวนงาน' });
-    h += card(6, 'สถานะใบงาน3 · สัดส่วน', donut(st3Data));
+    h += card(6, 'สถานะ Admin', hbars(admData, num, { field: 'admGroup' }), { hint: 'จำนวนงาน' });
+    h += card(6, 'สถานะใบงาน3 · สัดส่วน', donut(st3Data, { field: 'status3' }));
     return h + '</div>';
   }
 
@@ -541,8 +577,8 @@
     h += kpiCard(3, 'SLA ปิดงาน เฉลี่ย', (nC ? sC / nC : 0).toFixed(1) + ' วัน', C.orange, num(nC) + ' งาน');
     h += kpiCard(3, 'งานที่ปิดแล้ว', num(nC), C.green, '1.Done + 3.Cancel');
     h += kpiCard(3, 'งานคงค้าง', num(rs.length - nC), C.red, 'ยังไม่ปิดงาน');
-    h += card(12, 'SLA ปิดงาน เฉลี่ยรายวัน (วัน)', colsChart(daily), { hint: 'เฉลี่ยต่อวัน' });
-    h += card(6, 'SLA เฉลี่ยตามทีม (วัน)', hbars(teamData, v => v.toFixed(1)));
+    h += card(12, 'SLA ปิดงาน เฉลี่ยรายวัน (วัน)', colsChart(daily, { field: 'day' }), { hint: 'เฉลี่ยต่อวัน' });
+    h += card(6, 'SLA เฉลี่ยตามทีม (วัน)', hbars(teamData, v => v.toFixed(1), { field: 'team' }));
     h += card(6, 'นิยามที่ใช้คำนวณ',
       '<ul class="note"><li>SLA Admin = MAX(Date Admin − Date SO, 0)</li>' +
       '<li>SLA ปิดงาน = วันที่ปิดงาน − Date SO (งาน 1.Done / 3.Cancel)</li>' +
@@ -681,11 +717,17 @@
     if (isTime) bars.sort((a, b) => (parseFloat(a.label) || 0) - (parseFloat(b.label) || 0));
     else bars.sort((a, b) => b.value - a.value);
 
-    const chart = isTime ? colsChart(bars) : hbars(bars.slice(0, 12), fmt);
+    const chart = isTime
+      ? colsChart(bars.map(b => ({
+        label: b.label,
+        value: b.value,
+        xv: sp.dim === 'monthLabel' ? b.label.slice(3) + b.label.slice(0, 2) : b.label
+      })), { field: sp.dim })
+      : hbars(bars.slice(0, 12), fmt, { field: sp.dim });
     const dTop = bars.slice(0, 7);
     const dRest = bars.slice(7).reduce((a, b) => a + b.value, 0);
     const dData = dRest > 0 ? dTop.concat([{ label: 'อื่น ๆ (' + (bars.length - 7) + ')', value: dRest }]) : dTop;
-    const pv = matrix(data, labelOf, label2Of, valOf, fmt, { sortRows: 1, maxRows: 12, maxCols: 8, rowTitle: sp.dim });
+    const pv = matrix(data, labelOf, label2Of, valOf, fmt, { sortRows: 1, maxRows: 12, maxCols: 8, rowTitle: sp.dim, rowField: sp.dim, colField: sp.dim2 });
     const metricTxt = sp.metric === 'revenue' ? 'ราคาสุทธิ (บาท)' : sp.metric === 'units' ? 'จำนวนเครื่อง' : 'จำนวนงาน';
 
     let h = pgHead(name, data);
@@ -695,7 +737,7 @@
     h += kpiCard(3, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
     h += kpiCard(3, 'รายการในหน้านี้', num(data.length), C.violet, sp.filter ? 'ตามเงื่อนไขหน้านี้' : 'ทั้งงวด');
     h += card(8, sp.title + ' · ตาม ' + sp.dim, chart, { hint: isTime ? 'รายแกนเวลา' : 'เรียงจากมากไปน้อย' });
-    h += card(4, sp.dim + ' · สัดส่วน', donut(dData));
+    h += card(4, sp.dim + ' · สัดส่วน', donut(dData, { field: sp.dim }));
     h += card(12, sp.dim + ' × ' + sp.dim2, pv, { hint: metricTxt });
     return h + '</div>';
   }
@@ -737,6 +779,20 @@
     const p = $('dataPrev'), n = $('dataNext');
     if (p) p.onclick = () => { S.pageIdx--; render(); };
     if (n) n.onclick = () => { S.pageIdx++; render(); };
+
+    document.querySelectorAll('[data-xf]').forEach(el => {
+      el.onclick = () => {
+        const raw2 = el.getAttribute('data-xf') || '';
+        const i = raw2.indexOf('|');
+        if (i < 0) return;
+        const f = raw2.slice(0, i), v = raw2.slice(i + 1);
+        if (S.xf && S.xf.f === f && S.xf.v === v) S.xf = null;   /* คลิกซ้ำ = ยกเลิก */
+        else S.xf = { f: f, v: v };
+        render();
+      };
+    });
+    const xc = $('xfClear');
+    if (xc) xc.onclick = e => { e.stopPropagation(); S.xf = null; render(); };
 
     document.querySelectorAll('input[data-f]').forEach(cb => {
       cb.onchange = () => {
