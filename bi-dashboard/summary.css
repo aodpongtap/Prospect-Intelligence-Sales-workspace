@@ -102,7 +102,11 @@
 
 /* ---------------- RANK LIST ---------------- */
 .sum-rank { display: flex; flex-direction: column; gap: 10px; }
-.sum-rank-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; }
+.sum-rank-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px; padding: 2px 4px; margin: 0 -4px; border-radius: 6px; }
+.sum-rank-row:hover { background: #F9FAFB; }
+.sum-rank-row.sel { background: #EFF8FF; }
+.sum-rank-row.sel .sum-rank-name { color: #0B4C8C; font-weight: 700; }
+.sum-rank-row.sel .sum-rank-track i { background: linear-gradient(90deg, #118DFF, #12239E); }
 .sum-rank-name {
   font-size: 12px; font-weight: 600; color: #344054;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

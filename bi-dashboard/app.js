@@ -16,7 +16,7 @@
   const COLS = Array.from({ length: 90 }, (_, i) => i);
   const DATE_COLS = [2, 32, 47, 54];
 
-  const S = { raw: null, data: null, meta: null, page: 'summary', period: null, q: '', pageIdx: 0, xf: {}, filter: { team: new Set(), channel: new Set(), group: new Set() }, momMth: null, momN: 1, keepScroll: false };
+  const S = { raw: null, data: null, meta: null, page: 'summary', period: null, q: '', pageIdx: 0, xf: {}, filter: { team: new Set(), channel: new Set(), group: new Set() }, momMth: null, momMth2: null, momN: 1, keepScroll: false };
 
   /* หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) — เพิ่ม Summary เป็นหน้าแรก */
   const PBI_PAGES = [
@@ -143,6 +143,9 @@
     });
     S.xf = (v.xf && typeof v.xf === 'object' && !Array.isArray(v.xf)) ? v.xf : {};
     if (typeof v.q === 'string') S.q = v.q;
+    if (typeof v.momMth === 'string') S.momMth = v.momMth;
+    if (typeof v.momMth2 === 'string') S.momMth2 = v.momMth2;
+    if (v.momN === 1 || v.momN === 3) S.momN = v.momN;
     S.pageIdx = 0;
     return true;
   }
@@ -150,7 +153,7 @@
     const v = {
       page: S.page, period: S.period,
       team: [...S.filter.team], channel: [...S.filter.channel], group: [...S.filter.group],
-      xf: S.xf, q: S.q, at: new Date().toISOString()
+      xf: S.xf, q: S.q, momMth: S.momMth, momMth2: S.momMth2, momN: S.momN, at: new Date().toISOString()
     };
     let ok = true;
     try { localStorage.setItem(VIEW_KEY, JSON.stringify(v)); } catch (e) { ok = false; }
@@ -194,6 +197,22 @@
     S.data.forEach(d => { if (d.mth) set.add(String(d.mth).slice(0, 4) + '-' + String(d.mth).slice(4).padStart(2, '0')); });
     return [...set].sort();
   }
+  /* ตรวจเงื่อนไข cross-filter (ยกเว้นฟิลด์ของ visual ตัวเอง) */
+  function matchXf(d, except) {
+    if (!S.xf) return true;
+    for (const f in S.xf) {
+      if (f === except) continue;
+      const set = S.xf[f];
+      if (!set || !set.size) continue;
+      if (f === 'day') {
+        if (!d.dateSO || !set.has(String(d.dateSO.getDate()))) return false;
+      } else if (f === 'monthLabel') {
+        if (!set.has(String(d.mth))) return false;
+      } else if (!set.has(String(d[f] == null ? '' : d[f]))) return false;
+    }
+    return true;
+  }
+
   function rows(except) {
     if (!S.data) return [];
     const fT = S.filter.team, fC = S.filter.channel, fG = S.filter.group;
@@ -206,19 +225,7 @@
       if (fT.size && !fT.has(String(d.team == null ? '' : d.team))) return false;
       if (fC.size && !fC.has(String(d.channel == null ? '' : d.channel))) return false;
       if (fG.size && !fG.has(String(d.group == null ? '' : d.group))) return false;
-      if (S.xf) {
-        for (const f in S.xf) {
-          if (f === except) continue;      /* visual ของตัวเองต้องเห็นทุกหมวด */
-          const set = S.xf[f];
-          if (!set || !set.size) continue;
-          if (f === 'day') {
-            if (!d.dateSO || !set.has(String(d.dateSO.getDate()))) return false;
-          } else if (f === 'monthLabel') {
-            if (!set.has(String(d.mth))) return false;
-          } else if (!set.has(String(d[f] == null ? '' : d[f]))) return false;
-        }
-      }
-      return true;
+      return matchXf(d, except);
     });
   }
 
@@ -654,7 +661,7 @@
     const pD = prev.filter(d => d.status3 === '1.Done').length;
     const pC = prev.filter(d => d.status3 === '3.Cancel').length;
     /* เทียบแบบวันต่อวัน: เดือนก่อนนับถึงวันที่เท่ากัน (elapsed) */
-    const prevTD = prev.filter(d => d.dateSO instanceof Date && !isNaN(d.dateSO) && d.dateSO.getDate() <= elapsed);
+    const prevTD = prev.filter(d => d.dateSO instanceof Date && !isNaN(d.dateSO) && d.dateSO.getDate() <= elapsed && matchXf(d));
     const pTSo = prevTD.length, pTRev = sum(prevTD, 'revenue'), pTUnit = sum(prevTD, 'units');
     const pTD = prevTD.filter(d => d.status3 === '1.Done').length;
     const pTC = prevTD.filter(d => d.status3 === '3.Cancel').length;
@@ -698,7 +705,7 @@
 
     /* ความเสี่ยง: backlog ค้างทั้งหมด + เกิน 21 วัน */
     const all = allFiltered();
-    const openAll = all.filter(d => d.status3 === '2.Pending');
+    const openAll = all.filter(d => d.status3 === '2.Pending' && matchXf(d));
     const old21 = openAll.filter(d => d.dateSO instanceof Date && !isNaN(d.dateSO) && (now - d.dateSO) / 86400000 > 21).length;
 
     /* ===== เทียบเดือนก่อน (Month over Month) — เลือกเดือนได้ + โหมด 3 เดือน ===== */
@@ -707,7 +714,7 @@
     const shiftMth = (k, n) => { const y = +String(k).slice(0, 4), m = +String(k).slice(5, 7); const d = new Date(y, m - 1 + n, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
     const statOf = k => {
       const list = monthRowsOf(Number(String(k).replace('-', '')))
-        .filter(d => d.dateSO instanceof Date && !isNaN(d.dateSO) && d.dateSO.getDate() <= elapsed);
+        .filter(d => d.dateSO instanceof Date && !isNaN(d.dateSO) && d.dateSO.getDate() <= elapsed && matchXf(d));
       const n = list.length, rv = sum(list, 'revenue');
       return {
         so: n, rev: rv, unit: sum(list, 'units'),
@@ -717,15 +724,18 @@
       };
     };
     const curKeyM = S.period || mthList[mthList.length - 1] || '';
-    let cmpKey = S.momMth;
-    if (!cmpKey || mthList.indexOf(cmpKey) < 0 || cmpKey === curKeyM) cmpKey = shiftMth(curKeyM, -1);
-    if (mthList.indexOf(cmpKey) < 0) {
-      const older = mthList.filter(k => k < curKeyM);
-      cmpKey = older.length ? older[older.length - 1] : curKeyM;
-    }
+    const others = mthList.filter(k => k !== curKeyM);          /* เรียงเก่า -> ใหม่ */
+    const validM = v => !!v && others.indexOf(v) >= 0;
+    const fallbackM = ex => {
+      const prevM = shiftMth(curKeyM, -1);
+      if (validM(prevM) && ex.indexOf(prevM) < 0) return prevM;
+      const rest = others.filter(k => ex.indexOf(k) < 0);
+      return rest.length ? rest[rest.length - 1] : '';
+    };
     const nMode = S.momN === 3 ? 3 : 1;
-    const cmpKeys = (nMode === 3 ? [cmpKey, shiftMth(cmpKey, -1)] : [cmpKey])
-      .filter(k => mthList.indexOf(k) >= 0 && k !== curKeyM);
+    const c1 = validM(S.momMth) ? S.momMth : fallbackM([]);
+    const c2 = nMode === 3 ? (validM(S.momMth2) && S.momMth2 !== c1 ? S.momMth2 : fallbackM([c1])) : '';
+    const cmpKeys = (nMode === 3 ? [c1, c2] : [c1]).filter(validM);
 
     const curStat = { so: so, rev: rev, unit: units, done: nD, canc: nC, avg: so ? rev / so : 0 };
     const momRows = [
@@ -739,15 +749,18 @@
     const cmpStats = cmpKeys.map(k => ({ k: k, s: statOf(k) }));
     const base = cmpStats.length ? cmpStats[0] : null;
 
+    const mSel = (id, label, val) => '<label>' + esc(label) + ' <select id="' + id + '" class="pbi-select">' +
+      others.slice().reverse().map(k => '<option value="' + k + '"' + (k === val ? ' selected' : '') + '>' +
+        esc(mthLabel(k)) + '</option>').join('') + '</select></label>';
     let momTbl = '<div class="mom-ctl">' +
       '<div class="seg" id="momMode">' +
         '<button data-mode="1" class="' + (nMode === 1 ? 'on' : '') + '">เดือน × เดือน</button>' +
         '<button data-mode="3" class="' + (nMode === 3 ? 'on' : '') + '">เทียบ 3 เดือน</button>' +
       '</div>' +
-      '<label>เทียบกับ <select id="momSel" class="pbi-select">' +
-        mthList.slice().reverse().filter(k => k !== curKeyM).map(k =>
-          '<option value="' + k + '"' + (k === cmpKey ? ' selected' : '') + '>' + esc(mthLabel(k)) + '</option>').join('') +
-      '</select></label>' +
+      (others.length
+        ? mSel('momSel', nMode === 3 ? 'เทียบกับ' : 'เทียบกับ', c1) +
+          (nMode === 3 ? mSel('momSel2', 'และ', c2) : '')
+        : '<span class="mom-note">ยังมีข้อมูลเดือนเดียว</span>') +
       '<span class="mom-note">นับถึงวันที่ ' + elapsed + ' ของทุกเดือน</span>' +
       '</div>';
     momTbl += '<div class="tbl"><table class="pbi"><thead><tr>' +
@@ -814,12 +827,13 @@
       bkc[age <= 3 ? 0 : age <= 7 ? 1 : age <= 14 ? 2 : 3]++;
     });
 
-    /* ---- ตัวช่วย: อันดับแบบแท่ง ---- */
-    const rankList = (items, fmt) => {
+    /* ---- ตัวช่วย: อันดับแบบแท่ง (คลิกกรองได้) ---- */
+    const rankList = (items, fmt, field) => {
       if (!items || !items.length) return empty();
       const mx = Math.max.apply(null, items.map(x => x.value)) || 1;
       return '<div class="sum-rank">' + items.map(x =>
-        '<div class="sum-rank-row"><span class="sum-rank-name" title="' + esc(x.label) + '">' + esc(x.label) + '</span>' +
+        '<div class="sum-rank-row' + (field && xfHas(field, x.label) ? ' sel' : '') + '"' + (field ? xfAttr(field, x.label) : '') + ' title="' + esc(x.label) + ' · ' + fmt(x.value) + '">' +
+        '<span class="sum-rank-name">' + esc(x.label) + '</span>' +
         '<span class="sum-rank-val">' + fmt(x.value) + '</span>' +
         '<span class="sum-rank-track"><i style="width:' + (x.value / mx * 100).toFixed(1) + '%"></i></span></div>').join('') + '</div>';
     };
@@ -872,9 +886,9 @@
     h += card(7, 'ยอด SO สะสม · เดือนนี้เทียบเดือนก่อน', trendChart, { hint: 'ถึงวันที่ ' + elapsed });
     h += card(5, 'องค์ประกอบสถานะใบงาน', compHtml, { hint: 'สัดส่วน 100%' });
 
-    h += card(4, 'Top 5 ทีมขาย · Revenue', rankList(topTeam.slice(0, 5), baht), { hint: 'ราคาสุทธิ' });
-    h += card(4, 'กลุ่มสินค้า · Unit', rankList(byGroup, num), { hint: 'จำนวนเครื่อง' });
-    h += card(4, 'พื้นที่ · SO', rankList(byArea, num), { hint: 'จำนวนใบ' });
+    h += card(4, 'Top 5 ทีมขาย · Revenue', rankList(topTeam.slice(0, 5), baht, 'team'), { hint: 'ราคาสุทธิ' });
+    h += card(4, 'กลุ่มสินค้า · Unit', rankList(byGroup, num, 'group'), { hint: 'จำนวนเครื่อง' });
+    h += card(4, 'พื้นที่ · SO', rankList(byArea, num, 'gbkk'), { hint: 'จำนวนใบ' });
 
     h += card(6, 'ความเสี่ยงงานค้าง (Backlog)',
       (old21 ? '<div class="sum-risk-alert">⚠ ค้างเกิน 21 วัน ' + num(old21) + ' ใบ จากทั้งหมด ' + num(openAll.length) + ' ใบ</div>' : '') +
@@ -1677,6 +1691,8 @@
   /* ---------- render ---------- */
   function render() {
     const rs = rows();
+    const stage = document.querySelector('.pbi-stage');
+    const prevY = stage ? stage.scrollTop : 0;
     renderFilterBar();
     const html = S.page === 'summary' ? pageSummary(rs)
       : S.page === 'overview' ? pageOverview(rs)
@@ -1697,18 +1713,19 @@
     el.innerHTML = html;
     el.classList.add('active');
     setActiveNav();
-    if (S.keepScroll) S.keepScroll = false; else scrollTopPage();
+    if (S.keepScroll) { S.keepScroll = false; if (stage) stage.scrollTop = prevY; }
+    else scrollTopPage();
     bind();
   }
 
   function bind() {
     const sel = $('periodSel');
-    if (sel) sel.onchange = () => { S.period = sel.value; S.pageIdx = 0; render(); };
+    if (sel) sel.onchange = () => { S.period = sel.value; S.pageIdx = 0; S.keepScroll = true; render(); };
     const s = $('dataSearch');
-    if (s) s.oninput = e => { const v = e.target.value; clearTimeout(s._t); s._t = setTimeout(() => { S.q = v; render(); }, 320); };
+    if (s) s.oninput = e => { const v = e.target.value; clearTimeout(s._t); s._t = setTimeout(() => { S.q = v; S.keepScroll = true; render(); }, 320); };
     const p = $('dataPrev'), n = $('dataNext');
-    if (p) p.onclick = () => { S.pageIdx--; render(); };
-    if (n) n.onclick = () => { S.pageIdx++; render(); };
+    if (p) p.onclick = () => { S.pageIdx--; S.keepScroll = true; render(); };
+    if (n) n.onclick = () => { S.pageIdx++; S.keepScroll = true; render(); };
 
     document.querySelectorAll('[data-xf]').forEach(el => {
       el.onclick = () => {
@@ -1716,6 +1733,7 @@
         const i = raw2.indexOf('|');
         if (i < 0) return;
         xfToggle(raw2.slice(0, i), raw2.slice(i + 1));   /* คลิกซ้ำ = ยกเลิก, คลิกหลายแท่ง = รวมหลายค่า */
+        S.keepScroll = true;
         render();
       };
     });
@@ -1723,25 +1741,26 @@
       b.onclick = e => {
         e.stopPropagation();
         delete S.xf[b.getAttribute('data-xfc')];
+        S.keepScroll = true;
         render();
       };
     });
     const xa = $('xfClearAll');
-    if (xa) xa.onclick = () => { S.xf = {}; render(); };
+    if (xa) xa.onclick = () => { S.xf = {}; S.keepScroll = true; render(); };
 
     document.querySelectorAll('input[data-f]').forEach(cb => {
       cb.onchange = () => {
         const f = cb.dataset.f;
         if (cb.checked) S.filter[f].add(cb.value); else S.filter[f].delete(cb.value);
-        S.pageIdx = 0;
+        S.pageIdx = 0; S.keepScroll = true;
         render();
       };
     });
     document.querySelectorAll('[data-clear]').forEach(b => {
-      b.onclick = e => { e.preventDefault(); S.filter[b.dataset.clear].clear(); render(); };
+      b.onclick = e => { e.preventDefault(); S.filter[b.dataset.clear].clear(); S.keepScroll = true; render(); };
     });
     const rst = $('fReset');
-    if (rst) rst.onclick = () => { S.filter.team.clear(); S.filter.channel.clear(); S.filter.group.clear(); render(); };
+    if (rst) rst.onclick = () => { S.filter.team.clear(); S.filter.channel.clear(); S.filter.group.clear(); S.keepScroll = true; render(); };
 
     /* Summary — เทียบเดือน (โหมด / เดือนที่เลือก) */
     document.querySelectorAll('#momMode button').forEach(b => {
@@ -1749,6 +1768,8 @@
     });
     const ms = $('momSel');
     if (ms) ms.onchange = () => { S.momMth = ms.value; S.keepScroll = true; render(); };
+    const ms2 = $('momSel2');
+    if (ms2) ms2.onchange = () => { S.momMth2 = ms2.value; S.keepScroll = true; render(); };
   }
 
   const NAV_GROUPS = [
