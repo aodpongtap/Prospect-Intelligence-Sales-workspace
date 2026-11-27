@@ -180,7 +180,7 @@
       });
       return h + '</div></details>';
     };
-    let h = '<label class="fsel"><span>งวด</span><select id="periodSel" class="pbi-select">' +
+    let h = '<label class="fsel"><span>เดือน</span><select id="periodSel" class="pbi-select">' +
       periods().slice().reverse().map(p => '<option value="' + p + '"' + (p === S.period ? ' selected' : '') + '>' +
         p.replace('-', ' · ') + '</option>').join('') + '</select></label>';
     h += mk('team', 'ทีมขาย') + mk('channel', 'ช่องทาง') + mk('group', 'กลุ่มสินค้า');
@@ -499,7 +499,7 @@
   /* ---------- pages ---------- */
   function pgHead(title, rs, extra) {
     return '<div class="pg-head"><h1>' + esc(title) + '</h1>' +
-      '<span class="sub">' + esc(S.period ? S.period.replace('-', ' · ') : 'ทุกงวด') + ' · ' + num(rs ? rs.length : 0) + ' รายการ</span>' +
+      '<span class="sub">' + esc(S.period ? S.period.replace('-', ' · ') : 'ทุกเดือน') + ' · ' + num(rs ? rs.length : 0) + ' รายการ</span>' +
       '<span class="field-scope">เฉพาะกลุ่มหยอดเหรียญ</span>' + xfChips() +
       '<span class="grow"></span>' + (extra || '') + '</div>';
   }
