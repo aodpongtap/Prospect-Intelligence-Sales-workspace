@@ -319,7 +319,7 @@
     let h = '<div class="hbars" style="--lw:' + lw + 'px">';
     data.forEach((d, i) => {
       const p = Math.max(1.2, Math.min(100, d.value / max * 100));
-      const col = d.color || PALETTE[i % PALETTE.length];
+      const col = d.color || (o.palette ? PALETTE[i % PALETTE.length] : 'linear-gradient(90deg,#7EA6FF,#118DFF)');
       const sel = xfHas(o.field, d.label);
       h += '<div class="hbar' + (sel ? ' sel' : '') + '"' + xfAttr(o.field, d.label) +
         ' title="' + esc(d.label) + ' · ' + f(d.value) + '">' +
@@ -684,6 +684,14 @@
     h += card(4, 'สถานะตรวจสอบ (Admin)', donut(adm, { field: 'admGroup' }));
     h += card(12, 'Grp ทีมขาย × สถานะ Admin', stM, { hint: 'จำนวนงาน' });
     h += card(12, 'กลุ่มสินค้า × ทีมขาย · Revenue', revM, { hint: 'ราคาสุทธิ (บาท)' });
+    h += card(12, 'นิยาม & วิธีอ่านหน้านี้',
+      '<ul class="note">' +
+      '<li><b>กราฟ SO ต่อวัน</b> = แท่งน้ำเงินคือจำนวน SO ที่เปิดในวันนั้น · แดง (เส้น) คือจำนวนงานที่ติดตั้งในวันนั้น</li>' +
+      '<li><b>สถานะ Admin</b> = 1.ผ่าน / 2.Pening (รอตรวจสอบ·ระหว่างแก้ไข) / 3.ไม่ผ่าน — ตามกลุ่มในโมเดล PBI</li>' +
+      '<li><b>ประมาณการ SO ปิดเดือน</b> = SO ถึงวันนี้ ÷ วันที่ผ่านไป × วันในเดือน</li>' +
+      '<li><b>Revenue</b> = IF(เงินสดว่าง, ราคาตั้ง, ราคาเงินสด) − ส่วนลด ÷ 1.07</li>' +
+      '<li>คลิกกราฟ/ตาราง/สัญลักษณ์เพื่อกรองได้หลายค่า · ปุ่ม “ล้างทั้งหมด” เพื่อคืนค่า</li>' +
+      '</ul>');
     return h + '</div>';
   }
 
@@ -705,6 +713,13 @@
     h += card(12, 'สถานะใบงาน3 × Grp ทีมขาย', statusTable(rs), { hint: 'SO / %SO' });
     h += card(6, 'สถานะ Admin', hbars(admData, num, { field: 'admGroup' }), { hint: 'จำนวนงาน' });
     h += card(6, 'สถานะใบงาน3 · สัดส่วน', donut(st3Data, { field: 'status3' }));
+    h += card(12, 'นิยาม & วิธีอ่านหน้านี้',
+      '<ul class="note">' +
+      '<li><b>Total SO</b> = จำนวนใบสั่งซื้อในเดือนนี้ (นับทุกสถานะ รวมที่ยังไม่มีสถานะ)</li>' +
+      '<li><b>Rev (ราคาสุทธิ)</b> / <b>Total Unit</b> = คิดเฉพาะงานที่มีสถานะ 1.Done / 2.Pending / 3.Cancel ตาม measure ใน PBI</li>' +
+      '<li><b>%SO</b> = สัดส่วนของแต่ละสถานะต่อจำนวน SO ทั้งหมดของทีมนั้น</li>' +
+      '<li>คลิกแถวตารางเพื่อกรองทีม · คลิกชิ้นโดนัทเพื่อกรองสถานะ ได้หลายค่าพร้อมกัน</li>' +
+      '</ul>');
     return h + '</div>';
   }
 
@@ -737,6 +752,18 @@
       .map(e => ({ label: e[0], value: e[1][1] ? +(e[1][0] / e[1][1]).toFixed(1) : 0 }))
       .sort((a, b) => b.value - a.value).slice(0, 10);
 
+    /* อายุงานคงค้าง (Aging) — เฉพาะงานที่ยังไม่ปิด */
+    const BK = ['0–3 วัน', '4–7 วัน', '8–14 วัน', '15–21 วัน', '> 21 วัน'];
+    const bk = [0, 0, 0, 0, 0];
+    const today = new Date();
+    rs.forEach(d => {
+      if (d.status3 === '1.Done' || d.status3 === '3.Cancel') return;
+      if (!(d.dateSO instanceof Date) || isNaN(d.dateSO)) return;
+      const age = Math.max(0, Math.round((today - d.dateSO) / 86400000));
+      bk[age <= 3 ? 0 : age <= 7 ? 1 : age <= 14 ? 2 : age <= 21 ? 3 : 4]++;
+    });
+    const agingData = BK.map((k, i) => ({ label: k, value: bk[i] }));
+
     let h = pgHead('Performance / TAT', rs);
     h += '<div class="g">';
     h += kpiCard(3, 'SLA Admin เฉลี่ย', (nA ? sA / nA : 0).toFixed(1) + ' วัน', C.blue, num(nA) + ' งาน');
@@ -745,7 +772,8 @@
     h += kpiCard(3, 'งานคงค้าง', num(rs.length - nC), C.red, 'ยังไม่ปิดงาน');
     h += card(12, 'SLA ปิดงาน เฉลี่ยรายวัน (วัน)', colsChart(daily, { field: 'day' }), { hint: 'เฉลี่ยต่อวัน' });
     h += card(6, 'SLA เฉลี่ยตามทีม (วัน)', hbars(teamData, v => v.toFixed(1), { field: 'team' }));
-    h += card(6, 'นิยามที่ใช้คำนวณ',
+    h += card(6, 'อายุงานคงค้าง (Aging) · งานที่ยังไม่ปิด', hbars(agingData, num), { hint: 'นับจากวันที่เปิด SO ถึงวันนี้' });
+    h += card(12, 'นิยามที่ใช้คำนวณ',
       '<ul class="note"><li>SLA Admin = MAX(Date Admin − Date SO, 0)</li>' +
       '<li>SLA ปิดงาน = วันที่ปิดงาน − Date SO (งาน 1.Done / 3.Cancel)</li>' +
       '<li>งานที่ยังไม่ปิด = วันนี้ − Date SO</li>' +
@@ -1310,18 +1338,66 @@
     const dTop = bars.slice(0, 7);
     const dRest = bars.slice(7).reduce((a, b) => a + b.value, 0);
     const dData = dRest > 0 ? dTop.concat([{ label: 'อื่น ๆ (' + (bars.length - 7) + ')', value: dRest }]) : dTop;
-    const pv = matrix(data, labelOf, label2Of, valOf, fmt, { sortRows: 1, maxRows: 12, maxCols: 8, rowTitle: FIELD_TH[sp.dim] || sp.dim, rowField: sp.dim, colField: sp.dim2 });
+    const pv = matrix(data, labelOf, label2Of, valOf, fmt, { sortRows: isTime ? 0 : 1, maxRows: 12, maxCols: 8, rowTitle: FIELD_TH[sp.dim] || sp.dim, rowField: sp.dim, colField: sp.dim2 });
     const metricTxt = sp.metric === 'revenue' ? 'ราคาสุทธิ (บาท)' : sp.metric === 'units' ? 'จำนวนเครื่อง' : 'จำนวนงาน';
+    const dimTh = FIELD_TH[sp.dim] || sp.dim;
+    const dim2Th = FIELD_TH[sp.dim2] || sp.dim2;
+
+    /* สถานะงาน × มิติหลัก */
+    const stBy = new Map();
+    data.forEach(d => {
+      const k = labelOf(d);
+      const o = stBy.get(k) || { d: 0, p: 0, c: 0 };
+      if (d.status3 === '1.Done') o.d++;
+      else if (d.status3 === '2.Pending') o.p++;
+      else if (d.status3 === '3.Cancel') o.c++;
+      stBy.set(k, o);
+    });
+    const stRows = [...stBy.entries()]
+      .sort(isTime ? (a, b) => natCmp(a[0], b[0]) : (a, b) => (b[1].d + b[1].p + b[1].c) - (a[1].d + a[1].p + a[1].c))
+      .slice(0, 10)
+      .map(e => ({
+        label: e[0], segs: [
+          { name: 'Done', v: e[1].d, color: C.green },
+          { name: 'Pending', v: e[1].p, color: C.gold },
+          { name: 'Cancel', v: e[1].c, color: C.red }
+        ]
+      }));
+
+    /* มิติเทียบ: Top 10 */
+    const g2 = new Map();
+    data.forEach(d => { const k = label2Of(d); g2.set(k, (g2.get(k) || 0) + valOf(d)); });
+    const bars2 = [...g2.entries()].map(e => ({ label: e[0], value: e[1] }))
+      .sort((a, b) => b.value - a.value).slice(0, 10);
+
+    const nD = data.filter(d => d.status3 === '1.Done').length;
+    const nP = data.filter(d => d.status3 === '2.Pending').length;
+    const nC = data.filter(d => d.status3 === '3.Cancel').length;
+    const closeR = (nD + nP) ? nD / (nD + nP) : 0;
+    const filterNote = { '2.Pending': 'เฉพาะงาน 2.Pending', '2.1.Pending-Detail': 'เฉพาะงาน 2.Pending',
+      '3.Cancel': 'เฉพาะงาน 3.Cancel', '3.1.Cancel-Detail': 'เฉพาะงาน 3.Cancel' }[name] || 'ตามเงื่อนไขหน้านี้';
 
     let h = pgHead(name, data);
     h += '<div class="g">';
     h += kpiCard(3, 'จำนวน SO', num(soCount), C.navy, 'ไม่นับซ้ำ');
     h += kpiCard(3, 'Revenue (ราคาสุทธิ)', baht(rev), C.orange, 'ตามสูตรในไฟล์');
     h += kpiCard(3, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
-    h += kpiCard(3, 'รายการในหน้านี้', num(data.length), C.violet, sp.filter ? 'ตามเงื่อนไขหน้านี้' : 'ทั้งเดือน');
-    h += card(8, sp.title + ' · ตาม ' + (FIELD_TH[sp.dim] || sp.dim), chart, { hint: isTime ? 'รายแกนเวลา' : 'เรียงจากมากไปน้อย' });
-    h += card(4, (FIELD_TH[sp.dim] || sp.dim) + ' · สัดส่วน', donut(dData, { field: sp.dim }));
-    h += card(12, (FIELD_TH[sp.dim] || sp.dim) + ' × ' + (FIELD_TH[sp.dim2] || sp.dim2), pv, { hint: metricTxt });
+    h += kpiCard(3, 'Done / Pending / Cancel', num(nD) + ' / ' + num(nP) + ' / ' + num(nC), C.violet,
+      'อัตราปิดงาน ' + (closeR * 100).toFixed(0) + '% · รายการในหน้านี้ ' + num(data.length));
+    h += card(8, sp.title + ' · ตาม ' + dimTh, chart, { hint: isTime ? 'รายแกนเวลา' : 'เรียงจากมากไปน้อย' });
+    h += card(4, dimTh + ' · สัดส่วน', donut(dData, { field: sp.dim }));
+    h += card(12, dimTh + ' × ' + dim2Th, pv, { hint: metricTxt });
+    h += card(6, 'สถานะงาน × ' + dimTh, stRows.length ? stackedBars(stRows) + statusLegend() : empty(),
+      { hint: 'จำนวน SO' });
+    h += card(6, dim2Th + ' · Top 10', bars2.length ? hbars(bars2, fmt, { field: sp.dim2 }) : empty(), { hint: metricTxt });
+    h += card(12, 'นิยาม & วิธีใช้',
+      '<ul class="note">' +
+      '<li><b>ตัววัดหลัก</b> = ' + metricTxt + ' · <b>มิติ</b> = ' + dimTh + ' × ' + dim2Th + '</li>' +
+      '<li><b>Revenue</b> = IF(เงินสดว่าง, ราคาตั้ง, ราคาเงินสด) − ส่วนลด ÷ 1.07 (สูตรคอลัมน์ DW)</li>' +
+      '<li><b>สถานะใบงาน3</b> = มีสัญญา → 1.Done · Check SV. Cancel → 3.Cancel · อื่น ๆ ตาม Master Stutus (D:F)</li>' +
+      '<li><b>การกรองหน้านี้</b> = ' + esc(filterNote) + ' · คลิกแท่ง/แถว/ชิปได้หลายค่า และปุ่ม “ล้างทั้งหมด” เพื่อคืนค่า</li>' +
+      '<li><b>ขอบเขตข้อมูล</b> = เฉพาะกลุ่มสินค้าหยอดเหรียญ ในเดือนที่เลือกด้านบน</li>' +
+      '</ul>');
     return h + '</div>';
   }
 
