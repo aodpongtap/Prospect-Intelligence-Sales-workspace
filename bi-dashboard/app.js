@@ -2102,7 +2102,7 @@
         center: moneyMode ? (dTot / 1e6).toFixed(2) : num(dTot),
         centerSub: moneyMode ? 'ลบ.' : 'รวม'
       })
-      : empty(), { hint: 'รวม ' + dFmt(dTot) });
+      : empty());
     h += card(12, dimTh + ' × ' + dim2Th, pv, { hint: metricTxt });
     h += card(6, 'สถานะงาน × ' + dimTh, stRows.length ? '<div class="stk-wrap">' + stackedBars(stRows) + statusLegend() + '</div>' : empty(),
       { hint: 'จำนวน SO' });
