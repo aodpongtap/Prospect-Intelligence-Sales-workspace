@@ -1682,8 +1682,9 @@
     ];
     const maxLate = Math.max.apply(null, steps.map(s => s[3]));
     let slaTbl = '<div class="tbl"><table class="pbi"><thead><tr>' +
-      '<th>ขั้นตอน</th><th class="num">SLA เป้า</th><th class="num">เฉลี่ยจริง</th>' +
-      '<th class="num">เกินกำหนด (ใบ)</th><th>สถานะ</th></tr></thead><tbody>';
+      '<th style="width:32%">ขั้นตอน</th><th class="num" style="width:12%">SLA เป้า</th>' +
+      '<th class="num" style="width:14%">เฉลี่ยจริง</th>' +
+      '<th class="num" style="width:26%">เกินกำหนด (ใบ)</th><th style="width:16%">สถานะ</th></tr></thead><tbody>';
     steps.forEach(s => {
       const late = s[3], over = late > 25;
       slaTbl += '<tr><td>' + esc(s[0]) + '</td><td class="num">' + s[1] + '</td>' +
@@ -1704,7 +1705,7 @@
       '<div style="margin-top:10px">' + hbars(dep, v => num(v) + ' ใบ', { pct: true }) + '</div>' +
       '<div style="margin-top:10px;font-size:11.5px;color:#667085;line-height:1.6">' +
       'มัดจำที่รับแล้ว <b>฿8.4 ลบ.</b> · ค้าง <b>฿3.9 ลบ.</b><br>' +
-      'ค้างเกิน 30 วัน <b>31 ใบ</b> ( Pens) </div>';
+      'ค้างเกิน 30 วัน <b>31 ใบ</b></div>';
 
     /* ── การ์ด 3: สั่งของหรือยัง ── */
     const ord = [
