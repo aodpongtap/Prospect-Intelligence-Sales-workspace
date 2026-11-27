@@ -17,6 +17,7 @@
   const DATE_COLS = [2, 32, 47, 54];
 
   const S = { raw: null, data: null, meta: null, page: 'summary', period: null, q: '', pageIdx: 0, xf: {}, filter: { team: new Set(), channel: new Set(), group: new Set() }, momMth: null, momMth2: null, momN: 1, monMth: null, monScope: 'front', keepScroll: false };
+  const MON_TH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
   /* หน้าจริงของรายงาน Power BI (ตามลำดับในตัวนำทางหน้า) — เพิ่ม Summary เป็นหน้าแรก */
   const PBI_PAGES = [
@@ -1789,7 +1790,7 @@
 
     const mthLabel = k => {
       const y = +String(k).slice(0, 4), m = +String(k).slice(5, 7);
-      return TH_M[m - 1] + ' ' + (y + 543);
+      return MON_TH[m - 1] + ' ' + (y + 543);
     };
 
     /* ── แถบควบคุม: เดือน + ขอบเขตสินค้า ── */
