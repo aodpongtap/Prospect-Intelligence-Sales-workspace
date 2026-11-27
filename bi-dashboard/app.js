@@ -23,7 +23,7 @@
     'Daily Admin', '2.SO Order Status', '1.Unit / Revenue', 'SML', 'Pack สด/ผ่อน',
     '2.Pending', '2.1.Pending-Detail', 'Map', 'Performance/TAT', '3.Cancel',
     '3.1.Cancel-Detail', 'P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape',
-    'P5.Transport', 'P6.Technicial', 'Aging (21 Day)', 'Report ติดตั้ง', 'ยกเลิก**มัดจำ', 'วัน'
+    'P5.Transport', 'P6.Technician', 'Aging (21 Day)', 'Report ติดตั้ง', 'ยกเลิก / มัดจำ', 'วัน'
   ];
   /* หน้าที่มีเพิ่มในเว็บ (ไม่มีใน PBI) — เปิดจากเมนู ☰ เท่านั้น */
   const EXTRA_PAGES = ['1.Unit / Revenue New', 'Product end2end-Detail', 'All Job/Close', '1.Revenue', 'Status (Back log)', 'Status (New)', 'Report สัญญา'];
@@ -49,14 +49,14 @@
     'P3.Consult': { dim: 'team', dim2: 'pkg', metric: 'count', title: 'P3 · Consult' },
     'P4.Sale Scape': { dim: 'team', dim2: 'group', metric: 'count', title: 'P4 · Sale Scape' },
     'P5.Transport': { dim: 'province', dim2: 'team', metric: 'count', title: 'P5 · Transport (ขนส่ง)' },
-    'P6.Technicial': { dim: 'team', dim2: 'prodCat', metric: 'count', title: 'P6 · Technician' },
+    'P6.Technician': { dim: 'team', dim2: 'prodCat', metric: 'count', title: 'P6 · Technician' },
     'Aging (21 Day)': { dim: 'team', dim2: 'status3', metric: 'count', filter: d => d.slaClose != null && d.slaClose > 21, title: 'งานค้างเกิน 21 วัน' },
     '1.Unit / Revenue New': { dim: 'monthLabel', dim2: 'team', metric: 'revenue', title: 'Unit / Revenue รายเดือน' },
     'Product end2end-Detail': { dim: 'group', dim2: 'prodCat', metric: 'units', title: 'สินค้าแบบ end-to-end' },
     '1.Revenue': { dim: 'team', dim2: 'group', metric: 'revenue', title: 'Revenue ตามทีม / กลุ่มสินค้า' },
     'Status (Back log)': { dim: 'status3', dim2: 'team', metric: 'count', title: 'Backlog ตามสถานะ' },
     'Report ติดตั้ง': { dim: 'team', dim2: 'province', metric: 'units', title: 'รายงานการติดตั้ง' },
-    'ยกเลิก**มัดจำ': { dim: 'team', dim2: 'pkg', metric: 'revenue', filter: d => d.status3 === '3.Cancel', title: 'ยกเลิก / มัดจำ' },
+    'ยกเลิก / มัดจำ': { dim: 'team', dim2: 'pkg', metric: 'revenue', filter: d => d.status3 === '3.Cancel', title: 'ยกเลิก / มัดจำ' },
     'วัน': { dim: 'dayLabel', dim2: 'team', metric: 'count', title: 'ยอดตามวันในเดือน' }
   };
 
@@ -1027,9 +1027,9 @@
   const NAV_GROUPS = [
     { label: 'ภาพรวม', pages: ['Daily Admin', '1.Revenue', '1.Unit / Revenue', '1.Unit / Revenue New', 'Performance/TAT'] },
     { label: 'สถานะงาน', pages: ['Status (New)', 'Status (Back log)', '2.SO Order Status', '2.Pending', '2.1.Pending-Detail', '3.Cancel', '3.1.Cancel-Detail'] },
-    { label: 'ขั้นตอนทำงาน', pages: ['P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape', 'P5.Transport', 'P6.Technicial', 'Report ติดตั้ง', 'Report สัญญา'] },
+    { label: 'ขั้นตอนทำงาน', pages: ['P1.Sale/Admin', 'P2.Checker', 'P3.Consult', 'P4.Sale Scape', 'P5.Transport', 'P6.Technician', 'Report ติดตั้ง', 'Report สัญญา'] },
     { label: 'สินค้า & พื้นที่', pages: ['SML', 'Pack สด/ผ่อน', 'Map', 'Product end2end-Detail'] },
-    { label: 'อื่น ๆ', pages: ['Aging (21 Day)', 'ยกเลิก**มัดจำ', 'วัน', 'All Job/Close'] }
+    { label: 'อื่น ๆ', pages: ['Aging (21 Day)', 'ยกเลิก / มัดจำ', 'วัน', 'All Job/Close'] }
   ];
 
   function pageKey(name) { return IMPLEMENTED[name] || name; }
