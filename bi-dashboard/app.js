@@ -1657,12 +1657,28 @@
     return h + '</div>';
   }
 
-        /* ══════════════════════════════════════════════════════════════════════
-     Monitor Consult — บอร์ดตามงาน · ใช้ข้อมูลจาก ListBooking โดยตรง
-     ฟิลด์ที่ใช้: depositStatus/paidAmount · shipStatus · consultStart/End/Status
+          /* ══════════════════════════════════════════════════════════════════════
+     Monitor Consult — เฉพาะงาน “เครื่องซักผ้าฝาหน้า” (ข้อมูลจาก ListBooking)
+     + Cross-sell: ลูกค้าซื้อกี่กลุ่มสินค้า / คู่สินค้าที่ซื้อร่วม / ลิสต์โอกาส
      ══════════════════════════════════════════════════════════════════════ */
+  const FRONT_RE = /ฝาหน้า/;
+  const DRY_RE = /อบผ้า/;
+  const isFrontLoad = d => FRONT_RE.test(String(d.product || '')) && !DRY_RE.test(String(d.product || ''));
+  function prodCatOf(p) {
+    const s = String(p || '');
+    if (/Stack|ซ้อน/i.test(s)) return 'Stack (ซัก+อบ)';
+    if (/อบ/i.test(s)) return 'อบผ้า';
+    if (/ซัก/i.test(s)) return 'ซักผ้า';
+    if (/กาแฟ/i.test(s)) return 'กาแฟ';
+    if (/น้ำ/i.test(s)) return 'ตู้น้ำ';
+    if (/Snack|ขนม/i.test(s)) return 'Snack';
+    return 'อื่น ๆ';
+  }
+  const sizeOfRev = v => v > 1000000 ? 'L' : v > 500000 ? 'M' : v > 300000 ? 'S' : v > 100000 ? 'SS' : '-';
+
   function consultReal(data) {
-    const rows = data || [];
+    const rows = (data || []).filter(isFrontLoad);          /* งานฝาหน้าในเดือน/ตัวกรองที่เลือก */
+    const all = S.data || [];
     const now = new Date();
     const nums = a => a.filter(v => typeof v === 'number' && isFinite(v));
     const avgOf = a => { const x = nums(a); return x.length ? x.reduce((p, c) => p + c, 0) / x.length : 0; };
@@ -1675,32 +1691,26 @@
       .sort((a, b) => b.age - a.age);
     const pendVal = pend.reduce((a, x) => a + (x.d.revenue || 0), 0);
     const old21 = pend.filter(x => x.age > 21).length;
-    const old15 = pend.filter(x => x.age > 15 && x.age <= 21).length;
 
-    /* ── มัดจำ (จาก ListBooking: สถานะการเก็บเงิน + ยอดชำระแล้ว) ── */
-    const openJobs = rows.filter(d => d.status3 !== '3.Cancel');           /* ไม่นับใบยกเลิก */
-    const depPaid = openJobs.filter(d => String(d.depositStatus || '').indexOf('เรียบร้อย') >= 0 || (d.paidAmount || 0) > 0);
-    const depWait = openJobs.filter(d => !(String(d.depositStatus || '').indexOf('เรียบร้อย') >= 0 || (d.paidAmount || 0) > 0));
+    /* ── มัดจำ ── */
+    const openJobs = rows.filter(d => d.status3 !== '3.Cancel');
+    const depOk = d => String(d.depositStatus || '').indexOf('เรียบร้อย') >= 0 || (d.paidAmount || 0) > 0;
+    const depWait = openJobs.filter(d => !depOk(d));
     const depWaitVal = depWait.reduce((a, d) => a + (d.revenue || 0), 0);
     const paidSum = openJobs.reduce((a, d) => a + (d.paidAmount || 0), 0);
 
-    /* ── ส่งของ / จัดส่ง ── */
+    /* ── ส่งของ ── */
     const SHIP_DONE = /จัดส่งแล้ว|ได้รับแล้ว/;
     const SHIP_MID = /รอตรวจสอบ|รอนัดลูกค้า|นัดลูกค้าแล้ว|ลูกค้าไม่พร้อม/;
     const shipDone = openJobs.filter(d => SHIP_DONE.test(String(d.shipStatus || ''))).length;
     const shipMid = openJobs.filter(d => SHIP_MID.test(String(d.shipStatus || ''))).length;
     const shipNone = openJobs.filter(d => !String(d.shipStatus || '').trim()).length;
 
-    /* ── Consult (E-Consult) ── */
+    /* ── Consult ── */
     const cOpen = rows.filter(d => dOnly(d.consultStart) && !dOnly(d.consultEnd));
     const cAll = rows.filter(d => dOnly(d.consultStart));
     const cDays = cOpen.map(d => days(dOnly(d.consultStart), now));
     const cAvg = cDays.length ? cDays.reduce((a, b) => a + b, 0) / cDays.length : 0;
-    const cStatus = {};
-    rows.forEach(d => {
-      const s = String(d.consultStatus || '').trim() || '(ยังไม่เปิด)';
-      cStatus[s] = (cStatus[s] || 0) + 1;
-    });
 
     /* ── SLA ปิดงาน ── */
     const closed = rows.filter(d => (d.status3 === '1.Done' || d.status3 === '3.Cancel') && typeof d.slaClose === 'number' && d.slaClose > 0);
@@ -1708,11 +1718,49 @@
     const scAvg = avgOf(sc);
     const overPct = sc.length ? (sc.filter(v => v > 15).length / sc.length * 100) : 0;
 
+    /* ── CROSS-SELL: ประวัติการซื้อทั้งหมดของลูกค้าที่เคยซื้อฝาหน้า ── */
+    const hist = new Map();     /* customer -> { cats:Set, rev, so, team, sales, prov, last } */
+    all.forEach(d => {
+      const c = String(d.customer || '').trim();
+      if (!c) return;
+      const o = hist.get(c) || { cats: new Set(), rev: 0, so: 0, team: '', sales: '', prov: '', front: false, last: null };
+      o.cats.add(prodCatOf(d.product));
+      o.rev += d.revenue || 0;
+      o.so += 1;
+      if (isFrontLoad(d)) o.front = true;
+      o.team = o.team || d.team;
+      o.sales = o.sales || d.salesperson;
+      o.prov = o.prov || d.province;
+      if (d.status3 === '2.Pending') o.last = d;
+      hist.set(c, o);
+    });
+    const frontCust = [...hist.entries()].filter(e => e[1].front);
+    const csTotal = frontCust.length;
+    const csMulti = frontCust.filter(e => e[1].cats.size > 1).length;
+    const csPct = csTotal ? csMulti / csTotal * 100 : 0;
+
+    /* คู่สินค้าที่ซื้อร่วม */
+    const pair = {};
+    frontCust.forEach(e => {
+      const a = [...e[1].cats].sort();
+      if (a.length < 2) return;
+      for (let x = 0; x < a.length; x++) for (let y = x + 1; y < a.length; y++) {
+        const key = a[x] + ' + ' + a[y];
+        pair[key] = (pair[key] || 0) + 1;
+      }
+    });
+    const pairTop = Object.entries(pair).sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+    /* ลิสต์โอกาส: ลูกค้าที่ซื้อกลุ่มเดียว แต่ยอดสะสม >= 300k */
+    const opp = frontCust.filter(e => e[1].cats.size === 1 && e[1].rev >= 300000)
+      .sort((a, b) => b[1].rev - a[1].rev)
+      .slice(0, 12);
+
     /* ── บอร์ดการ์ดงาน ── */
     const LV = x => x.age > 21 ? { c: '#E11D48', b: 'background:#FFF1F3;color:#BE123C' }
       : x.age > 15 ? { c: '#F59E0B', b: 'background:#FFF8EB;color:#B45309' }
       : { c: '#0EA5E9', b: 'background:#F0F9FF;color:#0369A1' };
-    const depTxt = d => (String(d.depositStatus || '').indexOf('เรียบร้อย') >= 0 || (d.paidAmount || 0) > 0)
+    const depTxt = d => depOk(d)
       ? '<b style="color:#047857">จ่ายแล้ว ' + (d.paidAmount ? baht(d.paidAmount) : '') + '</b>'
       : '<b style="color:#B45309">ยังไม่จ่าย</b>';
     const shipTxt = d => {
@@ -1755,8 +1803,8 @@
       'ต้องตาม <b>' + num(pend.length) + ' งาน</b> มูลค่า <b>' + baht(pendVal) + '</b>',
       'ค้างเกิน 21 วัน <b>' + num(old21) + ' งาน</b>' + (teamTop.length ? ' · ทีมที่มากสุด <b>' + esc(teamTop[0][0]) + '</b>' : ''),
       'มัดจำยังไม่จ่าย <b>' + num(depWait.length) + ' ใบ</b> · มูลค่า <b>' + baht(depWaitVal) + '</b>',
-      'ยังไม่ส่งของ <b>' + num(shipMid) + ' ใบ</b> (รอตรวจ/รอนัด) · ยังไม่ถึงขั้น <b>' + num(shipNone) + ' ใบ</b>',
-      'Consult เปิดค้าง <b>' + num(cOpen.length) + ' ใบ</b> · เฉลี่ย <b>' + cAvg.toFixed(0) + ' วัน</b>',
+      'ยังไม่ส่งของ <b>' + num(shipMid) + ' ใบ</b> · ยังไม่ถึงขั้น <b>' + num(shipNone) + ' ใบ</b>',
+      'Cross-sell: ลูกค้า <b>' + num(csTotal) + '</b> ราย ซื้อหลายกลุ่มแค่ <b>' + num(csMulti) + '</b> (' + csPct.toFixed(1) + '%)',
       'SLA ปิดงานเฉลี่ย <b>' + scAvg.toFixed(1) + ' วัน</b> (เป้า 15) · เกินกำหนด <b>' + overPct.toFixed(0) + '%</b>'
     ];
     const railSum = '<div style="display:flex;flex-direction:column;gap:9px">' + bullets.map((x, i2) =>
@@ -1783,7 +1831,7 @@
           '<b style="font-size:13px">สิ่งที่ผมต้องตามทีม</b>' +
           '<span style="font-size:10.5px;font-weight:800;color:#fff;background:#E11D48;border-radius:99px;padding:2px 8px">' + num(pend.length) + '</span>' +
           '<span style="margin-left:auto;font-size:11px;color:#98A2B3">เรียงตามอายุงานมากสุด · กด “ตามแล้ว” เพื่อซ่อน</span></div>' +
-          '<div style="display:flex;flex-direction:column;gap:9px;max-height:620px;overflow:auto;padding-right:2px">' + board + '</div></div>' +
+          '<div style="display:flex;flex-direction:column;gap:9px;max-height:600px;overflow:auto;padding-right:2px">' + board + '</div></div>' +
         '<div style="display:flex;flex-direction:column;gap:12px">' +
           '<div style="border:1px solid #E4E9F0;border-radius:12px;overflow:hidden">' +
             '<div style="padding:9px 12px;border-bottom:1px solid #EEF2F7;font-weight:800;font-size:12px">📌 สรุป 1 นาที (สำหรับหัวหน้า)</div>' +
@@ -1797,14 +1845,42 @@
         '</div>' +
       '</div>';
 
+    /* ── การ์ด Cross-sell ── */
+    const maxPair = pairTop.length ? pairTop[0][1] : 1;
+    const pairHtml = pairTop.length ? pairTop.map(p =>
+      '<div style="display:flex;justify-content:space-between;font-size:11.6px;color:#475569;padding:5px 0"><span>' + esc(p[0]) + '</span><b>' + num(p[1]) + ' ราย</b></div>' +
+      '<div style="height:6px;border-radius:99px;background:#EDF0F5;overflow:hidden"><i style="display:block;height:100%;border-radius:99px;width:' +
+      (p[1] / maxPair * 100).toFixed(0) + '%;background:linear-gradient(90deg,#7EA6FF,#118DFF)"></i></div>').join('')
+      : '<div style="font-size:11.6px;color:#98A2B3">ยังไม่มีลูกค้าที่ซื้อหลายกลุ่ม</div>';
+
+    let oppTbl = opp.length
+      ? '<div class="tbl"><table class="pbi"><thead><tr><th>ลูกค้า</th><th>กลุ่มที่ซื้อ</th><th>จังหวัด</th>' +
+        '<th class="num">ยอดสะสม</th><th>ขนาด</th><th>ทีม · เซลล์</th></tr></thead><tbody>' +
+        opp.map(e => '<tr><td>' + esc(String(e[0]).slice(0, 30)) + '</td>' +
+          '<td>' + esc([...e[1].cats][0]) + '</td>' +
+          '<td>' + esc(String(e[1].prov || '-').slice(0, 14)) + '</td>' +
+          '<td class="num">' + baht(e[1].rev) + '</td>' +
+          '<td><b>' + sizeOfRev(e[1].rev) + '</b></td>' +
+          '<td>' + esc(stripNum(e[1].team || '-')) + ' · ' + esc(String(e[1].sales || '-').slice(0, 14)) + '</td></tr>').join('') +
+        '</tbody></table></div>'
+      : empty('ไม่มีลูกค้าที่เข้าเงื่อนไข');
+
+    const csCard = card(12, 'โอกาส Cross-sell · เฉพาะลูกค้าที่เคยซื้อเครื่องซักผ้าฝาหน้า',
+      '<div class="mon-2col" style="grid-template-columns:minmax(0,1fr) minmax(0,1.9fr)">' +
+        '<div><div style="font-size:11.5px;color:#667085;margin-bottom:6px">คู่สินค้าที่ลูกค้าซื้อร่วม</div>' + pairHtml + '</div>' +
+        '<div><div style="font-size:11.5px;color:#667085;margin-bottom:6px">ลูกค้าที่ซื้อกลุ่มเดียว แต่ยอดสะสม ≥ ฿300,000 (' + num(frontCust.filter(e => e[1].cats.size === 1 && e[1].rev >= 300000).length) + ' ราย)</div>' + oppTbl + '</div>' +
+      '</div>',
+      { hint: 'ซื้อหลายกลุ่ม ' + num(csMulti) + ' / ' + num(csTotal) + ' ราย (' + csPct.toFixed(1) + '%)' });
+
     return kpiCard(3, 'ต้องตามวันนี้', num(pend.length) + ' งาน', C.red, 'มูลค่า ' + baht(pendVal)) +
       kpiCard(3, 'มัดจำยังไม่จ่าย', num(depWait.length) + ' ใบ', depWait.length ? C.gold : C.green,
         'จ่ายแล้ว ' + baht(paidSum) + ' · ค้าง ' + baht(depWaitVal)) +
       kpiCard(3, 'ยังไม่ส่งของ', num(shipMid) + ' ใบ', shipMid ? C.orange : C.green,
         'ส่งแล้ว ' + num(shipDone) + ' · ยังไม่ถึงขั้น ' + num(shipNone)) +
-      kpiCard(3, 'Consult เปิดค้าง', num(cOpen.length) + ' ใบ', cOpen.length ? C.violet : C.green,
-        'เฉลี่ย ' + cAvg.toFixed(0) + ' วัน · เปิดทั้งหมด ' + num(cAll.length)) +
-      card(12, '', inner, { hint: '' });
+      kpiCard(3, 'Cross-sell', csPct.toFixed(1) + ' %', csPct >= 20 ? C.green : C.gold,
+        'ซื้อหลายกลุ่ม ' + num(csMulti) + ' จาก ' + num(csTotal) + ' ราย') +
+      card(12, '', inner, { hint: '' }) +
+      csCard;
   }
 
   function pageGeneric(name, rs) {
@@ -1887,18 +1963,23 @@
     const filterNote = { '2.Pending': 'เฉพาะงาน 2.Pending', '2.1.Pending-Detail': 'เฉพาะงาน 2.Pending',
       '3.Cancel': 'เฉพาะงาน 3.Cancel', '3.1.Cancel-Detail': 'เฉพาะงาน 3.Cancel' }[name] || 'ตามเงื่อนไขหน้านี้';
 
+    /* ── Monitor Consult: เฉพาะงานเครื่องซักผ้าฝาหน้า (หัวหน้าต่างนับเฉพาะกลุ่มนี้) ── */
+    if (name === 'P3.Consult') {
+      const scoped = data.filter(isFrontLoad);
+      let hc = '<div class="pg-head"><h1>' + esc(pageLabel(name)) + '</h1>' +
+        '<span class="sub">' + esc(S.period ? S.period.replace('-', ' · ') : 'ทุกเดือน') + ' · ' + num(scoped.length) + ' รายการ</span>' +
+        '<span class="field-scope">เครื่องซักผ้าฝาหน้า</span>' + xfChips() +
+        '<span class="grow"></span></div>';
+      return hc + '<div class="g">' + consultReal(data) + '</div>';
+    }
+
     let h = pgHead(pageLabel(name), data);
     h += '<div class="g">';
-    if (name === 'P3.Consult') {
-      h += consultReal(data);
-      return h + '</div>';
-    }
     h += kpiCard(3, 'จำนวน SO', num(soCount), C.navy, 'ไม่นับซ้ำ');
     h += kpiCard(3, 'Revenue (ราคาสุทธิ)', baht(rev), C.orange, 'ตามสูตรในไฟล์');
     h += kpiCard(3, 'Unit (จำนวนเครื่อง)', num(units), C.teal, '= จำนวน Set');
     h += kpiCard(3, 'Done / Pending / Cancel', num(nD) + ' / ' + num(nP) + ' / ' + num(nC), C.violet,
       'อัตราปิดงาน ' + (closeR * 100).toFixed(0) + '% · รายการในหน้านี้ ' + num(data.length));
-    if (name === 'P3.Consult') h += consultReal(data);   /* หน้า Monitor Consult ใช้ layout บอร์ดตามงาน */
     h += card(8, sp.title + ' · ตาม ' + dimTh, chart, { hint: isTime ? 'รายแกนเวลา' : 'เรียงจากมากไปน้อย' });
     h += card(4, dimTh + ' · สัดส่วน', donut(dData, { field: sp.dim }));
     h += card(12, dimTh + ' × ' + dim2Th, pv, { hint: metricTxt });
