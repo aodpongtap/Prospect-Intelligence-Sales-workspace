@@ -1863,7 +1863,9 @@
           '<span style="margin-left:auto;font-size:11px;color:#98A2B3">เรียงตามอายุงานมากสุด · กด “ตามแล้ว” = ติ๊กคงอยู่ถึงสิ้นเดือน</span>' +
           (ackSet.size ? '<button id="monAckClear" class="btn" style="height:24px;padding:0 9px;border-radius:7px;border:1px solid #E4E9F0;background:#fff;color:#64748B;font:inherit;font-size:10.8px;font-weight:700;cursor:pointer">↺ ล้างติ๊กเดือนนี้</button>' : '') +
           '</div>' +
-          '<div style="display:flex;flex-direction:column;gap:9px;max-height:600px;overflow:auto;padding-right:2px">' + board + '</div></div>' +
+          '<div style="display:flex;flex-direction:column;gap:9px;max-height:600px;overflow:auto;padding-right:2px">' + board +
+            (pend.length > 15 ? '<div style="font-size:11px;color:#98A2B3;text-align:center;padding:6px 0">แสดง 15 จาก ' + num(pend.length) + ' งาน (เรียงตามอายุงานมากสุด)</div>' : '') +
+            '</div></div>' +
         '<div style="display:flex;flex-direction:column;gap:12px">' +
           '<div style="border:1px solid #E4E9F0;border-radius:12px;overflow:hidden">' +
             '<div style="padding:9px 12px;border-bottom:1px solid #EEF2F7;font-weight:800;font-size:12px">📌 สรุป 1 นาที (สำหรับหัวหน้า)</div>' +
