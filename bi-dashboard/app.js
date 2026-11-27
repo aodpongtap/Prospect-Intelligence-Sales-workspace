@@ -801,13 +801,15 @@
       { name: 'SO สะสม · ' + prevMthTh, color: '#98A2B3', values: cumPrev, dashed: true }
     ], { height: 210 }) : empty();
 
-    /* ---- องค์ประกอบสถานะ ---- */
-    const ctot = (nD + nP + nC) || 1;
+    /* ---- องค์ประกอบสถานะ (ให้ผลรวม = 100% ของ SO เสมอ) ---- */
+    const nBlank = Math.max(so - (nD + nP + nC), 0);
+    const ctot = (nD + nP + nC + nBlank) || 1;
     const compRows = [
       { k: 'ปิดจริง (1.Done)', v: nD, c: '#059669' },
       { k: 'คงค้าง (2.Pending)', v: nP, c: '#F59E0B' },
       { k: 'ยกเลิก (3.Cancel)', v: nC, c: '#E11D48' }
     ];
+    if (nBlank > 0) compRows.push({ k: 'ยังไม่ระบุสถานะ', v: nBlank, c: '#94A3B8' });
     const compHtml = '<div class="sum-comp"><div class="sum-comp-bar">' +
       compRows.filter(x => x.v).map(x => '<i style="width:' + (x.v / ctot * 100).toFixed(1) +
         '%;background:' + x.c + '" title="' + esc(x.k) + ' ' + num(x.v) + ' ใบ"></i>').join('') +
@@ -840,13 +842,16 @@
     };
 
     /* ---- HERO ---- */
+    const stampRaw = (S.meta && S.meta.stamp) || '';
+    const stampTxt = stampRaw ? stampRaw.replace(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$3/$2/$1 $4:$5') : '';
+    const stampTag = stampTxt ? ' · ข้อมูล ณ ' + stampTxt : '';
     const dRev = dl(rev, pTRev), dSo = dl(so, pTSo), dUnit = dl(units, pTUnit), dDone = dl(nD, pTD);
     const chip = v => '<span class="sum-chip ' + (v == null || Math.abs(v) < 1 ? 'flat' : v > 0 ? 'up' : 'down') + '">' +
       (v == null ? '–' : Math.abs(v) < 1 ? '≈ เดิม' : (v > 0 ? '▲ ' : '▼ ') + Math.abs(v).toFixed(0) + '%') + '</span>';
 
     const hero = '<section class="sum-hero">' +
       '<div class="sum-hero-main">' +
-        '<div class="sum-eyebrow">รายได้สุทธิ · ' + curMthTh + '</div>' +
+        '<div class="sum-eyebrow">รายได้สุทธิ · ' + curMthTh + stampTag + '</div>' +
         '<div class="sum-hero-num">' + baht(rev) + '</div>' +
         '<div class="sum-hero-lbl">หลังหักส่วนลด ÷ 1.07 · เฉพาะกลุ่มหยอดเหรียญ</div>' +
         '<div class="sum-hero-delta">' + chip(dRev) + '<small>เทียบ ' + prevMthTh + ' (ถึงวันที่ ' + elapsed + ') · ' + baht(pTRev) + '</small></div>' +
@@ -2016,6 +2021,11 @@
   };
 
   /* ---------- row hook (ใช้ตรวจสูตรรายใบ) ---------- */
+  window.__sos = function (mth) {
+    if (!S.data) return [];
+    const m = String(mth || '202611');
+    return S.data.filter(d => isKeepGroup(d.group) && String(d.mth) === m).map(d => String(d.so).trim());
+  };
   window.__row = function (so) {
     if (!S.data) return { error: 'no data' };
     const d = S.data.find(x => String(x.so).trim() === String(so).trim());
