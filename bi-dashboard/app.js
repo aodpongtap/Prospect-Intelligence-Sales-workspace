@@ -95,7 +95,7 @@
   const ymd = d => (d instanceof Date && !isNaN(d)) ? d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') : '';
 
   /* ---------- cache: จำชุดข้อมูลล่าสุดไว้ใน IndexedDB ---------- */
-  const DB_NAME = 'sale-order-bi', STORE = 'dataset', SCHEMA_VER = 9;
+  const DB_NAME = 'sale-order-bi', STORE = 'dataset', SCHEMA_VER = 10;
   function idb() {
     return new Promise((res, rej) => {
       const r = indexedDB.open(DB_NAME, 1);
@@ -1657,49 +1657,77 @@
     return h + '</div>';
   }
 
-      /* ══════════════════════════════════════════════════════════════════════
-     Monitor Consult — บอร์ดตามงาน (layout แบบ Monthly Monitor) · ข้อมูลจริง
-     ซ้าย: การ์ดงานที่ต้องตาม  |  ขวา: สรุป 1 นาที + SLA + ทีมที่ต้องตาม
+        /* ══════════════════════════════════════════════════════════════════════
+     Monitor Consult — บอร์ดตามงาน · ใช้ข้อมูลจาก ListBooking โดยตรง
+     ฟิลด์ที่ใช้: depositStatus/paidAmount · shipStatus · consultStart/End/Status
      ══════════════════════════════════════════════════════════════════════ */
   function consultReal(data) {
     const rows = data || [];
     const now = new Date();
     const nums = a => a.filter(v => typeof v === 'number' && isFinite(v));
     const avgOf = a => { const x = nums(a); return x.length ? x.reduce((p, c) => p + c, 0) / x.length : 0; };
+    const dOnly = v => (v instanceof Date && !isNaN(v)) ? v : null;
+    const days = (a, b) => Math.max(0, Math.round((b - a) / 86400000));
 
-    /* ── งานค้าง เรียงตามอายุงาน (ใช้เป็นบอร์ดตามงาน) ── */
-    const pend = rows.filter(d => d.status3 === '2.Pending' && d.dateSO instanceof Date && !isNaN(d.dateSO))
-      .map(d => ({ d: d, age: Math.max(0, Math.floor((now - d.dateSO) / 86400000)) }))
+    /* ── งานค้าง (บอร์ดตามงาน) ── */
+    const pend = rows.filter(d => d.status3 === '2.Pending' && dOnly(d.dateSO))
+      .map(d => ({ d: d, age: days(dOnly(d.dateSO), now) }))
       .sort((a, b) => b.age - a.age);
     const pendVal = pend.reduce((a, x) => a + (x.d.revenue || 0), 0);
     const old21 = pend.filter(x => x.age > 21).length;
     const old15 = pend.filter(x => x.age > 15 && x.age <= 21).length;
 
+    /* ── มัดจำ (จาก ListBooking: สถานะการเก็บเงิน + ยอดชำระแล้ว) ── */
+    const openJobs = rows.filter(d => d.status3 !== '3.Cancel');           /* ไม่นับใบยกเลิก */
+    const depPaid = openJobs.filter(d => String(d.depositStatus || '').indexOf('เรียบร้อย') >= 0 || (d.paidAmount || 0) > 0);
+    const depWait = openJobs.filter(d => !(String(d.depositStatus || '').indexOf('เรียบร้อย') >= 0 || (d.paidAmount || 0) > 0));
+    const depWaitVal = depWait.reduce((a, d) => a + (d.revenue || 0), 0);
+    const paidSum = openJobs.reduce((a, d) => a + (d.paidAmount || 0), 0);
+
+    /* ── ส่งของ / จัดส่ง ── */
+    const SHIP_DONE = /จัดส่งแล้ว|ได้รับแล้ว/;
+    const SHIP_MID = /รอตรวจสอบ|รอนัดลูกค้า|นัดลูกค้าแล้ว|ลูกค้าไม่พร้อม/;
+    const shipDone = openJobs.filter(d => SHIP_DONE.test(String(d.shipStatus || ''))).length;
+    const shipMid = openJobs.filter(d => SHIP_MID.test(String(d.shipStatus || ''))).length;
+    const shipNone = openJobs.filter(d => !String(d.shipStatus || '').trim()).length;
+
+    /* ── Consult (E-Consult) ── */
+    const cOpen = rows.filter(d => dOnly(d.consultStart) && !dOnly(d.consultEnd));
+    const cAll = rows.filter(d => dOnly(d.consultStart));
+    const cDays = cOpen.map(d => days(dOnly(d.consultStart), now));
+    const cAvg = cDays.length ? cDays.reduce((a, b) => a + b, 0) / cDays.length : 0;
+    const cStatus = {};
+    rows.forEach(d => {
+      const s = String(d.consultStatus || '').trim() || '(ยังไม่เปิด)';
+      cStatus[s] = (cStatus[s] || 0) + 1;
+    });
+
     /* ── SLA ปิดงาน ── */
     const closed = rows.filter(d => (d.status3 === '1.Done' || d.status3 === '3.Cancel') && typeof d.slaClose === 'number' && d.slaClose > 0);
     const sc = closed.map(d => d.slaClose);
     const scAvg = avgOf(sc);
-    const over15 = sc.filter(v => v > 15).length;
-    const overPct = sc.length ? (over15 / sc.length * 100) : 0;
-
-    /* ── สถานะ Admin ── */
-    const admBad = rows.filter(d => d.admGroup === '2.Pening' || d.admGroup === '3.ไม่ผ่าน').length;
-    const admPend = rows.filter(d => d.admGroup === '2.Pening').length;
-    const admFail = rows.filter(d => d.admGroup === '3.ไม่ผ่าน').length;
-
-    /* ── คาดปิดสิ้นเดือน ── */
-    const parts = String(S.period || '').split('-').map(Number);
-    const yy = parts[0] || now.getFullYear(), mm = parts[1] || (now.getMonth() + 1);
-    const dim = new Date(yy, mm, 0).getDate();
-    const isCur = yy === now.getFullYear() && mm === now.getMonth() + 1;
-    const elapsed = isCur ? Math.min(now.getDate(), dim) : dim;
-    const fcSo = elapsed ? Math.round(rows.length / elapsed * dim) : rows.length;
-    const rev = rows.reduce((a, d) => a + (d.revenue || 0), 0);
+    const overPct = sc.length ? (sc.filter(v => v > 15).length / sc.length * 100) : 0;
 
     /* ── บอร์ดการ์ดงาน ── */
-    const LV = x => x.age > 21 ? { c: '#E11D48', b: 'background:#FFF1F3;color:#BE123C', t: 'ค้าง ' + x.age + ' วัน' }
-      : x.age > 15 ? { c: '#F59E0B', b: 'background:#FFF8EB;color:#B45309', t: 'ค้าง ' + x.age + ' วัน' }
-      : { c: '#0EA5E9', b: 'background:#F0F9FF;color:#0369A1', t: 'ค้าง ' + x.age + ' วัน' };
+    const LV = x => x.age > 21 ? { c: '#E11D48', b: 'background:#FFF1F3;color:#BE123C' }
+      : x.age > 15 ? { c: '#F59E0B', b: 'background:#FFF8EB;color:#B45309' }
+      : { c: '#0EA5E9', b: 'background:#F0F9FF;color:#0369A1' };
+    const depTxt = d => (String(d.depositStatus || '').indexOf('เรียบร้อย') >= 0 || (d.paidAmount || 0) > 0)
+      ? '<b style="color:#047857">จ่ายแล้ว ' + (d.paidAmount ? baht(d.paidAmount) : '') + '</b>'
+      : '<b style="color:#B45309">ยังไม่จ่าย</b>';
+    const shipTxt = d => {
+      const s = String(d.shipStatus || '').trim();
+      if (!s) return '<b style="color:#98A2B3">ยังไม่ถึงขั้น</b>';
+      const col = SHIP_DONE.test(s) ? '#047857' : SHIP_MID.test(s) ? '#B45309' : '#0F172A';
+      return '<b style="color:' + col + '">' + esc(s) + '</b>';
+    };
+    const conTxt = d => {
+      const st = String(d.consultStatus || '').trim();
+      if (!st) return '<b style="color:#98A2B3">ยังไม่เปิด Consult</b>';
+      const open = dOnly(d.consultStart) && !dOnly(d.consultEnd);
+      return '<b style="color:' + (open ? '#B45309' : '#047857') + '">' + esc(st) +
+        (dOnly(d.consultStart) ? ' · ' + days(dOnly(d.consultStart), now) + ' วัน' : '') + '</b>';
+    };
     const board = pend.length ? pend.slice(0, 15).map(x => {
       const v = LV(x);
       return '<div class="mon-fu" style="border:1px solid #E4E9F0;border-left:4px solid ' + v.c +
@@ -1707,42 +1735,41 @@
         '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">' +
           '<span style="font-weight:800;font-size:13px;letter-spacing:-.2px">' +
             esc(String(x.d.so || '').slice(0, 14) + ' · ' + String(x.d.customer || '-').slice(0, 26)) + '</span>' +
-          '<span style="display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:99px;font-size:10.8px;font-weight:800;' + v.b + '">' + v.t + '</span>' +
+          '<span style="display:inline-flex;align-items:center;height:21px;padding:0 9px;border-radius:99px;font-size:10.8px;font-weight:800;' + v.b + '">ค้าง ' + x.age + ' วัน</span>' +
           '<span style="font-size:11.5px;color:#475569">' + esc(stripNum(x.d.team || '-')) + ' · ' + esc(String(x.d.salesperson || '-').slice(0, 16)) + '</span>' +
           '<span style="margin-left:auto"><button class="btn mon-ack" style="height:26px;padding:0 10px;border-radius:8px;border:1px solid #E4E9F0;background:#fff;color:#475569;font:inherit;font-size:11px;font-weight:700;cursor:pointer">ตามแล้ว</button></span>' +
         '</div>' +
         '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:11.8px;color:#475569">' +
-          '<span>สถานะ Admin <b style="color:' + (/ไม่ผ่าน/.test(String(x.d.admGroup)) ? '#B42318' : /Pening/.test(String(x.d.admGroup)) ? '#B45309' : '#047857') + '">' + esc(x.d.admGroup || '-') + '</b></span>' +
-          '<span>ติดตั้ง <b style="color:#0F172A">' + esc(String(x.d.installStatus || '(ยังไม่ระบุ)')) + '</b></span>' +
+          '<span>มัดจำ ' + depTxt(x.d) + '</span>' +
+          '<span>ส่งของ ' + shipTxt(x.d) + '</span>' +
+          '<span>Consult ' + conTxt(x.d) + '</span>' +
           '<span>มูลค่า <b style="color:#0F172A">' + baht(x.d.revenue || 0) + '</b></span>' +
         '</div></div>';
     }).join('') : empty('ไม่มีงานค้างในเงื่อนไขนี้');
 
-    /* ── rail: สรุป 1 นาที (คำนวณจริง) ── */
+    /* ── rail ── */
     const teamCnt = new Map();
     pend.forEach(x => { const k2 = stripNum(x.d.team || '(ไม่ระบุ)'); teamCnt.set(k2, (teamCnt.get(k2) || 0) + 1); });
     const teamTop = [...teamCnt.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
-    const worstTeam = teamTop.length ? teamTop[0][0] : '-';
     const bullets = [
       'ต้องตาม <b>' + num(pend.length) + ' งาน</b> มูลค่า <b>' + baht(pendVal) + '</b>',
-      'ค้างเกิน 21 วัน <b>' + num(old21) + ' งาน</b>' + (teamTop.length ? ' · ทีมที่มากสุด <b>' + esc(worstTeam) + '</b>' : ''),
-      'คาดปิดสิ้นเดือน <b>' + num(fcSo) + ' ใบ</b> จาก <b>' + num(rows.length) + ' ใบ</b> ที่เปิดมาแล้ว',
-      'SLA ปิดงานเฉลี่ย <b>' + scAvg.toFixed(1) + ' วัน</b> (เป้า 15) · เกินกำหนด <b>' + overPct.toFixed(0) + '%</b>',
-      'ติดที่ Admin <b>' + num(admBad) + ' ใบ</b> (รอตรวจ ' + num(admPend) + ' · ไม่ผ่าน ' + num(admFail) + ')'
+      'ค้างเกิน 21 วัน <b>' + num(old21) + ' งาน</b>' + (teamTop.length ? ' · ทีมที่มากสุด <b>' + esc(teamTop[0][0]) + '</b>' : ''),
+      'มัดจำยังไม่จ่าย <b>' + num(depWait.length) + ' ใบ</b> · มูลค่า <b>' + baht(depWaitVal) + '</b>',
+      'ยังไม่ส่งของ <b>' + num(shipMid) + ' ใบ</b> (รอตรวจ/รอนัด) · ยังไม่ถึงขั้น <b>' + num(shipNone) + ' ใบ</b>',
+      'Consult เปิดค้าง <b>' + num(cOpen.length) + ' ใบ</b> · เฉลี่ย <b>' + cAvg.toFixed(0) + ' วัน</b>',
+      'SLA ปิดงานเฉลี่ย <b>' + scAvg.toFixed(1) + ' วัน</b> (เป้า 15) · เกินกำหนด <b>' + overPct.toFixed(0) + '%</b>'
     ];
     const railSum = '<div style="display:flex;flex-direction:column;gap:9px">' + bullets.map((x, i2) =>
       '<div style="display:flex;gap:9px;font-size:11.9px;color:#475569;line-height:1.55">' +
       '<span style="flex:0 0 auto;width:20px;height:20px;border-radius:7px;background:#EEF0FF;color:#4F46E5;' +
       'font-weight:800;font-size:10.5px;display:grid;place-items:center">' + (i2 + 1) + '</span><span>' + x + '</span></div>').join('') + '</div>';
 
-    /* ── rail: SLA อ้างอิง Flowchart ── */
     const slas = [['พื้นที่พร้อมติดตั้ง — รวมทั้งหมด', '15 วัน'], ['พื้นที่ไม่พร้อมติดตั้ง — รวมทั้งหมด', '14–21 วัน'],
       ['Admin ตรวจสอบ', '0 วัน'], ['ตรวจสอบเครดิต', '12 ชม.'], ['แจ้งงานทีมช่าง', '1–2 วัน'],
       ['สั่งของ / จัดส่ง', '21 วัน'], ['ติดตั้งงาน', '5 วัน']];
     const railSla = '<div style="display:flex;flex-direction:column;gap:2px">' + slas.map(s =>
       '<div style="display:flex;justify-content:space-between;font-size:11.6px;color:#475569;padding:4px 0"><span>' + esc(s[0]) + '</span><b>' + s[1] + '</b></div>').join('') + '</div>';
 
-    /* ── rail: ทีมที่ต้องตามมากสุด (จริง) ── */
     const maxT = teamTop.length ? teamTop[0][1] : 1;
     const railTeam = teamTop.length ? teamTop.map((x, i2) =>
       '<div style="display:flex;justify-content:space-between;font-size:11.6px;color:#475569;padding:4px 0"><span>' + esc(x[0]) + '</span><b>' + num(x[1]) + ' งาน</b></div>' +
@@ -1771,11 +1798,12 @@
       '</div>';
 
     return kpiCard(3, 'ต้องตามวันนี้', num(pend.length) + ' งาน', C.red, 'มูลค่า ' + baht(pendVal)) +
-      kpiCard(3, 'ค้างเกิน 21 วัน', num(old21) + ' งาน', C.gold, '16–21 วันอีก ' + num(old15) + ' งาน') +
-      kpiCard(3, 'SLA ปิดงานเฉลี่ย', scAvg.toFixed(1) + ' วัน', scAvg > 15 ? C.red : C.green,
-        'เป้า 15 วัน · เกินกำหนด ' + overPct.toFixed(0) + '%') +
-      kpiCard(3, 'ติดที่ Admin', num(admBad) + ' ใบ', admBad ? C.orange : C.green,
-        'รอตรวจ ' + num(admPend) + ' · ไม่ผ่าน ' + num(admFail)) +
+      kpiCard(3, 'มัดจำยังไม่จ่าย', num(depWait.length) + ' ใบ', depWait.length ? C.gold : C.green,
+        'จ่ายแล้ว ' + baht(paidSum) + ' · ค้าง ' + baht(depWaitVal)) +
+      kpiCard(3, 'ยังไม่ส่งของ', num(shipMid) + ' ใบ', shipMid ? C.orange : C.green,
+        'ส่งแล้ว ' + num(shipDone) + ' · ยังไม่ถึงขั้น ' + num(shipNone)) +
+      kpiCard(3, 'Consult เปิดค้าง', num(cOpen.length) + ' ใบ', cOpen.length ? C.violet : C.green,
+        'เฉลี่ย ' + cAvg.toFixed(0) + ' วัน · เปิดทั้งหมด ' + num(cAll.length)) +
       card(12, '', inner, { hint: '' });
   }
 

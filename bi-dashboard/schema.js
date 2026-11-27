@@ -23,10 +23,16 @@
     installments: 19, // T  จำนวนงวด
     saleCode: 25,     // Z  รหัสพนักงานขาย
     createdFrom: 28,  // AC สร้างจาก
+    paidAmount: 29,   // AD ยอดชำระแล้ว
+    depositStatus: 30,// AE สถานะการเก็บเงินงวดแรกหรือมัดจำ
     adminStatus: 31,  // AF สถานะ Admin
     adminDate: 32,    // AG วันที่ Admin
     ctStatus: 33,     // AH สถานะ CT
+    ctDate: 36,       // AK วันที่ CT ตรวจสอบ
     jobStatus: 39,    // AN สถานะงาน
+    shipStatus: 40,   // AO สถานะการจัดส่ง
+    shipDate: 41,     // AP วันที่จัดส่ง
+    recvDate: 42,     // AQ วันที่ได้รับ
     installStatus: 46,// AU สถานะติดตั้ง
     installDate: 47,  // AV วันที่ช่างลงข้อมูล
     closeNote: 52,    // BA หมายเหตุปิดใบงาน
@@ -34,10 +40,16 @@
     contractDate: 54, // BC วันที่ทำสัญญา
     owner: 55,        // BD ผู้รับผิดชอบ
     allStatus: 56,    // BE สถานะ ALL
+    allStatus2: 57,   // BF สถานะ ALL2
     saleStatus: 62,   // BK Sale_สถานะ
     refNo: 66,        // BO เลขที่อ้างอิง
     serial: 67,       // BP SerialNumber
-    sets: 73          // BV จำนวน Set
+    expectedDate: 68, // BQ วันที่คาดว่าจะได้รับ
+    sets: 73,         // BV จำนวน Set
+    consultStart: 77, // BZ วันที่เปิด Consult
+    consultEnd: 78,   // CA วันที่ปิด Consult
+    consultStatus: 79,// CB สถานะ Consult
+    consultOwner: 80  // CC พนักงาน Consult
   };
 
   const LK = global.BI_LOOKUPS || {};
@@ -256,7 +268,21 @@
         closeDate: closeDate,
         adminDate: dateAdmin,
         installDate: dateOnly(r[C.installDate]),
-        installStatus: trim(r[C.installStatus])
+        installStatus: trim(r[C.installStatus]),
+        /* ── ฟิลด์จาก ListBooking ที่ใช้ในหน้า Monitor Consult ── */
+        paidAmount: Number(r[C.paidAmount]) || 0,
+        depositStatus: trim(r[C.depositStatus]),
+        ctStatus: trim(r[C.ctStatus]),
+        ctDate: dateOnly(r[C.ctDate]),
+        shipStatus: trim(r[C.shipStatus]),
+        shipDate: dateOnly(r[C.shipDate]),
+        recvDate: dateOnly(r[C.recvDate]),
+        allStatus: trim(r[C.allStatus]),
+        allStatus2: trim(r[C.allStatus2]),
+        consultStart: dateOnly(r[C.consultStart]),
+        consultEnd: dateOnly(r[C.consultEnd]),
+        consultStatus: trim(r[C.consultStatus]),
+        consultOwner: trim(r[C.consultOwner])
       };
     }
     return out;
