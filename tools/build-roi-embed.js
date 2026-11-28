@@ -20,7 +20,7 @@ if (/<html[^>]*>/.test(html)) {
 }
 
 // 2) กัน localStorage โยน error ในกรณี srcdoc มี opaque origin (file://)
-const shim = '<script>try{window.localStorage.getItem("x");}catch(e){try{Object.defineProperty(window,"localStorage",{value:{getItem:function(){return null;},setItem:function(){},removeItem:function(){}}}});}catch(_){}}</script>';
+const shim = '<script>try{window.localStorage.getItem("x");}catch(e){try{Object.defineProperty(window,"localStorage",{value:{getItem:function(){return null;},setItem:function(){},removeItem:function(){}}});}catch(_){}}</script>';
 html = html.replace(/<head([^>]*)>/i, '<head$1>' + shim);
 
 // 3) เขียนเป็น JS string (escape </script> เพื่อให้ฝังใน <script> ภายหลังได้)
