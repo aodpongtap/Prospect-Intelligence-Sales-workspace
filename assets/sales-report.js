@@ -666,6 +666,21 @@
           var sig = String(ld.customer || '').trim() + '||' + String(ld.job || '').trim() + '||' + (Number(ld.amount) || 0);
           if (cloudSig[sig]) { DEALS.splice(dq, 1); changed = true; }
         }
+        /* ระดับ AE (sale/agent) เห็นเฉพาะดีลของตัวเองจากคลาวด์ → ดีลในเครื่องที่เป็นของคนอื่น
+           และไม่มีอยู่บนคลาวด์คือ “ดีลผี” ที่ทำให้หน้าเว็บมีเสียงรบกวน/ตัวเลขผิด → ลบทิ้งจากเครื่อง */
+        try {
+          var ses = global.__ME__ || ((global.PIAuth && global.PIAuth.session) ? global.PIAuth.session() : null) || {};
+          var lvl = String(ses.level || '').toLowerCase();
+          var myEmail = String(ses.email || '').toLowerCase();
+          if ((lvl === 'sale' || lvl === 'agent') && myEmail) {
+            for (var oe = DEALS.length - 1; oe >= 0; oe--) {
+              var od = DEALS[oe];
+              if (cloudNos[od.no]) continue;
+              var owner = String(od.ownerEmail || '').toLowerCase();
+              if (owner && owner !== myEmail) { DEALS.splice(oe, 1); changed = true; }
+            }
+          }
+        } catch (e) {}
         /* ห้ามดันดีลในเครื่องขึ้นคลาวด์แบบอัตโนมัติ (เดิมทำแล้วเกิดดีลซ้ำนับสิบใบ + toast เด้งรัว)
            ดีลที่สร้างตอนออฟไลน์ถูกเก็บในคิวแล้วส่งผ่าน flushQueue() เท่านั้น */
         if (changed) saveDeals();
