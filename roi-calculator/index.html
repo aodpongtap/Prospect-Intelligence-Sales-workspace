@@ -714,7 +714,6 @@ html.embed .verdict{border-color:var(--line)}
             <label class="num" style="margin-bottom:8px"><span id="modelLabel">รุ่นสินค้าอ้างอิง (ราคาเงินสด)</span>
               <select class="sel" id="modelSel"></select>
             </label>
-            <div class="chips" id="modelChips" hidden style="margin-bottom:8px"></div>
             <div id="installBlock" hidden>
               <div class="num"><span>ค่าติดตั้ง / เตรียมพื้นที่ (BOQ)</span>
                 <input type="number" id="install" value="6010" min="0" step="100">
@@ -847,7 +846,7 @@ html.embed .verdict{border-color:var(--line)}
 
     <section class="kpis">
       <div class="kpi hero" id="kpiRoiCard">
-        <div class="k-label">ROI ต่อปี</div>
+        <div class="k-label" id="kpiRoiLabel">ROI ต่อปี</div>
         <div class="k-val" id="kpiRoi">—</div>
         <div class="k-sub" id="kpiRoiSub">ผลตอบแทนจากเงินลงทุนตัวเอง</div>
         <div class="ring" id="roiRing" aria-hidden="true"></div>
@@ -1075,12 +1074,17 @@ APR แท้จริงของแผนคงที่ = อัตรา IRR
 ตู้ไฟ 1 เฟส 12,000 · 3 เฟส 30,000 · มาตรวัดน้ำ 700
             </div>
 
-            <h4>3) สมมติฐานการใช้งาน (จุดคืนทุน_BU_Vending_2569)</h4>
+            <h4>3) ตัวอย่างจริง (ตามค่าตั้งต้นของแต่ละหมวด)</h4>
             <div class="formula">
-ซักผ้าฝาบน 28,900 บ. · 5 รอบ/วัน · 30 บ./รอบ · ค่าใช้จ่าย 6% ของรายได้
-  → กำไร 4,230 บ./เดือน · คืนทุน 6.8 เดือน · ROI 176%/ปี
-ซัก-อบ ฝาหน้า 185,900 บ. · 10 รอบ/วัน · 80 บ./รอบ · ค่าใช้จ่าย 15% ของรายได้
-  → กำไร 20,400 บ./เดือน/เครื่อง · คืนทุน 9.1 เดือน · ROI 132%/ปี
+น้ำด่าง V3 52,900 บ. · 100 ลิตร/วัน · 5 บ./ลิตร · ซื้อเงินสด
+  → กำไร 12,713 บ./เดือน · คืนทุน 4 เดือน · ROI 288%/ปี
+น้ำแข็ง FC-180 123,500 บ. · 65 กก./วัน · 5 บ./กก. · ซื้อเงินสด
+  → กำไร 5,221 บ./เดือน · คืนทุน 2 ปี · ROI 51%/ปี
+กาแฟ SAFE 55,900 บ. · 60 แก้ว/วัน · 10 บ./แก้ว · ซื้อเงินสด
+  → กำไร 5,826 บ./เดือน · คืนทุน 10 เดือน · ROI 125%/ปี
+ซักผ้าหน้า 13 กก. 76,900 + ติดตั้ง 6,010 บ. · 5 รอบ/วัน · 30 บ./รอบ
+  → ซื้อสด กำไร 3,720 บ./เดือน · คืนทุน 1 ปี 10 เดือน · ROI 54%/ปี
+  → ผ่อน 24 งวด (ดาวน์ 20% ดอก 2.90%/ด.) กระแสเงินสดติดลบ −968 บ./เดือน ⚠
             </div>
             <p style="margin-top:10px">แบบจำลองนี้คิดค่าไฟ/ค่าน้ำแยกจริง (ไม่ใช้ % ของรายได้) จึงได้คืนทุนของ Stack 17+13 ประมาณ 9 เดือน ใกล้เคียงสมมติฐาน BU</p>
           </div>
@@ -1224,7 +1228,7 @@ const nf1 = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 1, maximumFr
 function baht(n) {
   if (!isFinite(n)) return '—';
   const s = nf0.format(Math.abs(Math.round(n)));
-  return (n < 0 ? '−' : '') + '฿' + s;
+  return (n < 0 ? '-' : '') + '฿' + s;
 }
 function bahtSigned(n) {
   if (!isFinite(n)) return '—';
@@ -1245,15 +1249,22 @@ function pctCap(v) {
   if (v > 5) return '>500%';
   return pct(v);
 }
+/* แสดงเปอร์เซ็นต์จริง (ไม่ตันที่ 500%) — ค่ามากใช้ตัวเลขเต็มไม่มีจุดทศนิยม */
+function pctBig(v, d = 1) {
+  if (!isFinite(v)) return '—';
+  const p = v * 100;
+  if (Math.abs(p) >= 1000) return nf0.format(Math.round(p)) + '%';
+  return p.toFixed(d) + '%';
+}
 function monthText(m) {
   if (m == null || !isFinite(m)) return 'ไม่คืนทุน';
   if (m <= 0) return 'ทันที';
-  let y = Math.floor(m / 12);
-  let mo = Math.round(m - y * 12);
-  if (mo === 12) { y += 1; mo = 0; }
+  const t = Math.ceil(m);              /* ปัดขึ้นเหมือกันทุกจุด — ไม่ให้การ์ดสองที่ให้ตัวเลขต่างกัน */
+  const y = Math.floor(t / 12);
+  const mo = t - y * 12;
   if (y > 0 && mo > 0) return `${y} ปี ${mo} เดือน`;
   if (y > 0) return `${y} ปี`;
-  return `${Math.max(1, Math.round(m))} เดือน`;
+  return `${t} เดือน`;
 }
 
 const num = id => { const el = document.getElementById(id); const v = parseFloat(el.value); return isFinite(v) ? v : 0; };
@@ -1417,31 +1428,11 @@ function populateModels(presetKey, selected) {
   sel.innerHTML = '<option value="">— กำหนดราคาเอง (แก้ช่องราคาได้) —</option>'
     + list.map(m => `<option value="${m.code}">${m.code} · ${m.name} — ${nf0.format(m.price)} ฿</option>`).join('');
   sel.value = (selected === undefined ? (DEFAULT_MODEL[presetKey] || '') : selected);
-  renderModelChips(list);
-}
-
-/* ปุ่มเลือกรุ่นแบบแตะได้ (ทางเลือกเสริมของ dropdown — ใช้บนมือถือที่ native select ตอบสนองช้า) */
-function renderModelChips(list) {
-  const box = $('#modelChips');
-  if (!box) return;
-  if (!list || !list.length) { box.hidden = true; box.innerHTML = ''; return; }
-  box.hidden = false;
-  box.innerHTML = list.map(m =>
-    `<button type="button" class="chip" data-model="${m.code}" title="${m.name}">${m.code} · ${nf0.format(m.price)} ฿</button>`
-  ).join('');
-  syncModelChips();
-}
-function syncModelChips() {
-  const sel = $('#modelSel'), box = $('#modelChips');
-  if (!sel || !box) return;
-  const cur = sel.value;
-  [...box.querySelectorAll('[data-model]')].forEach(b => b.classList.toggle('on', b.dataset.model === cur));
 }
 
 function applyModel(code) {
   const list = MODELS[state.preset] || [];
   const m = list.find(x => x.code === code);
-  syncModelChips();
   if (!m) return;                       // กำหนดเอง → ใช้ราคาตามที่ผู้ใช้แก้
   $('#price').value = m.price;
   if (state.preset === 'laundry' && m.type) {
@@ -1466,7 +1457,8 @@ function setTone(cardId, tone) {
 
 function renderKPIs(p, r) {
   // ROI
-  setKpi('kpiRoi', 'kpiRoiCard', r.roi === Infinity ? '∞' : (!isFinite(r.roi) ? '—' : (r.roi > 5 ? '>500%' : pct(r.roi))));
+  setKpi('kpiRoi', 'kpiRoiCard', r.roi === Infinity ? '∞' : pctBig(r.roi));
+  $('#kpiRoiLabel').textContent = p.mode === 'loan' ? 'ROI ต่อเงินดาวน์ (ต่อปี)' : 'ROI ต่อปี';
   setTone('kpiRoiCard', null);
   const roiCard = document.getElementById('kpiRoiCard');
   const ringV = isFinite(r.roi) ? Math.max(0, Math.min(1, r.roi / 0.6)) : 0;
@@ -1516,7 +1508,10 @@ function renderVerdict(p, r) {
   txt += ` → รายรับ ${baht(r.revenue)}/เดือน`;
   txt += ` หักต้นทุน${p.mode === 'loan' ? 'และค่างวด' : ''} เหลือ <b>${baht(r.ncf)}/เดือน</b>`;
   if (r.payback != null && r.payback > 0) txt += ` คืนทุนภายใน <b>${monthText(r.payback)}</b>`;
-  if (isFinite(r.roi) && r.roi > 0) txt += ` (ผลตอบแทน ${r.roi > 5 ? 'มากกว่า 500%' : pct(r.roi, 0)} ต่อปี)`;
+  if (isFinite(r.roi) && r.roi > 0) txt += ` (ผลตอบแทน ${pctBig(r.roi, 0)} ต่อปี)`;
+  if (p.mode === 'loan' && r.ncf < 0) {
+    txt = `<b>⚠ กระแสเงินสดติดลบ ${baht(Math.abs(r.ncf))}/เดือน</b> — ค่างวดสูงกว่ากำนไรด่าเนินงาน ลองเพิ่มเงินดาวน์ ลดจำนวนงวด หรือปรับราคาขาย · ` + txt;
+  }
   if (!ok) txt = 'ยอดขาย/ราคานี้ยังไม่พอหักต้นทุน — ปรับยอดขายขึ้น หรือลดเงินลงทุน/ค่าเช่าก่อนนำเสนอลูกค้า';
   $('#verdictText').innerHTML = txt;
 }
@@ -1534,7 +1529,7 @@ function renderCompare(p) {
       <div class="row"><span>ดอกเบี้ยรวม</span><b>${r.interest ? baht(r.interest) : '—'}</b></div>
       <div class="row"><span>กำไรสุทธิ/เดือน</span><b>${bahtSigned(r.ncf)}</b></div>
       <div class="row"><span>คืนทุน (จากเงินที่จ่ายเอง)</span><b>${monthText(r.payback)}</b></div>
-      <div class="row"><span>ผลตอบแทนต่อปี</span><b>${!isFinite(r.roi) ? '—' : (r.roi > 5 ? '>500%' : pct(r.roi, 0))}</b></div>
+      <div class="row"><span>ผลตอบแทนต่อปี</span><b>${pctBig(r.roi, 0)}</b></div>
     </div>`;
 
   $('#cmpBox').innerHTML =
@@ -1549,7 +1544,7 @@ function renderCompare(p) {
 /* ---------- render: advanced metrics ---------- */
 function renderAdvanced(p, r) {
   $('#advNpv').textContent = bahtSigned(r.npv);
-  $('#advIrr').textContent = pctCap(r.irrAnnual);
+  $('#advIrr').textContent = pctBig(r.irrAnnual);
   $('#advPi').textContent = r.equity > 0 ? ((r.npv + r.equity) / r.equity).toFixed(2) + ' เท่า' : '—';
 }
 
@@ -2025,21 +2020,13 @@ function bind() {
     el.addEventListener(evt, () => {
       if (id === 'qty') { state.scenario = 'custom'; syncScenarioChips(); }
       if (id === 'downPct' || id === 'term') applyRateFromTable();
-      if (id === 'price') { const s = $('#modelSel'); if (s && s.value) { s.value = ''; syncModelChips(); } }
+      if (id === 'price') { const s = $('#modelSel'); if (s && s.value) s.value = ''; }
       render();
     });
   });
 
   // actions
   $('#modelSel').addEventListener('change', e => applyModel(e.target.value));
-  if ($('#modelChips')) {
-    $('#modelChips').addEventListener('click', e => {
-      const b = e.target.closest('[data-model]');
-      if (!b) return;
-      $('#modelSel').value = b.dataset.model;
-      applyModel(b.dataset.model);
-    });
-  }
   $$('#boqChips .chip').forEach(b => b.addEventListener('click', () => {
     $$('#boqChips .chip').forEach(x => x.classList.remove('on'));
     b.classList.add('on');
