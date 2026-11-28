@@ -486,13 +486,13 @@
 
 </script>
   <script src="assets/report-log.js?v=13"></script>
-  <script src="assets/sales-report.js?v=96"></script>
+  <script src="assets/sales-report.js?v=97"></script>
   <script src="assets/daily-report.js?v=23"></script>
   <script src="assets/project-tracking.js?v=16"></script>
   <script src="assets/customer-intelligence.js?v=6"></script>
   <script src="assets/audit-log.js?v=15"></script>
   <script src="assets/team-page.js?v=15"></script>
-  <script src="assets/roi-calculator-embed.js?v=12"></script>
+  <script src="assets/roi-calculator-embed.js?v=15"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
     window.__allowedPages__ = function () {
@@ -1321,7 +1321,7 @@
     /* ===== JavaScript: ROI Calculator ===== */
     function renderROI(){
       var embedded = !!window.__ROI_HTML__;
-      var srcAttr = embedded ? '' : ' src="roi-calculator/index.html?embed=1&v=1"';
+      var srcAttr = embedded ? '' : ' src="roi-calculator/index.html?embed=1&v=2"';
       return `${pageHead("ROI Calculator","คำนวณผลตอบแทนการลงทุน จุดคุ้มทุน และค่างวดผ่อนชำระ — ใช้ราคากลางและตารางดอกเบี้ยชุดเดียวกับใบเสนอราคา",btn("เปิดเต็มหน้าจอ","open-roi-full","fa-solid fa-up-right-from-square"))}<section class="panel" style="padding:0;overflow:hidden"><iframe class="roi-frame" id="roiFrame"${srcAttr} title="ROI Calculator"></iframe></section><div class="roi-note"><i class="fa-solid fa-circle-info" style="margin-top:2px"></i><span>เครื่องมือนี้ใช้ราคาสินค้าอ้างอิง PM9003/2569 และตารางดอกเบี้ยเช่าซื้อ TSRL — ผลลัพธ์เป็นการประมาณการเพื่อประกอบการนำเสนอ ไม่ใช่การรับประกันผลตอบแทน</span></div>`
     }
     /* ฝังโค้ดเครื่องคำนวณ (srcdoc) เข้าไปในหน้าเลย — ไม่ต้องโหลดไฟล์ภายนอก */

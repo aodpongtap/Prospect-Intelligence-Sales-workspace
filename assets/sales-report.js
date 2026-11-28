@@ -604,11 +604,11 @@
     }
     try {
       global.PIAuth.saveDealV2(payload).then(function (res) {
-        /* เซิร์ฟเวอร์อาจให้เลขใหม่เมื่อเลขซ้ำข้ามเครื่อง */
+        /* เซิร์ฟเวอร์อาจให้เลขใหม่ (กันชนกันข้ามเครื่อง) — ปรับในเครื่องเงียบ ๆ ไม่เด้ง toast
+           เพราะการเด้งทุกครั้งรบกวนผู้ใช้และเคยหลอกให้เข้าใจว่าเกิดดีลใหม่ */
         if (res && res.no && res.no !== d.no) {
           d.no = res.no;
           saveDeals();
-          if (typeof global.toast === 'function') global.toast('ระบบออกเลขดีลให้ใหม่ ' + res.no);
         }
         flushQueue();
       }).catch(function () {
@@ -654,12 +654,20 @@
           var cu = Date.parse(remote.updatedAt || '') || 0;
           if (cu > lu) { for (var k in remote) if (Object.prototype.hasOwnProperty.call(remote, k)) loc[k] = remote[k]; changed = true; }
         });
-        /* ดีลในเครื่องที่ยังไม่เคยขึ้นคลาวด์ → ดันขึ้นครั้งแรก (ข้ามใบที่ถูกลบไปแล้ว และใบที่ยังอยู่ในคิว) */
-        var queued = {};
-        syncQueue().forEach(function (o) { if (o.op === 'save' && o.deal && o.deal.no) queued[o.deal.no] = 1; });
-        DEALS.filter(function (d) { return !cloudNos[d.no] && !deleted[d.no] && !queued[d.no]; }).slice(0, 200).forEach(function (d) {
-          cloudSave(d, true);   /* ให้เซิร์ฟเวอร์ออกเลขใหม่ — กันเลขซ้ำ/สร้างซ้ำ */
+        /* ลบสำเนาในเครื่องที่เนื้อหาเดียวกันกับดีลบนคลาวด์ แต่เลขดีลไม่ตรง
+           (เศษดีลซ้ำที่เกิดจากการดันขึ้นคลาวด์อัตโนมัติในอดีต) */
+        var cloudSig = {};
+        list.forEach(function (c) {
+          cloudSig[String(c.customer || '').trim() + '||' + String(c.job || '').trim() + '||' + (Number(c.amount) || 0)] = 1;
         });
+        for (var dq = DEALS.length - 1; dq >= 0; dq--) {
+          var ld = DEALS[dq];
+          if (cloudNos[ld.no]) continue;
+          var sig = String(ld.customer || '').trim() + '||' + String(ld.job || '').trim() + '||' + (Number(ld.amount) || 0);
+          if (cloudSig[sig]) { DEALS.splice(dq, 1); changed = true; }
+        }
+        /* ห้ามดันดีลในเครื่องขึ้นคลาวด์แบบอัตโนมัติ (เดิมทำแล้วเกิดดีลซ้ำนับสิบใบ + toast เด้งรัว)
+           ดีลที่สร้างตอนออฟไลน์ถูกเก็บในคิวแล้วส่งผ่าน flushQueue() เท่านั้น */
         if (changed) saveDeals();
         flushQueue();
       }).catch(function () {});

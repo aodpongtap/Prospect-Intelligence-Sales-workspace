@@ -89,10 +89,12 @@ function listDealsV2Api_(token) {
 /**
  * ล้างดีลซ้ำ (Admin เท่านั้น): ลูกค้า+มูลค่า+drRef เดียวกัน → เก็บใบเก่าสุด ลบทิ้งที่เหลือ (soft delete)
  */
-function dedupeDealsApi_(token) {
+function dedupeDealsApi_(token, mode) {
   var s = session_(token);
   if (!s) throw new Error('กรุณาเข้าสู่ระบบใหม่');
   if (!isAdminLevel_(s.level)) throw new Error('เฉพาะ Admin เท่านั้น');
+  /* mode = 'loose' → จัดกลุ่มด้วย ลูกค้า+งาน+มูลค่า+เจ้าของ แม้ไม่มี drRef (ล้างดีลซ้ำที่ระบบสร้างซ้ำ) */
+  var loose = String(mode || '') === 'loose';
   var lock = LockService.getScriptLock();
   var locked = false;
   try { locked = lock.tryLock(30000); } catch (e) { locked = false; }
@@ -112,8 +114,12 @@ function dedupeDealsApi_(token) {
       var cust = map.customer ? String(r[map.customer - 1] || '').trim() : '';
       var amt = map.amount ? Number(r[map.amount - 1] || 0) : 0;
       var dref = map.drRef ? String(r[map.drRef - 1] || '').trim().toUpperCase() : '';
-      if (!dref || !cust) continue;
-      var key = dref + '||' + cust + '||' + amt;
+      var job0 = map.job ? String(r[map.job - 1] || '').trim() : '';
+      var own0 = map.ownerEmail ? String(r[map.ownerEmail - 1] || '').trim().toLowerCase() : '';
+      var key = '';
+      if (dref && cust) key = dref + '||' + cust + '||' + amt;
+      else if (loose && cust && amt) key = 'L||' + cust + '||' + job0 + '||' + amt + '||' + own0;
+      else continue;
       if (!seen[key]) { seen[key] = true; continue; }
       if (map.deleted) sh.getRange(i + 2, map.deleted).setValue(1);
       if (map.updatedAt) sh.getRange(i + 2, map.updatedAt).setValue(new Date().toISOString());
@@ -338,6 +344,32 @@ function saveDealV2_(token, payload) {
             return { ok: true, no: String(rr[map.no - 1] || ''), dup: true };
           }
         }
+      }
+    }
+  }
+  if (!row && p.isNew === true && !String(p.drRef || '').trim()) {
+    /* กันดีลซ้ำจาก client รุ่นเก่า/แคชค้าง (ส่ง isNew แต่ไม่มี drRef):
+       ถ้าเจ้าของเดียวกันมีดีล ลูกค้า+งาน+มูลค่า เดียวกันอยู่แล้วภายใน 30 วัน → คืนเลขเดิม ไม่สร้างใบใหม่ */
+    var dsc = sh.getLastRow();
+    if (dsc >= 2) {
+      var scanX = sh.getRange(2, 1, dsc - 1, sh.getLastColumn()).getValues();
+      var myMail = String(s.email || '').toLowerCase();
+      for (var zz = scanX.length - 1; zz >= 0; zz--) {
+        var rx = scanX[zz];
+        if (map.deleted && Number(rx[map.deleted - 1]) === 1) continue;
+        var ox = map.ownerEmail ? String(rx[map.ownerEmail - 1] || '').trim().toLowerCase() : '';
+        if (ox !== myMail) continue;
+        var cx = map.customer ? String(rx[map.customer - 1] || '').trim() : '';
+        var jx = map.job ? String(rx[map.job - 1] || '').trim() : '';
+        var ax = map.amount ? Number(rx[map.amount - 1] || 0) : 0;
+        if (cx !== customer || jx !== job || ax !== Number(p.amount || 0)) continue;
+        var ctime = 0;
+        if (map.createdAt) {
+          var cv = rx[map.createdAt - 1];
+          ctime = cv instanceof Date ? cv.getTime() : Date.parse(String(cv || ''));
+        }
+        if (ctime && (Date.now() - ctime) > 30 * 86400000) continue;
+        return { ok: true, no: String(rx[map.no - 1] || ''), dup: true };
       }
     }
   }
