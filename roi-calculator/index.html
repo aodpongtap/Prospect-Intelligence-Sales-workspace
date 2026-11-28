@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{if(location.search.indexOf('embed')>-1)document.documentElement.classList.add('embed');}catch(e){}</script>
+<meta name="theme-color" content="#0b1220">
+<title>ROI Studio · วิเคราะห์การลงทุน &amp; ค่างวด</title>
+<meta name="description" content="เครื่องมือวิเคราะห์การลงทุนตู้หยอดเหรียญ: ROI, Payback, NPV, IRR, จุดคุ้มทุน และคำนวณค่างวด/ดอกเบี้ยทั้งแบบ Flat rate และลดต้นลดดอก">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+:root{
+  --bg:#f2f6fc; --surface:#fff; --surface-2:#f7f9fd; --surface-3:#edf2fb;
+  --ink:#0d1526; --ink-2:#4a5768; --ink-3:#8b98ac; --line:#e3e9f3; --line-2:#eff3f9;
+  --brand:#3b5bfd; --brand-2:#0fb5a5; --brand-soft:#eef1ff;
+  --ok:#0e9f6e; --ok-soft:#e8f8f1; --warn:#b97708; --warn-soft:#fdf4e3; --bad:#d63d3d; --bad-soft:#fdeaea;
+  --shadow:0 12px 32px rgba(16,32,64,.07); --shadow-sm:0 2px 8px rgba(16,32,64,.05);
+  --r-lg:18px; --r-md:12px; --r-sm:9px;
+  --grid:#e7edf7;
+  --c-raw:#f59e0b; --c-qr:#38bdf8; --c-elec:#facc15; --c-water:#60a5fa;
+  --c-fix:#a78bfa; --c-loan:#fb7185; --c-profit:#10b981;
+}
+[data-theme="dark"]{
+  --bg:#080e1c; --surface:#111a2b; --surface-2:#151f33; --surface-3:#1a2539;
+  --ink:#e9eefb; --ink-2:#a9b6cd; --ink-3:#6d7d9a; --line:#22304a; --line-2:#1b2740;
+  --brand:#6b83ff; --brand-2:#2ed3c2; --brand-soft:#1a2544;
+  --ok:#34d399; --ok-soft:#10291f; --warn:#f0b429; --warn-soft:#2a2110; --bad:#f87171; --bad-soft:#2b1414;
+  --shadow:0 16px 38px rgba(0,0,0,.5); --shadow-sm:0 2px 10px rgba(0,0,0,.32);
+  --grid:#223049;
+}
+body{
+  min-height:100vh; color:var(--ink); font-size:13.5px; line-height:1.5;
+  font-family:"Prompt","Noto Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(1100px 520px at 8% -12%, rgba(59,91,253,.14), transparent 62%),
+    radial-gradient(900px 480px at 96% -6%, rgba(15,181,165,.13), transparent 58%),
+    var(--bg);
+}
+h1,h2,h3,h4,p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,select{font:inherit;color:inherit}
+::selection{background:rgba(59,91,253,.22)}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:40; display:flex; align-items:center; gap:14px;
+  padding:10px 22px; background:color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter:blur(14px); border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.mark{
+  width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto;
+  background:linear-gradient(140deg,var(--brand),var(--brand-2));color:#fff;
+  font-weight:700;font-size:11.5px;letter-spacing:.04em;box-shadow:0 6px 16px rgba(59,91,253,.35);
+}
+.brand strong{display:block;font-size:14px;font-weight:600;letter-spacing:-.01em}
+.brand small{display:block;font-size:10px;color:var(--ink-3);margin-top:1px}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;
+  border:1px solid var(--line);background:var(--surface);font-size:11.5px;color:var(--ink-2);white-space:nowrap;
+}
+.pill b{color:var(--ink);font-weight:600}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 13px;border-radius:10px;
+  border:1px solid var(--line);background:var(--surface);font-size:12px;font-weight:500;color:var(--ink-2);
+  transition:.16s ease; white-space:nowrap;
+}
+.btn:hover{border-color:var(--brand);color:var(--brand);box-shadow:var(--shadow-sm)}
+.btn.solid{background:linear-gradient(135deg,var(--brand),#5b7bff);color:#fff;border-color:transparent;box-shadow:0 8px 20px rgba(59,91,253,.3)}
+.btn.solid:hover{color:#fff;filter:brightness(1.05)}
+.btn.icon{width:36px;padding:0;height:36px;font-size:15px}
+
+/* ---------- layout ---------- */
+.app{
+  display:grid; grid-template-columns:minmax(340px,398px) minmax(0,1fr); gap:18px;
+  max-width:1500px; margin:0 auto; padding:18px 22px 56px; align-items:start;
+}
+.stack{display:grid;gap:14px}
+.card{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--shadow-sm);
+}
+.card-head{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line-2)}
+.card-head h2{font-size:12.5px;font-weight:600;letter-spacing:.01em;display:flex;align-items:center;gap:8px}
+.card-head .hint{margin-left:auto;font-size:10.5px;color:var(--ink-3);font-weight:300}
+.card-body{padding:16px}
+.eyebrow{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+
+/* ---------- preset chips ---------- */
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;
+  border:1px solid var(--line);background:var(--surface-2);font-size:11.5px;font-weight:500;color:var(--ink-2);
+  transition:.15s ease;
+}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand)}
+.chip .e{font-size:13px}
+
+/* ---------- segmented ---------- */
+.seg{display:inline-flex;padding:3px;gap:3px;background:var(--surface-3);border-radius:11px;border:1px solid var(--line-2);flex-wrap:wrap}
+.seg button{
+  padding:7px 13px;border-radius:8px;font-size:11.5px;font-weight:500;color:var(--ink-2);transition:.15s ease;white-space:nowrap;
+}
+.seg button.on{background:var(--surface);color:var(--brand);box-shadow:var(--shadow-sm);font-weight:600}
+.seg.wide{display:flex;width:100%}
+.seg.wide button{flex:1}
+
+/* ---------- fields ---------- */
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.field-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
+.field-top label{font-size:11.5px;color:var(--ink-2);font-weight:400}
+.field-top output{font-size:12px;font-weight:600;color:var(--brand);font-variant-numeric:tabular-nums}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:99px;outline:none;
+  background:linear-gradient(90deg,var(--brand) var(--fill,50%),var(--line) var(--fill,50%));
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff;border:4px solid var(--brand);
+  box-shadow:0 2px 6px rgba(16,32,64,.22);cursor:grab;
+}
+input[type=range]::-webkit-slider-thumb:active{cursor:grabbing;transform:scale(1.06)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#fff;border:4px solid var(--brand)}
+.range-scale{display:flex;justify-content:space-between;font-size:9.5px;color:var(--ink-3);margin-top:4px;font-weight:300}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.num{display:flex;flex-direction:column;gap:4px}
+.num span{font-size:10.5px;color:var(--ink-3);font-weight:300}
+.num input,select.sel{
+  width:100%;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);
+  font-size:12.5px;font-weight:500;font-variant-numeric:tabular-nums;transition:.15s ease;
+}
+.num input:focus,select.sel:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(59,91,253,.14);background:var(--surface)}
+select.sel{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%238b98ac'/></svg>");background-repeat:no-repeat;background-position:right 10px center;padding-right:26px}
+
+/* ---------- accordion ---------- */
+details.acc{border-top:1px solid var(--line-2)}
+details.acc:first-of-type{border-top:0}
+details.acc > summary{
+  list-style:none;display:flex;align-items:center;gap:8px;padding:12px 16px;font-size:11.5px;font-weight:600;
+  color:var(--ink-2);cursor:pointer;user-select:none;
+}
+details.acc > summary::-webkit-details-marker{display:none}
+details.acc > summary .caret{margin-left:auto;transition:.2s;color:var(--ink-3);font-size:10px}
+details.acc[open] > summary .caret{transform:rotate(180deg)}
+details.acc > summary:hover{color:var(--brand)}
+details.acc .acc-body{padding:2px 16px 16px}
+
+/* ---------- KPI ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{
+  position:relative;padding:14px 15px 13px;border-radius:var(--r-lg);border:1px solid var(--line);
+  background:var(--surface);box-shadow:var(--shadow-sm);overflow:hidden;min-width:0;
+}
+.kpi .k-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600;display:flex;gap:5px;align-items:center}
+.kpi .k-val{font-size:clamp(17px,1.55vw,24px);font-weight:700;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums;line-height:1.15;white-space:nowrap}
+.kpi .k-sub{font-size:10px;color:var(--ink-3);margin-top:4px;font-weight:300;min-height:14px}
+.kpi.hero{background:linear-gradient(135deg,#3b5bfd 0%,#4d6bff 45%,#0fb5a5 130%);border-color:transparent;color:#fff;box-shadow:0 14px 30px rgba(59,91,253,.32)}
+.kpi.hero .k-label,.kpi.hero .k-sub{color:rgba(255,255,255,.78)}
+.kpi.hero::after{content:"";position:absolute;right:-30px;top:-40px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.1)}
+.kpi[data-tone="ok"] .k-val{color:var(--ok)}
+.kpi[data-tone="bad"] .k-val{color:var(--bad)}
+.kpi[data-tone="warn"] .k-val{color:var(--warn)}
+.kpi.hero .k-val{color:#fff}
+.kpi .badge{position:absolute;right:12px;top:12px;font-size:9px;padding:2px 7px;border-radius:999px;background:var(--surface-3);color:var(--ink-2);font-weight:600}
+.kpi.hero .badge{background:rgba(255,255,255,.2);color:#fff}
+
+/* ---------- views ---------- */
+.view[hidden]{display:none!important}
+.sec-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.sec-title .line{flex:1;height:1px;background:var(--line-2)}
+
+/* ---------- cost bar ---------- */
+.cbar{display:flex;height:24px;border-radius:8px;overflow:hidden;background:var(--surface-3);box-shadow:inset 0 1px 3px rgba(0,0,0,.05)}
+.cbar i{display:block;height:100%;transition:width .35s ease}
+.cbar i:first-child{border-radius:8px 0 0 8px}
+.cbar i:last-child{border-radius:0 8px 8px 0}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:8px 14px;margin-top:14px}
+.legend div{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-2)}
+.legend i{width:8px;height:8px;border-radius:3px;flex:0 0 auto}
+.legend b{margin-left:auto;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* ---------- breakeven ---------- */
+.be-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.be{padding:12px 13px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--line-2)}
+.be span{display:block;font-size:10px;color:var(--ink-3);font-weight:300}
+.be b{display:block;font-size:16px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+.be small{display:block;font-size:9.5px;color:var(--ink-3);margin-top:2px;font-weight:300}
+
+/* ---------- sensitivity ---------- */
+.sens{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.sens .cell{
+  padding:9px 8px;border-radius:var(--r-sm);border:1px solid var(--line-2);background:var(--surface-2);text-align:center;transition:.15s;
+}
+.sens .cell.on{border-color:var(--brand);background:var(--brand-soft)}
+.sens .cell em{display:block;font-style:normal;font-size:9.5px;color:var(--ink-3)}
+.sens .cell b{display:block;font-size:13px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.sens .cell small{display:block;font-size:9px;color:var(--ink-3);margin-top:1px}
+
+/* ---------- chart ---------- */
+.chart-wrap{position:relative;height:268px}
+.chart-wrap canvas{width:100%;height:100%;display:block}
+
+/* ---------- tables ---------- */
+.tbl-wrap{overflow:auto;max-height:460px;border-radius:var(--r-md);border:1px solid var(--line-2)}
+table{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
+thead th{
+  position:sticky;top:0;background:var(--surface-3);color:var(--ink-2);font-weight:600;font-size:10px;
+  letter-spacing:.05em;text-transform:uppercase;text-align:right;padding:9px 11px;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+thead th:first-child,tbody td:first-child{text-align:left}
+tbody td{padding:8px 11px;text-align:right;border-bottom:1px solid var(--line-2);color:var(--ink-2);white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--surface-2)}
+td.pos{color:var(--ok);font-weight:600}
+td.neg{color:var(--bad);font-weight:600}
+td.em{color:var(--ink);font-weight:600}
+
+/* ---------- loan ---------- */
+.loan-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.lc{padding:12px 13px;border-radius:var(--r-md);border:1px solid var(--line-2);background:var(--surface-2)}
+.lc span{display:block;font-size:10px;color:var(--ink-3);font-weight:300}
+.lc b{display:block;font-size:15px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+.lc.hl{background:linear-gradient(135deg,rgba(59,91,253,.1),rgba(15,181,165,.1));border-color:rgba(59,91,253,.3)}
+.note{
+  display:flex;gap:9px;padding:11px 13px;border-radius:var(--r-md);font-size:11px;line-height:1.6;
+  background:var(--warn-soft);border:1px solid rgba(185,119,8,.25);color:var(--ink-2);
+}
+.note.ok{background:var(--ok-soft);border-color:rgba(14,159,110,.25)}
+.note.bad{background:var(--bad-soft);border-color:rgba(214,61,61,.25)}
+.note b{color:var(--ink)}
+.empty{padding:26px 16px;text-align:center;color:var(--ink-3);font-size:11.5px}
+
+/* ---------- matrix ---------- */
+.matrix{overflow:auto}
+.matrix table{font-size:10.5px}
+.matrix th,.matrix td{padding:6px 8px;text-align:center}
+.matrix td button{
+  width:100%;padding:5px 2px;border-radius:6px;font-size:10.5px;font-variant-numeric:tabular-nums;color:var(--ink-2);
+  border:1px solid transparent;transition:.12s;
+}
+.matrix td button:hover{background:var(--brand-soft);color:var(--brand)}
+.matrix td button.on{background:var(--brand);color:#fff;font-weight:600;box-shadow:0 4px 10px rgba(59,91,253,.3)}
+.matrix th.corner{background:transparent;border:0}
+.matrix tbody th{
+  position:static;background:transparent;text-transform:none;letter-spacing:0;font-size:10.5px;
+  color:var(--ink-3);padding:6px 4px;border:0;font-weight:500;white-space:nowrap;
+}
+
+/* ---------- notes ---------- */
+.notes h3{font-size:12.5px;margin:0 0 7px;font-weight:600}
+.notes h4{font-size:11.5px;margin:14px 0 5px;font-weight:600;color:var(--ink-2)}
+.notes p,.notes li{font-size:11.5px;color:var(--ink-2);line-height:1.75;font-weight:300}
+.notes ul{margin:0;padding-left:18px}
+.notes code{
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;background:var(--surface-3);
+  padding:1.5px 6px;border-radius:5px;color:var(--brand);border:1px solid var(--line-2);
+}
+.formula{
+  padding:11px 13px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--line-2);
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;line-height:2;color:var(--ink-2);overflow:auto;
+}
+.src{display:flex;gap:8px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--line-2);font-size:11px;color:var(--ink-2);font-weight:300}
+.src:last-child{border-bottom:0}
+.src b{color:var(--ink);font-weight:600}
+
+/* ---------- toast ---------- */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,18px);opacity:0;pointer-events:none;
+  background:#0d1526;color:#fff;padding:10px 18px;border-radius:999px;font-size:12px;z-index:90;
+  box-shadow:0 12px 30px rgba(0,0,0,.35);transition:.25s ease;
+}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- verdict ---------- */
+.verdict{
+  display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center;padding:16px 18px;border-radius:var(--r-lg);
+  border:1px solid rgba(59,91,253,.22);background:linear-gradient(135deg,rgba(59,91,253,.07),rgba(15,181,165,.07));
+  box-shadow:var(--shadow-sm);
+}
+.verdict.bad{border-color:rgba(214,61,61,.28);background:linear-gradient(135deg,rgba(214,61,61,.08),rgba(214,61,61,.02))}
+.verdict.bad .v-tag{background:var(--bad-soft);color:var(--bad)}
+.v-tag{display:inline-block;padding:2px 9px;border-radius:999px;background:var(--brand-soft);color:var(--brand);font-size:9.5px;font-weight:600;letter-spacing:.06em}
+.verdict p{font-size:12.5px;line-height:1.85;color:var(--ink-2);margin-top:7px}
+.verdict p b{color:var(--ink);font-weight:600}
+.v-chips{display:flex;gap:20px;align-items:center;padding-left:18px;border-left:1px solid var(--line)}
+.v-chips span{display:block;font-size:9.5px;color:var(--ink-3)}
+.v-chips b{display:block;font-size:15px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* ---------- compare ---------- */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cmp .col{border:1px solid var(--line-2);border-radius:var(--r-md);background:var(--surface-2);padding:13px}
+.cmp .col.on{border-color:var(--brand);background:var(--brand-soft)}
+.cmp h4{margin:0 0 8px;font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:6px}
+.cmp h4 small{margin-left:auto;font-size:9px;font-weight:500;color:var(--brand);background:var(--surface);border:1px solid var(--line);padding:1px 7px;border-radius:999px}
+.cmp .row{display:flex;justify-content:space-between;gap:10px;font-size:11px;padding:5px 0;border-bottom:1px dashed var(--line-2);color:var(--ink-2)}
+.cmp .row:last-child{border-bottom:0}
+.cmp .row b{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600;white-space:nowrap}
+
+/* ---------- advanced ---------- */
+details.acc.sub{border-top:1px dashed var(--line-2);margin-top:6px}
+details.acc.sub > summary{font-size:10.5px;font-weight:500;padding:8px 0;color:var(--ink-3)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1180px){
+  .app{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .input-panel{position:static!important;max-height:none!important}
+}
+@media (max-width:640px){
+  .app{padding:12px 12px 60px;gap:12px}
+  .topbar{padding:9px 13px;gap:9px}
+  .brand small{display:none}
+  .top-actions .pill{display:none}
+  .kpi .k-val{font-size:20px}
+  .verdict{grid-template-columns:1fr}
+  .v-chips{padding-left:0;border-left:0;border-top:1px solid var(--line);padding-top:12px;justify-content:space-between}
+  .cmp{grid-template-columns:1fr}
+  .be-grid{grid-template-columns:1fr 1fr}
+  .sens{grid-template-columns:repeat(3,1fr)}
+  .grid3{grid-template-columns:1fr 1fr}
+  .card-body{padding:13px}
+  .chart-wrap{height:220px}
+}
+@media print{
+  .topbar,.input-panel,.seg,.btn,.toast{display:none!important}
+  body{background:#fff}
+  .app{display:block;padding:0;max-width:none}
+  .card{box-shadow:none;break-inside:avoid;margin-bottom:10px}
+  .tbl-wrap{max-height:none;overflow:visible}
+}
+</style>
+<style id="ux2">
+/* ============================================================
+   UX2 — premium glass layer (aesthetics only, no layout changes)
+   ============================================================ */
+:root{
+  --brand:#4f46e5; --brand-2:#0d9488; --brand-3:#8b5cf6;
+  --brand-soft:rgba(79,70,229,.10);
+  --surface:rgba(255,255,255,.90);
+  --surface-2:rgba(255,255,255,.74);
+  --surface-3:rgba(238,243,252,.92);
+  --line:rgba(18,32,74,.13);
+  --line-2:rgba(18,32,74,.08);
+  --ink-3:#6b7791;
+  --shadow:0 28px 64px -34px rgba(10,22,55,.55);
+  --shadow-sm:0 14px 32px -24px rgba(10,22,55,.62);
+  --r-lg:22px; --r-md:14px; --r-sm:10px;
+}
+[data-theme="dark"]{
+  --brand:#818cf8; --brand-2:#2dd4bf; --brand-3:#a78bfa;
+  --brand-soft:rgba(129,140,248,.14);
+  --surface:rgba(21,30,50,.88);
+  --surface-2:rgba(27,38,62,.72);
+  --surface-3:rgba(33,46,73,.85);
+  --line:rgba(125,155,225,.18);
+  --line-2:rgba(125,155,225,.10);
+  --ink-3:#8391ad;
+  --shadow:0 30px 70px -34px rgba(0,0,0,.9);
+  --shadow-sm:0 14px 34px -22px rgba(0,0,0,.95);
+}
+
+/* --- ambient background --- */
+body{
+  background:
+    radial-gradient(1000px 620px at 8% -12%, rgba(79,70,229,.20), transparent 62%),
+    radial-gradient(900px 560px at 96% -6%, rgba(13,148,136,.17), transparent 58%),
+    radial-gradient(800px 600px at 52% 112%, rgba(139,92,246,.13), transparent 62%),
+    var(--bg);
+  background-attachment:fixed;
+}
+body::after{
+  content:""; position:fixed; inset:-10%; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(closest-side, rgba(79,70,229,.16), transparent) 12% 22%/44vmax 44vmax no-repeat,
+    radial-gradient(closest-side, rgba(13,148,136,.14), transparent) 88% 68%/40vmax 40vmax no-repeat;
+  animation:drift 26s ease-in-out infinite alternate;
+}
+@keyframes drift{
+  from{transform:translate3d(0,0,0) scale(1)}
+  to{transform:translate3d(-2.5%,2%,0) scale(1.06)}
+}
+
+/* --- top bar --- */
+.topbar{
+  background:color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter:blur(24px) saturate(180%);
+  border-bottom:1px solid var(--line);
+  box-shadow:0 10px 30px -26px rgba(10,22,55,.5);
+}
+.mark{
+  background:linear-gradient(140deg,var(--brand),var(--brand-3) 55%,var(--brand-2));
+  box-shadow:0 10px 24px -8px rgba(79,70,229,.65), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.brand strong{letter-spacing:-.015em}
+.pill{
+  background:color-mix(in srgb, var(--surface) 70%, transparent);
+  backdrop-filter:blur(12px);
+  border-color:var(--line);
+}
+
+/* --- buttons --- */
+.btn{
+  background:color-mix(in srgb, var(--surface) 74%, transparent);
+  border-color:var(--line);
+  border-radius:12px;
+  transition:transform .18s cubic-bezier(.2,.8,.3,1), box-shadow .18s, border-color .18s, color .18s;
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 12px 24px -14px rgba(79,70,229,.55);border-color:color-mix(in srgb, var(--brand) 55%, transparent)}
+.btn:active{transform:translateY(0) scale(.985)}
+.btn.solid{
+  background:linear-gradient(135deg,var(--brand),var(--brand-3) 52%,var(--brand-2));
+  background-size:180% 180%;
+  border-color:transparent; color:#fff;
+  box-shadow:0 14px 30px -14px rgba(79,70,229,.75), inset 0 1px 0 rgba(255,255,255,.28);
+  animation:sheen 9s ease infinite;
+}
+@keyframes sheen{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+/* --- cards --- */
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow-sm);
+  transition:box-shadow .25s ease, transform .25s ease, border-color .25s ease;
+  animation:rise .5s cubic-bezier(.2,.8,.3,1) both;
+}
+.card:hover{box-shadow:var(--shadow);border-color:color-mix(in srgb, var(--brand) 22%, var(--line))}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card-head{border-bottom:1px solid var(--line-2)}
+.card-head h2{letter-spacing:.005em;font-size:13px;font-weight:600}
+.topbar::after{
+  content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px; pointer-events:none;
+  background:linear-gradient(90deg, transparent, rgba(79,70,229,.55), rgba(13,148,136,.55), transparent);
+}
+
+/* --- KPI --- */
+.kpi{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow-sm);
+  transition:transform .25s cubic-bezier(.2,.8,.3,1), box-shadow .25s;
+}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.kpi.hero{
+  background:
+    radial-gradient(120% 130% at 100% 0%, rgba(255,255,255,.26), transparent 46%),
+    linear-gradient(135deg,#4f46e5 0%,#6366f1 42%,#0d9488 118%);
+  background-size:160% 160%;
+  border-color:rgba(255,255,255,.22);
+  box-shadow:0 22px 44px -20px rgba(79,70,229,.75), inset 0 1px 0 rgba(255,255,255,.3);
+  animation:heroShift 12s ease-in-out infinite alternate;
+}
+@keyframes heroShift{from{background-position:0% 0%}to{background-position:100% 100%}}
+.kpi.hero::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:radial-gradient(240px circle at var(--mx,70%) var(--my,0%), rgba(255,255,255,.22), transparent 65%);
+  transition:background .2s;
+}
+.kpi .ring{
+  position:absolute; right:12px; top:12px; width:42px; height:42px; border-radius:50%;
+  background:conic-gradient(#fff calc(var(--v,0) * 1turn), rgba(255,255,255,.22) 0);
+  -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  mask:radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 5px));
+  transition:background .5s ease;
+}
+.kpi .k-val{letter-spacing:-.03em}
+.kpi.hero .k-sub{padding-right:0}
+.kpi.hero .k-label{padding-right:50px}
+.kpi.flash .k-val{animation:flash .5s cubic-bezier(.2,.8,.3,1)}
+@keyframes flash{
+  0%{box-shadow:0 0 0 0 rgba(79,70,229,.35)}
+  60%{box-shadow:0 0 0 12px rgba(79,70,229,0)}
+  100%{box-shadow:0 0 0 0 rgba(79,70,229,0)}
+}
+.kpi.hero .k-val{text-shadow:0 2px 14px rgba(0,0,0,.18)}
+
+/* --- segmented control --- */
+.seg{
+  position:relative; border:1px solid var(--line);
+  background:color-mix(in srgb, var(--surface-3) 85%, transparent);
+}
+.seg button{position:relative; isolation:isolate; border-radius:9px; transition:color .2s}
+.seg button::before{
+  content:""; position:absolute; inset:0; border-radius:9px; z-index:-1;
+  background:linear-gradient(135deg, rgba(79,70,229,.18), rgba(13,148,136,.16));
+  border:1px solid color-mix(in srgb, var(--brand) 32%, transparent);
+  box-shadow:0 8px 18px -12px rgba(79,70,229,.7);
+  opacity:0; transform:scale(.9); transition:opacity .22s, transform .28s cubic-bezier(.34,1.4,.64,1);
+}
+.seg button.on::before{opacity:1;transform:scale(1)}
+.seg button.on{background:transparent!important;box-shadow:none!important}
+
+/* --- chips --- */
+.chip{
+  background:color-mix(in srgb, var(--surface-2) 80%, transparent);
+  border-color:var(--line);
+  transition:transform .18s cubic-bezier(.2,.8,.3,1), box-shadow .18s, border-color .18s, color .18s, background .18s;
+}
+.chip:hover{transform:translateY(-1px);box-shadow:0 10px 20px -16px rgba(79,70,229,.7)}
+.chip.on{
+  background:linear-gradient(135deg, rgba(79,70,229,.16), rgba(13,148,136,.14));
+  border-color:color-mix(in srgb, var(--brand) 55%, transparent);
+  color:var(--brand); box-shadow:0 10px 22px -16px rgba(79,70,229,.8), inset 0 0 0 1px transparent;
+}
+
+/* --- inputs --- */
+.num input, select.sel{
+  background:color-mix(in srgb, var(--surface-2) 88%, transparent);
+  border-color:var(--line);
+  border-radius:10px;
+  transition:border-color .18s, box-shadow .18s, background .18s;
+}
+.num input:hover, select.sel:hover{border-color:color-mix(in srgb, var(--brand) 28%, var(--line))}
+.num input:focus, select.sel:focus{
+  border-color:color-mix(in srgb, var(--brand) 60%, transparent);
+  box-shadow:0 0 0 4px color-mix(in srgb, var(--brand) 14%, transparent);
+}
+input[type=range]{height:6px}
+input[type=range]::-webkit-slider-thumb{
+  width:17px;height:17px;border-width:4px;
+  box-shadow:0 3px 10px rgba(79,70,229,.42), 0 0 0 4px color-mix(in srgb, var(--brand) 14%, transparent);
+  transition:transform .15s, box-shadow .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.12);box-shadow:0 3px 14px rgba(79,70,229,.6), 0 0 0 6px color-mix(in srgb, var(--brand) 16%, transparent)}
+details.acc > summary{border-radius:10px;transition:color .18s}
+details.acc > summary:hover{color:var(--brand)}
+
+/* --- verdict / compare / small cards --- */
+.verdict{
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(79,70,229,.16), transparent 55%),
+    radial-gradient(120% 140% at 100% 100%, rgba(13,148,136,.16), transparent 55%),
+    var(--surface);
+  backdrop-filter:blur(22px) saturate(170%);
+  border-color:color-mix(in srgb, var(--brand) 26%, transparent);
+  box-shadow:var(--shadow-sm);
+}
+.verdict.bad{
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(214,61,61,.14), transparent 55%),
+    var(--surface);
+  border-color:rgba(214,61,61,.28);
+}
+.cmp .col{background:color-mix(in srgb, var(--surface-2) 70%, transparent);border-color:var(--line);transition:border-color .2s, box-shadow .2s}
+.cmp .col.on{box-shadow:0 16px 34px -26px rgba(79,70,229,.8)}
+.be{
+  background:linear-gradient(160deg, rgba(79,70,229,.06), rgba(13,148,136,.05));
+  border-color:color-mix(in srgb, var(--brand) 16%, var(--line));
+}
+.be span{color:var(--ink-2);font-weight:400}
+.be b{font-size:19px;letter-spacing:-.02em}
+.be small{color:var(--ink-3)}
+.num span{color:var(--ink-2)}
+.range-scale{color:var(--ink-3)}
+.field-top output{font-weight:600}
+.sens .cell{background:color-mix(in srgb, var(--surface-2) 72%, transparent);border-color:var(--line);transition:transform .18s, border-color .18s, background .18s}
+.sens .cell:hover{transform:translateY(-2px);border-color:color-mix(in srgb, var(--brand) 40%, var(--line))}
+.sens .cell.on{background:linear-gradient(135deg, rgba(79,70,229,.16), rgba(13,148,136,.12));border-color:color-mix(in srgb, var(--brand) 45%, transparent)}
+.legend i{box-shadow:0 0 0 2px color-mix(in srgb, currentColor 0%, transparent)}
+.cbar{box-shadow:inset 0 1px 4px rgba(10,22,55,.12);background:color-mix(in srgb, var(--surface-3) 80%, transparent)}
+
+/* --- tables & matrix --- */
+.tbl-wrap{border-color:var(--line);background:color-mix(in srgb, var(--surface) 60%, transparent)}
+thead th{background:color-mix(in srgb, var(--surface-3) 92%, transparent)}
+tbody tr:hover td{background:color-mix(in srgb, var(--brand) 5%, transparent)}
+.matrix td button{border-radius:8px;transition:transform .14s, background .14s, color .14s}
+.matrix td button:hover{transform:scale(1.04)}
+.matrix td button.on{background:linear-gradient(135deg,var(--brand),var(--brand-2));box-shadow:0 8px 18px -10px rgba(79,70,229,.8)}
+
+/* --- chart tooltip --- */
+.chart-tip{
+  position:absolute; z-index:6; pointer-events:none; opacity:0;
+  transform:translate(-50%,-130%); transition:opacity .13s ease;
+  padding:7px 11px; border-radius:10px; white-space:nowrap;
+  background:color-mix(in srgb, #0b1224 88%, transparent);
+  border:1px solid rgba(255,255,255,.16);
+  color:#fff; font-size:10.5px; line-height:1.5;
+  box-shadow:0 16px 30px -18px rgba(0,0,0,.8);
+  backdrop-filter:blur(10px);
+}
+.chart-tip.on{opacity:1}
+.chart-tip b{color:#a5b4fc;font-weight:600}
+
+/* --- toast --- */
+.toast{
+  background:color-mix(in srgb, #0b1224 86%, transparent);
+  border:1px solid rgba(255,255,255,.14);
+  backdrop-filter:blur(14px);
+  box-shadow:0 20px 40px -20px rgba(0,0,0,.7);
+}
+
+/* --- scrollbars --- */
+.input-panel::-webkit-scrollbar,.tbl-wrap::-webkit-scrollbar,.matrix::-webkit-scrollbar,.formula::-webkit-scrollbar{width:8px;height:8px}
+.input-panel::-webkit-scrollbar-thumb,.tbl-wrap::-webkit-scrollbar-thumb,.matrix::-webkit-scrollbar-thumb,.formula::-webkit-scrollbar-thumb{
+  background:color-mix(in srgb, var(--ink-3) 35%, transparent);border-radius:99px
+}
+.input-panel::-webkit-scrollbar-track,.tbl-wrap::-webkit-scrollbar-track,.matrix::-webkit-scrollbar-track,.formula::-webkit-scrollbar-track{background:transparent}
+
+/* --- motion preferences --- */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  body::after{display:none}
+}
+
+/* keep mobile layout rules from the base sheet winning over the glass layer */
+@media (max-width:1180px){
+  .topbar{backdrop-filter:blur(18px) saturate(150%)}
+  .app{grid-template-columns:minmax(0,1fr)}
+  .app > *{min-width:0}
+  .stack,.card,.card-body{min-width:0}
+}
+
+/* ---------- embed mode (used inside Prospect Intelligence iframe) ---------- */
+html.embed .topbar{display:none}
+html.embed body{background:transparent}
+html.embed .app{padding:14px 14px 26px;max-width:none;gap:14px;grid-template-columns:minmax(320px,360px) minmax(0,1fr)}
+html.embed .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+html.embed .verdict{grid-template-columns:1fr;gap:12px}
+html.embed .v-chips{padding-left:0;border-left:0;border-top:1px solid var(--line);padding-top:11px;justify-content:space-between}
+html.embed .input-panel{top:8px!important;max-height:calc(100vh - 20px)!important}
+html.embed .verdict{border-color:var(--line)}
+@media (max-width:1180px){
+  html.embed .input-panel{position:sticky!important;max-height:calc(100vh - 20px)!important;overflow:auto}
+}
+@media (max-width:900px){
+  html.embed .app{grid-template-columns:minmax(0,1fr)}
+  html.embed .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  html.embed .input-panel{position:static!important;max-height:none!important;overflow:visible}
+}
+@media (max-width:640px){
+  .num input, select.sel{min-width:0}
+  .seg button{flex:1 1 auto}
+  .topbar{flex-wrap:wrap;row-gap:8px}
+  .brand{flex:0 0 auto}
+  .brand strong{white-space:nowrap;font-size:13.5px}
+  .top-actions{margin-left:auto}
+  .btn{padding:7px 11px;font-size:11.5px}
+  .btn.icon{width:34px;height:34px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="mark">ROI</div>
+    <div>
+      <strong>ROI Studio</strong>
+      <small>วิเคราะห์การลงทุน · ค่างวด · กระแสเงินสด</small>
+    </div>
+  </div>
+  <div class="top-actions">
+    <span class="pill">สินทรัพย์: <b id="topMachine">ตู้กดน้ำด่าง</b></span>
+    <span class="pill">กระแสเงินสด: <b id="topCash">—</b></span>
+    <button class="btn" id="btnCopy" type="button">คัดลอกข้อความนำเสนอ</button>
+    <button class="btn" id="btnPrint" type="button">พิมพ์ / PDF</button>
+    <button class="btn icon" id="btnTheme" type="button" title="สลับโหมดสว่าง/มืด" aria-label="สลับโหมดสว่าง/มืด">◐</button>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- ============ INPUT PANEL ============ -->
+  <aside class="panel input-panel" style="position:sticky;top:72px;max-height:calc(100vh - 88px);overflow:auto;border-radius:18px">
+    <div class="card" style="overflow:hidden">
+
+      <div class="card-head">
+        <h2><span class="eyebrow" style="letter-spacing:.1em">ตัวแปร</span></h2>
+        <span class="hint">แก้ไขแล้วผลลัพธ์อัปเดตทันที</span>
+      </div>
+
+      <div class="card-body" style="padding-bottom:10px">
+        <div class="field">
+          <div class="field-top"><label>เลือกสินทรัพย์</label></div>
+          <div class="chips" id="presetChips">
+            <button class="chip on" data-preset="alkaline" type="button"><span class="e">💧</span>ตู้กดน้ำด่าง</button>
+            <button class="chip" data-preset="ice" type="button"><span class="e">❄️</span>ตู้ผลิตน้ำแข็ง</button>
+            <button class="chip" data-preset="coffee" type="button"><span class="e">☕</span>ตู้กาแฟ 10 บาท</button>
+            <button class="chip" data-preset="laundry" type="button"><span class="e">🧺</span>เครื่องซักผ้า</button>
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:0">
+          <div class="field-top"><label>ระดับยอดขายที่ใช้ประเมิน</label><output id="scenOut">ตามเป้า</output></div>
+          <div class="seg wide" id="scenarioSeg">
+            <button data-scen="low" type="button">ต่ำกว่าเป้า 30%</button>
+            <button data-scen="base" class="on" type="button">ตามเป้า</button>
+            <button data-scen="high" type="button">สูงกว่าเป้า 30%</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1. investment -->
+      <details class="acc" open>
+        <summary>💵 เงินลงทุน &amp; สมมติฐานการวิเคราะห์ <span class="caret">▾</span></summary>
+        <div class="acc-body">
+          <div class="num" style="margin-bottom:10px">
+            <span>ราคาเครื่อง / ราคาลงทุน (บาท)</span>
+            <input type="number" id="price" value="45000" min="0" step="500" inputmode="numeric">
+          </div>
+
+          <!-- laundry-only: model + BOQ install -->
+          <div id="laundryBlock" hidden style="margin-bottom:10px">
+            <label class="num" style="margin-bottom:8px"><span>รุ่นสินค้าอ้างอิง — PM9003/2569 (ราคาเงินสด)</span>
+              <select class="sel" id="laundryModel"></select>
+            </label>
+            <div class="num"><span>ค่าติดตั้ง / เตรียมพื้นที่ (BOQ)</span>
+              <input type="number" id="install" value="6010" min="0" step="100">
+            </div>
+            <div class="chips" style="margin-top:7px" id="boqChips">
+              <button class="chip" type="button" data-n="1">1 เครื่อง</button>
+              <button class="chip" type="button" data-n="2">2</button>
+              <button class="chip" type="button" data-n="3">3</button>
+              <button class="chip" type="button" data-n="4">4</button>
+              <button class="chip" type="button" data-n="5">5</button>
+            </div>
+          </div>
+          <p id="investHint" style="font-size:9.5px;color:var(--ink-3);margin:-4px 0 10px;font-weight:300"></p>
+
+          <div class="grid2">
+            <label class="num"><span>ระยะเวลาประเมิน (ปี)</span>
+              <select class="sel" id="years">
+                <option value="3">3 ปี</option>
+                <option value="5" selected>5 ปี</option>
+                <option value="7">7 ปี</option>
+                <option value="10">10 ปี</option>
+              </select>
+            </label>
+            <label class="num"><span>อัตราคิดลด (NPV) %/ปี</span>
+              <input type="number" id="discount" value="8" min="0" max="40" step="0.5">
+            </label>
+          </div>
+          <details class="acc sub">
+            <summary>ขั้นสูง: มูลค่าซาก &amp; อัตราคิดลด <span class="caret">▾</span></summary>
+            <div class="acc-body" style="padding:0">
+              <label class="num"><span>มูลค่าซากเมื่อสิ้นสุดโครงการ (บาท)</span>
+                <input type="number" id="salvage" value="0" min="0" step="1000">
+              </label>
+              <p style="font-size:9.5px;color:var(--ink-3);margin:6px 0 0;font-weight:300">
+                ใช้เฉพาะการคำนวณ NPV/IRR ไม่กระทบกำไรและระยะเวลาคืนทุน
+              </p>
+            </div>
+          </details>
+        </div>
+      </details>
+
+      <!-- 2. sales -->
+      <details class="acc" open>
+        <summary>📈 ยอดขาย &amp; ราคาต่อหน่วย <span class="caret">▾</span></summary>
+        <div class="acc-body">
+          <div class="field">
+            <div class="field-top"><label for="qty">ปริมาณขายต่อวัน</label><output id="qtyOut">100 ลิตร</output></div>
+            <input type="range" id="qty" min="0" max="400" step="1" value="100">
+            <div class="range-scale"><span>0</span><span>จุดคุ้มทุน <b id="beInline">—</b></span><span id="qtyMaxOut">400</span></div>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <div class="field-top"><label for="unitPrice">ราคาขายต่อหน่วย</label><output id="priceOut">5.00 บาท</output></div>
+            <input type="range" id="unitPrice" min="1" max="10" step="0.5" value="5">
+            <div class="range-scale"><span id="unitMinOut">1 บาท</span><span id="unitMaxOut">10 บาท</span></div>
+          </div>
+        </div>
+      </details>
+
+      <!-- 3. costs -->
+      <details class="acc">
+        <summary>🧾 ต้นทุนดำเนินงาน <span class="caret">▾</span></summary>
+        <div class="acc-body">
+          <div class="field">
+            <div class="field-top"><label for="qrShare">สัดส่วนลูกค้าจ่าย QR</label><output id="qrShareOut">60%</output></div>
+            <input type="range" id="qrShare" min="0" max="100" step="5" value="60">
+          </div>
+          <div class="grid2">
+            <label class="num"><span>ค่าธรรมเนียม QR (%/ยอด)</span><input type="number" id="qrFee" value="1" min="0" max="10" step="0.1"></label>
+            <label class="num"><span>ต้นทุนวัตถุดิบ (บาท/หน่วย)</span><input type="number" id="rawCost" value="0" min="0" step="0.5"></label>
+          </div>
+          <div class="grid2" style="margin-top:10px">
+            <label class="num"><span>กำลังไฟ (kW)</span><input type="number" id="elecKW" value="0.15" min="0" step="0.01"></label>
+            <label class="num"><span>ชั่วโมงทำงาน/วัน</span><input type="number" id="elecHours" value="12" min="0" max="24" step="1"></label>
+            <label class="num"><span>ค่าไฟ (บาท/หน่วย)</span><input type="number" id="elecRate" value="4" min="0" step="0.1"></label>
+            <label class="num"><span>ค่าน้ำ (บาท/ลบ.ม.)</span><input type="number" id="waterRate" value="18" min="0" step="1"></label>
+            <label class="num"><span>น้ำที่ใช้ (ลิตร/หน่วย)</span><input type="number" id="waterL" value="1.5" min="0" step="0.1"></label>
+            <label class="num"><span>ค่าเช่าที่ (บาท/เดือน)</span><input type="number" id="rent" value="1500" min="0" step="100"></label>
+            <label class="num"><span>ค่าดูแล/ไส้กรอง (บาท/เดือน)</span><input type="number" id="maint" value="400" min="0" step="50"></label>
+          </div>
+        </div>
+      </details>
+
+      <!-- 4. payment -->
+      <details class="acc" open>
+        <summary>🏦 การชำระเงิน &amp; ดอกเบี้ย <span class="caret">▾</span></summary>
+        <div class="acc-body">
+          <div class="seg wide" id="modeSeg" style="margin-bottom:12px">
+            <button data-mode="cash" class="on" type="button">ซื้อเงินสด</button>
+            <button data-mode="loan" type="button">ผ่อนชำระ / ไฟแนนซ์</button>
+          </div>
+          <p id="cashHint" style="font-size:10px;color:var(--ink-3);margin:0;font-weight:300">
+            โหมดซื้อเงินสด ไม่มีค่างวดและดอกเบี้ย — เลือก “ผ่อนชำระ” เพื่อคำนวณค่างวดจากตารางดอกเบี้ย TSRL
+          </p>
+
+          <div id="loanInputs">
+            <div class="field">
+              <div class="field-top"><label for="downPct">เงินดาวน์</label><output id="downOut">20%</output></div>
+              <input type="range" id="downPct" min="0" max="50" step="5" value="20">
+            </div>
+            <div class="grid2">
+              <label class="num"><span>จำนวนงวด (เดือน)</span>
+                <select class="sel" id="term">
+                  <option value="6">6</option>
+                  <option value="12">12</option>
+                  <option value="18">18</option>
+                  <option value="21">21</option>
+                  <option value="24" selected>24</option>
+                  <option value="36">36</option>
+                </select>
+              </label>
+              <label class="num"><span>ดอกเบี้ยคงที่ (%/เดือน)</span>
+                <input type="number" id="flatRate" value="2.40" min="0" max="5" step="0.01">
+              </label>
+            </div>
+            <p style="font-size:9.5px;color:var(--ink-3);margin:7px 0 12px;font-weight:300" id="rateHint">อัตราอ้างอิงจากตาราง TSRL — แตะช่องในตารางเพื่อเลือกแผน</p>
+            <div class="matrix" id="rateMatrix"></div>
+          </div>
+        </div>
+      </details>
+
+      <div style="padding:12px 16px;border-top:1px solid var(--line-2);display:flex;gap:8px">
+        <button class="btn solid" id="btnReset" type="button" style="flex:1">↺ รีเซ็ตค่าตั้งต้น</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ RESULTS ============ -->
+  <main class="stack">
+
+    <section class="kpis">
+      <div class="kpi hero" id="kpiRoiCard">
+        <div class="k-label">ROI ต่อปี</div>
+        <div class="k-val" id="kpiRoi">—</div>
+        <div class="k-sub" id="kpiRoiSub">ผลตอบแทนจากเงินลงทุนตัวเอง</div>
+        <div class="ring" id="roiRing" aria-hidden="true"></div>
+      </div>
+      <div class="kpi" id="kpiPaybackCard">
+        <div class="k-label">คืนทุน (Payback)</div>
+        <div class="k-val" id="kpiPayback">—</div>
+        <div class="k-sub" id="kpiPaybackSub">กระแสเงินสดสะสม</div>
+      </div>
+      <div class="kpi" id="kpiProfitCard">
+        <div class="k-label">กำไรสุทธิ/เดือน</div>
+        <div class="k-val" id="kpiProfit">—</div>
+        <div class="k-sub" id="kpiProfitSub">หลังหักต้นทุนและค่างวด</div>
+      </div>
+      <div class="kpi" id="kpiBeCard">
+        <div class="k-label">จุดคุ้มทุน</div>
+        <div class="k-val" id="kpiBe">—</div>
+        <div class="k-sub" id="kpiBeSub">ยอดขายขั้นต่ำต่อวัน</div>
+      </div>
+    </section>
+
+    <!-- plain-language verdict for sales -->
+    <section class="verdict" id="verdictCard">
+      <div>
+        <span class="v-tag">สรุปสั้นสำหรับลูกค้า</span>
+        <p id="verdictText">—</p>
+      </div>
+      <div class="v-chips">
+        <div><span>เงินลงทุนรวม</span><b id="vInvest">—</b></div>
+        <div><span>กำไร/เดือน</span><b id="vProfit">—</b></div>
+        <div><span>คืนทุน</span><b id="vPayback">—</b></div>
+      </div>
+    </section>
+
+    <div class="seg" id="viewSeg">
+      <button data-view="overview" class="on" type="button">ภาพรวม</button>
+      <button data-view="cashflow" type="button">กระแสเงินสด</button>
+      <button data-view="loan" type="button">ค่างวด &amp; ดอกเบี้ย</button>
+      <button data-view="notes" type="button">สูตร &amp; ที่มา</button>
+    </div>
+
+    <!-- ---------- overview ---------- -->
+    <section class="view" id="view-overview">
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><h2>🎯 จุดคุ้มทุน &amp; กำไรต่อหน่วย</h2><span class="hint" id="beHint">ต่อเดือน 30 วัน</span></div>
+          <div class="card-body">
+            <div class="be-grid">
+              <div class="be"><span>ขายขั้นต่ำเพื่อไม่ขาดทุน</span><b id="beQty">—</b><small id="beQtyUnit">หน่วย/วัน</small></div>
+              <div class="be"><span>รายได้ขั้นต่ำ</span><b id="beRevenue">—</b><small>บาท/เดือน</small></div>
+              <div class="be"><span>กำไรส่วนเพิ่มต่อหน่วย</span><b id="beContrib">—</b><small>บาท/หน่วย</small></div>
+            </div>
+            <div class="note" id="beNote" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>💰 โครงสร้างรายรับ–รายจ่าย</h2><span class="hint" id="revHint">รายรับ 0 บาท/เดือน</span></div>
+          <div class="card-body">
+            <div class="cbar" id="costBar"></div>
+            <div class="legend" id="costLegend"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>⚖️ เทียบ 2 ทางเลือก: เงินสด vs ผ่อนชำระ</h2><span class="hint">ใช้ยอดขายชุดเดียวกัน</span></div>
+          <div class="card-body">
+            <div class="cmp" id="cmpBox"></div>
+            <p style="font-size:10px;color:var(--ink-3);margin:10px 0 0;font-weight:300" id="cmpNote"></p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>🔀 ทดสอบความเสี่ยง (Sensitivity)</h2><span class="hint">ยอดขายเปลี่ยน ±30%</span></div>
+          <div class="card-body">
+            <div class="sens" id="sensGrid"></div>
+            <p style="font-size:10px;color:var(--ink-3);margin:10px 0 0;font-weight:300">
+              ใช้ดูว่าถ้ายอดขายพลาดเป่า 30% ระยะเวลาคืนทุนจะยืดออกไปเท่าไร ก่อนเซ็นสัญญาเช่าพื้นที่
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- cashflow ---------- -->
+    <section class="view" id="view-cashflow" hidden>
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><h2>🧮 ตัวชี้วัดขั้นสูง</h2><span class="hint">สำหรับวิเคราะห์เชิงลึก (ไม่จำเป็นต่อการนำเสนอ)</span></div>
+          <div class="card-body">
+            <div class="be-grid">
+              <div class="be"><span>NPV (มูลค่าปัจจุบันสุทธิ)</span><b id="advNpv">—</b><small>คิดลดที่อัตราคิดลดที่ตั้งไว้</small></div>
+              <div class="be"><span>IRR (ผลตอบแทนที่แท้จริง)</span><b id="advIrr">—</b><small>ต่อปี</small></div>
+              <div class="be"><span>PI (Profitability Index)</span><b id="advPi">—</b><small>มากกว่า 1 คือคุ้มลงทุน</small></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>📊 กระแสเงินสดสะสม</h2><span class="hint" id="chartHint">—</span></div>
+          <div class="card-body">
+            <div class="chart-wrap"><canvas id="cashChart"></canvas><div class="chart-tip" id="chartTip"></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>🗓️ ตารางกระแสเงินสดรายปี</h2><span class="hint">มูลค่าปัจจุบันคิดส่วนลดรายเดือน</span></div>
+          <div class="card-body">
+            <div class="tbl-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ปี</th><th>รายรับ</th><th>ต้นทุนดำเนินงาน</th><th>ค่างวด</th>
+                    <th>กระแสเงินสดสุทธิ</th><th>สะสม</th><th>มูลค่าปัจจุบัน</th>
+                  </tr>
+                </thead>
+                <tbody id="yearBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- loan ---------- -->
+    <section class="view" id="view-loan" hidden>
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><h2>🏦 โครงสร้างการผ่อนชำระ</h2><span class="hint" id="loanHint">—</span></div>
+          <div class="card-body" id="loanSummary"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h2>📋 ตารางผ่อนชำระ</h2><span class="hint" id="amortHint">—</span></div>
+          <div class="card-body">
+            <div class="tbl-wrap">
+              <table>
+                <thead>
+                  <tr><th>งวด</th><th>ค่างวด</th><th>เงินต้น</th><th>ดอกเบี้ย</th><th>คงเหลือ</th></tr>
+                </thead>
+                <tbody id="amortBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- notes ---------- -->
+    <section class="view notes" id="view-notes" hidden>
+      <div class="stack">
+        <div class="card">
+          <div class="card-head"><h2>🧮 สูตรการคำนวณที่ใช้</h2><span class="hint">มาตรฐานการวิเคราะห์การลงทุน</span></div>
+          <div class="card-body">
+            <h4>1) รายรับ–ต้นทุนต่อเดือน (30 วัน)</h4>
+            <div class="formula">
+รายรับ = ปริมาณขาย/วัน × ราคา/หน่วย × 30
+ต้นทุนผันแปร = วัตถุดิบ + ค่าธรรมเนียม QR + ค่าไฟ + ค่าน้ำ
+ค่าไฟ = กำลังไฟ(kW) × ชั่วโมงทำงาน × 30 × เรตค่าไฟ
+ค่าน้ำ = ปริมาณขาย/วัน × ลิตรต่อหน่วย ÷ 1000 × เรตค่าน้ำ × 30
+ค่าธรรมเนียม QR = รายรับ × สัดส่วนจ่าย QR × อัตราค่าธรรมเนียม
+            </div>
+
+            <h4>2) กระแสเงินสด &amp; ผลตอบแทน</h4>
+            <div class="formula">
+NCF = รายรับ − ต้นทุนดำเนินงาน − ค่างวด (ถ้ามี)
+ROI ต่อปี = NCF × 12 ÷ เงินลงทุนตัวเอง × 100
+Payback = เดือนแรกที่กระแสเงินสดสะสม ≥ เงินลงทุนตัวเอง
+NPV = −เงินลงทุน + Σ [ CFₜ ÷ (1+r)^(t/12) ] + มูลค่าซาก
+IRR = อัตรา r ที่ทำให้ NPV = 0  (แสดงเป็นอัตราทบต้นต่อปี)
+            </div>
+
+            <h4>3) ค่างวด &amp; ดอกเบี้ย</h4>
+            <div class="formula">
+แบบคงที่ (Flat rate — ตาราง TSRL)
+  ดอกเบี้ยรวม = ยอดจัดไฟแนนซ์ × อัตรา/เดือน × จำนวนงวด
+  ค่างวด = (ยอดจัด + ดอกเบี้ยรวม) ÷ จำนวนงวด
+
+แบบลดต้นลดดอก ( annuity )
+  i = APR ÷ 12,  ค่างวด = P × i ÷ (1 − (1+i)^−n)
+
+APR แท้จริงของแผนคงที่ = อัตรา IRR ต่อเดือน × 12 (เทียบกับสินเชื่อลดต้นลดดอก)
+            </div>
+
+            <h4>4) จุดคุ้มทุน</h4>
+            <div class="formula">
+กำไรส่วนเพิ่ม/หน่วย = ราคา − วัตถุดิบ − ค่าน้ำ/หน่วย − ค่า QR ต่อหน่วย
+จุดคุ้มทุน (หน่วย/วัน) = (ค่าเช่า + ค่าดูแล + ค่าไฟ + ค่างวด) ÷ (กำไรส่วนเพิ่ม × 30)
+            </div>
+
+            <p style="margin-top:12px">* ตัวเลขทั้งหมดเป็นการประมาณการเพื่อการตัดสินใจเบื้องต้น ไม่ใช่การรับประกันผลตอบแทน</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>🧺 สมมติฐานเครื่องซักผ้า (อ้างอิงเอกสาร)</h2><span class="hint">PM9003/2569 · BOQ ติดตั้ง · จุดคืนทุน 2569</span></div>
+          <div class="card-body">
+            <h4>1) ราคาขายเงินสด — LG เครื่องซักผ้าหยอดเหรียญ (PM9003/2569 ข้อ 9)</h4>
+            <div class="tbl-wrap" style="max-height:300px;margin-bottom:14px">
+              <table>
+                <thead><tr><th>รหัส</th><th>รายการ</th><th>ราคาเงินสด</th></tr></thead>
+                <tbody>
+                  <tr><td class="em">10501614</td><td>LG ซักผ้าฝาบน 17 กก. T2517VBTB + กล่องหยอดเหรียญ</td><td>28,900</td></tr>
+                  <tr><td class="em">10501822</td><td>LG ซักผ้าฝาบน 17 กก. T2517VBTB + ชุดหยอดเหรียญ + QR</td><td>35,900</td></tr>
+                  <tr><td class="em">10501777</td><td>LG ซักผ้าหน้า 13 กก. + ชุดหยอดเหรียญ (ซักเดี่ยว)</td><td>76,900</td></tr>
+                  <tr><td class="em">10501818</td><td>LG ซักผ้าหน้า Single 13 กก. + ชุด + QR</td><td>82,900</td></tr>
+                  <tr><td class="em">10501779</td><td>LG ซักผ้าหน้า 17 กก. + ชุดหยอดเหรียญ (ซักเดี่ยว)</td><td>101,900</td></tr>
+                  <tr><td class="em">10501819</td><td>LG ซักผ้าหน้า Single 17 กก. + ชุด + QR</td><td>107,900</td></tr>
+                  <tr><td class="em">10501778</td><td>LG อบผ้า 13 กก. + ชุดหยอดเหรียญ (อบเดี่ยว)</td><td>62,900</td></tr>
+                  <tr><td class="em">10501820</td><td>LG อบผ้า Single 13 กก. + ชุด + QR</td><td>68,900</td></tr>
+                  <tr><td class="em">10501780</td><td>LG อบผ้า 17 กก. + ชุดหยอดเหรียญ (อบเดี่ยว)</td><td>79,900</td></tr>
+                  <tr><td class="em">10501821</td><td>LG อบผ้า Single 17 กก. + ชุด + QR</td><td>85,900</td></tr>
+                  <tr><td class="em">10501609</td><td>LG Stack ซัก 13 + อบ 10 กก. + ชุดหยอดเหรียญ</td><td>145,900</td></tr>
+                  <tr><td class="em">10501816</td><td>LG Stack 13 + 10 + ชุด + QR</td><td>158,900</td></tr>
+                  <tr><td class="em">10501611</td><td>LG Stack ซัก 17 + อบ 13 กก. + ชุดหยอดเหรียญ</td><td>185,900</td></tr>
+                  <tr><td class="em">10501817</td><td>LG Stack 17 + 13 + ชุด + QR</td><td>198,900</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4>2) ค่าเตรียมพื้นที่ติดตั้ง (BOQ เครื่องซักผ้า)</h4>
+            <div class="formula">
+1 เครื่อง = 6,010   ·   2 เครื่อง = 11,245   ·   3 เครื่อง = 16,780
+4 เครื่อง = 22,765  ·   5 เครื่อง = 29,425
+(ท่อน้ำดี 30 บ./ม. · ท่อน้ำทิ้ง 40 บ./ม. · ก๊อกน้ำ 500 บ./ชุด · ท่อลมร้อน 1,500 บ./ชุด
+ สายไฟ 100/50 บ./ม. · เบรกเกอร์ 130 บ./ชุด · ปลั๊ก 500 บ./ชุด · ค่าแรง 1,200 บ./เครื่อง)
+งานเสริม: ปรับพื้น 1,000/ตรม. · หลังคา 1,500/ตรม. · ผนัง 1,500/ตรม.
+ตู้ไฟ 1 เฟส 12,000 · 3 เฟส 30,000 · มาตรวัดน้ำ 700
+            </div>
+
+            <h4>3) สมมติฐานการใช้งาน (จุดคืนทุน_BU_Vending_2569)</h4>
+            <div class="formula">
+ซักผ้าฝาบน 28,900 บ. · 5 รอบ/วัน · 30 บ./รอบ · ค่าใช้จ่าย 6% ของรายได้
+  → กำไร 4,230 บ./เดือน · คืนทุน 6.8 เดือน · ROI 176%/ปี
+ซัก-อบ ฝาหน้า 185,900 บ. · 10 รอบ/วัน · 80 บ./รอบ · ค่าใช้จ่าย 15% ของรายได้
+  → กำไร 20,400 บ./เดือน/เครื่อง · คืนทุน 9.1 เดือน · ROI 132%/ปี
+            </div>
+            <p style="margin-top:10px">แบบจำลองนี้คิดค่าไฟ/ค่าน้ำแยกจริง (ไม่ใช้ % ของรายได้) จึงได้คืนทุนของ Stack 17+13 ประมาณ 9 เดือน ใกล้เคียงสมมติฐาน BU</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>📁 ที่มาของข้อมูล</h2><span class="hint">รวบรวมจากไฟล์ในเครื่อง</span></div>
+          <div class="card-body">
+            <div class="src"><b>ROI / คืนทุน</b><span>safe_vending_roi_calculator.html — โครงสร้างรายรับ–ต้นทุนตู้หยอดเหรียญ 3 ชนิด (น้ำด่าง / น้ำแข็ง / กาแฟ), เงินดาวน์–ดอกเบี้ย–ค่างวด, ROI และ Payback</span></div>
+            <div class="src"><b>ตารางดอกเบี้ย</b><span>คำนวณราคาผ่อนสินค้า TSRL.xlsx (ชีต Interest) — อัตราดอกเบี้ยคงที่ต่อเดือน แยกตามเงินดาวน์ 0–50% และงวด 6/12/18/21/24/36 เดือน</span></div>
+            <div class="src"><b>จุดคืนทุน</b><span>จุดคืนทุน_BU_Vending_2569.xlsx — แนวคิด Break-even, สัดส่วนค่าใช้จ่ายต่อรายได้, ROI ต่อปี (ตู้กดน้ำ RO / ตู้กาแฟ / เครื่องซักผ้า / ซัก-อบ)</span></div>
+            <div class="src"><b>ราคาเครื่องซักผ้า</b><span>PM9003-2569 ประกาศเรื่องราคาจำหน่ายสินค้าของบริษัทฯ (ข้อ 9 เครื่องซักผ้าหยอดเหรียญ LG 14 รุ่น) และไฟล์ราคาใน DRS CRD TELE_Rev.plan เครื่องซักผ้า หยอดเหรียญ (ALL).xlsx</span></div>
+            <div class="src"><b>ค่าติดตั้ง</b><span>คำนวนงานก่อสร้าง (เครื่องซักผ้า).xlsx (ชีต Sim Cost) — BOQ เตรียมพื้นที่ 1–5 เครื่อง</span></div>
+            <div class="src"><b>หลักการมาตรฐาน</b><span>NPV / IRR / Payback / Break-even ตามหลักการวิเคราะห์โครงการลงทุน (capital budgeting) และการเทียบค่างวดแบบ Flat rate กับ ลดต้นลดดอก (APR)</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p style="text-align:center;font-size:10px;color:var(--ink-3);padding:2px 0 8px">
+      ROI Studio · ผลคำนวณเป็นการประมาณการ ใช้ประกอบการตัดสินใจ ไม่ใช่การรับประกันผลตอบแทน
+    </p>
+  </main>
+</div>
+
+<div class="toast" id="toast">คัดลอกสรุปแล้ว</div>
+
+<script>
+/* ============================================================
+   ROI Studio — single file app
+   ============================================================ */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+/* ---------- asset presets ---------- */
+const PRESETS = {
+  alkaline: { label:'ตู้กดน้ำด่าง', emoji:'💧', unit:'ลิตร', unitShort:'ลิตร/วัน',
+    price:45000, baseQty:100, qtyMax:400, unitPrice:5, unitMin:1, unitMax:10,
+    rawCost:0, qrShare:60, qrFee:1, elecKW:0.15, elecHours:12, elecRate:4,
+    waterL:1.5, waterRate:18, rent:1500, maint:400, flatRate:2.40 },
+  ice: { label:'ตู้ผลิตน้ำแข็ง', emoji:'❄️', unit:'กก.', unitShort:'กก./วัน',
+    price:186000, baseQty:65, qtyMax:150, unitPrice:5, unitMin:2, unitMax:15,
+    rawCost:0, qrShare:70, qrFee:1, elecKW:1.33, elecHours:12, elecRate:4,
+    waterL:1.3, waterRate:18, rent:2000, maint:500, flatRate:2.90 },
+  coffee: { label:'ตู้กาแฟ 10 บาท', emoji:'☕', unit:'แก้ว', unitShort:'แก้ว/วัน',
+    price:49000, baseQty:60, qtyMax:200, unitPrice:10, unitMin:10, unitMax:20,
+    rawCost:4.5, qrShare:60, qrFee:1, elecKW:1.5, elecHours:12, elecRate:4,
+    waterL:0.2, waterRate:18, rent:1500, maint:300, flatRate:2.90 },
+  laundry: { label:'เครื่องซักผ้า / อบผ้า (LG)', emoji:'🧺', unit:'รอบ', unitShort:'รอบ/วัน',
+    price:28900, baseQty:5, qtyMax:24, unitPrice:30, unitMin:10, unitMax:100,
+    rawCost:0, qrShare:30, qrFee:1, elecKW:0.5, elecHours:3, elecRate:4,
+    waterL:120, waterRate:18, rent:0, maint:200, flatRate:2.40 }
+};
+
+/* ---------- LG coin-op laundry price list : PM9003/2569 (เงินสด) ---------- */
+const LAUNDRY_MODELS = [
+  { code:'10501614', name:'LG ซักผ้าฝาบน 17 กก. T2517VBTB + กล่องหยอดเหรียญ', price:28900,  type:'top' },
+  { code:'10501822', name:'LG ซักผ้าฝาบน 17 กก. T2517VBTB + ชุดหยอดเหรียญ + QR', price:35900, type:'top' },
+  { code:'10501777', name:'LG ซักผ้าหน้า 13 กก. + ชุดหยอดเหรียญ', price:76900,  type:'front' },
+  { code:'10501818', name:'LG ซักผ้าหน้า Single 13 กก. + ชุด + QR', price:82900, type:'front' },
+  { code:'10501779', name:'LG ซักผ้าหน้า 17 กก. + ชุดหยอดเหรียญ', price:101900, type:'front' },
+  { code:'10501819', name:'LG ซักผ้าหน้า Single 17 กก. + ชุด + QR', price:107900, type:'front' },
+  { code:'10501778', name:'LG อบผ้า 13 กก. + ชุดหยอดเหรียญ', price:62900,  type:'dryer' },
+  { code:'10501820', name:'LG อบผ้า Single 13 กก. + ชุด + QR', price:68900, type:'dryer' },
+  { code:'10501780', name:'LG อบผ้า 17 กก. + ชุดหยอดเหรียญ', price:79900,  type:'dryer' },
+  { code:'10501821', name:'LG อบผ้า Single 17 กก. + ชุด + QR', price:85900, type:'dryer' },
+  { code:'10501609', name:'LG Stack 13 ซัก + 10 อบ + ชุดหยอดเหรียญ', price:145900, type:'stack' },
+  { code:'10501816', name:'LG Stack 13 + 10 + ชุด + QR', price:158900, type:'stack' },
+  { code:'10501611', name:'LG Stack 17 ซัก + 13 อบ + ชุดหยอดเหรียญ', price:185900, type:'stack' },
+  { code:'10501817', name:'LG Stack 17 + 13 + ชุด + QR', price:198900, type:'stack' }
+];
+
+const LAUNDRY_TYPE = {
+  top:   { unitPrice:30, waterL:120, elecKW:0.5, elecHours:3, baseQty:5,  qtyMax:24 },
+  front: { unitPrice:30, waterL:130, elecKW:0.6, elecHours:3, baseQty:5,  qtyMax:24 },
+  dryer: { unitPrice:40, waterL:0,   elecKW:3.0, elecHours:3, baseQty:3,  qtyMax:20 },
+  stack: { unitPrice:80, waterL:120, elecKW:3.3, elecHours:6, baseQty:10, qtyMax:24 }
+};
+
+/* BOQ ค่าเตรียมพื้นที่ติดตั้ง (เครื่องซักผ้า) ตามจำนวนเครื่อง */
+const BOQ_INSTALL = { 1:6010, 2:11245, 3:16780, 4:22765, 5:29425 };
+
+/* ---------- TSRL rate table (% per month, flat) ---------- */
+const RATE = {
+  downs: [0, 10, 15, 20, 30, 40, 50],
+  terms: [6, 12, 18, 21, 24, 36],
+  rows: [
+    [2.00, 2.25, 2.50, 2.75, 3.00, 3.25],  // down 0%
+    [2.00, 2.25, 2.50, 2.75, 3.00, 3.25],  // down 10%
+    [1.95, 2.20, 2.45, 2.70, 2.95, 3.20],  // down 15%
+    [1.90, 2.15, 2.40, 2.65, 2.90, 3.15],  // down 20%
+    [1.80, 2.05, 2.30, 2.55, 2.80, 3.05],  // down 30%
+    [1.60, 1.70, 1.80, 1.90, 2.00, 2.10],  // down 40%
+    [1.50, 1.60, 1.70, 1.80, 1.90, 2.00]   // down 50%
+  ]
+};
+
+function lookupRate(downPct, term) {
+  const col = RATE.terms.indexOf(Number(term));
+  if (col < 0) return 2.4;
+  const x = Math.min(50, Math.max(0, downPct));
+  let i = 0;
+  while (i < RATE.downs.length - 1 && x > RATE.downs[i + 1]) i++;
+  const j = Math.min(i + 1, RATE.downs.length - 1);
+  const x0 = RATE.downs[i], x1 = RATE.downs[j];
+  const r0 = RATE.rows[i][col], r1 = RATE.rows[j][col];
+  return x1 === x0 ? r0 : r0 + (r1 - r0) * (x - x0) / (x1 - x0);
+}
+
+/* ---------- state ---------- */
+const state = { preset:'alkaline', scenario:'base', mode:'cash', view:'overview' };
+
+/* ---------- formatting ---------- */
+const nf0 = new Intl.NumberFormat('th-TH', { maximumFractionDigits: 0 });
+const nf2 = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const nf1 = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+function baht(n) {
+  if (!isFinite(n)) return '—';
+  const s = nf0.format(Math.abs(Math.round(n)));
+  return (n < 0 ? '−' : '') + '฿' + s;
+}
+function bahtSigned(n) {
+  if (!isFinite(n)) return '—';
+  return (n > 0 ? '+' : '') + baht(n);
+}
+function pct(v, d = 1) {
+  if (!isFinite(v)) return '—';
+  return (v * 100).toFixed(d) + '%';
+}
+function compact(n) {
+  const a = Math.abs(n);
+  if (a >= 1e6) return (n / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'M';
+  if (a >= 1e3) return Math.round(n / 1e3) + 'K';
+  return String(Math.round(n));
+}
+function pctCap(v) {
+  if (!isFinite(v)) return '—';
+  if (v > 5) return '>500%';
+  return pct(v);
+}
+function monthText(m) {
+  if (m == null || !isFinite(m)) return 'ไม่คืนทุน';
+  if (m <= 0) return 'ทันที';
+  let y = Math.floor(m / 12);
+  let mo = Math.round(m - y * 12);
+  if (mo === 12) { y += 1; mo = 0; }
+  if (y > 0 && mo > 0) return `${y} ปี ${mo} เดือน`;
+  if (y > 0) return `${y} ปี`;
+  return `${Math.max(1, Math.round(m))} เดือน`;
+}
+
+const num = id => { const el = document.getElementById(id); const v = parseFloat(el.value); return isFinite(v) ? v : 0; };
+
+/* ---------- micro-interactions ---------- */
+const prevKpi = {};
+function flashKpi(cardId) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  card.classList.remove('flash');
+  void card.offsetWidth;
+  card.classList.add('flash');
+}
+function setKpi(id, cardId, text) {
+  const el = document.getElementById(id);
+  if (!el || el.textContent === text) return;
+  el.textContent = text;
+  if (prevKpi[id] !== undefined) flashKpi(cardId);
+  prevKpi[id] = text;
+}
+let chartGeom = null;
+
+/* ---------- core engine ---------- */
+function irr(cashflows) {
+  const npvAt = r => cashflows.reduce((s, cf, i) => s + cf / Math.pow(1 + r, i), 0);
+  let lo = -0.9999, hi = 1, flo = npvAt(lo), fhi = npvAt(hi), guard = 0;
+  while (flo * fhi > 0 && guard++ < 80) { hi *= 1.7; fhi = npvAt(hi); }
+  if (flo * fhi > 0) return NaN;
+  for (let k = 0; k < 240; k++) {
+    const mid = (lo + hi) / 2, fm = npvAt(mid);
+    if (Math.abs(fm) < 1e-7) return mid;
+    if (flo * fm <= 0) { hi = mid; fhi = fm; } else { lo = mid; flo = fm; }
+  }
+  return (lo + hi) / 2;
+}
+
+function core(p) {
+  const revenue = p.qty * p.unitPrice * 30;
+  const raw     = p.qty * p.rawCost * 30;
+  const qr      = revenue * (p.qrShare / 100) * (p.qrFee / 100);
+  const elec    = p.elecKW * p.elecHours * 30 * p.elecRate;
+  const water   = (p.qty * p.waterL / 1000) * p.waterRate * 30;
+  const fixed   = p.rent + p.maint;
+  const opex    = raw + qr + elec + water + fixed;
+
+  let principal = 0, down = p.price, interest = 0, pmt = 0;
+  if (p.mode === 'loan') {
+    down = p.price * (p.downPct / 100);
+    principal = Math.max(0, p.price - down);
+    interest = principal * (p.flatRate / 100) * p.term;
+    pmt = p.term > 0 ? (principal + interest) / p.term : 0;
+  }
+  const equity = p.mode === 'loan' ? down : p.price;
+
+  const opProfit = revenue - opex;
+  const months = Math.round(p.years * 12);
+  const monthly = [];
+  let cum = -equity;
+  const cumSeries = [{ m: 0, cum }];
+  for (let m = 1; m <= months; m++) {
+    const payM = (p.mode === 'loan' && m <= p.term) ? pmt : 0;
+    let cf = opProfit - payM;
+    if (m === months) cf += p.salvage;
+    cum += cf;
+    monthly.push({ m, rev: revenue, opex, pay: payM, cf, cum });
+    cumSeries.push({ m, cum });
+  }
+
+  // payback (months, fractional)
+  let payback = null;
+  if (equity <= 0) payback = 0;
+  else {
+    for (let i = 1; i < cumSeries.length; i++) {
+      if (cumSeries[i].cum >= 0) {
+        const prev = cumSeries[i - 1].cum, cur = cumSeries[i].cum;
+        const frac = cur !== prev ? (-prev) / (cur - prev) : 0;
+        payback = (i - 1) + frac;
+        break;
+      }
+    }
+  }
+
+  const ncf = opProfit - (p.mode === 'loan' ? pmt : 0);
+  const roi = equity > 0 ? (ncf * 12) / equity : Infinity;
+
+  const r = p.discount / 100;
+  let npv = -equity;
+  monthly.forEach(row => { npv += row.cf / Math.pow(1 + r, row.m / 12); });
+
+  const flows = [-equity, ...monthly.map(x => x.cf)];
+  const iM = irr(flows);
+  const irrAnnual = isFinite(iM) ? Math.pow(1 + iM, 12) - 1 : NaN;
+
+  // break-even
+  const qrPerUnit = p.unitPrice * (p.qrShare / 100) * (p.qrFee / 100);
+  const contribution = p.unitPrice - p.rawCost - (p.waterL / 1000) * p.waterRate - qrPerUnit;
+  const fixedMonthly = fixed + elec + (p.mode === 'loan' ? pmt : 0);
+  const beQty = contribution > 0 ? fixedMonthly / (contribution * 30) : null;
+
+  return {
+    revenue, raw, qr, elec, water, fixed, opex, opProfit,
+    principal, down, interest, pmt, equity, ncf, roi, payback, npv, irrAnnual,
+    months, monthly, cumSeries, contribution, beQty,
+    beRevenue: beQty != null ? beQty * p.unitPrice * 30 : null,
+    margin: revenue > 0 ? opProfit / revenue : 0
+  };
+}
+
+/* ---------- read inputs ---------- */
+function readInputs() {
+  return {
+    preset: state.preset, mode: state.mode,
+    price: num('price') + num('install'), years: num('years'), discount: num('discount'), salvage: num('salvage'),
+    qty: num('qty'), unitPrice: num('unitPrice'),
+    rawCost: num('rawCost'), qrShare: num('qrShare'), qrFee: num('qrFee'),
+    elecKW: num('elecKW'), elecHours: num('elecHours'), elecRate: num('elecRate'),
+    waterL: num('waterL'), waterRate: num('waterRate'),
+    rent: num('rent'), maint: num('maint'),
+    downPct: num('downPct'), term: num('term'), flatRate: num('flatRate')
+  };
+}
+
+/* ---------- slider fill ---------- */
+function paintRange(el) {
+  const min = Number(el.min || 0), max = Number(el.max || 100);
+  const v = Number(el.value);
+  const f = max > min ? ((v - min) / (max - min)) * 100 : 0;
+  el.style.setProperty('--fill', f + '%');
+}
+
+/* ---------- render: labels ---------- */
+function renderLabels(p) {
+  const cfg = PRESETS[state.preset];
+  $('#qtyOut').textContent = `${nf0.format(p.qty)} ${cfg.unit}`;
+  $('#priceOut').textContent = nf2.format(p.unitPrice) + ' บาท';
+  $('#qrShareOut').textContent = p.qrShare + '%';
+  $('#downOut').textContent = p.downPct + '%';
+  $('#unitMinOut').textContent = cfg.unitMin + ' บาท';
+  $('#unitMaxOut').textContent = cfg.unitMax + ' บาท';
+  $('#qtyMaxOut').textContent = cfg.qtyMax;
+  $('#topMachine').textContent = cfg.label;
+  const inst = num('install');
+  $('#investHint').textContent = inst > 0
+    ? `รวมค่าติดตั้ง ${baht(inst)} → เงินลงทุนจริง ${baht(num('price') + inst)}`
+    : '';
+  $$('input[type=range]').forEach(paintRange);
+}
+
+/* ---------- laundry catalogue ---------- */
+function populateLaundryModels() {
+  const sel = $('#laundryModel');
+  if (!sel || sel.options.length) return;
+  sel.innerHTML = LAUNDRY_MODELS
+    .map(m => `<option value="${m.code}">${m.code} · ${m.name} — ${nf0.format(m.price)} ฿</option>`)
+    .join('');
+  sel.value = '10501614';
+}
+
+function applyLaundryModel(code) {
+  const m = LAUNDRY_MODELS.find(x => x.code === code);
+  if (!m) return;
+  const t = LAUNDRY_TYPE[m.type];
+  $('#price').value = m.price;
+  $('#unitPrice').value = t.unitPrice;
+  $('#waterL').value = t.waterL;
+  $('#elecKW').value = t.elecKW;
+  $('#elecHours').value = t.elecHours;
+  $('#qty').max = t.qtyMax;
+  $('#qty').value = t.baseQty;
+  state.scenario = 'base';
+  syncScenarioChips();
+  render();
+}
+
+/* ---------- render: KPIs ---------- */
+function setTone(cardId, tone) {
+  const el = document.getElementById(cardId);
+  if (tone) el.dataset.tone = tone; else el.removeAttribute('data-tone');
+}
+
+function renderKPIs(p, r) {
+  // ROI
+  setKpi('kpiRoi', 'kpiRoiCard', r.roi === Infinity ? '∞' : (!isFinite(r.roi) ? '—' : (r.roi > 5 ? '>500%' : pct(r.roi))));
+  setTone('kpiRoiCard', null);
+  const roiCard = document.getElementById('kpiRoiCard');
+  const ringV = isFinite(r.roi) ? Math.max(0, Math.min(1, r.roi / 0.6)) : 0;
+  roiCard.style.setProperty('--v', ringV.toFixed(3));
+  $('#kpiRoiSub').textContent = p.mode === 'loan'
+    ? `จากเงินดาวน์ ${baht(r.equity)} · กำไร/เดือน ${baht(r.ncf)}`
+    : `จากเงินลงทุน ${baht(r.equity)} · กำไร/เดือน ${baht(r.ncf)}`;
+
+  // Payback
+  setKpi('kpiPayback', 'kpiPaybackCard', monthText(r.payback));
+  setTone('kpiPaybackCard', r.payback == null ? 'bad' : (r.payback <= 18 ? 'ok' : r.payback <= 30 ? 'warn' : 'bad'));
+  $('#kpiPaybackSub').textContent = r.payback == null
+    ? 'กระแสเงินสดไม่พอคืนทุน'
+    : `นับจากวันติดตั้ง · ภายใน ${p.years} ปี`;
+
+  // กำไรสุทธิ/เดือน
+  setKpi('kpiProfit', 'kpiProfitCard', bahtSigned(r.ncf));
+  setTone('kpiProfitCard', r.ncf > 0 ? 'ok' : 'bad');
+  $('#kpiProfitSub').textContent = p.mode === 'loan'
+    ? `หลังหักค่างวด ${baht(r.pmt)}/เดือน`
+    : 'หลังหักต้นทุนดำเนินงาน';
+
+  // จุดคุ้มทุน
+  const be = r.beQty;
+  setKpi('kpiBe', 'kpiBeCard', be != null ? nf0.format(Math.ceil(be)) : '—');
+  setTone('kpiBeCard', be == null ? 'bad' : (p.qty >= be ? 'ok' : 'warn'));
+  $('#kpiBeSub').textContent = be != null
+    ? `${PRESETS[state.preset].unit}/วัน (ปัจจุบัน ${nf0.format(p.qty)})`
+    : 'กำไรต่อหน่วยติดลบ';
+
+  $('#topCash').textContent = bahtSigned(r.ncf);
+}
+
+/* ---------- render: verdict ---------- */
+function renderVerdict(p, r) {
+  const cfg = PRESETS[state.preset];
+  const ok = r.ncf > 0 && r.payback != null;
+  $('#verdictCard').className = 'verdict' + (ok ? '' : ' bad');
+
+  $('#vInvest').textContent = baht(p.price);
+  $('#vProfit').textContent = bahtSigned(r.ncf);
+  $('#vPayback').textContent = monthText(r.payback);
+
+  let txt = `ลงทุนรวม <b>${baht(p.price)}</b>`;
+  if (p.mode === 'loan') txt += ` (ดาวน์ ${p.downPct}% = ${baht(r.down)} ผ่อน ${p.term} งวด งวดละ ${baht(r.pmt)})`;
+  txt += ` ขายได้ ${nf0.format(p.qty)} ${cfg.unit}/วัน ราคา ${nf2.format(p.unitPrice)} บาท`;
+  txt += ` → รายรับ ${baht(r.revenue)}/เดือน`;
+  txt += ` หักต้นทุน${p.mode === 'loan' ? 'และค่างวด' : ''} เหลือ <b>${baht(r.ncf)}/เดือน</b>`;
+  if (r.payback != null && r.payback > 0) txt += ` คืนทุนภายใน <b>${monthText(r.payback)}</b>`;
+  if (isFinite(r.roi) && r.roi > 0) txt += ` (ผลตอบแทน ${r.roi > 5 ? 'มากกว่า 500%' : pct(r.roi, 0)} ต่อปี)`;
+  if (!ok) txt = 'ยอดขาย/ราคานี้ยังไม่พอหักต้นทุน — ปรับยอดขายขึ้น หรือลดเงินลงทุน/ค่าเช่าก่อนนำเสนอลูกค้า';
+  $('#verdictText').innerHTML = txt;
+}
+
+/* ---------- render: cash vs installment ---------- */
+function renderCompare(p) {
+  const cash = core({ ...p, mode: 'cash' });
+  const loan = core({ ...p, mode: 'loan' });
+
+  const col = (title, tag, r, on) => `
+    <div class="col ${on ? 'on' : ''}">
+      <h4>${title}${tag ? `<small>${tag}</small>` : ''}</h4>
+      <div class="row"><span>เงินที่จ่ายวันแรก</span><b>${baht(r.equity)}</b></div>
+      <div class="row"><span>ค่างวด/เดือน</span><b>${r.pmt ? baht(r.pmt) : '—'}</b></div>
+      <div class="row"><span>ดอกเบี้ยรวม</span><b>${r.interest ? baht(r.interest) : '—'}</b></div>
+      <div class="row"><span>กำไรสุทธิ/เดือน</span><b>${bahtSigned(r.ncf)}</b></div>
+      <div class="row"><span>คืนทุน (จากเงินที่จ่ายเอง)</span><b>${monthText(r.payback)}</b></div>
+      <div class="row"><span>ผลตอบแทนต่อปี</span><b>${!isFinite(r.roi) ? '—' : (r.roi > 5 ? '>500%' : pct(r.roi, 0))}</b></div>
+    </div>`;
+
+  $('#cmpBox').innerHTML =
+    col('💵 ซื้อเงินสด', 'ไม่มีดอกเบี้ย', cash, p.mode === 'cash') +
+    col(`🏦 ผ่อน ${p.term} งวด`, 'ใช้เงินเริ่มต้นน้อย', loan, p.mode === 'loan');
+
+  $('#cmpNote').innerHTML = loan.pmt
+    ? `ซื้อเงินสดใช้เงินก้อน ${baht(cash.equity)} แต่ไม่มีภาระรายเดือน · ผ่อนชำระใช้เงินเริ่มต้นเพียง ${baht(loan.equity)} แต่มีค่างวด ${baht(loan.pmt)}/เดือน และดอกเบี้ยรวม ${baht(loan.interest)} ตลอดสัญญา`
+    : 'เลือกโหมดผ่อนชำระเพื่อดูตัวเลขฝั่งไฟแนนซ์';
+}
+
+/* ---------- render: advanced metrics ---------- */
+function renderAdvanced(p, r) {
+  $('#advNpv').textContent = bahtSigned(r.npv);
+  $('#advIrr').textContent = pctCap(r.irrAnnual);
+  $('#advPi').textContent = r.equity > 0 ? ((r.npv + r.equity) / r.equity).toFixed(2) + ' เท่า' : '—';
+}
+
+/* ---------- render: break-even ---------- */
+function renderBreakEven(p, r) {
+  const cfg = PRESETS[state.preset];
+  const be = r.beQty;
+  $('#beQty').textContent = be != null ? nf0.format(Math.ceil(be)) : '—';
+  $('#beQtyUnit').textContent = be != null ? `${cfg.unitShort} (${Math.ceil(be * 30)}/${cfg.unit}/เดือน)` : 'กำไรส่วนเพิ่มติดลบ';
+  $('#beRevenue').textContent = r.beRevenue != null ? baht(r.beRevenue) : '—';
+  $('#beContrib').textContent = baht(r.contribution);
+  $('#beInline').textContent = be != null ? `${nf0.format(Math.ceil(be))} ${cfg.unit}` : '—';
+
+  const note = $('#beNote');
+  if (r.opProfit <= 0) {
+    note.className = 'note bad';
+    note.innerHTML = `<span>⛔</span><span>ยอดขายปัจจุบัน <b>${nf0.format(p.qty)} ${cfg.unit}/วัน</b> ยังไม่ถึงจุดคุ้มทุน — ต้องขายเพิ่มอีก <b>${be != null ? Math.max(0, Math.ceil(be - p.qty)) : '—'} ${cfg.unit}/วัน</b> หรือปรับราคา/ลดต้นทุนก่อนลงทุน</span>`;
+  } else if (be != null && r.beQty > 0) {
+    const buffer = (p.qty - be) / p.qty;
+    note.className = 'note ok';
+    note.innerHTML = `<span>✅</span><span>ยอดขายอยู่เหนือจุดคุ้มทุน <b>${pct(buffer)}</b> — ถ้ายอดขายตกลงเกิน ${pct(buffer)} จะเริ่มขาดทุน (Margin of Safety)</span>`;
+  } else {
+    note.className = 'note';
+    note.innerHTML = '<span>ℹ️</span><span>ไม่มีต้นทุนคงที่/ค่างวด จึงคุ้มทุนทันทีเมื่อขายได้</span>';
+  }
+}
+
+/* ---------- render: cost bar ---------- */
+function renderCostBar(p, r) {
+  const items = [
+    { label:'ต้นทุนวัตถุดิบ', val:r.raw,   color:'var(--c-raw)' },
+    { label:'ค่าธรรมเนียม QR', val:r.qr,  color:'var(--c-qr)' },
+    { label:'ค่าไฟฟ้า',       val:r.elec, color:'var(--c-elec)' },
+    { label:'ค่าน้ำประปา',     val:r.water, color:'var(--c-water)' },
+    { label:'ค่าเช่า + ดูแล',  val:r.fixed, color:'var(--c-fix)' },
+    { label:'ค่างวดผ่อน',      val:p.mode === 'loan' ? r.pmt : 0, color:'var(--c-loan)' },
+    { label:'กำไร/กระแสเงินสด', val:Math.max(0, r.ncf), color:'var(--c-profit)' }
+  ].filter(x => x.val > 0.5);
+
+  const total = Math.max(r.revenue, items.reduce((s, x) => s + x.val, 0), 1);
+  const bar = $('#costBar');
+  bar.innerHTML = items.map(x => `<i style="width:${(x.val / total * 100).toFixed(2)}%;background:${x.color}" title="${x.label}"></i>`).join('');
+  if (!items.length) bar.innerHTML = '<i style="width:100%;background:var(--surface-3)"></i>';
+
+  $('#costLegend').innerHTML = items.map(x => `
+    <div><i style="background:${x.color}"></i>${x.label}<b>${baht(x.val)}</b></div>
+  `).join('') + `<div><i style="background:var(--line)"></i>รายรับรวม<b>${baht(r.revenue)}</b></div>`;
+
+  $('#revHint').textContent = `รายรับ ${baht(r.revenue)}/เดือน · กำไรดำเนินงาน ${baht(r.opProfit)} (${pct(r.margin)} ของรายรับ)`;
+}
+
+/* ---------- render: sensitivity ---------- */
+function renderSensitivity(p) {
+  const scales = [
+    { s:0.7,  label:'−30%' },
+    { s:0.85, label:'−15%' },
+    { s:1.0,  label:'ตามเป้า' },
+    { s:1.15, label:'+15%' },
+    { s:1.3,  label:'+30%' }
+  ];
+  const grid = $('#sensGrid');
+  grid.innerHTML = scales.map(sc => {
+    const q = Math.max(0, p.qty * sc.s);
+    const r = core({ ...p, qty:q });
+    const tone = r.payback == null ? 'var(--bad)' : (r.payback <= 18 ? 'var(--ok)' : 'var(--warn)');
+    return `<div class="cell ${sc.s === 1 ? 'on' : ''}">
+      <em>${sc.label}</em>
+      <b style="color:${tone}">${r.payback == null ? 'ไม่คืนทุน' : Math.ceil(r.payback) + ' เดือน'}</b>
+      <small>${nf0.format(q)} /วัน · ROI ${isFinite(r.roi) ? pct(r.roi, 0) : '∞'}</small>
+    </div>`;
+  }).join('');
+}
+
+/* ---------- render: chart ---------- */
+function drawChart(p, r) {
+  const cv = $('#cashChart');
+  if (!cv || cv.offsetParent === null) return;
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 600, H = cv.clientHeight || 260;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  const cs = getComputedStyle(document.documentElement);
+  const cLine = cs.getPropertyValue('--line').trim() || '#e3e9f3';
+  const cInk3 = cs.getPropertyValue('--ink-3').trim() || '#8b98ac';
+  const cGrid = cs.getPropertyValue('--grid').trim() || '#e7edf7';
+  const cBrand = cs.getPropertyValue('--brand').trim() || '#3b5bfd';
+  const cOk = cs.getPropertyValue('--ok').trim() || '#0e9f6e';
+  const cBad = cs.getPropertyValue('--bad').trim() || '#d63d3d';
+
+  const series = r.cumSeries;
+  const padL = 54, padR = 14, padT = 16, padB = 26;
+  const plotW = Math.max(10, W - padL - padR), plotH = Math.max(10, H - padT - padB);
+
+  const vals = series.map(d => d.cum);
+  let mn = Math.min(0, ...vals), mx = Math.max(0, ...vals);
+  if (mn === mx) { mx = 1; mn = -1; }
+  const span = mx - mn;
+  mn -= span * 0.12; mx += span * 0.12;
+
+  const X = m => padL + (m / series[series.length - 1].m) * plotW;
+  const Y = v => padT + (1 - (v - mn) / (mx - mn)) * plotH;
+
+  // grid
+  ctx.strokeStyle = cGrid; ctx.lineWidth = 1;
+  ctx.font = '10px Prompt, sans-serif'; ctx.fillStyle = cInk3; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let i = 0; i <= 4; i++) {
+    const v = mn + (mx - mn) * i / 4;
+    const y = Y(v);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillText(compact(v), padL - 8, y);
+  }
+
+  // zero line
+  const y0 = Y(0);
+  ctx.strokeStyle = cInk3; ctx.setLineDash([4, 4]); ctx.globalAlpha = .55;
+  ctx.beginPath(); ctx.moveTo(padL, y0); ctx.lineTo(W - padR, y0); ctx.stroke();
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
+
+  // area
+  const last = series[series.length - 1];
+  const endColor = last.cum >= 0 ? cOk : cBad;
+  const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
+  const endRGB = last.cum >= 0 ? '14,159,110' : '214,61,61';
+  grad.addColorStop(0, `rgba(${endRGB},.26)`);
+  grad.addColorStop(1, `rgba(${endRGB},0)`);
+  ctx.beginPath();
+  ctx.moveTo(X(0), y0);
+  series.forEach(d => ctx.lineTo(X(d.m), Y(d.cum)));
+  ctx.lineTo(X(last.m), y0);
+  ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+
+  // line
+  ctx.beginPath();
+  series.forEach((d, i) => i ? ctx.lineTo(X(d.m), Y(d.cum)) : ctx.moveTo(X(d.m), Y(d.cum)));
+  ctx.strokeStyle = cBrand; ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.stroke();
+
+  // payback marker
+  if (r.payback != null && r.payback > 0 && r.payback <= last.m) {
+    const px = X(r.payback);
+    ctx.strokeStyle = cOk; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(px, padT); ctx.lineTo(px, padT + plotH); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = cOk; ctx.beginPath(); ctx.arc(px, Y(0), 4, 0, Math.PI * 2); ctx.fill();
+
+    ctx.fillStyle = cOk; ctx.font = '600 10px Prompt, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    const txt = 'คืนทุน ' + Math.ceil(r.payback) + ' เดือน';
+    const tx = Math.min(px + 7, W - padR - ctx.measureText(txt).width);
+    ctx.fillText(txt, tx, padT + 2);
+  }
+
+  // x labels
+  ctx.fillStyle = cInk3; ctx.font = '10px Prompt, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  const yearsCount = Math.round(last.m / 12);
+  for (let y = 0; y <= yearsCount; y++) {
+    const m = Math.min(y * 12, last.m);
+    ctx.fillText(y === 0 ? 'เริ่ม' : 'ปี ' + y, X(m), padT + plotH + 7);
+  }
+
+  chartGeom = { padL, padR, padT, plotH, W, H, series, X, Y, lastM: last.m };
+}
+
+function handleChartMove(e) {
+  const tip = document.getElementById('chartTip');
+  if (!chartGeom || state.view !== 'cashflow') { tip.classList.remove('on'); return; }
+  const cv = document.getElementById('cashChart');
+  const rect = cv.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const g = chartGeom;
+  const plotW = g.W - g.padL - g.padR;
+  if (x < g.padL - 8 || x > g.W - g.padR + 8) { tip.classList.remove('on'); return; }
+  const t = Math.max(0, Math.min(1, (x - g.padL) / plotW));
+  const m = Math.round(t * g.lastM);
+  const pt = g.series[m];
+  if (!pt) return;
+  tip.innerHTML = `เดือนที่ <b>${m}</b> · สะสม <b>${bahtSigned(pt.cum)}</b>`;
+  tip.style.left = g.X(m) + 'px';
+  tip.style.top = g.Y(pt.cum) + 'px';
+  tip.classList.add('on');
+}
+
+/* ---------- render: yearly table ---------- */
+function renderYearTable(p, r) {
+  const rows = [];
+  let cum = -r.equity;
+  let pv = -r.equity;
+  const rDisc = p.discount / 100;
+  for (let y = 1; y <= p.years; y++) {
+    let rev = 0, opx = 0, pay = 0, cf = 0, pvY = 0;
+    for (let m = (y - 1) * 12 + 1; m <= y * 12; m++) {
+      const row = r.monthly[m - 1];
+      if (!row) continue;
+      rev += row.rev; opx += row.opex; pay += row.pay; cf += row.cf;
+      pvY += row.cf / Math.pow(1 + rDisc, row.m / 12);
+    }
+    cum += cf; pv += pvY;
+    rows.push({ y, rev, opx, pay, cf, cum, pv });
+  }
+  $('#yearBody').innerHTML = rows.map(x => `
+    <tr>
+      <td class="em">ปี ${x.y}</td>
+      <td>${baht(x.rev)}</td>
+      <td>${baht(-x.opx)}</td>
+      <td>${x.pay ? baht(-x.pay) : '—'}</td>
+      <td class="${x.cf >= 0 ? 'pos' : 'neg'}">${bahtSigned(x.cf)}</td>
+      <td class="${x.cum >= 0 ? 'pos' : 'neg'}">${bahtSigned(x.cum)}</td>
+      <td>${bahtSigned(x.pv)}</td>
+    </tr>`).join('');
+
+  $('#chartHint').textContent = `เงินลงทุนตั้งต้น ${baht(r.equity)} · สิ้นปีที่ ${p.years} กระแสเงินสดสะสม ${bahtSigned(rows[rows.length - 1].cum)}`;
+}
+
+/* ---------- render: loan ---------- */
+function renderLoan(p, r) {
+  const box = $('#loanSummary');
+  const tbody = $('#amortBody');
+
+  if (p.mode !== 'loan') {
+    $('#loanHint').textContent = 'โหมดซื้อเงินสด';
+    tbody.innerHTML = `<tr><td colspan="5" class="empty">โหมดซื้อเงินสด — ไม่มีตารางผ่อนชำระ</td></tr>`;
+    $('#amortHint').textContent = '—';
+    box.innerHTML = `
+      <div class="empty">
+        <p style="margin-bottom:10px">ตอนนี้ใช้โหมดซื้อเงินสด — เปรียบเทียบได้ว่าถ้าเลือกผ่อน sẽกระทบกระแสเงินสดอย่างไร</p>
+        <button class="btn solid" id="btnSwitchLoan" type="button">เปรียบเทียบแบบผ่อนชำระ</button>
+      </div>`;
+    const b = $('#btnSwitchLoan');
+    if (b) b.onclick = () => setMode('loan');
+    return;
+  }
+
+  const n = Math.max(1, p.term);
+  const iM = r.principal > 0 ? irr([-r.principal, ...Array(n).fill(r.pmt)]) : 0;
+  const aprNominal = isFinite(iM) ? iM * 12 : NaN;
+  const aprEffective = isFinite(iM) ? Math.pow(1 + iM, 12) - 1 : NaN;
+
+  const totalPay = r.pmt * n;
+  const interestPct = r.principal > 0 ? r.interest / r.principal : 0;
+
+  // benchmark: same principal, reducing-balance (annuity) at the discount rate
+  const iBench = p.discount / 100 / 12;
+  const pmtBench = iBench > 0 ? r.principal * iBench / (1 - Math.pow(1 + iBench, -n)) : r.principal / n;
+  const benchInterest = pmtBench * n - r.principal;
+  const benchDiff = r.pmt - pmtBench;
+
+  $('#loanHint').textContent = `${p.downPct}% ดาวน์ · ${n} งวด · ดอกเบี้ยคงที่ ${nf2.format(p.flatRate)}%/เดือน`;
+  $('#amortHint').textContent = `รวม ${n} งวด · ดอกเบี้ยรวม ${baht(r.interest)}`;
+
+  box.innerHTML = `
+    <div class="loan-cards">
+      <div class="lc"><span>ราคาสุทธิ</span><b>${baht(p.price)}</b></div>
+      <div class="lc"><span>เงินดาวน์ (${p.downPct}%)</span><b>${baht(r.down)}</b></div>
+      <div class="lc"><span>ยอดจัดไฟแนนซ์</span><b>${baht(r.principal)}</b></div>
+      <div class="lc hl"><span>ค่างวด / เดือน</span><b>${baht(r.pmt)}</b></div>
+      <div class="lc"><span>ดอกเบี้ยรวม</span><b>${baht(r.interest)}</b></div>
+      <div class="lc"><span>ยอดชำระรวม</span><b>${baht(totalPay)}</b></div>
+      <div class="lc"><span>APR แท้จริง / ปี</span><b>${isFinite(aprNominal) ? pct(aprNominal) : '—'}</b></div>
+      <div class="lc"><span>ถ้าลดต้นลดดอก ${nf1.format(p.discount)}%/ปี</span><b>${baht(pmtBench)}</b></div>
+    </div>
+    <div class="note ${benchDiff > 0 ? '' : 'ok'}" style="margin-top:12px">
+      <span>🧮</span>
+      <span>ดอกเบี้ยคงที่ ${nf2.format(p.flatRate)}%/เดือน = <b>${pct(interestPct)}</b> ของยอดจัดตลอดสัญญา
+      คิดเป็นดอกเบี้ยแท้จริง (APR) ประมาณ <b>${isFinite(aprNominal) ? pct(aprNominal) : '—'}</b> ต่อปี
+      — ถ้ากู้แบบลดต้นลดดอกที่ ${nf1.format(p.discount)}%/ปี ค่างวดจะอยู่ที่ <b>${baht(pmtBench)}</b>
+      (${benchDiff >= 0 ? 'ถูกกว่า' : 'แพงกว่า'} ${baht(Math.abs(benchDiff))}/เดือน, ดอกเบี้ยต่างกัน ${baht(Math.abs(r.interest - benchInterest))} ตลอดสัญญา)
+      ${p.downPct >= 50 ? ' · เงินดาวน์ 50% ขึ้นไป: ยกเว้นผู้ค้ำประกันได้' : ''}</span>
+    </div>`;
+
+  // amortization (flat rate → interest constant)
+  const intPerMonth = r.interest / n;
+  const prinPerMonth = r.principal / n;
+  let bal = r.principal;
+  let html = '';
+  for (let m = 1; m <= n; m++) {
+    const isLast = m === n;
+    const intr = isLast ? r.pmt - bal : intPerMonth;
+    const prin = isLast ? bal : prinPerMonth;
+    bal = Math.max(0, bal - prin);
+    html += `<tr>
+      <td class="em">${m}</td>
+      <td>${baht(r.pmt)}</td>
+      <td>${baht(prin)}</td>
+      <td>${baht(intr)}</td>
+      <td>${baht(bal)}</td>
+    </tr>`;
+  }
+  tbody.innerHTML = html;
+}
+
+/* ---------- rate matrix ---------- */
+function renderMatrix() {
+  const host = $('#rateMatrix');
+  const down = num('downPct'), term = num('term');
+  const head = `<tr><th class="corner">ดาวน์ \\ งวด</th>${RATE.terms.map(t => `<th>${t}</th>`).join('')}</tr>`;
+  const body = RATE.downs.map((d, i) => {
+    const cells = RATE.terms.map((t, j) => {
+      const active = d === down && t === term;
+      return `<td><button type="button" class="${active ? 'on' : ''}" data-down="${d}" data-term="${t}">${RATE.rows[i][j].toFixed(2)}%</button></td>`;
+    }).join('');
+    return `<tr><th>${d}%</th>${cells}</tr>`;
+  }).join('');
+  host.innerHTML = `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+  $$('#rateMatrix button').forEach(b => {
+    b.addEventListener('click', () => {
+      $('#downPct').value = b.dataset.down;
+      $('#term').value = b.dataset.term;
+      $('#flatRate').value = lookupRate(Number(b.dataset.down), Number(b.dataset.term)).toFixed(2);
+      render();
+    });
+  });
+}
+
+/* ---------- master render ---------- */
+function render() {
+  const p = readInputs();
+
+  // panel visibility
+  const isLoan = p.mode === 'loan';
+  $('#loanInputs').style.display = isLoan ? '' : 'none';
+  $('#cashHint').hidden = isLoan;
+
+  renderLabels(p);
+  const r = core(p);
+  renderKPIs(p, r);
+  renderVerdict(p, r);
+  renderBreakEven(p, r);
+  renderCostBar(p, r);
+  renderCompare(p);
+  renderSensitivity(p);
+  renderAdvanced(p, r);
+  renderYearTable(p, r);
+  renderLoan(p, r);
+  renderMatrix();
+  if (state.view === 'cashflow') drawChart(p, r);
+}
+
+/* ---------- presets / scenario ---------- */
+function applyPreset(key) {
+  state.preset = key;
+  const c = PRESETS[key];
+  $('#price').value = c.price;
+  $('#unitPrice').min = c.unitMin;
+  $('#unitPrice').max = c.unitMax;
+  $('#unitPrice').value = c.unitPrice;
+  $('#qty').max = c.qtyMax;
+  $('#qty').value = c.baseQty;
+  $('#rawCost').value = c.rawCost;
+  $('#qrShare').value = c.qrShare;
+  $('#qrFee').value = c.qrFee;
+  $('#elecKW').value = c.elecKW;
+  $('#elecHours').value = c.elecHours;
+  $('#elecRate').value = c.elecRate;
+  $('#waterL').value = c.waterL;
+  $('#waterRate').value = c.waterRate;
+  $('#rent').value = c.rent;
+  $('#maint').value = c.maint;
+  $('#laundryBlock').hidden = key !== 'laundry';
+  $('#investHint').hidden = key !== 'laundry';
+  $('#install').value = key === 'laundry' ? 6010 : 0;
+  if (key === 'laundry') {
+    populateLaundryModels();
+    const t = LAUNDRY_TYPE.top;
+    $('#unitPrice').min = 10; $('#unitPrice').max = 100;
+    $('#elecKW').value = t.elecKW; $('#elecHours').value = t.elecHours;
+    $('#waterL').value = t.waterL; $('#qty').max = t.qtyMax; $('#qty').value = t.baseQty;
+  }
+  state.scenario = 'base';
+  syncScenarioChips();
+  applyRateFromTable();
+  render();
+}
+
+function syncScenarioChips() {
+  $$('#scenarioSeg button').forEach(b => b.classList.toggle('on', b.dataset.scen === state.scenario));
+  const map = { low:'ต่ำกว่าเป้า 30%', base:'ตามเป้า', high:'สูงกว่าเป้า 30%' };
+  $('#scenOut').textContent = map[state.scenario] || 'กำหนดเอง';
+}
+
+function applyScenario(scen) {
+  const c = PRESETS[state.preset];
+  const f = { low:0.7, base:1, high:1.3 }[scen];
+  state.scenario = scen;
+  $('#qty').value = Math.round(c.baseQty * f);
+  syncScenarioChips();
+  render();
+}
+
+function applyRateFromTable() {
+  const rate = lookupRate(num('downPct'), num('term'));
+  $('#flatRate').value = rate.toFixed(2);
+}
+
+/* ---------- mode ---------- */
+function setMode(mode) {
+  state.mode = mode;
+  $$('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+  render();
+}
+
+/* ---------- theme ---------- */
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('roiStudioTheme', t);
+  $('#btnTheme').textContent = t === 'dark' ? '☀' : '◐';
+  render();
+}
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), 2000);
+}
+
+/* ---------- summary (customer facing) ---------- */
+function summaryText() {
+  const p = readInputs(), r = core(p), c = PRESETS[state.preset];
+  const lines = [];
+  lines.push(`ข้อเสนอการลงทุน — ${c.label}`);
+  lines.push(`• เงินลงทุนรวม ${baht(p.price)}` + (p.mode === 'loan'
+    ? ` (ดาวน์ ${p.downPct}% = ${baht(r.down)} · ผ่อน ${p.term} งวด งวดละ ${baht(r.pmt)})`
+    : ' (ซื้อเงินสด)'));
+  lines.push(`• ยอดขาย ${nf0.format(p.qty)} ${c.unit}/วัน × ${nf2.format(p.unitPrice)} บาท = รายรับ ${baht(r.revenue)}/เดือน`);
+  lines.push(`• ต้นทุนดำเนินงาน ${baht(r.opex)}/เดือน` + (r.pmt ? ` + ค่างวด ${baht(r.pmt)}` : ''));
+  lines.push(`• กำไรสุทธิ ${baht(r.ncf)}/เดือน`);
+  if (r.payback != null) lines.push(`• คืนทุนประมาณ ${monthText(r.payback)}`);
+  if (isFinite(r.roi)) lines.push(`• ผลตอบแทนต่อปี ${pct(r.roi, 0)}`);
+  if (r.beQty != null) lines.push(`• จุดคุ้มทุน ${nf0.format(Math.ceil(r.beQty))} ${c.unit}/วัน`);
+  lines.push('');
+  lines.push('(ตัวเลขเป็นการประมาณการจากแบบจำลอง ไม่ใช่การรับประกันผลตอบแทน)');
+  return lines.join('\n');
+}
+
+/* ---------- bind ---------- */
+function bind() {
+  // preset chips
+  $$('#presetChips .chip').forEach(b => b.addEventListener('click', () => {
+    $$('#presetChips .chip').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    applyPreset(b.dataset.preset);
+  }));
+
+  // scenario
+  $$('#scenarioSeg button').forEach(b => b.addEventListener('click', () => applyScenario(b.dataset.scen)));
+
+  // mode
+  $$('#modeSeg button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+  // views
+  $$('#viewSeg button').forEach(b => b.addEventListener('click', () => {
+    state.view = b.dataset.view;
+    $$('#viewSeg button').forEach(x => x.classList.toggle('on', x === b));
+    $$('.view').forEach(v => { v.hidden = v.id !== 'view-' + state.view; });
+    $('#chartTip').classList.remove('on');
+    if (state.view === 'cashflow') requestAnimationFrame(() => drawChart(readInputs(), core(readInputs())));
+  }));
+
+  // all inputs → render
+  const ids = ['price','years','discount','salvage','qty','unitPrice','rawCost','qrShare','qrFee',
+    'elecKW','elecHours','elecRate','waterL','waterRate','rent','maint','downPct','term','flatRate','install'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const evt = (el.tagName === 'SELECT' || el.type === 'number') ? 'input' : 'input';
+    el.addEventListener(evt, () => {
+      if (id === 'qty') { state.scenario = 'custom'; syncScenarioChips(); }
+      if (id === 'downPct' || id === 'term') applyRateFromTable();
+      render();
+    });
+  });
+
+  // actions
+  $('#laundryModel').addEventListener('change', e => applyLaundryModel(e.target.value));
+  $$('#boqChips .chip').forEach(b => b.addEventListener('click', () => {
+    $$('#boqChips .chip').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    $('#install').value = BOQ_INSTALL[b.dataset.n];
+    render();
+  }));
+
+  $('#btnPrint').addEventListener('click', () => window.print());
+  $('#btnReset').addEventListener('click', () => {
+    $('#years').value = 5; $('#discount').value = 8; $('#salvage').value = 0;
+    $('#downPct').value = 20; $('#term').value = 24; $('#modeSeg [data-mode="cash"]').click();
+    applyPreset(state.preset);
+    toast('รีเซ็ตค่าตั้งต้นแล้ว');
+  });
+  $('#btnCopy').addEventListener('click', async () => {
+    const txt = summaryText();
+    try { await navigator.clipboard.writeText(txt); toast('คัดลอกข้อความนำเสนอแล้ว'); }
+    catch { toast('คัดลอกไม่สำเร็จ — เลือกข้อความเอง'); }
+  });
+  $('#btnTheme').addEventListener('click', () => {
+    setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  });
+
+  // resize → redraw chart
+  let rt;
+  window.addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => {
+      if (state.view === 'cashflow') { const p = readInputs(); drawChart(p, core(p)); }
+    }, 120);
+  });
+
+  // chart hover tooltip
+  const chartEl = $('#cashChart');
+  chartEl.addEventListener('mousemove', handleChartMove);
+  chartEl.addEventListener('mouseleave', () => $('#chartTip').classList.remove('on'));
+
+  // hero spotlight
+  const hero = document.getElementById('kpiRoiCard');
+  hero.addEventListener('mousemove', e => {
+    const rect = hero.getBoundingClientRect();
+    hero.style.setProperty('--mx', ((e.clientX - rect.left) / rect.width * 100).toFixed(1) + '%');
+    hero.style.setProperty('--my', ((e.clientY - rect.top) / rect.height * 100).toFixed(1) + '%');
+  });
+}
+
+/* ---------- boot ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('roiStudioTheme');
+  if (saved) { document.documentElement.dataset.theme = saved; $('#btnTheme').textContent = saved === 'dark' ? '☀' : '◐'; }
+  bind();
+  applyPreset('alkaline');
+});
+</script>
+</body>
+</html>

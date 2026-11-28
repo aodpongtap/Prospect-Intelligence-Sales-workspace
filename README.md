@@ -18,6 +18,7 @@
 | Prospect Intelligence Sales workspace | `index.html` | ติดตามดีล/Pipeline ของทีมขาย · ล็อกอินด้วย Google Sheets |
 | Partner Care Center | `partner-care/index.html` | ดูแล Partner (สุขภาพความสัมพันธ์) + ภาพรวมทีมขาย |
 | **TSR Partner Management (CRM)** | `partner-crm/index.html` | ระบบบริหารคู่ค้าเต็มรูป: Tiering 6 ระดับ, GP/Commission Engine, Volume Rebate, Onboarding Kanban, สิทธิประโยชน์, KPI ผู้บริหาร, Admin ตั้งค่าได้ไม่ต้องแก้โค้ด |
+| **ROI Calculator** | `roi-calculator/index.html` | คำนวณ ROI / ระยะคืนทุน / จุดคุ้มทุน / ค่างวด–ดอกเบี้ย (ฝังใน Workspace ที่เมนู **ROI Calculator** — เปิดให้ Head Team L3 ลงไปเท่านั้น มีปุ่ม "คำนวณ ROI" ในหน้า AE Pipeline และ Dashboard) |
 
 ### TSR Partner Management — โครงสร้างข้อมูล (localStorage key `tsr_partner_crm_v1`)
 

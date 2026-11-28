@@ -51,6 +51,9 @@
       .main{margin-left:0}.topbar{height:60px;padding:0 15px;z-index:10}.mobile-menu{display:inline-grid!important;place-items:center}.content{padding:20px 14px 30px}.profile-copy{display:none}.page-head{flex-direction:column}.head-actions{width:100%}.cols-2,.cols-3{grid-template-columns:1fr}.detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kanban{grid-template-columns:repeat(5,220px)}.journey{padding-bottom:8px}}
     @media(max-width:480px){.kpi-grid{gap:9px}.kpi{padding:12px}.kpi-value{font-size:18px}.kpi-top{font-size:10px}.top-actions{gap:7px}.breadcrumb{display:none}.form-grid{grid-template-columns:1fr}.form-group.full{grid-column:auto}.detail-grid{grid-template-columns:1fr 1fr}.content{padding-left:11px;padding-right:11px}}
     /* ===== AE Pipeline: ตารางดีลแบบใหม่ ===== */
+    .roi-frame{display:block;width:100%;height:calc(100vh - 196px);min-height:640px;border:0;background:#fff;border-radius:0}
+    .roi-note{display:flex;gap:8px;align-items:flex-start;margin-top:10px;padding:10px 12px;border-radius:9px;background:#eff6ff;border:1px solid #dbeafe;color:#1e40af;font-size:10px;line-height:1.7}
+    @media(max-width:760px){.roi-frame{height:calc(100vh - 150px);min-height:560px}}
     .dm-table th{font-size:9.5px;letter-spacing:.02em;border-bottom:1px solid #e9eef5;padding:11px 12px}
     .dm-table td{padding:12px;border-bottom:1px solid #f1f5f9;vertical-align:middle;font-size:10.5px}
     .dm-table tbody tr:last-child td{border-bottom:0}
@@ -73,6 +76,7 @@
       <nav class="nav-list" id="navList">
         <button class="nav-item active" data-page="dashboard"><i class="fa-solid fa-gauge-high"></i>Dashboard</button>
         <button class="nav-item" data-page="sales"><i class="fa-solid fa-bullseye"></i>AE Pipeline</button>
+        <button class="nav-item" data-page="roi"><i class="fa-solid fa-calculator"></i>ROI Calculator</button>
         <button class="nav-item" data-page="partners"><i class="fa-solid fa-handshake"></i>Partnership Business</button>
         <button class="nav-item" data-page="projects"><i class="fa-solid fa-diagram-project"></i>Project Tracking</button>
         <button class="nav-item" data-page="intelligence"><i class="fa-solid fa-brain"></i>Customer Intelligence</button>
@@ -114,12 +118,13 @@
   </script>
   <script src="assets/auth-sheets.js?v=22"></script>
   <script src="assets/report-log.js?v=13"></script>
-  <script src="assets/sales-report.js?v=93"></script>
+  <script src="assets/sales-report.js?v=95"></script>
   <script src="assets/daily-report.js?v=23"></script>
   <script src="assets/project-tracking.js?v=16"></script>
   <script src="assets/customer-intelligence.js?v=6"></script>
   <script src="assets/audit-log.js?v=15"></script>
   <script src="assets/team-page.js?v=15"></script>
+  <script src="assets/roi-calculator-embed.js?v=1"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
     window.__allowedPages__ = function () {
@@ -127,13 +132,18 @@
       var MAP = {
         admin: ['dashboard', 'sales', 'daily', 'partners', 'projects', 'intelligence', 'reports', 'team', 'audit'],
         bu: ['dashboard', 'sales', 'daily', 'partners', 'projects', 'intelligence', 'reports', 'team'],
-        head: ['dashboard', 'sales', 'daily', 'team', 'projects', 'intelligence', 'reports'],
-        editor: ['dashboard', 'sales', 'daily', 'team', 'projects', 'intelligence', 'reports'],
-        sup: ['dashboard', 'daily', 'team', 'sales', 'projects', 'intelligence', 'reports'],
-        sale: ['dashboard', 'sales', 'daily', 'reports'],
-        agent: ['dashboard', 'sales', 'daily', 'reports']
+        head: ['dashboard', 'sales', 'roi', 'daily', 'team', 'projects', 'intelligence', 'reports'],
+        editor: ['dashboard', 'sales', 'roi', 'daily', 'team', 'projects', 'intelligence', 'reports'],
+        sup: ['dashboard', 'roi', 'daily', 'team', 'sales', 'projects', 'intelligence', 'reports'],
+        sale: ['dashboard', 'sales', 'roi', 'daily', 'reports'],
+        agent: ['dashboard', 'sales', 'roi', 'daily', 'reports']
       };
       return MAP[lv] || null;   // admin = ทุกหน้า (รวม Activity Log) · ระดับอื่นเห็นเฉพาะที่กำหนด
+    };
+    /* ROI Calculator: เปิดให้ Head Team (L3) ลงไป — Admin/BU ไม่ต้องมี */
+    window.__canUseRoi__ = function () {
+      var lv = String(((window.__ME__ || {}).level) || '').toLowerCase();
+      return ['head', 'sup', 'sale', 'agent', 'editor'].indexOf(lv) >= 0;
     };
     window.__applyMe__ = function (rawMe, opts) {
       opts = opts || {};
@@ -828,7 +838,7 @@
     })();
 
 
-    const pageTitles={dashboard:"Dashboard",sales:"AE Pipeline",daily:"Daily Report",audit:"Activity Log",partners:"Partnership Business",team:"ทีม & สิทธิ์",projects:"Project Tracking",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
+    const pageTitles={dashboard:"Dashboard",sales:"AE Pipeline",roi:"ROI Calculator",daily:"Daily Report",audit:"Activity Log",partners:"Partnership Business",team:"ทีม & สิทธิ์",projects:"Project Tracking",intelligence:"Customer Intelligence",reports:"Reports",settings:"Settings"};
     const stageNames=["Planning","AE Handover","Installation","Testing & Acceptance","Completed"];
     const stageLabels=["Prospect","Qualified","Proposal","Negotiation","Won","Lost"];
     const stageLabelsTH={"Prospect":"หาลูกค้า","Qualified":"คัดกรองแล้ว","Proposal":"เสนอราคา","Negotiation":"เจรจา","Won":"ปิดการขาย","Lost":"เสียดีล"};
@@ -877,7 +887,7 @@
     function btn(label,action,icon="",primary=false,extra=""){return `<button class="btn ${primary?"btn-primary":""}" data-action="${action}" ${extra}>${icon?`<i class="${icon}"></i>`:""}${label}</button>`}
     function destroyCharts(){charts.forEach(c=>c.destroy());charts=[]}
     function makeChart(id,config){const canvas=document.getElementById(id);if(canvas&&window.Chart)charts.push(new Chart(canvas,config))}
-    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,audit:(window.AuditLog?AuditLog.render:function(){return '<div class="panel"><div class="panel-title">Activity Log</div><div class="panel-sub">ไม่พบโมดูล Activity Log (assets/audit-log.js)</div></div>'}),daily:(window.DailyReport?DailyReport.render:function(){return '<div class="panel"><div class="panel-title">Daily Report</div><div class="panel-sub">ไม่พบโมดูล Daily Report (assets/daily-report.js)</div></div>'}),partners:renderPartnerCRM,team:(window.TeamPage?TeamPage.render:renderTeam),projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),intelligence:(window.CustomerIntel?CustomerIntel.render:renderIntelligence),reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence"){window.CustomerIntel?CustomerIntel.drawCharts():drawHealthChart()}if(currentPage==="reports")drawReportCharts();if(currentPage==="team"&&!window.TeamPage)loadTeam();if(window.__afterRender__)window.__afterRender__();if(window.__srDailyTab__&&currentPage==="reports"){window.__srDailyTab__=false;var _dt=document.querySelector('[data-sr-view="daily"]');if(_dt)_dt.click()}var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
+    function render(){destroyCharts();document.getElementById("crumbName").textContent=pageTitles[currentPage];document.querySelectorAll(".nav-item").forEach(i=>i.classList.toggle("active",i.dataset.page===currentPage));document.getElementById("sidebar").classList.remove("open");const views={dashboard:(window.SalesReport?SalesReport.renderDashboard:renderDashboard),sales:renderSales,roi:renderROI,audit:(window.AuditLog?AuditLog.render:function(){return '<div class="panel"><div class="panel-title">Activity Log</div><div class="panel-sub">ไม่พบโมดูล Activity Log (assets/audit-log.js)</div></div>'}),daily:(window.DailyReport?DailyReport.render:function(){return '<div class="panel"><div class="panel-title">Daily Report</div><div class="panel-sub">ไม่พบโมดูล Daily Report (assets/daily-report.js)</div></div>'}),partners:renderPartnerCRM,team:(window.TeamPage?TeamPage.render:renderTeam),projects:(window.ProjectTracking?ProjectTracking.render:renderProjects),intelligence:(window.CustomerIntel?CustomerIntel.render:renderIntelligence),reports:renderReports,settings:renderSettings};document.getElementById("content").innerHTML=views[currentPage]();if(currentPage==="dashboard"){window.SalesReport?SalesReport.drawDashboardCharts():drawDashboardCharts()};if(currentPage==="intelligence"){window.CustomerIntel?CustomerIntel.drawCharts():drawHealthChart()}if(currentPage==="reports")drawReportCharts();if(currentPage==="team"&&!window.TeamPage)loadTeam();if(window.__afterRender__)window.__afterRender__();if(window.__srDailyTab__&&currentPage==="reports"){window.__srDailyTab__=false;var _dt=document.querySelector('[data-sr-view="daily"]');if(_dt)_dt.click()}var _sb=document.getElementById("scopeBar");if(_sb)_sb.style.display=(currentPage==="sales"&&_sb.getAttribute("data-ready")==="1")?"block":"none"}
 
     /* ===== การนำทางแบบเว็บทั่วไป: URL เปลี่ยน + ปุ่ม Back ของเบราว์เซอร์ใช้ได้ ===== */
     function pageUrl(p){return p&&p!=="dashboard"?"index.html?page="+encodeURIComponent(p):"index.html"}
@@ -944,7 +954,26 @@
           <td class="dm-num"><span class="risk-number ${riskClass(rk)}">${rk}</span> <span class="muted" style="font-size:9px">${rk>=60?'สูง':rk>=35?'กลาง':'ต่ำ'}</span></td>
         </tr>`;
       }).join("")}</tbody></table></div>`}
-    function renderSales(){const owners=[...new Set(deals.map(d=>d.owner))],teams=[...new Set(deals.map(d=>d.team))];return `${pageHead("AE Pipeline: Risk & Forecast","ติดตาม Pipeline, ความเสี่ยง และ Forecast ของทีมขาย",`${btn("Export CSV","export-deals","fa-solid fa-download")}${btn("Refresh Data","refresh","fa-solid fa-rotate")}${btn("Add Deal","add-deal","fa-solid fa-plus",true)}`)}<div class="panel"><div class="toolbar"><div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="field" id="dealSearch" placeholder="ค้นหาชื่อลูกค้า หรือชื่อ Deal"></div><div class="filters"><select class="select filter-select" id="ownerFilter"><option value="">ทุก AE Owner</option>${owners.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="teamFilter"><option value="">ทุก AE Team</option>${teams.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="stageFilter"><option value="">ทุก Stage</option>${stageLabels.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="riskFilter"><option value="">ทุก Risk Level</option><option value="high">High Risk</option><option value="mid">Medium Risk</option><option value="low">Low Risk</option></select><select class="select filter-select" id="periodFilter"><option value="">ทุกช่วงเวลา</option><option value="month">ปิดภายในเดือนนี้</option><option value="quarter">ปิดภายใน 90 วัน</option></select></div><button class="btn btn-soft" id="sortRisk"><i class="fa-solid fa-arrow-down-wide-short"></i>Sort Risk</button></div><div id="dealTable">${renderDealsTable()}</div><div class="panel-sub" style="margin-top:12px">แสดง <span id="dealCount">${deals.length}</span> ดีล · คลิกแถวเพื่อดูรายละเอียด</div></div>`}
+    function renderSales(){const owners=[...new Set(deals.map(d=>d.owner))],teams=[...new Set(deals.map(d=>d.team))];return `${pageHead("AE Pipeline: Risk & Forecast","ติดตาม Pipeline, ความเสี่ยง และ Forecast ของทีมขาย",`${(window.__canUseRoi__ && window.__canUseRoi__())?btn("คำนวณ ROI","go-roi","fa-solid fa-calculator"):""}${btn("Export CSV","export-deals","fa-solid fa-download")}${btn("Refresh Data","refresh","fa-solid fa-rotate")}${btn("Add Deal","add-deal","fa-solid fa-plus",true)}`)}<div class="panel"><div class="toolbar"><div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="field" id="dealSearch" placeholder="ค้นหาชื่อลูกค้า หรือชื่อ Deal"></div><div class="filters"><select class="select filter-select" id="ownerFilter"><option value="">ทุก AE Owner</option>${owners.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="teamFilter"><option value="">ทุก AE Team</option>${teams.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="stageFilter"><option value="">ทุก Stage</option>${stageLabels.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="riskFilter"><option value="">ทุก Risk Level</option><option value="high">High Risk</option><option value="mid">Medium Risk</option><option value="low">Low Risk</option></select><select class="select filter-select" id="periodFilter"><option value="">ทุกช่วงเวลา</option><option value="month">ปิดภายในเดือนนี้</option><option value="quarter">ปิดภายใน 90 วัน</option></select></div><button class="btn btn-soft" id="sortRisk"><i class="fa-solid fa-arrow-down-wide-short"></i>Sort Risk</button></div><div id="dealTable">${renderDealsTable()}</div><div class="panel-sub" style="margin-top:12px">แสดง <span id="dealCount">${deals.length}</span> ดีล · คลิกแถวเพื่อดูรายละเอียด</div></div>`}
+    /* ===== JavaScript: ROI Calculator ===== */
+    function renderROI(){
+      var embedded = !!window.__ROI_HTML__;
+      var srcAttr = embedded ? '' : ' src="roi-calculator/index.html?embed=1&v=1"';
+      return `${pageHead("ROI Calculator","คำนวณผลตอบแทนการลงทุน จุดคุ้มทุน และค่างวดผ่อนชำระ — ใช้ราคากลางและตารางดอกเบี้ยชุดเดียวกับใบเสนอราคา",btn("เปิดเต็มหน้าจอ","open-roi-full","fa-solid fa-up-right-from-square"))}<section class="panel" style="padding:0;overflow:hidden"><iframe class="roi-frame" id="roiFrame"${srcAttr} title="ROI Calculator"></iframe></section><div class="roi-note"><i class="fa-solid fa-circle-info" style="margin-top:2px"></i><span>เครื่องมือนี้ใช้ราคาสินค้าอ้างอิง PM9003/2569 และตารางดอกเบี้ยเช่าซื้อ TSRL — ผลลัพธ์เป็นการประมาณการเพื่อประกอบการนำเสนอ ไม่ใช่การรับประกันผลตอบแทน</span></div>`
+    }
+    /* ฝังโค้ดเครื่องคำนวณ (srcdoc) เข้าไปในหน้าเลย — ไม่ต้องโหลดไฟล์ภายนอก */
+    (function () {
+      var prev = window.__afterRender__;
+      window.__afterRender__ = function () {
+        if (typeof prev === 'function') { try { prev(); } catch (e) {} }
+        var f = document.getElementById('roiFrame');
+        if (f && !f.getAttribute('data-mounted') && window.__ROI_HTML__) {
+          f.setAttribute('data-mounted', '1');
+          f.srcdoc = window.__ROI_HTML__;
+        }
+      };
+    })();
+
     function applyDealFilters(){const search=(document.getElementById("dealSearch")?.value||"").toLowerCase(),owner=document.getElementById("ownerFilter")?.value||"",team=document.getElementById("teamFilter")?.value||"",stage=document.getElementById("stageFilter")?.value||"",risk=document.getElementById("riskFilter")?.value||"",period=document.getElementById("periodFilter")?.value||"";let list=deals.filter(d=>(!search||`${d.name} ${d.customer}`.toLowerCase().includes(search))&&(!owner||d.owner===owner)&&(!team||d.team===team)&&(!stage||d.stage===stage)&&(!risk||(risk==="high"?riskScore(d)>=60:risk==="mid"?riskScore(d)>=35&&riskScore(d)<60:riskScore(d)<35))&&(!period||(period==="month"?d.close<="2026-10-31":d.close<="2027-01-05")));list.sort((a,b)=>sortDesc?riskScore(b)-riskScore(a):riskScore(a)-riskScore(b));document.getElementById("dealTable").innerHTML=renderDealsTable(list);document.getElementById("dealCount").textContent=list.length}
     function openDeal(id){if(window.SalesReport&&SalesReport.openDealDetail){SalesReport.openDealDetail(id);return}const d=deals.find(x=>String(x.id)===String(id));if(!d)return;const score=riskScore(d),reasons=[];if(dayDiff(d.lastActivity)>7)reasons.push(`ไม่มี Activity มาแล้ว ${dayDiff(d.lastActivity)} วัน`);if(Math.ceil((new Date(d.close)-new Date("2026-10-07"))/86400000)<=14&&["Prospect","Qualified"].includes(d.stage))reasons.push("ใกล้วันปิดการขาย แต่ยังอยู่ใน Stage เริ่มต้น");if(d.probability<40)reasons.push(`Probability ต่ำ (${d.probability}%)`);if(!d.nextAction)reasons.push("ยังไม่ได้กำหนด Next Action");if(d.status==="On Hold")reasons.push("สถานะ Deal เป็น On Hold");const activity=d.activity.map((a,i)=>`<div class="timeline-entry"><strong>${a}</strong><small>${thaiDate(d.lastActivity)} · ${i===0?"ล่าสุด":"Activity ก่อนหน้า"}</small></div>`).join("");const body=`<div class="detail-grid"><div class="detail-cell"><small>มูลค่า Deal</small><strong>${money(d.value)}</strong></div><div class="detail-cell"><small>Stage ปัจจุบัน</small><strong>${d.stage}</strong></div><div class="detail-cell"><small>Probability</small><strong>${d.probability}%</strong></div><div class="detail-cell"><small>Expected Close</small><strong>${thaiDate(d.close)}</strong></div><div class="detail-cell"><small>AE Owner</small><strong>${d.owner} · ${d.team}</strong></div><div class="detail-cell"><small>Risk Score</small><strong><span class="risk-pill ${riskClass(score)}">${score} / 100</span></strong></div></div><h3 class="modal-section-title">Activity Timeline</h3><div class="timeline">${activity}</div><h3 class="modal-section-title">เหตุผลที่ระบบประเมินความเสี่ยง</h3><div class="alert ${score>=60?"red":""}"><i class="fa-solid fa-triangle-exclamation"></i><span>${reasons.length?reasons.join(" · "):"ไม่มีความเสี่ยงที่ตรวจพบในขณะนี้"}</span></div><h3 class="modal-section-title">AI Suggested Action</h3><div class="suggestion">ควรนัดประชุมกับผู้มีอำนาจตัดสินใจภายใน 3 วัน เนื่องจากดีลใกล้วันปิดการขาย แต่ยังไม่มีการยืนยันงบประมาณ</div>`;setModal(d.name,d.customer,body,[{label:"Cancel"},{label:"Add Activity",icon:"fa-solid fa-plus",action:`add-activity-${d.id}`},{label:"Mark as Follow-up",icon:"fa-solid fa-flag",action:`follow-${d.id}`},{label:"Update Deal",icon:"fa-solid fa-pen",action:`edit-deal-${d.id}`,primary:true}],true)}
     function showDealFormLegacy(deal=null){const d=deal||{};const body=`<form id="dealForm"><div class="form-grid"><div class="form-group"><label>ชื่อ Deal</label><input name="name" required value="${d.name||""}" placeholder="เช่น ระบบ Cloud Solution"></div><div class="form-group"><label>ชื่อลูกค้า</label><input name="customer" required value="${d.customer||""}" placeholder="ชื่อลูกค้า"></div><div class="form-group"><label>AE Owner</label><input name="owner" required value="${d.owner||""}" placeholder="ชื่อผู้รับผิดชอบ"></div><div class="form-group"><label>Sales Team</label><select name="team"><option>Enterprise</option><option>Commercial</option><option>Strategic</option></select></div><div class="form-group"><label>มูลค่า (บาท)</label><input name="value" type="number" min="0" required value="${d.value||""}"></div><div class="form-group"><label>Stage</label><select name="stage">${stageLabels.map(s=>`<option ${d.stage===s?"selected":""}>${s}</option>`).join("")}</select></div><div class="form-group"><label>Probability (%)</label><input name="probability" type="number" min="0" max="100" value="${d.probability??50}"></div><div class="form-group"><label>Expected Close</label><input name="close" type="date" value="${d.close||"2026-11-07"}"></div><div class="form-group full"><label>Next Action</label><input name="nextAction" value="${d.nextAction||""}" placeholder="ระบุ Action ถัดไป"></div></div></form>`;setModal(deal?"Update Deal":"เพิ่ม Deal ใหม่","กรอกข้อมูล Pipeline",body,[{label:"Cancel"},{label:deal?"บันทึกการแก้ไข":"เพิ่ม Deal",icon:"fa-solid fa-check",action:deal?`save-deal-${deal.id}`:"save-new-deal",primary:true}])}
@@ -1191,6 +1220,8 @@ ${mdTable(["ผู้รับผิดชอบ","Actual (บาท)","จำ�
       const action=e.target.closest("[data-action]")?.dataset.action;if(!action)return;
       if(action==="go-back"){if(canGoBack()){try{history.back()}catch(err){goTo("dashboard",false)}}else{goTo("dashboard",false)}return}
       if(action==="go-sales"){currentPage="sales";render()}
+      else if(action==="go-roi"){goTo("roi",true)}
+      else if(action==="open-roi-full"){window.open("roi-calculator/index.html","_blank","noopener")}
       else if(action==="add-team"){if(!window.__CAN_REGISTER__){toast("สิทธิ์ Supervisor ดูได้อย่างเดียว");return}var f=document.getElementById("teamForm");if(f){f.style.display="block";fillTeamUplines();f.scrollIntoView({behavior:"smooth",block:"center"})}}
       else if(action==="save-team"){
         if(!window.__CAN_REGISTER__){toast("สิทธิ์ Supervisor ดูได้อย่างเดียว");return}
