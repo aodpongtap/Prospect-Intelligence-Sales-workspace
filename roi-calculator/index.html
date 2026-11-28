@@ -599,6 +599,10 @@ tbody tr:hover td{background:color-mix(in srgb, var(--brand) 5%, transparent)}
   box-shadow:0 20px 40px -20px rgba(0,0,0,.7);
 }
 
+/* --- scroll stability (กันหน้าเด้งเวลาเนื้อหาเปลี่ยนความสูง) --- */
+html,body{overflow-anchor:none}
+.input-panel{overflow-anchor:none}
+
 /* --- scrollbars --- */
 .input-panel::-webkit-scrollbar,.tbl-wrap::-webkit-scrollbar,.matrix::-webkit-scrollbar,.formula::-webkit-scrollbar{width:8px;height:8px}
 .input-panel::-webkit-scrollbar-thumb,.tbl-wrap::-webkit-scrollbar-thumb,.matrix::-webkit-scrollbar-thumb,.formula::-webkit-scrollbar-thumb{
@@ -711,9 +715,10 @@ html.embed .verdict{border-color:var(--line)}
 
           <!-- model reference (ทุกสินค้า) + BOQ เฉพาะเครื่องซักผ้า -->
           <div id="modelBlock" hidden style="margin-bottom:10px">
-            <label class="num" style="margin-bottom:8px"><span id="modelLabel">รุ่นสินค้าอ้างอิง (ราคาเงินสด)</span>
-              <select class="sel" id="modelSel"></select>
-            </label>
+            <!-- ไม่ครอบด้วย <label> เพราะ Chrome จะส่ง click ซ้ำเข้า select ทำ dropdown เด้ง/หน้าเลื่อน -->
+            <div class="num" style="margin-bottom:8px"><span id="modelLabel">รุ่นสินค้าอ้างอิง (ราคาเงินสด)</span>
+              <select class="sel" id="modelSel" aria-labelledby="modelLabel"></select>
+            </div>
             <div id="installBlock" hidden>
               <div class="num"><span>ค่าติดตั้ง / เตรียมพื้นที่ (BOQ)</span>
                 <input type="number" id="install" value="6010" min="0" step="100">
@@ -1554,7 +1559,7 @@ function renderBreakEven(p, r) {
   const cfg = PRESETS[state.preset];
   const be = r.beQty;
   $('#beQty').textContent = be != null ? nf0.format(Math.ceil(be)) : '—';
-  $('#beQtyUnit').textContent = be != null ? `${cfg.unitShort} (${Math.ceil(be * 30)}/${cfg.unit}/เดือน)` : 'กำไรส่วนเพิ่มติดลบ';
+  $('#beQtyUnit').textContent = be != null ? `${cfg.unitShort} (${nf0.format(Math.ceil(be) * 30)} ${cfg.unit}/เดือน)` : 'กำไรส่วนเพิ่มติดลบ';
   $('#beRevenue').textContent = r.beRevenue != null ? baht(r.beRevenue) : '—';
   $('#beContrib').textContent = baht(r.contribution);
   $('#beInline').textContent = be != null ? `${nf0.format(Math.ceil(be))} ${cfg.unit}` : '—';
@@ -1614,7 +1619,7 @@ function renderSensitivity(p) {
     return `<div class="cell ${sc.s === 1 ? 'on' : ''}">
       <em>${sc.label}</em>
       <b style="color:${tone}">${r.payback == null ? 'ไม่คืนทุน' : Math.ceil(r.payback) + ' เดือน'}</b>
-      <small>${nf0.format(q)} /วัน · ROI ${isFinite(r.roi) ? pct(r.roi, 0) : '∞'}</small>
+      <small>${nf0.format(q)} ${PRESETS[state.preset].unit}/วัน · ROI ${isFinite(r.roi) ? pct(r.roi, 0) : '∞'}</small>
     </div>`;
   }).join('');
 }
@@ -1863,6 +1868,17 @@ function renderMatrix() {
 
 /* ---------- master render ---------- */
 function render() {
+  /* กันหน้า "เด้ง": จำตำแหน่ง scroll ของหน้าและของแผงตัวแปรไว้ แล้วคืนค่าหลังวาดใหม่
+     (Chrome จะ scroll element ที่โฟกัสในแผง sticky กลับไปจุด layout เดิม → หน้าเด้งขึ้นบน) */
+  const keepY = window.scrollY || document.documentElement.scrollTop || 0;
+  const keepX = window.scrollX || 0;
+  const scrollPanel = $('.input-panel');
+  const keepPanelTop = scrollPanel ? scrollPanel.scrollTop : 0;
+  const restoreScroll = () => {
+    if (Math.abs(window.scrollY - keepY) > 1) window.scrollTo(keepX, keepY);
+    if (scrollPanel && Math.abs(scrollPanel.scrollTop - keepPanelTop) > 1) scrollPanel.scrollTop = keepPanelTop;
+  };
+
   const p = readInputs();
 
   // panel visibility
@@ -1883,6 +1899,9 @@ function render() {
   renderLoan(p, r);
   renderMatrix();
   if (state.view === 'cashflow') drawChart(p, r);
+
+  restoreScroll();
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(restoreScroll);
 }
 
 /* ---------- presets / scenario ---------- */
