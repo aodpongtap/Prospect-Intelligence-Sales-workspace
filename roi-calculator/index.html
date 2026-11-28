@@ -1132,9 +1132,9 @@ const PRESETS = {
     rawCost:4.5, qrShare:60, qrFee:1, elecKW:1.5, elecHours:12, elecRate:4,
     waterL:0.2, waterRate:18, rent:1500, maint:300, flatRate:2.90 },
   laundry: { label:'เครื่องซักผ้า / อบผ้า (LG)', emoji:'🧺', unit:'รอบ', unitShort:'รอบ/วัน',
-    price:28900, baseQty:5, qtyMax:24, unitPrice:30, unitMin:10, unitMax:100,
-    rawCost:0, qrShare:30, qrFee:1, elecKW:0.5, elecHours:3, elecRate:4,
-    waterL:120, waterRate:18, rent:0, maint:200, flatRate:2.40 }
+    price:76900, baseQty:5, qtyMax:24, unitPrice:30, unitMin:10, unitMax:100,
+    rawCost:0, qrShare:30, qrFee:1, elecKW:0.6, elecHours:3, elecRate:4,
+    waterL:130, waterRate:18, rent:0, maint:200, flatRate:2.40 }
 };
 
 /* ---------- แคตตาล็อกรุ่นสินค้า (ราคาขายเงินสด) ---------- */
@@ -1160,30 +1160,21 @@ const MODELS = {
   /* TODO: รอรายชื่อรุ่นตู้กาแฟ (รหัสสินค้า 8 หลัก + ราคาเงินสด) — ใส่ที่นี่แล้ว dropdown จะขึ้นเอง
      รูปแบบ: { code:'1050xxxx', name:'ชื่อรุ่น + จุดขาย', price:00000 } */
   laundry: [
-    { code:'10501614', name:'LG ซักผ้าฝาบน 17 กก. T2517VBTB + กล่องหยอดเหรียญ', price:28900,  type:'top' },
-    { code:'10501822', name:'LG ซักผ้าฝาบน 17 กก. T2517VBTB + ชุดหยอดเหรียญ + QR', price:35900, type:'top' },
     { code:'10501777', name:'LG ซักผ้าหน้า 13 กก. + ชุดหยอดเหรียญ', price:76900,  type:'front' },
     { code:'10501818', name:'LG ซักผ้าหน้า Single 13 กก. + ชุด + QR', price:82900, type:'front' },
     { code:'10501779', name:'LG ซักผ้าหน้า 17 กก. + ชุดหยอดเหรียญ', price:101900, type:'front' },
-    { code:'10501819', name:'LG ซักผ้าหน้า Single 17 กก. + ชุด + QR', price:107900, type:'front' },
-    { code:'10501778', name:'LG อบผ้า 13 กก. + ชุดหยอดเหรียญ', price:62900,  type:'dryer' },
-    { code:'10501820', name:'LG อบผ้า Single 13 กก. + ชุด + QR', price:68900, type:'dryer' },
-    { code:'10501780', name:'LG อบผ้า 17 กก. + ชุดหยอดเหรียญ', price:79900,  type:'dryer' },
-    { code:'10501821', name:'LG อบผ้า Single 17 กก. + ชุด + QR', price:85900, type:'dryer' },
-    { code:'10501609', name:'LG Stack 13 ซัก + 10 อบ + ชุดหยอดเหรียญ', price:145900, type:'stack' },
-    { code:'10501816', name:'LG Stack 13 + 10 + ชุด + QR', price:158900, type:'stack' },
-    { code:'10501611', name:'LG Stack 17 ซัก + 13 อบ + ชุดหยอดเหรียญ', price:185900, type:'stack' },
-    { code:'10501817', name:'LG Stack 17 + 13 + ชุด + QR', price:198900, type:'stack' }
+    { code:'10501819', name:'LG ซักผ้าหน้า Single 17 กก. + ชุด + QR', price:107900, type:'front' }
+  ]
   ]
 };
 
-const DEFAULT_MODEL = { alkaline:'10501857', ice:'10500830', coffee:'10501640', laundry:'10501614' };
+const DEFAULT_MODEL = { alkaline:'10501857', ice:'10500830', coffee:'10501640', laundry:'10501777' };
 
 const MODEL_LABEL = {
   alkaline: 'รุ่นตู้กดน้ำ — ราคาที่ส่งลูกค้า',
   ice: 'รุ่นเครื่องทำน้ำแข็ง — PM9003/2569',
   coffee: 'รุ่นตู้กาแฟ — ราคาเงินสด',
-  laundry: 'รุ่นสินค้า — PM9003/2569 (ราคาเงินสด)'
+  laundry: 'รุ่นเครื่องซักผ้าฝาหน้า (LG) — ราคาเงินสด'
 };
 
 const LAUNDRY_TYPE = {
@@ -1926,7 +1917,7 @@ function applyPreset(key) {
   $('#install').value = key === 'laundry' ? 6010 : 0;
   populateModels(key);
   if (key === 'laundry') {
-    const t = LAUNDRY_TYPE.top;
+    const t = LAUNDRY_TYPE.front;
     $('#unitPrice').min = 10; $('#unitPrice').max = 100;
     $('#elecKW').value = t.elecKW; $('#elecHours').value = t.elecHours;
     $('#waterL').value = t.waterL; $('#qty').max = t.qtyMax; $('#qty').value = t.baseQty;
