@@ -7,7 +7,8 @@ const root = path.resolve(__dirname, '..');
 const targets = [
   'index.html', 'users.html', 'login.html',
   'partner-crm/index.html', 'partner-care/index.html',
-  'assets/auth-sheets.js',
+  'roi-calculator/index.html',
+  'assets/auth-sheets.js', 'assets/sales-report.js', 'assets/daily-report.js',
   'apps-script/Code.gs', 'apps-script/Users.html', 'apps-script/Login.html', 'apps-script/Index.html'
 ];
 
