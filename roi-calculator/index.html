@@ -1612,6 +1612,9 @@ function renderSensitivity(p) {
     { s:1.3,  label:'+30%' }
   ];
   const grid = $('#sensGrid');
+  const cfg = PRESETS[state.preset];
+  /* ยอดขายจำลองเป็นเศษได้ (เช่น 3.5 รอบ) — อย่าปัดจนสองช่องแสดงเลขเท่ากัน */
+  const qTxt = q => (q < 10 ? nf1.format(q) : nf0.format(q));
   grid.innerHTML = scales.map(sc => {
     const q = Math.max(0, p.qty * sc.s);
     const r = core({ ...p, qty:q });
@@ -1619,7 +1622,7 @@ function renderSensitivity(p) {
     return `<div class="cell ${sc.s === 1 ? 'on' : ''}">
       <em>${sc.label}</em>
       <b style="color:${tone}">${r.payback == null ? 'ไม่คืนทุน' : Math.ceil(r.payback) + ' เดือน'}</b>
-      <small>${nf0.format(q)} ${PRESETS[state.preset].unit}/วัน · ROI ${isFinite(r.roi) ? pct(r.roi, 0) : '∞'}</small>
+      <small>${qTxt(q)} ${cfg.unit}/วัน · ROI ${isFinite(r.roi) ? pct(r.roi, 0) : '∞'}</small>
     </div>`;
   }).join('');
 }
