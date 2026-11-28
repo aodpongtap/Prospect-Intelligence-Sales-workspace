@@ -714,6 +714,7 @@ html.embed .verdict{border-color:var(--line)}
             <label class="num" style="margin-bottom:8px"><span id="modelLabel">รุ่นสินค้าอ้างอิง (ราคาเงินสด)</span>
               <select class="sel" id="modelSel"></select>
             </label>
+            <div class="chips" id="modelChips" hidden style="margin-bottom:8px"></div>
             <div id="installBlock" hidden>
               <div class="num"><span>ค่าติดตั้ง / เตรียมพื้นที่ (BOQ)</span>
                 <input type="number" id="install" value="6010" min="0" step="100">
@@ -1420,16 +1421,37 @@ function populateModels(presetKey, selected) {
     /* ยังไม่มีแคตตาล็อกของกลุ่มนี้ → แสดง dropdown ไว้เพื่อให้เห็นว่ามีช่องรุ่นสินค้า */
     sel.innerHTML = '<option value="">— ยังไม่มีรุ่นในระบบ · กำหนดราคาเอง —</option>';
     sel.value = '';
+    renderModelChips([]);
     return;
   }
   sel.innerHTML = '<option value="">— กำหนดราคาเอง (แก้ช่องราคาได้) —</option>'
     + list.map(m => `<option value="${m.code}">${m.code} · ${m.name} — ${nf0.format(m.price)} ฿</option>`).join('');
   sel.value = (selected === undefined ? (DEFAULT_MODEL[presetKey] || '') : selected);
+  renderModelChips(list);
+}
+
+/* ปุ่มเลือกรุ่นแบบแตะได้ (ทางเลือกเสริมของ dropdown — ใช้บนมือถือที่ native select ตอบสนองช้า) */
+function renderModelChips(list) {
+  const box = $('#modelChips');
+  if (!box) return;
+  if (!list || !list.length) { box.hidden = true; box.innerHTML = ''; return; }
+  box.hidden = false;
+  box.innerHTML = list.map(m =>
+    `<button type="button" class="chip" data-model="${m.code}" title="${m.name}">${m.code} · ${nf0.format(m.price)} ฿</button>`
+  ).join('');
+  syncModelChips();
+}
+function syncModelChips() {
+  const sel = $('#modelSel'), box = $('#modelChips');
+  if (!sel || !box) return;
+  const cur = sel.value;
+  [...box.querySelectorAll('[data-model]')].forEach(b => b.classList.toggle('on', b.dataset.model === cur));
 }
 
 function applyModel(code) {
   const list = MODELS[state.preset] || [];
   const m = list.find(x => x.code === code);
+  syncModelChips();
   if (!m) return;                       // กำหนดเอง → ใช้ราคาตามที่ผู้ใช้แก้
   $('#price').value = m.price;
   if (state.preset === 'laundry' && m.type) {
@@ -2013,13 +2035,21 @@ function bind() {
     el.addEventListener(evt, () => {
       if (id === 'qty') { state.scenario = 'custom'; syncScenarioChips(); }
       if (id === 'downPct' || id === 'term') applyRateFromTable();
-      if (id === 'price') { const s = $('#modelSel'); if (s && s.value) s.value = ''; }
+      if (id === 'price') { const s = $('#modelSel'); if (s && s.value) { s.value = ''; syncModelChips(); } }
       render();
     });
   });
 
   // actions
   $('#modelSel').addEventListener('change', e => applyModel(e.target.value));
+  if ($('#modelChips')) {
+    $('#modelChips').addEventListener('click', e => {
+      const b = e.target.closest('[data-model]');
+      if (!b) return;
+      $('#modelSel').value = b.dataset.model;
+      applyModel(b.dataset.model);
+    });
+  }
   $$('#boqChips .chip').forEach(b => b.addEventListener('click', () => {
     $$('#boqChips .chip').forEach(x => x.classList.remove('on'));
     b.classList.add('on');
