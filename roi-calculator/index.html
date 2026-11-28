@@ -2049,7 +2049,41 @@ function bind() {
   });
 
   // actions
-  $('#modelSel').addEventListener('change', e => applyModel(e.target.value));
+  /* กันหน้า "เด้ง" ตอนเลือกรุ่น: Chrome จะเลื่อนหน้าไปที่ตำแหน่ง layout ของ <select>
+     ที่อยู่ในแผง sticky (เกิดตอน pointerdown/focus ก่อน event change)
+     → จำตำแหน่ง scroll ตอนผู้ใช้เริ่มแตะ แล้วคืนค่าหลังเปลี่ยนรุ่น */
+  const selEl = $('#modelSel');
+  let selSnap = null;
+  const takeSnap = () => {
+    const panel = $('.input-panel');
+    selSnap = { y: window.scrollY || document.documentElement.scrollTop || 0, p: panel ? panel.scrollTop : 0, ts: Date.now() };
+  };
+  const restoreSnap = () => {
+    if (!selSnap) return;
+    const y = Math.abs(window.scrollY - selSnap.y) > 1;
+    const panel = $('.input-panel');
+    const p = panel && Math.abs(panel.scrollTop - selSnap.p) > 1;
+    if (y) window.scrollTo(window.scrollX, selSnap.y);
+    if (p) panel.scrollTop = selSnap.p;
+  };
+  selEl.addEventListener('pointerdown', takeSnap, { passive: true });
+  selEl.addEventListener('keydown', () => { if (!selSnap || Date.now() - selSnap.ts > 800) takeSnap(); });
+  selEl.addEventListener('focus', () => { if (!selSnap || Date.now() - selSnap.ts > 800) takeSnap(); }, { passive: true });
+  selEl.addEventListener('change', e => {
+    if (!selSnap) takeSnap();
+    applyModel(e.target.value);   // วาดใหม่ (render ภายในจะพยายามรักษา scroll อยู่แล้ว)
+    restoreSnap();
+    requestAnimationFrame(restoreSnap);
+    setTimeout(restoreSnap, 80);
+    setTimeout(() => { selSnap = null; }, 400);
+  });
+  /* ผู้ใช้ปิด dropdown โดยไม่เลือก (กด Esc/คลิกที่อื่น) — คืนตำแหน่งเผื่อเบราว์เซอร์เลื่อนไปแล้ว */
+  selEl.addEventListener('blur', () => {
+    if (!selSnap || Date.now() - selSnap.ts > 800) { selSnap = null; return; }
+    restoreSnap();
+    requestAnimationFrame(restoreSnap);
+    selSnap = null;
+  });
   $$('#boqChips .chip').forEach(b => b.addEventListener('click', () => {
     $$('#boqChips .chip').forEach(x => x.classList.remove('on'));
     b.classList.add('on');
