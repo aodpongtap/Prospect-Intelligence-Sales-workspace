@@ -1723,14 +1723,9 @@
 
   function renderDashboard() {
     injectCss();
-    var canRoi = ['head', 'sup', 'sale', 'agent', 'editor'].indexOf(String(((window.__ME__ || {}).level) || '').toLowerCase()) >= 0;
-    var roiBtn = canRoi
-      ? '    <button class="sr-btn" data-action="go-roi"><i class="fa-solid fa-calculator"></i> คำนวณ ROI</button>'
-      : '';
     if (scopeOf().type === 'pending') {
       return '<div class="sr"><div class="sr-head"><div><h1>ภาพรวมยอดขาย &amp; Forecast</h1>'
-        + '<div class="sr-sub">กำลังโหลดข้อมูลตามสิทธิ์ของคุณ…</div></div>'
-        + (roiBtn ? '<div class="sr-head-r">' + roiBtn + '</div>' : '') + '</div>' + scopeNotice() + '</div>';
+        + '<div class="sr-sub">กำลังโหลดข้อมูลตามสิทธิ์ของคุณ…</div></div></div>' + scopeNotice() + '</div>';
     }
     var k = kpis();
     var s = k.sum;
@@ -1948,7 +1943,6 @@
       + '  <div><h1>ภาพรวมยอดขาย &amp; Forecast</h1>'
       + '    <div class="sr-sub">' + esc(today) + ' · ใช้สูตรและข้อมูลชุดเดียวกับหน้า Reports</div></div>'
       + '  <div class="sr-head-r">'
-      + roiBtn
       + '    <div class="sr-upd"><i class="fa-regular fa-clock"></i> อัปเดตล่าสุด <b>' + esc(nowStr) + '</b></div>'
       + '    <label class="sr-ar"><i class="fa-solid fa-rotate"></i> Auto Refresh'
       + '      <select data-sr-refresh>' + [0, 1, 5, 10, 15].map(function (m) {

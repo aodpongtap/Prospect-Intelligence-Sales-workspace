@@ -709,20 +709,22 @@ html.embed .verdict{border-color:var(--line)}
             <input type="number" id="price" value="45000" min="0" step="500" inputmode="numeric">
           </div>
 
-          <!-- laundry-only: model + BOQ install -->
-          <div id="laundryBlock" hidden style="margin-bottom:10px">
-            <label class="num" style="margin-bottom:8px"><span>รุ่นสินค้าอ้างอิง — PM9003/2569 (ราคาเงินสด)</span>
-              <select class="sel" id="laundryModel"></select>
+          <!-- model reference (ทุกสินค้า) + BOQ เฉพาะเครื่องซักผ้า -->
+          <div id="modelBlock" hidden style="margin-bottom:10px">
+            <label class="num" style="margin-bottom:8px"><span id="modelLabel">รุ่นสินค้าอ้างอิง (ราคาเงินสด)</span>
+              <select class="sel" id="modelSel"></select>
             </label>
-            <div class="num"><span>ค่าติดตั้ง / เตรียมพื้นที่ (BOQ)</span>
-              <input type="number" id="install" value="6010" min="0" step="100">
-            </div>
-            <div class="chips" style="margin-top:7px" id="boqChips">
-              <button class="chip" type="button" data-n="1">1 เครื่อง</button>
-              <button class="chip" type="button" data-n="2">2</button>
-              <button class="chip" type="button" data-n="3">3</button>
-              <button class="chip" type="button" data-n="4">4</button>
-              <button class="chip" type="button" data-n="5">5</button>
+            <div id="installBlock" hidden>
+              <div class="num"><span>ค่าติดตั้ง / เตรียมพื้นที่ (BOQ)</span>
+                <input type="number" id="install" value="6010" min="0" step="100">
+              </div>
+              <div class="chips" style="margin-top:7px" id="boqChips">
+                <button class="chip" type="button" data-n="1">1 เครื่อง</button>
+                <button class="chip" type="button" data-n="2">2</button>
+                <button class="chip" type="button" data-n="3">3</button>
+                <button class="chip" type="button" data-n="4">4</button>
+                <button class="chip" type="button" data-n="5">5</button>
+              </div>
             </div>
           </div>
           <p id="investHint" style="font-size:9.5px;color:var(--ink-3);margin:-4px 0 10px;font-weight:300"></p>
@@ -1090,6 +1092,8 @@ APR แท้จริงของแผนคงที่ = อัตรา IRR
             <div class="src"><b>ตารางดอกเบี้ย</b><span>คำนวณราคาผ่อนสินค้า TSRL.xlsx (ชีต Interest) — อัตราดอกเบี้ยคงที่ต่อเดือน แยกตามเงินดาวน์ 0–50% และงวด 6/12/18/21/24/36 เดือน</span></div>
             <div class="src"><b>จุดคืนทุน</b><span>จุดคืนทุน_BU_Vending_2569.xlsx — แนวคิด Break-even, สัดส่วนค่าใช้จ่ายต่อรายได้, ROI ต่อปี (ตู้กดน้ำ RO / ตู้กาแฟ / เครื่องซักผ้า / ซัก-อบ)</span></div>
             <div class="src"><b>ราคาเครื่องซักผ้า</b><span>PM9003-2569 ประกาศเรื่องราคาจำหน่ายสินค้าของบริษัทฯ (ข้อ 9 เครื่องซักผ้าหยอดเหรียญ LG 14 รุ่น) และไฟล์ราคาใน DRS CRD TELE_Rev.plan เครื่องซักผ้า หยอดเหรียญ (ALL).xlsx</span></div>
+            <div class="src"><b>ราคาตู้กดน้ำ</b><span>ตู้น้ำลิตร หยอดเหรียญ V3 + ชุดติดตั้ง 45,900 บาท (Project Vending SML REV01.xlsx) · A01 Water Mate 14,900 บาท</span></div>
+            <div class="src"><b>ราคาเครื่องทำน้ำแข็ง</b><span>PM9003-2569 ตารางราคาเครื่องทำน้ำแข็งพร้อมเครื่องกรองน้ำ RO (FC 180-1 / FH-180 / FC-180 / FC-140 / FH-140 / FC-90 / FH-90 / FH-60)</span></div>
             <div class="src"><b>ค่าติดตั้ง</b><span>คำนวนงานก่อสร้าง (เครื่องซักผ้า).xlsx (ชีต Sim Cost) — BOQ เตรียมพื้นที่ 1–5 เครื่อง</span></div>
             <div class="src"><b>หลักการมาตรฐาน</b><span>NPV / IRR / Payback / Break-even ตามหลักการวิเคราะห์โครงการลงทุน (capital budgeting) และการเทียบค่างวดแบบ Flat rate กับ ลดต้นลดดอก (APR)</span></div>
           </div>
@@ -1115,11 +1119,11 @@ const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 /* ---------- asset presets ---------- */
 const PRESETS = {
   alkaline: { label:'ตู้กดน้ำด่าง', emoji:'💧', unit:'ลิตร', unitShort:'ลิตร/วัน',
-    price:45000, baseQty:100, qtyMax:400, unitPrice:5, unitMin:1, unitMax:10,
+    price:45900, baseQty:100, qtyMax:400, unitPrice:5, unitMin:1, unitMax:10,
     rawCost:0, qrShare:60, qrFee:1, elecKW:0.15, elecHours:12, elecRate:4,
     waterL:1.5, waterRate:18, rent:1500, maint:400, flatRate:2.40 },
   ice: { label:'ตู้ผลิตน้ำแข็ง', emoji:'❄️', unit:'กก.', unitShort:'กก./วัน',
-    price:186000, baseQty:65, qtyMax:150, unitPrice:5, unitMin:2, unitMax:15,
+    price:142500, baseQty:65, qtyMax:150, unitPrice:5, unitMin:2, unitMax:15,
     rawCost:0, qrShare:70, qrFee:1, elecKW:1.33, elecHours:12, elecRate:4,
     waterL:1.3, waterRate:18, rent:2000, maint:500, flatRate:2.90 },
   coffee: { label:'ตู้กาแฟ 10 บาท', emoji:'☕', unit:'แก้ว', unitShort:'แก้ว/วัน',
@@ -1132,23 +1136,47 @@ const PRESETS = {
     waterL:120, waterRate:18, rent:0, maint:200, flatRate:2.40 }
 };
 
-/* ---------- LG coin-op laundry price list : PM9003/2569 (เงินสด) ---------- */
-const LAUNDRY_MODELS = [
-  { code:'10501614', name:'LG ซักผ้าฝาบน 17 กก. T2517VBTB + กล่องหยอดเหรียญ', price:28900,  type:'top' },
-  { code:'10501822', name:'LG ซักผ้าฝาบน 17 กก. T2517VBTB + ชุดหยอดเหรียญ + QR', price:35900, type:'top' },
-  { code:'10501777', name:'LG ซักผ้าหน้า 13 กก. + ชุดหยอดเหรียญ', price:76900,  type:'front' },
-  { code:'10501818', name:'LG ซักผ้าหน้า Single 13 กก. + ชุด + QR', price:82900, type:'front' },
-  { code:'10501779', name:'LG ซักผ้าหน้า 17 กก. + ชุดหยอดเหรียญ', price:101900, type:'front' },
-  { code:'10501819', name:'LG ซักผ้าหน้า Single 17 กก. + ชุด + QR', price:107900, type:'front' },
-  { code:'10501778', name:'LG อบผ้า 13 กก. + ชุดหยอดเหรียญ', price:62900,  type:'dryer' },
-  { code:'10501820', name:'LG อบผ้า Single 13 กก. + ชุด + QR', price:68900, type:'dryer' },
-  { code:'10501780', name:'LG อบผ้า 17 กก. + ชุดหยอดเหรียญ', price:79900,  type:'dryer' },
-  { code:'10501821', name:'LG อบผ้า Single 17 กก. + ชุด + QR', price:85900, type:'dryer' },
-  { code:'10501609', name:'LG Stack 13 ซัก + 10 อบ + ชุดหยอดเหรียญ', price:145900, type:'stack' },
-  { code:'10501816', name:'LG Stack 13 + 10 + ชุด + QR', price:158900, type:'stack' },
-  { code:'10501611', name:'LG Stack 17 ซัก + 13 อบ + ชุดหยอดเหรียญ', price:185900, type:'stack' },
-  { code:'10501817', name:'LG Stack 17 + 13 + ชุด + QR', price:198900, type:'stack' }
-];
+/* ---------- แคตตาล็อกรุ่นสินค้า (ราคาขายเงินสด) ---------- */
+const MODELS = {
+  alkaline: [
+    { code:'10501613', name:'ตู้น้ำลิตร หยอดเหรียญ V3 + ชุดติดตั้ง (ไม่รวมมิเตอร์น้ำ-ไฟ)', price:45900 },
+    { code:'10100296', name:'A01 Water Mate ตู้กดน้ำ', price:14900 }
+  ],
+  ice: [
+    { code:'10500847', name:'น้ำแข็งหลอดหนาพิเศษ FC 180-1 (180 กก./วัน)', price:142500 },
+    { code:'10500829', name:'น้ำแข็งหลอดบาง FH-180 (180 กก./วัน)', price:136500 },
+    { code:'10500830', name:'น้ำแข็งหลอดหนา FC-180 (180 กก./วัน)', price:123500 },
+    { code:'10500828', name:'น้ำแข็งหลอดหนา FC-140 (140 กก./วัน)', price:94500 },
+    { code:'10500827', name:'น้ำแข็งหลอดบาง FH-140 (140 กก./วัน)', price:94500 },
+    { code:'10500826', name:'น้ำแข็งหลอดหนา FC-90 (90 กก./วัน)', price:64500 },
+    { code:'10500825', name:'น้ำแข็งหลอดบาง FH-90 (90 กก./วัน)', price:64500 },
+    { code:'10500821', name:'น้ำแข็งหลอดบาง FH-60 (60 กก./วัน)', price:51500 }
+  ],
+  laundry: [
+    { code:'10501614', name:'LG ซักผ้าฝาบน 17 กก. T2517VBTB + กล่องหยอดเหรียญ', price:28900,  type:'top' },
+    { code:'10501822', name:'LG ซักผ้าฝาบน 17 กก. T2517VBTB + ชุดหยอดเหรียญ + QR', price:35900, type:'top' },
+    { code:'10501777', name:'LG ซักผ้าหน้า 13 กก. + ชุดหยอดเหรียญ', price:76900,  type:'front' },
+    { code:'10501818', name:'LG ซักผ้าหน้า Single 13 กก. + ชุด + QR', price:82900, type:'front' },
+    { code:'10501779', name:'LG ซักผ้าหน้า 17 กก. + ชุดหยอดเหรียญ', price:101900, type:'front' },
+    { code:'10501819', name:'LG ซักผ้าหน้า Single 17 กก. + ชุด + QR', price:107900, type:'front' },
+    { code:'10501778', name:'LG อบผ้า 13 กก. + ชุดหยอดเหรียญ', price:62900,  type:'dryer' },
+    { code:'10501820', name:'LG อบผ้า Single 13 กก. + ชุด + QR', price:68900, type:'dryer' },
+    { code:'10501780', name:'LG อบผ้า 17 กก. + ชุดหยอดเหรียญ', price:79900,  type:'dryer' },
+    { code:'10501821', name:'LG อบผ้า Single 17 กก. + ชุด + QR', price:85900, type:'dryer' },
+    { code:'10501609', name:'LG Stack 13 ซัก + 10 อบ + ชุดหยอดเหรียญ', price:145900, type:'stack' },
+    { code:'10501816', name:'LG Stack 13 + 10 + ชุด + QR', price:158900, type:'stack' },
+    { code:'10501611', name:'LG Stack 17 ซัก + 13 อบ + ชุดหยอดเหรียญ', price:185900, type:'stack' },
+    { code:'10501817', name:'LG Stack 17 + 13 + ชุด + QR', price:198900, type:'stack' }
+  ]
+};
+
+const DEFAULT_MODEL = { alkaline:'10501613', ice:'10500847', laundry:'10501614' };
+
+const MODEL_LABEL = {
+  alkaline: 'รุ่นตู้กดน้ำ — ราคาที่ส่งลูกค้า',
+  ice: 'รุ่นเครื่องทำน้ำแข็ง — PM9003/2569',
+  laundry: 'รุ่นสินค้า — PM9003/2569 (ราคาเงินสด)'
+};
 
 const LAUNDRY_TYPE = {
   top:   { unitPrice:30, waterL:120, elecKW:0.5, elecHours:3, baseQty:5,  qtyMax:24 },
@@ -1376,29 +1404,32 @@ function renderLabels(p) {
   $$('input[type=range]').forEach(paintRange);
 }
 
-/* ---------- laundry catalogue ---------- */
-function populateLaundryModels() {
-  const sel = $('#laundryModel');
-  if (!sel || sel.options.length) return;
-  sel.innerHTML = LAUNDRY_MODELS
-    .map(m => `<option value="${m.code}">${m.code} · ${m.name} — ${nf0.format(m.price)} ฿</option>`)
-    .join('');
-  sel.value = '10501614';
+/* ---------- model catalogue ---------- */
+function populateModels(presetKey, selected) {
+  const sel = $('#modelSel');
+  if (!sel) return;
+  const list = MODELS[presetKey] || [];
+  sel.innerHTML = '<option value="">— กำหนดราคาเอง (แก้ช่องราคาได้) —</option>'
+    + list.map(m => `<option value="${m.code}">${m.code} · ${m.name} — ${nf0.format(m.price)} ฿</option>`).join('');
+  sel.value = (selected === undefined ? (DEFAULT_MODEL[presetKey] || '') : selected);
 }
 
-function applyLaundryModel(code) {
-  const m = LAUNDRY_MODELS.find(x => x.code === code);
-  if (!m) return;
-  const t = LAUNDRY_TYPE[m.type];
+function applyModel(code) {
+  const list = MODELS[state.preset] || [];
+  const m = list.find(x => x.code === code);
+  if (!m) return;                       // กำหนดเอง → ใช้ราคาตามที่ผู้ใช้แก้
   $('#price').value = m.price;
-  $('#unitPrice').value = t.unitPrice;
-  $('#waterL').value = t.waterL;
-  $('#elecKW').value = t.elecKW;
-  $('#elecHours').value = t.elecHours;
-  $('#qty').max = t.qtyMax;
-  $('#qty').value = t.baseQty;
-  state.scenario = 'base';
-  syncScenarioChips();
+  if (state.preset === 'laundry' && m.type) {
+    const t = LAUNDRY_TYPE[m.type];
+    $('#unitPrice').value = t.unitPrice;
+    $('#waterL').value = t.waterL;
+    $('#elecKW').value = t.elecKW;
+    $('#elecHours').value = t.elecHours;
+    $('#qty').max = t.qtyMax;
+    $('#qty').value = t.baseQty;
+    state.scenario = 'base';
+    syncScenarioChips();
+  }
   render();
 }
 
@@ -1853,11 +1884,13 @@ function applyPreset(key) {
   $('#waterRate').value = c.waterRate;
   $('#rent').value = c.rent;
   $('#maint').value = c.maint;
-  $('#laundryBlock').hidden = key !== 'laundry';
+  $('#modelBlock').hidden = !(MODELS[key] && MODELS[key].length);
+  $('#modelLabel').textContent = MODEL_LABEL[key] || 'รุ่นสินค้าอ้างอิง';
+  $('#installBlock').hidden = key !== 'laundry';
   $('#investHint').hidden = key !== 'laundry';
   $('#install').value = key === 'laundry' ? 6010 : 0;
+  populateModels(key);
   if (key === 'laundry') {
-    populateLaundryModels();
     const t = LAUNDRY_TYPE.top;
     $('#unitPrice').min = 10; $('#unitPrice').max = 100;
     $('#elecKW').value = t.elecKW; $('#elecHours').value = t.elecHours;
@@ -1967,12 +2000,13 @@ function bind() {
     el.addEventListener(evt, () => {
       if (id === 'qty') { state.scenario = 'custom'; syncScenarioChips(); }
       if (id === 'downPct' || id === 'term') applyRateFromTable();
+      if (id === 'price') { const s = $('#modelSel'); if (s && s.value) s.value = ''; }
       render();
     });
   });
 
   // actions
-  $('#laundryModel').addEventListener('change', e => applyLaundryModel(e.target.value));
+  $('#modelSel').addEventListener('change', e => applyModel(e.target.value));
   $$('#boqChips .chip').forEach(b => b.addEventListener('click', () => {
     $$('#boqChips .chip').forEach(x => x.classList.remove('on'));
     b.classList.add('on');

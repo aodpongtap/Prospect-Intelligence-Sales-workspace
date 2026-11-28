@@ -118,7 +118,7 @@
   </script>
   <script src="assets/auth-sheets.js?v=22"></script>
   <script src="assets/report-log.js?v=13"></script>
-  <script src="assets/sales-report.js?v=95"></script>
+  <script src="assets/sales-report.js?v=96"></script>
   <script src="assets/daily-report.js?v=23"></script>
   <script src="assets/project-tracking.js?v=16"></script>
   <script src="assets/customer-intelligence.js?v=6"></script>
@@ -139,11 +139,6 @@
         agent: ['dashboard', 'sales', 'roi', 'daily', 'reports']
       };
       return MAP[lv] || null;   // admin = ทุกหน้า (รวม Activity Log) · ระดับอื่นเห็นเฉพาะที่กำหนด
-    };
-    /* ROI Calculator: เปิดให้ Head Team (L3) ลงไป — Admin/BU ไม่ต้องมี */
-    window.__canUseRoi__ = function () {
-      var lv = String(((window.__ME__ || {}).level) || '').toLowerCase();
-      return ['head', 'sup', 'sale', 'agent', 'editor'].indexOf(lv) >= 0;
     };
     window.__applyMe__ = function (rawMe, opts) {
       opts = opts || {};
@@ -954,7 +949,7 @@
           <td class="dm-num"><span class="risk-number ${riskClass(rk)}">${rk}</span> <span class="muted" style="font-size:9px">${rk>=60?'สูง':rk>=35?'กลาง':'ต่ำ'}</span></td>
         </tr>`;
       }).join("")}</tbody></table></div>`}
-    function renderSales(){const owners=[...new Set(deals.map(d=>d.owner))],teams=[...new Set(deals.map(d=>d.team))];return `${pageHead("AE Pipeline: Risk & Forecast","ติดตาม Pipeline, ความเสี่ยง และ Forecast ของทีมขาย",`${(window.__canUseRoi__ && window.__canUseRoi__())?btn("คำนวณ ROI","go-roi","fa-solid fa-calculator"):""}${btn("Export CSV","export-deals","fa-solid fa-download")}${btn("Refresh Data","refresh","fa-solid fa-rotate")}${btn("Add Deal","add-deal","fa-solid fa-plus",true)}`)}<div class="panel"><div class="toolbar"><div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="field" id="dealSearch" placeholder="ค้นหาชื่อลูกค้า หรือชื่อ Deal"></div><div class="filters"><select class="select filter-select" id="ownerFilter"><option value="">ทุก AE Owner</option>${owners.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="teamFilter"><option value="">ทุก AE Team</option>${teams.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="stageFilter"><option value="">ทุก Stage</option>${stageLabels.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="riskFilter"><option value="">ทุก Risk Level</option><option value="high">High Risk</option><option value="mid">Medium Risk</option><option value="low">Low Risk</option></select><select class="select filter-select" id="periodFilter"><option value="">ทุกช่วงเวลา</option><option value="month">ปิดภายในเดือนนี้</option><option value="quarter">ปิดภายใน 90 วัน</option></select></div><button class="btn btn-soft" id="sortRisk"><i class="fa-solid fa-arrow-down-wide-short"></i>Sort Risk</button></div><div id="dealTable">${renderDealsTable()}</div><div class="panel-sub" style="margin-top:12px">แสดง <span id="dealCount">${deals.length}</span> ดีล · คลิกแถวเพื่อดูรายละเอียด</div></div>`}
+    function renderSales(){const owners=[...new Set(deals.map(d=>d.owner))],teams=[...new Set(deals.map(d=>d.team))];return `${pageHead("AE Pipeline: Risk & Forecast","ติดตาม Pipeline, ความเสี่ยง และ Forecast ของทีมขาย",`${btn("Export CSV","export-deals","fa-solid fa-download")}${btn("Refresh Data","refresh","fa-solid fa-rotate")}${btn("Add Deal","add-deal","fa-solid fa-plus",true)}`)}<div class="panel"><div class="toolbar"><div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input class="field" id="dealSearch" placeholder="ค้นหาชื่อลูกค้า หรือชื่อ Deal"></div><div class="filters"><select class="select filter-select" id="ownerFilter"><option value="">ทุก AE Owner</option>${owners.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="teamFilter"><option value="">ทุก AE Team</option>${teams.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="stageFilter"><option value="">ทุก Stage</option>${stageLabels.map(x=>`<option>${x}</option>`).join("")}</select><select class="select filter-select" id="riskFilter"><option value="">ทุก Risk Level</option><option value="high">High Risk</option><option value="mid">Medium Risk</option><option value="low">Low Risk</option></select><select class="select filter-select" id="periodFilter"><option value="">ทุกช่วงเวลา</option><option value="month">ปิดภายในเดือนนี้</option><option value="quarter">ปิดภายใน 90 วัน</option></select></div><button class="btn btn-soft" id="sortRisk"><i class="fa-solid fa-arrow-down-wide-short"></i>Sort Risk</button></div><div id="dealTable">${renderDealsTable()}</div><div class="panel-sub" style="margin-top:12px">แสดง <span id="dealCount">${deals.length}</span> ดีล · คลิกแถวเพื่อดูรายละเอียด</div></div>`}
     /* ===== JavaScript: ROI Calculator ===== */
     function renderROI(){
       var embedded = !!window.__ROI_HTML__;
