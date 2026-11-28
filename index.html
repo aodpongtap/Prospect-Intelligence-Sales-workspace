@@ -124,14 +124,14 @@
   <script src="assets/customer-intelligence.js?v=6"></script>
   <script src="assets/audit-log.js?v=15"></script>
   <script src="assets/team-page.js?v=15"></script>
-  <script src="assets/roi-calculator-embed.js?v=3"></script>
+  <script src="assets/roi-calculator-embed.js?v=4"></script>
   <script>
     // ตัวช่วยแสดงข้อมูลผู้ใช้/สิทธิ์ — ใช้ร่วมกันทั้ง GitHub Pages และ Google Apps Script
     window.__allowedPages__ = function () {
       var lv = String(((window.__ME__ || {}).level) || '').toLowerCase();
       var MAP = {
-        admin: ['dashboard', 'sales', 'daily', 'partners', 'projects', 'intelligence', 'reports', 'team', 'audit'],
-        bu: ['dashboard', 'sales', 'daily', 'partners', 'projects', 'intelligence', 'reports', 'team'],
+        admin: ['dashboard', 'sales', 'roi', 'daily', 'partners', 'projects', 'intelligence', 'reports', 'team', 'audit'],
+        bu: ['dashboard', 'sales', 'roi', 'daily', 'partners', 'projects', 'intelligence', 'reports', 'team'],
         head: ['dashboard', 'sales', 'roi', 'daily', 'team', 'projects', 'intelligence', 'reports'],
         editor: ['dashboard', 'sales', 'roi', 'daily', 'team', 'projects', 'intelligence', 'reports'],
         sup: ['dashboard', 'roi', 'daily', 'team', 'sales', 'projects', 'intelligence', 'reports'],
