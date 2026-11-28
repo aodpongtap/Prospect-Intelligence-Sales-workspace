@@ -1092,7 +1092,7 @@ APR แท้จริงของแผนคงที่ = อัตรา IRR
             <div class="src"><b>ตารางดอกเบี้ย</b><span>คำนวณราคาผ่อนสินค้า TSRL.xlsx (ชีต Interest) — อัตราดอกเบี้ยคงที่ต่อเดือน แยกตามเงินดาวน์ 0–50% และงวด 6/12/18/21/24/36 เดือน</span></div>
             <div class="src"><b>จุดคืนทุน</b><span>จุดคืนทุน_BU_Vending_2569.xlsx — แนวคิด Break-even, สัดส่วนค่าใช้จ่ายต่อรายได้, ROI ต่อปี (ตู้กดน้ำ RO / ตู้กาแฟ / เครื่องซักผ้า / ซัก-อบ)</span></div>
             <div class="src"><b>ราคาเครื่องซักผ้า</b><span>PM9003-2569 ประกาศเรื่องราคาจำหน่ายสินค้าของบริษัทฯ (ข้อ 9 เครื่องซักผ้าหยอดเหรียญ LG 14 รุ่น) และไฟล์ราคาใน DRS CRD TELE_Rev.plan เครื่องซักผ้า หยอดเหรียญ (ALL).xlsx</span></div>
-            <div class="src"><b>ราคาตู้กดน้ำ</b><span>ตู้น้ำลิตร หยอดเหรียญ V3 + ชุดติดตั้ง 45,900 บาท (Project Vending SML REV01.xlsx) · A01 Water Mate 14,900 บาท</span></div>
+            <div class="src"><b>ราคาตู้กดน้ำ</b><span>ตารางราคาตู้น้ำลิตร หยอดเหรียญ (ฉบับล่าสุดที่ส่งลูกค้า): V3 52,900 · V2 54,900 · Online QR v3 60,900 · Online QR v2 62,900 · Online 64,900 · Zuper Filter 46,900 (ไม่รวมไส้กรอง RO Membrane 54200030 อีก 2,190 บาท)</span></div>
             <div class="src"><b>ราคาเครื่องทำน้ำแข็ง</b><span>PM9003-2569 ตารางราคาเครื่องทำน้ำแข็งพร้อมเครื่องกรองน้ำ RO (FC 180-1 / FH-180 / FC-180 / FC-140 / FH-140 / FC-90 / FH-90 / FH-60)</span></div>
             <div class="src"><b>ค่าติดตั้ง</b><span>คำนวนงานก่อสร้าง (เครื่องซักผ้า).xlsx (ชีต Sim Cost) — BOQ เตรียมพื้นที่ 1–5 เครื่อง</span></div>
             <div class="src"><b>หลักการมาตรฐาน</b><span>NPV / IRR / Payback / Break-even ตามหลักการวิเคราะห์โครงการลงทุน (capital budgeting) และการเทียบค่างวดแบบ Flat rate กับ ลดต้นลดดอก (APR)</span></div>
@@ -1119,7 +1119,7 @@ const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 /* ---------- asset presets ---------- */
 const PRESETS = {
   alkaline: { label:'ตู้กดน้ำด่าง', emoji:'💧', unit:'ลิตร', unitShort:'ลิตร/วัน',
-    price:45900, baseQty:100, qtyMax:400, unitPrice:5, unitMin:1, unitMax:10,
+    price:52900, baseQty:100, qtyMax:400, unitPrice:5, unitMin:1, unitMax:10,
     rawCost:0, qrShare:60, qrFee:1, elecKW:0.15, elecHours:12, elecRate:4,
     waterL:1.5, waterRate:18, rent:1500, maint:400, flatRate:2.40 },
   ice: { label:'ตู้ผลิตน้ำแข็ง', emoji:'❄️', unit:'กก.', unitShort:'กก./วัน',
@@ -1139,8 +1139,12 @@ const PRESETS = {
 /* ---------- แคตตาล็อกรุ่นสินค้า (ราคาขายเงินสด) ---------- */
 const MODELS = {
   alkaline: [
-    { code:'10501613', name:'ตู้น้ำลิตร หยอดเหรียญ V3 + ชุดติดตั้ง (ไม่รวมมิเตอร์น้ำ-ไฟ)', price:45900 },
-    { code:'10100296', name:'A01 Water Mate ตู้กดน้ำ', price:14900 }
+    { code:'10501857', name:'ตู้น้ำลิตร หยอดเหรียญ V3 + ชุดติดตั้ง PSP (ไม่มีมิเตอร์น้ำ-ไฟ) · 2 ปี/40,000 ลิตร', price:52900 },
+    { code:'10501858', name:'ตู้น้ำลิตร หยอดเหรียญ V2 + ชุดติดตั้ง PSP (รวมมิเตอร์น้ำ-ไฟในตู้) · 2 ปี/40,000 ลิตร', price:54900 },
+    { code:'10501786', name:'ตู้น้ำลิตร หยอดเหรียญ Online (Static QR Code) v3 · 2 ปี/40,000 ลิตร', price:60900 },
+    { code:'10501785', name:'ตู้น้ำลิตร หยอดเหรียญ Online (Static QR Code) v2 · 2 ปี/40,000 ลิตร', price:62900 },
+    { code:'10500996', name:'ตู้น้ำลิตร หยอดเหรียญ Online · 2 ปี/40,000 ลิตร', price:64900 },
+    { code:'10501860', name:'ตู้น้ำลิตร หยอดเหรียญ Zuper Filter · 1 ปี/20,000 ลิตร', price:46900 }
   ],
   ice: [
     { code:'10500847', name:'น้ำแข็งหลอดหนาพิเศษ FC 180-1 (180 กก./วัน)', price:142500 },
@@ -1170,7 +1174,7 @@ const MODELS = {
   ]
 };
 
-const DEFAULT_MODEL = { alkaline:'10501613', ice:'10500847', laundry:'10501614' };
+const DEFAULT_MODEL = { alkaline:'10501857', ice:'10500847', laundry:'10501614' };
 
 const MODEL_LABEL = {
   alkaline: 'รุ่นตู้กดน้ำ — ราคาที่ส่งลูกค้า',
