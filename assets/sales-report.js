@@ -1432,12 +1432,12 @@
     return o;
   }
   function secOfDeal(d) { return (Number(d.status) === 4 || Number(d.status) === 3) ? num(d.amount) : 0; }
+  /* Forecast = มูลค่า × โอกาสปิดตามสถานะ (ใช้ prob ชุดเดียวกับที่โชว์ในตาราง) */
   function fcOfDeal(d) {
     var a = num(d.amount), c = Number(d.status);
     if (c === 4 || c === 3) return a;
-    if (c === 2) return a * 0.5;
-    if (c === 1) return a * 0.25;
-    return 0;
+    if (c === 5) return 0;
+    return a * (probOfStatus(c) / 100);
   }
 
   /** เป้ารวมของเดือน (คำนวณแบบเดียวกับ kpis(): AE ใช้เป้า/คน × จำนวนคนในความดูแล) */
@@ -1453,7 +1453,9 @@
     });
     if (!teams.length) return 0;
     var total = teams.reduce(function (a, t) { return a + targetOf(t.code, yr, month); }, 0);
-    var teamSize = SALES.filter(function (r) { return r.team === teams[0].code; }).length || 1;
+    /* ตัวหาร “เป้า/คน” ต้องอิงทีมของ AE ที่เลือก ไม่ใช่ทีมแรกเสมอ */
+    var anchorTeam = state.team || (state.sale ? sale(state.sale).team : (teams.length === 1 ? teams[0].code : ''));
+    var teamSize = anchorTeam ? (SALES.filter(function (r) { return r.team === anchorTeam; }).length || 1) : 1;
     if (sc.type === 'sale') return total / teamSize * (mySaleIds(sc).length || 1);
     if (state.sale) return total / teamSize;
     return total;

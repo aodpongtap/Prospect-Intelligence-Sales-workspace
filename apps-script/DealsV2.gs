@@ -280,6 +280,7 @@ function saveDealV2_(token, payload) {
   var job = String(p.job || '').trim();
   if (!customer) throw new Error('กรอกชื่อลูกค้า');
   if (!job) throw new Error('กรอกชื่องาน/ดีล');
+  if (!validCustomer_(customer)) throw new Error('ชื่อลูกค้าไม่ถูกต้อง — กรุณากรอกชื่อจริง (ห้ามใช้ n/a, -, test, ทดสอบ)');
 
   var status = Number(p.status);
   if (isNaN(status)) status = 1;
@@ -349,7 +350,7 @@ function saveDealV2_(token, payload) {
 
   var nowIso = new Date().toISOString();
   var noChange = false;
-  var saleId = String(p.saleId || s.saleId || '').trim().toUpperCase();
+  var saleId = assertSaleId_(s, p.saleId);
   if (!saleId) throw new Error('บัญชีนี้ยังไม่ถูกผูกกับ AE (saleId) — กรุณาให้แอดมินผูก AE ก่อนบันทึกดีล');
   var team = String(s.team || '').trim().toUpperCase();
   if (!team && saleId) {

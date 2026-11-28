@@ -273,13 +273,21 @@
     return { days: d, customers: c, avgCust: d ? c / d : 0, avgAct: d ? list.length / d : 0 };
   }
 
-  /** follow-up ที่ครบกำหนดวันนี้ หรือเลยกำหนด (ยังไม่ปิด) */
+  /** follow-up ที่ครบกำหนดวันนี้ หรือเลยกำหนด (ปิดอัตโนมัติเมื่อมีการติดตามครั้งใหม่หลังจากวันนัด) */
   function followups(list) {
     var t = isoLocal();
     var out = [];
+    var all = ITEMS || [];
     list.forEach(function (x) {
       if (!x.nextDate) return;
       if (x.done) return;
+      var key = normCust(x.customer);
+      var followed = all.some(function (y) {
+        if (y === x) return false;
+        if (normCust(y.customer) !== key) return false;
+        return String(y.date || '') > String(x.nextDate || '');
+      });
+      if (followed) return;                  /* มีการติดตามครั้งใหม่แล้ว → ปิดรายการเก่า */
       if (x.nextDate <= t) out.push(x);
     });
     out.sort(function (a, b) { return String(a.nextDate + (a.nextTime || '')).localeCompare(String(b.nextDate + (b.nextTime || ''))); });

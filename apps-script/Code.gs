@@ -356,6 +356,48 @@ function seesAllLevel_(level) {
   var l = String(level).toLowerCase();
   return l === 'admin' || l === 'bu';
 }
+
+/** ชื่อลูกค้าที่ใช้งานได้จริง — กัน n/a, -, test, ทดสอบ ฯลฯ หลุดเข้าข้อมูลจริง */
+function validCustomer_(name) {
+  var t = String(name || '').trim();
+  if (t.length < 2) return false;
+  if (/^(n\/?a|na|none|null|-+|\.+|xx+|ทดสอบ|ทดลอง|เทส|test|testing|tes|demo|sample|ตัวอย่าง|asdf|qwerty|\d+)$/i.test(t)) return false;
+  return true;
+}
+
+/** saleId ที่บัญชีนี้มีสิทธิ์บันทึกในนาม: ของตัวเอง + ลูกข่าย (Admin/BU = ทุกคน) */
+function allowedSaleIds_(s) {
+  var out = [];
+  var my = String((s && s.saleId) || '').trim().toUpperCase();
+  if (my) out.push(my);
+  if (!s) return out;
+  if (levelN_(s.level) <= 2) {
+    readRows_().forEach(function (r) {
+      var x = String(r.saleId || '').trim().toUpperCase();
+      if (x && out.indexOf(x) < 0) out.push(x);
+    });
+    return out;
+  }
+  var myMail = String(s.email || '').toLowerCase();
+  descendantsOf_(myMail).forEach(function (r) {
+    var x = String(r.saleId || '').trim().toUpperCase();
+    if (x && out.indexOf(x) < 0) out.push(x);
+  });
+  return out;
+}
+
+/** ตรวจสิทธิ์บันทึกในนาม saleId ที่ส่งมา (คืน saleId ที่อนุญาต หรือ throw) */
+function assertSaleId_(s, wantSale) {
+  var want = String(wantSale || '').trim().toUpperCase();
+  var my = String((s && s.saleId) || '').trim().toUpperCase();
+  var finalSale = want || my;
+  if (!finalSale) return '';
+  var allow = allowedSaleIds_(s);
+  if (allow.length && allow.indexOf(finalSale) < 0) {
+    throw new Error('ไม่มีสิทธิ์บันทึกในนาม AE คนนี้ (' + finalSale + ')');
+  }
+  return finalSale;
+}
 /** ใครบันทึกดีลได้: Admin / BU / Head Team / Supervisor / เซลล์ (L1–L5) */
 function canSell_(level) {
   var l = String(level).toLowerCase();

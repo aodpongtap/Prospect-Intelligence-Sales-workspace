@@ -181,6 +181,8 @@ function saveDailyApiCore_(token, p) {
   if (!canSell_(s.level)) throw new Error('บัญชีนี้ไม่มีสิทธิ์บันทึกกิจกรรม');
   var customer = String(p.customer || '').trim();
   if (!customer) throw new Error('กรอกชื่อลูกค้า');
+  if (!validCustomer_(customer)) throw new Error('ชื่อลูกค้าไม่ถูกต้อง — กรุณากรอกชื่อจริง (ห้ามใช้ n/a, -, test, ทดสอบ)');
+  var finalSaleId = assertSaleId_(s, p.saleId);
 
   var sh = tab_(DAILY_TAB);
   var rows = tabRows_(sh);
@@ -214,7 +216,7 @@ function saveDailyApiCore_(token, p) {
     nextDate: normDate_(p.nextDate),
     nextTime: normTime_(p.nextTime),
     nextNote: String(p.nextNote || ''),
-    saleId: String(p.saleId || s.saleId || '').trim().toUpperCase(),
+    saleId: finalSaleId || String(s.saleId || '').trim().toUpperCase(),
     by: ownerEmail,
     dmName: String(p.dmName || '').trim().slice(0, 120),
     dmPhone: String(p.dmPhone || '').trim().slice(0, 30),
