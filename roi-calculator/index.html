@@ -1509,11 +1509,12 @@ function renderVerdict(p, r) {
   txt += ` หักต้นทุน${p.mode === 'loan' ? 'และค่างวด' : ''} เหลือ <b>${baht(r.ncf)}/เดือน</b>`;
   if (r.payback != null && r.payback > 0) txt += ` คืนทุนภายใน <b>${monthText(r.payback)}</b>`;
   if (isFinite(r.roi) && r.roi > 0) txt += ` (ผลตอบแทน ${pctBig(r.roi, 0)} ต่อปี)`;
-  if (p.mode === 'loan' && r.ncf < 0) {
-    txt = `<b>⚠ กระแสเงินสดติดลบ ${baht(Math.abs(r.ncf))}/เดือน</b> — ค่างวดสูงกว่ากำนไรด่าเนินงาน ลองเพิ่มเงินดาวน์ ลดจำนวนงวด หรือปรับราคาขาย · ` + txt;
-  }
   if (!ok) txt = 'ยอดขาย/ราคานี้ยังไม่พอหักต้นทุน — ปรับยอดขายขึ้น หรือลดเงินลงทุน/ค่าเช่าก่อนนำเสนอลูกค้า';
-  $('#verdictText').innerHTML = txt;
+  /* เตือนเมื่อโหมดผ่อนแล้วกระแสเงินสดติดลบทุกเดือน */
+  const warn = (p.mode === 'loan' && r.ncf < 0)
+    ? `<b>⚠ กระแสเงินสดติดลบ ${baht(Math.abs(r.ncf))}/เดือน</b> — ค่างวด ${baht(r.pmt)} สูงกว่ากำไรดำเนินงาน ${baht(r.opProfit)} ลองเพิ่มเงินดาวน์ ลดจำนวนงวด หรือปรับราคาขาย<br>`
+    : '';
+  $('#verdictText').innerHTML = warn + txt;
 }
 
 /* ---------- render: cash vs installment ---------- */
