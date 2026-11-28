@@ -820,10 +820,11 @@
    * สูตรที่ใช้ทั้งระบบ:
    *   รวม 1 = ปิดงานแล้ว + รอส่งของ
    *   รวม 2 = ปิดงานแล้ว + รอส่งของ + รอยืนยัน PO
-   *   Forecast ปิดเดือน = (ปิดแล้ว + รอส่งของ) 100% + รอยืนยัน PO 50% + Pipeline 25%
+   *   Forecast ปิดเดือน = ปิดแล้ว/รอส่งของ 100% + รอยืนยัน PO 75% + Pipeline 50% + กำลังคุย 25%
+   *   (ใช้น้ำหนักชุดเดียวกับช่อง “โอกาสปิด” ของแต่ละสถานะ — probOfStatus)
    */
   function summarize(list) {
-    var s = { s0: 0, s1: 0, s2: 0, s3: 0, s4: 0, s5: 0, weighted1: 0, weighted2: 0, cashIn: 0, count: 0 };
+    var s = { s0: 0, s1: 0, s2: 0, s3: 0, s4: 0, s5: 0, weighted0: 0, weighted1: 0, weighted2: 0, cashIn: 0, count: 0 };
     list.forEach(function (d) {
       var a = num(d.amount);
       if (d.status === 5) { s.s5 += a; return; }
@@ -837,10 +838,11 @@
     });
     s.sum43 = s.s4 + s.s3;                    /* ปิดงานแล้ว + รอส่งของ */
     s.sum432 = s.s4 + s.s3 + s.s2;            /* + รอยืนยัน PO */
-    s.weighted2 = s.s2 * 0.5;                 /* รอยืนยัน PO ถ่วง 50% */
-    s.weighted1 = s.s1 * 0.25;                /* Pipeline ถ่วง 25% */
+    s.weighted2 = s.s2 * 0.75;                /* รอยืนยัน PO ถ่วง 75% */
+    s.weighted1 = s.s1 * 0.50;                /* Pipeline ถ่วง 50% */
+    s.weighted0 = s.s0 * 0.25;                /* กำลังคุย ถ่วง 25% */
     s.secured = s.sum43;                      /* ยอดที่มั่นใจ (ปิดแล้ว + รอส่งของ) */
-    s.forecast = s.sum43 + s.weighted2 + s.weighted1;
+    s.forecast = s.sum43 + s.weighted2 + s.weighted1 + s.weighted0;
     s.totalSale = s.s4 + s.s3 + s.s2 + s.s1;
     return s;
   }
@@ -983,7 +985,7 @@
         k.ach432, '#7C3AED', 'fa-solid fa-layer-group'),
       cardKpi('ประมาณการยอดขายปิดเดือน',
         money(s.forecast),
-        'ปิด+รอส่ง <b>' + money(s.secured) + '</b> + PO 50% <b>' + money(s.weighted2) + '</b> + Pipeline 25% <b>' + money(s.weighted1) + '</b>',
+        'ปิด+รอส่ง <b>' + money(s.secured) + '</b> + PO 75% <b>' + money(s.weighted2) + '</b> + Pipeline 50% <b>' + money(s.weighted1) + '</b> + กำลังคุย 25% <b>' + money(s.weighted0) + '</b>',
         k.forecastPct, '#16A34A', 'fa-solid fa-chart-line')
     ];
     return '<div class="sr-scope"><i class="fa-regular fa-calendar"></i> ขอบเขตข้อมูล: <b>' + esc(scope) + '</b>' +
@@ -1533,7 +1535,7 @@
       + '<div class="sr-fc-row">' + chips + '</div>'
       + '<div class="sr-fc-res"><div><small>Forecast Sales</small><b>' + money(s.forecast) + '</b></div>'
       + '<span class="sr-pill-pct">' + pct(k.forecastPct) + ' ของเป้า</span></div>'
-      + '<div class="sr-s2" style="margin-top:8px">ปิดงานแล้ว + รอส่งของ นับ 100% · รอยืนยัน PO 50% · Pipeline 25%'
+      + '<div class="sr-s2" style="margin-top:8px">ปิดงานแล้ว + รอส่งของ นับ 100% · รอยืนยัน PO 75% · Pipeline 50% · กำลังคุย 25%'
       + (s.s0 ? ' · กำลังคุยยังไม่นับ' : '') + '</div>'
       + '</section>';
   }
