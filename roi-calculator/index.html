@@ -1127,7 +1127,7 @@ const PRESETS = {
     rawCost:0, qrShare:70, qrFee:1, elecKW:1.33, elecHours:12, elecRate:4,
     waterL:1.3, waterRate:18, rent:2000, maint:500, flatRate:2.90 },
   coffee: { label:'ตู้กาแฟ 10 บาท', emoji:'☕', unit:'แก้ว', unitShort:'แก้ว/วัน',
-    price:49000, baseQty:60, qtyMax:200, unitPrice:10, unitMin:10, unitMax:20,
+    price:55900, baseQty:60, qtyMax:200, unitPrice:10, unitMin:10, unitMax:20,
     rawCost:4.5, qrShare:60, qrFee:1, elecKW:1.5, elecHours:12, elecRate:4,
     waterL:0.2, waterRate:18, rent:1500, maint:300, flatRate:2.90 },
   laundry: { label:'เครื่องซักผ้า / อบผ้า (LG)', emoji:'🧺', unit:'รอบ', unitShort:'รอบ/วัน',
@@ -1150,6 +1150,15 @@ const MODELS = {
     { code:'10500830', name:'น้ำแข็งหลอดหนา FC-180 (180 กก./วัน)', price:123500 },
     { code:'10500829', name:'น้ำแข็งหลอดบาง FH-180 (180 กก./วัน)', price:136500 }
   ],
+  coffee: [
+    { code:'10501640', name:'Safe Coffee เครื่องขายกาแฟหยอดเหรียญ พร้อมชุดอุปกรณ์', price:55900 },
+    { code:'10501663', name:'Safe Coffee เครื่องขายกาแฟหยอดเหรียญ พร้อมชุดอุปกรณ์ + เครื่องกรองน้ำ', price:57900 },
+    { code:'10501833', name:'Safe Coffee Online (Static QR Code) พร้อมชุดอุปกรณ์', price:59900 },
+    { code:'10501834', name:'Safe Coffee Online (Static QR Code) พร้อมชุดอุปกรณ์ + เครื่องกรองน้ำ', price:61900 }
+  ],
+  /* TODO: รอรายชื่อรุ่นตู้กาแฟ (รหัสสินค้า 8 หลัก + ราคาเงินสด) — ใส่ที่นี่แล้ว dropdown จะขึ้นเอง
+     รูปแบบ: { code:'1050xxxx', name:'ชื่อรุ่น + จุดขาย', price:00000 } */
+  coffee: [],
   laundry: [
     { code:'10501614', name:'LG ซักผ้าฝาบน 17 กก. T2517VBTB + กล่องหยอดเหรียญ', price:28900,  type:'top' },
     { code:'10501822', name:'LG ซักผ้าฝาบน 17 กก. T2517VBTB + ชุดหยอดเหรียญ + QR', price:35900, type:'top' },
@@ -1168,11 +1177,12 @@ const MODELS = {
   ]
 };
 
-const DEFAULT_MODEL = { alkaline:'10501857', ice:'10500847', laundry:'10501614' };
+const DEFAULT_MODEL = { alkaline:'10501857', ice:'10500830', coffee:'10501640', laundry:'10501614' };
 
 const MODEL_LABEL = {
   alkaline: 'รุ่นตู้กดน้ำ — ราคาที่ส่งลูกค้า',
   ice: 'รุ่นเครื่องทำน้ำแข็ง — PM9003/2569',
+  coffee: 'รุ่นตู้กาแฟ — ราคาเงินสด',
   laundry: 'รุ่นสินค้า — PM9003/2569 (ราคาเงินสด)'
 };
 
@@ -1407,6 +1417,12 @@ function populateModels(presetKey, selected) {
   const sel = $('#modelSel');
   if (!sel) return;
   const list = MODELS[presetKey] || [];
+  if (!list.length) {
+    /* ยังไม่มีแคตตาล็อกของกลุ่มนี้ → แสดง dropdown ไว้เพื่อให้เห็นว่ามีช่องรุ่นสินค้า */
+    sel.innerHTML = '<option value="">— ยังไม่มีรุ่นในระบบ · กำหนดราคาเอง —</option>';
+    sel.value = '';
+    return;
+  }
   sel.innerHTML = '<option value="">— กำหนดราคาเอง (แก้ช่องราคาได้) —</option>'
     + list.map(m => `<option value="${m.code}">${m.code} · ${m.name} — ${nf0.format(m.price)} ฿</option>`).join('');
   sel.value = (selected === undefined ? (DEFAULT_MODEL[presetKey] || '') : selected);
@@ -1882,7 +1898,7 @@ function applyPreset(key) {
   $('#waterRate').value = c.waterRate;
   $('#rent').value = c.rent;
   $('#maint').value = c.maint;
-  $('#modelBlock').hidden = !(MODELS[key] && MODELS[key].length);
+  $('#modelBlock').hidden = !((MODELS[key] && MODELS[key].length) || key === 'coffee');
   $('#modelLabel').textContent = MODEL_LABEL[key] || 'รุ่นสินค้าอ้างอิง';
   $('#installBlock').hidden = key !== 'laundry';
   $('#investHint').hidden = key !== 'laundry';
